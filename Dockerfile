@@ -7,7 +7,7 @@ ARG NODE_VERSION=22.11.0-alpine
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /repo
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN npm install -g pnpm@10
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
@@ -18,14 +18,14 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 FROM node:${NODE_VERSION} AS build
 WORKDIR /repo
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN npm install -g pnpm@10
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 # NEXT_PUBLIC_* bake into the client bundle here; the deploy workflow feeds
 # them as build args. Set placeholders so pnpm build never fails on unset.
-ARG NEXT_PUBLIC_API_URL=https://e-resi.com
-ARG NEXT_PUBLIC_APP_URL=https://e-resi.com
+ARG NEXT_PUBLIC_API_URL=https://api.e-resi.co.ke
+ARG NEXT_PUBLIC_APP_URL=https://app.e-resi.co.ke
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
