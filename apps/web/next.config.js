@@ -15,8 +15,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'e-resi-media.fra1.digitaloceanspaces.com' },
-      { protocol: 'https', hostname: 'e-resi-media.fra1.cdn.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'eresi-media.fra1.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'media.e-resi.co.ke' },
     ],
   },
 };
