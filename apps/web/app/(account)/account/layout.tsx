@@ -1,0 +1,21 @@
+import { AccountSidebar } from '../../../components/account/AccountSidebar';
+import { AccountTopbar } from '../../../components/account/AccountTopbar';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: { default: 'My Account', template: '%s — e-resi' },
+};
+
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen bg-surface-950">
+      <AccountSidebar />
+      <div className="flex flex-1 flex-col">
+        <AccountTopbar />
+        <main className="flex-1 p-6 lg:p-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

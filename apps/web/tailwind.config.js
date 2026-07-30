@@ -1,0 +1,117 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#f0f4ff',
+          100: '#e0eaff',
+          200: '#c7d7fe',
+          300: '#a5bcfd',
+          400: '#8098fa',
+          500: '#6172f3',
+          600: '#444fe8',
+          700: '#3640d4',
+          800: '#2d35ac',
+          900: '#2b3388',
+          950: '#1a1f52',
+        },
+        gold: {
+          50: '#fefce8',
+          100: '#fef9c3',
+          200: '#fef08a',
+          300: '#fde047',
+          400: '#facc15',
+          500: '#eab308',
+          600: '#ca8a04',
+          700: '#a16207',
+          800: '#854d0e',
+          900: '#713f12',
+        },
+        surface: {
+          950: '#080c14',
+          900: '#0e1423',
+          800: '#131c30',
+          700: '#1a2540',
+          600: '#233050',
+          500: '#2e3e66',
+        },
+      },
+      fontFamily: {
+        sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        display: ['var(--font-cormorant)', 'Georgia', 'serif'],
+      },
+      colors: {
+        // HomVR luxury palette — black / white / warm brown / gold accent
+        ink: '#0a0a0a',
+        chalk: '#f5f2ee',
+        stone: '#b8a898',
+        brown: {
+          50:  '#faf6f1',
+          100: '#f0e8dc',
+          200: '#dfd0bc',
+          300: '#c9b096',
+          400: '#b8936e',
+          500: '#a67c52',
+          600: '#8f6540',
+          700: '#754f31',
+          800: '#5e3e27',
+          900: '#4a301e',
+          950: '#2e1d10',
+        },
+        warm: {
+          50:  '#fdfaf6',
+          100: '#f7f0e4',
+          200: '#eddec8',
+          300: '#dec7a3',
+          400: '#ccaa78',
+          500: '#be9155',
+          600: '#a87840',
+          700: '#8a5f31',
+          800: '#6e4a25',
+          900: '#573a1d',
+        },
+      },
+      borderRadius: {
+        '4xl': '2rem',
+        '5xl': '2.5rem',
+      },
+      transitionTimingFunction: {
+        spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'in-out-expo': 'cubic-bezier(0.87, 0, 0.13, 1)',
+      },
+      keyframes: {
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(24px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 20px rgba(97, 114, 243, 0.4)' },
+          '50%': { boxShadow: '0 0 40px rgba(97, 114, 243, 0.6)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      },
+      animation: {
+        'fade-up': 'fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-in': 'fade-in 0.4s ease both',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        float: 'float 3s ease-in-out infinite',
+      },
+    },
+  },
+  plugins: [],
+};
