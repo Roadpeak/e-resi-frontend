@@ -22,7 +22,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'eresi-media.fra1.digitaloceanspaces.com' },
-      { protocol: 'https', hostname: 'media.e-resi.co.ke' },
+      { protocol: 'https', hostname: 'media.e-resi.com' },
     ],
   },
 };
