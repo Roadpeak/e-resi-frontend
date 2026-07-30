@@ -43,8 +43,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=https://api.e-resi.co.ke
-            NEXT_PUBLIC_APP_URL=https://app.e-resi.co.ke
+            NEXT_PUBLIC_API_URL=https://api.e-resi.com
+            NEXT_PUBLIC_APP_URL=https://app.e-resi.com
 
   deploy:
     name: Deploy to droplet

@@ -24,8 +24,8 @@ COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 # NEXT_PUBLIC_* bake into the client bundle here; the deploy workflow feeds
 # them as build args. Set placeholders so pnpm build never fails on unset.
-ARG NEXT_PUBLIC_API_URL=https://api.e-resi.co.ke
-ARG NEXT_PUBLIC_APP_URL=https://app.e-resi.co.ke
+ARG NEXT_PUBLIC_API_URL=https://api.e-resi.com
+ARG NEXT_PUBLIC_APP_URL=https://app.e-resi.com
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
