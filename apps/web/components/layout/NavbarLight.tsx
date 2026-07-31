@@ -92,7 +92,7 @@ export function NavbarLight() {
                   Sign In
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/onboarding"
                   className="bg-gray-900 text-white text-xs px-5 py-2.5 rounded-full hover:bg-gray-700 transition-colors"
                 >
                   List Property
@@ -117,7 +117,7 @@ export function NavbarLight() {
         ))}
         <div className="h-px bg-gray-100 my-1" />
         <Link href="/login" onClick={() => setMenuOpen(false)} className="text-sm text-gray-500">Sign In</Link>
-        <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="bg-gray-900 text-white text-sm px-5 py-2.5 rounded-full text-center">List Property</Link>
+        <Link href="/onboarding" onClick={() => setMenuOpen(false)} className="bg-gray-900 text-white text-sm px-5 py-2.5 rounded-full text-center">List Property</Link>
       </div>
     </>
   );

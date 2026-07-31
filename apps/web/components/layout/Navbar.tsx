@@ -118,7 +118,7 @@ export function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/onboarding"
                   className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-2.5 hover:bg-chalk/5 transition-all duration-300"
                 >
                   List Property
@@ -157,7 +157,7 @@ export function Navbar() {
         ))}
         <div className="h-px bg-white/8 my-2" />
         <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-stone/50">Sign In</Link>
-        <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
+        <Link href="/onboarding" onClick={() => setMenuOpen(false)} className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
       </div>
     </>
   );

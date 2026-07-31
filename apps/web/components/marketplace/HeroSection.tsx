@@ -234,7 +234,7 @@ export function HeroSection() {
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
           <Link
-            href="/dashboard"
+            href="/onboarding"
             className="btn-glow-dim group inline-flex items-center gap-3 border border-white/15 bg-white/4 hover:bg-white/8 text-white/35 hover:text-chalk text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-300"
           >
             List Your Development
