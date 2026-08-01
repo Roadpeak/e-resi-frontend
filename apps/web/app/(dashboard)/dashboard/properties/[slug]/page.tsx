@@ -12,6 +12,7 @@ import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { propertiesApi } from '../../../../../lib/api/properties';
 import { serviceById, fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
 import { formatPrice } from '../../../../../lib/utils';
+import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
 
 interface DashProperty {
   id: string;
@@ -113,7 +114,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
         county: form.county.trim() || undefined,
         priceFrom: form.priceFrom ? Number.parseFloat(form.priceFrom) : undefined,
         priceTo: form.priceTo ? Number.parseFloat(form.priceTo) : undefined,
-        heroImageUrl: form.heroImageUrl.trim() || undefined,
+        heroImageUrl: form.heroImageUrl.trim(),
       });
       await queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
       await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
@@ -324,7 +325,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls}>Price from ({property.currency})</label>
             <input value={form.priceFrom} onChange={(e) => setForm((f) => ({ ...f, priceFrom: e.target.value.replace(/[^\d.]/g, '') }))} inputMode="numeric" className={inputCls} />
@@ -333,11 +334,14 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
             <label className={labelCls}>Price to ({property.currency})</label>
             <input value={form.priceTo} onChange={(e) => setForm((f) => ({ ...f, priceTo: e.target.value.replace(/[^\d.]/g, '') }))} inputMode="numeric" className={inputCls} />
           </div>
-          <div>
-            <label className={labelCls}>Hero image URL</label>
-            <input value={form.heroImageUrl} onChange={(e) => setForm((f) => ({ ...f, heroImageUrl: e.target.value }))} placeholder="https://" className={inputCls} />
-          </div>
         </div>
+
+        <ImageUpload
+          value={form.heroImageUrl}
+          onChange={(url) => setForm((f) => ({ ...f, heroImageUrl: url }))}
+          label="Property photo"
+          hint="Shown on the listing, search results and all its rentals"
+        />
 
         {error && <p className="rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
 

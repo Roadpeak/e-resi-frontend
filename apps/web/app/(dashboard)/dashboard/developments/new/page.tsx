@@ -55,6 +55,7 @@ export default function NewDevelopmentPage() {
     try {
       const res = await apiClient.post<{ success: boolean; data: { slug: string } }>('/properties', {
         name: development.name.trim(),
+        heroImageUrl: development.heroImageUrl || undefined,
         tagline: development.shortDescription || undefined,
         description: development.fullDescription || undefined,
         category: toCategory(development.type),

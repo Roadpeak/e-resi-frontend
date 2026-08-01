@@ -8,6 +8,7 @@ import { useDevelopmentStore } from '../../lib/stores/development.store';
 import {
   Checkbox, ChipGroup, Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
 } from '../onboarding/ui';
+import { ImageUpload } from '../dashboard/ImageUpload';
 
 // ── Development creation · Step 1: Development details ───────────────────────
 
@@ -42,6 +43,12 @@ export function StepDevelopment() {
             <TextInput type="month" value={dev.expectedCompletion} onChange={(e) => patch({ expectedCompletion: e.target.value })} />
           </Field>
         </FieldGrid>
+        <ImageUpload
+          value={dev.heroImageUrl}
+          onChange={(heroImageUrl) => patch({ heroImageUrl })}
+          label="Cover photo"
+          hint="The face of this development — shown everywhere it appears"
+        />
       </SectionCard>
 
       <SectionCard title="Location">

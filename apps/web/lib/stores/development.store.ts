@@ -11,6 +11,7 @@ import { persist } from 'zustand/middleware';
 
 export interface DevelopmentInfo {
   name: string;
+  heroImageUrl: string;
   type: string;
   category: string;
   status: string;
@@ -68,7 +69,7 @@ interface DevelopmentState {
 export const DEV_TOTAL_STEPS = 3;
 
 const emptyDevelopment: DevelopmentInfo = {
-  name: '', type: '', category: '', status: '', expectedCompletion: '',
+  name: '', heroImageUrl: '', type: '', category: '', status: '', expectedCompletion: '',
   country: 'Kenya', county: '', city: '', area: '', mapsPin: '', gpsCoordinates: '',
   numberOfUnits: '', unitTypes: [], bedrooms: '', bathrooms: '', parking: '',
   amenities: [], securityFeatures: [], utilities: [],
