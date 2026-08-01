@@ -14,6 +14,7 @@ import { serviceById, fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onb
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
+import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
 
 interface DashProperty {
   id: string;
@@ -25,6 +26,8 @@ interface DashProperty {
   status: 'DRAFT' | 'ACTIVE' | 'OFF_PLAN' | 'SOLD_OUT' | 'ARCHIVED';
   neighborhood?: string | null;
   city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   county?: string | null;
   heroImageUrl?: string | null;
   priceFrom?: number | null;
@@ -53,6 +56,15 @@ const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
 const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
 
+/** Accepts "-1.2673, 36.8065"; ignores anything that isn't a valid pair. */
+function parseCoordinates(raw?: string): { latitude?: number; longitude?: number } {
+  if (!raw) return {};
+  const [lat, lng] = raw.split(',').map((v) => Number.parseFloat(v.trim()));
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return {};
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return {};
+  return { latitude: lat, longitude: lng };
+}
+
 export default function DashboardPropertyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
@@ -77,7 +89,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
 
   const [form, setForm] = useState({
     name: '', tagline: '', description: '', neighborhood: '', city: '', county: '',
-    priceFrom: '', priceTo: '', heroImageUrl: '',
+    priceFrom: '', priceTo: '', heroImageUrl: '', coordinates: '',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -96,6 +108,10 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
         priceFrom: property.priceFrom ? String(property.priceFrom) : '',
         priceTo: property.priceTo ? String(property.priceTo) : '',
         heroImageUrl: property.heroImageUrl ?? '',
+        coordinates:
+          property.latitude != null && property.longitude != null
+            ? `${property.latitude}, ${property.longitude}`
+            : '',
       });
     }
   }, [property]);
@@ -116,6 +132,8 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
         priceFrom: form.priceFrom ? Number.parseFloat(form.priceFrom) : undefined,
         priceTo: form.priceTo ? Number.parseFloat(form.priceTo) : undefined,
         heroImageUrl: form.heroImageUrl.trim(),
+        // Without coordinates the property can't be plotted on the map.
+        ...parseCoordinates(form.coordinates),
       });
       await queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
       await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
@@ -311,6 +329,19 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           />
         </div>
 
+        <DetectLocationButton
+          onDetected={(loc) =>
+            setForm((f) => ({
+              ...f,
+              coordinates: `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`,
+              // Only overwrite a field when detection produced a value.
+              neighborhood: loc.neighborhood ?? f.neighborhood,
+              city: loc.city ?? f.city,
+              county: loc.county ?? f.county,
+            }))
+          }
+        />
+
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className={labelCls}>Neighborhood</label>
@@ -324,6 +355,19 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
             <label className={labelCls}>County</label>
             <input value={form.county} onChange={(e) => setForm((f) => ({ ...f, county: e.target.value }))} className={inputCls} />
           </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>GPS coordinates</label>
+          <input
+            value={form.coordinates}
+            onChange={(e) => setForm((f) => ({ ...f, coordinates: e.target.value }))}
+            className={inputCls}
+            placeholder="-1.2673, 36.8065"
+          />
+          <p className="mt-1.5 text-[12px] text-[#80868b]">
+            Places this development on the marketplace map. Detect it above or paste a lat, lng pair.
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

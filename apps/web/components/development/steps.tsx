@@ -9,6 +9,7 @@ import {
   Checkbox, ChipGroup, Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
 } from '../onboarding/ui';
 import { ImageUpload } from '../dashboard/ImageUpload';
+import { DetectLocationButton } from '../dashboard/DetectLocationButton';
 
 // ── Development creation · Step 1: Development details ───────────────────────
 
@@ -52,6 +53,19 @@ export function StepDevelopment() {
       </SectionCard>
 
       <SectionCard title="Location">
+        <DetectLocationButton
+          className="mb-4"
+          onDetected={(loc) => {
+            // Only overwrite a field when detection actually produced a value.
+            patch({
+              gpsCoordinates: `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`,
+              ...(loc.neighborhood ? { area: loc.neighborhood } : {}),
+              ...(loc.city ? { city: loc.city } : {}),
+              ...(loc.county ? { county: loc.county } : {}),
+              ...(loc.country ? { country: loc.country } : {}),
+            });
+          }}
+        />
         <FieldGrid>
           <Field label="Country" required>
             <TextInput value={dev.country} onChange={(e) => patch({ country: e.target.value })} />

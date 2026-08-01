@@ -32,6 +32,15 @@ function parsePrice(v: string): number | undefined {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
+/** Accepts "-1.2673, 36.8065"; ignores anything that isn't a valid pair. */
+function parseCoordinates(raw?: string): { latitude?: number; longitude?: number } {
+  if (!raw) return {};
+  const [lat, lng] = raw.split(',').map((v) => Number.parseFloat(v.trim()));
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return {};
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return {};
+  return { latitude: lat, longitude: lng };
+}
+
 export default function NewDevelopmentPage() {
   const { step, setStep, next, back, development, media, reset } = useDevelopmentStore();
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +71,9 @@ export default function NewDevelopmentPage() {
         neighborhood: development.area || undefined,
         city: development.city || undefined,
         county: development.county || undefined,
+        // Parsed from the "lat, lng" field — without these the property can't
+        // be plotted on the marketplace map.
+        ...parseCoordinates(development.gpsCoordinates),
         priceFrom: parsePrice(development.startingPrice),
         tags: development.unitTypes,
         completionDate: development.expectedCompletion
