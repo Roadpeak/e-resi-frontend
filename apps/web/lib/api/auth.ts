@@ -44,6 +44,12 @@ export const authApi = {
   verifyEmail: (token: string) =>
     apiClient.get<{ message: string }>(`/auth/verify-email?token=${token}`, { skipAuth: true }),
 
+  sendVerificationCode: (email: string) =>
+    apiClient.post<{ message: string }>('/auth/send-verification-code', { email }, { skipAuth: true }),
+
+  verifyCode: (email: string, code: string) =>
+    apiClient.post<{ message: string }>('/auth/verify-code', { email, code }, { skipAuth: true }),
+
   forgotPassword: (email: string) =>
     apiClient.post<{ message: string }>('/auth/forgot-password', { email }, { skipAuth: true }),
 

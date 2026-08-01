@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +24,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setUser = useAuthStore((s) => s.setUser);
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -41,8 +42,11 @@ export function LoginForm() {
     try {
       const { accessToken, user } = await authApi.login(values);
       setUser(user, accessToken);
-      // Redirect based on role
-      if (user.role === 'DEVELOPER' || user.role === 'ADMIN') {
+      // Return to the page that sent us here (internal paths only), else by role
+      const redirect = searchParams.get('redirect');
+      if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+        router.push(redirect);
+      } else if (user.role === 'DEVELOPER' || user.role === 'ADMIN') {
         router.push('/dashboard');
       } else {
         router.push('/account');

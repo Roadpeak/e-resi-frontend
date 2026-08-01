@@ -1,5 +1,6 @@
 import { DashboardSidebar } from '../../../components/dashboard/DashboardSidebar';
 import { DashboardTopbar } from '../../../components/dashboard/DashboardTopbar';
+import { RequireAuth } from '../../../components/auth/RequireAuth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
+    <RequireAuth roles={['DEVELOPER', 'ADMIN']}>
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <DashboardSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -17,5 +19,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </RequireAuth>
   );
 }

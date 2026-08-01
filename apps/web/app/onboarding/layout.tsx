@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Logo } from '../../components/brand/Logo';
+import { RequireAuth } from '../../components/auth/RequireAuth';
 
 export const metadata: Metadata = {
   title: 'List your development',
@@ -21,7 +22,9 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
           </Link>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-5xl px-6 py-10">
+        <RequireAuth roles={['DEVELOPER', 'ADMIN']}>{children}</RequireAuth>
+      </main>
     </div>
   );
 }

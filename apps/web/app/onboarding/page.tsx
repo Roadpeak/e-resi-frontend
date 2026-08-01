@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { onboardingApi } from '../../lib/api/onboarding';
+import { ApiError } from '../../lib/api/client';
 import { TOTAL_STEPS, useOnboardingStore } from '../../lib/stores/onboarding.store';
 import { GhostButton, PrimaryButton } from '../../components/onboarding/ui';
 import { StepCompany, StepVerification, StepWelcome } from '../../components/onboarding/steps-intro';
@@ -24,6 +26,8 @@ const STEPS = [
 
 export default function OnboardingPage() {
   const { step, setStep, next, back, submitted, markSubmitted } = useOnboardingStore();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   // Avoid hydration mismatch: the persisted store only exists client-side.
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
@@ -36,6 +40,29 @@ export default function OnboardingPage() {
   const isReview = step === 7;
   const isDone = step === 8;
   const Current = STEPS[step].component;
+
+  async function handleContinue() {
+    if (!isReview) {
+      next();
+      return;
+    }
+    // Review step: persist the wizard to the backend before completing
+    setSubmitError('');
+    setSubmitting(true);
+    try {
+      const { company, verificationDocs, development, media, preferences } =
+        useOnboardingStore.getState();
+      await onboardingApi.submit({ company, verificationDocs, development, media, preferences });
+      markSubmitted();
+      next();
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiError ? err.message : 'Submission failed. Please try again.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div>
@@ -104,24 +131,33 @@ export default function OnboardingPage() {
 
       {/* Footer nav */}
       {!isDone && (
-        <div className="mt-10 flex items-center justify-between border-t border-gray-200 pt-6">
-          {step > 0 ? (
-            <GhostButton type="button" onClick={back}>
-              <ArrowLeft size={15} /> Back
-            </GhostButton>
-          ) : (
-            <span />
+        <div className="mt-10 border-t border-gray-200 pt-6">
+          {submitError && (
+            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {submitError}
+            </p>
           )}
-          <PrimaryButton
-            type="button"
-            onClick={() => {
-              if (isReview) markSubmitted();
-              next();
-            }}
-          >
-            {isWelcome ? 'Get started' : isReview ? 'Submit for review' : 'Continue'}
-            <ArrowRight size={15} />
-          </PrimaryButton>
+          <div className="flex items-center justify-between">
+            {step > 0 ? (
+              <GhostButton type="button" onClick={back} disabled={submitting}>
+                <ArrowLeft size={15} /> Back
+              </GhostButton>
+            ) : (
+              <span />
+            )}
+            <PrimaryButton type="button" onClick={handleContinue} disabled={submitting}>
+              {submitting ? (
+                <>
+                  Submitting <Loader2 size={15} className="animate-spin" />
+                </>
+              ) : (
+                <>
+                  {isWelcome ? 'Get started' : isReview ? 'Submit for review' : 'Continue'}
+                  <ArrowRight size={15} />
+                </>
+              )}
+            </PrimaryButton>
+          </div>
         </div>
       )}
     </div>
