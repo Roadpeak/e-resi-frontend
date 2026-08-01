@@ -13,6 +13,7 @@ import { propertiesApi } from '../../../../../lib/api/properties';
 import { serviceById, fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
+import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 
 interface DashProperty {
   id: string;
@@ -360,6 +361,9 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           </button>
         </div>
       </form>
+
+      {/* ── Media: gallery, logo, immersive videos ── */}
+      <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
 
       {/* ── Units ── */}
       <UnitsManager slug={property.slug} currency={property.currency} units={property.units} />

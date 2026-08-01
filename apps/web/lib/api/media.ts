@@ -9,9 +9,11 @@ export interface UploadedFile {
 }
 
 /** Upload a file (multipart) to the media endpoint — returns its public URL. */
+export type UploadFolder = 'properties' | 'rentals' | 'avatars' | 'logos' | 'documents' | 'tours';
+
 export async function uploadFile(
   file: File,
-  folder: 'properties' | 'rentals' | 'avatars' | 'logos' | 'documents' = 'properties',
+  folder: UploadFolder = 'properties',
 ): Promise<UploadedFile> {
   const token = useAuthStore.getState().accessToken;
   const form = new FormData();

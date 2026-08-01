@@ -92,7 +92,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   const images = [
     ...(unit.property.heroImageUrl ? [{ id: 'hero', url: unit.property.heroImageUrl, title: unit.property.name }] : []),
     ...(unit.property.media ?? [])
-      .filter((m) => ['PHOTO', 'DRONE_PHOTO'].includes(m.type))
+      .filter((m) => ['PHOTO', 'DRONE_PHOTO'].includes(m.type) && m.title !== '__logo__')
       .map((m) => ({ id: m.id, url: m.url, title: m.title ?? unit.property.name })),
   ];
   const scenes = unit.property.cinematicScenes ?? [];
