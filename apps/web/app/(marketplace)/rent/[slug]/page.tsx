@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  Building2,
   MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
   ArrowLeft, CheckCircle2, Loader2, Phone, Mail,
 } from 'lucide-react';
@@ -212,6 +213,14 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     Send Inquiry
                   </button>
                   <ChatWithDeveloper rentListingSlug={listing.slug} className="mt-2 w-full" />
+                  {listing.propertySlug && (
+                    <Link
+                      href={`/${listing.propertySlug}`}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+                    >
+                      <Building2 size={15} /> View the property
+                    </Link>
+                  )}
                 </div>
 
                 {/* Developer card */}

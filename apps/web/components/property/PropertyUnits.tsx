@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
 import type { Unit } from '../../lib/types';
 import { formatPrice, cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
 
 interface Props {
   units: Unit[];
   currency: string;
+  propertySlug: string;
 }
 
 const statusConfig = {
@@ -20,7 +21,7 @@ const statusConfig = {
 
 type Filter = 'all' | 'available';
 
-export function PropertyUnits({ units, currency }: Props) {
+export function PropertyUnits({ units, currency, propertySlug }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
 
   const displayed = filter === 'available' ? units.filter((u) => u.status?.toLowerCase() === 'available') : units;
@@ -63,10 +64,18 @@ export function PropertyUnits({ units, currency }: Props) {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.06 }}
               className={cn(
-                'rounded-2xl border bg-white p-6 flex flex-col gap-4 transition-colors',
-                isAvailable ? 'border-gray-200 hover:border-gray-300' : 'border-gray-200 opacity-60',
+                'group relative rounded-2xl border bg-white p-6 flex flex-col gap-4 transition-all',
+                isAvailable
+                  ? 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                  : 'border-gray-200 opacity-60 hover:opacity-80',
               )}
             >
+              {/* whole card opens the unit view */}
+              <Link
+                href={`/${propertySlug}/units/${unit.id}`}
+                aria-label={`View ${unit.name}`}
+                className="absolute inset-0 z-0 rounded-2xl"
+              />
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
@@ -94,16 +103,17 @@ export function PropertyUnits({ units, currency }: Props) {
               </div>
 
               {/* Price + CTA */}
-              <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-200">
+              <div className="relative z-10 mt-auto flex items-center justify-between border-t border-gray-200 pt-2 pointer-events-none">
                 <div>
                   <p className="text-xs text-gray-400">Price</p>
                   <p className="text-lg font-semibold text-gray-900">{formatPrice(unit.price, currency)}</p>
                 </div>
-                {isAvailable && (
-                  <a href="#booking">
-                    <Button size="sm" variant="secondary">Enquire</Button>
-                  </a>
-                )}
+                <Link
+                  href={`/${propertySlug}/units/${unit.id}`}
+                  className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-700"
+                >
+                  View unit <ArrowRight size={14} />
+                </Link>
               </div>
             </motion.div>
           );

@@ -77,7 +77,7 @@ export default async function PropertyPage({ params }: Props) {
           <section id="viewer3d"><PropertyViewer3D property={property} /></section>
         )}
         <section id="floorplans"><PropertyFloorPlans floorPlans={property.floorPlans} /></section>
-        <section id="units"><PropertyUnits units={property.units} currency={property.currency} /></section>
+        <section id="units"><PropertyUnits units={property.units} currency={property.currency} propertySlug={property.slug} /></section>
         {rentListings.length > 0 && (
           <section id="rentals"><PropertyRentListings listings={rentListings} /></section>
         )}

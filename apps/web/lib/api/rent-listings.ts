@@ -25,6 +25,8 @@ export interface BackendRentListingItem {
   isFeatured: boolean;
   tags: string[];
   createdAt: string;
+  /** Present on the single-listing endpoint — the development this belongs to. */
+  property?: { id: string; slug: string; name: string; heroImageUrl?: string | null } | null;
   rentUnits: Array<{
     id?: string;
     label: string;
@@ -50,8 +52,8 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
   return {
     id: b.id,
     slug: b.slug,
-    propertyId: '',
-    propertySlug: '',
+    propertyId: b.property?.id ?? '',
+    propertySlug: b.property?.slug ?? '',
     name: b.name,
     tagline: b.tagline ?? '',
     description: '',
