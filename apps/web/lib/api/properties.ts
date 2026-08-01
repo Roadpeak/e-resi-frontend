@@ -9,6 +9,7 @@ export interface PropertiesQuery {
   status?: string;
   city?: string;
   neighborhood?: string;
+  bedrooms?: number;
   priceMin?: number;
   priceMax?: number;
   has3DTour?: boolean;
@@ -42,9 +43,15 @@ export const propertiesApi = {
   },
 
   list: (query: PropertiesQuery = {}) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { sortBy, priceMin, priceMax, has3DTour, hasVRTour, search, ...supported } = query;
-    return apiClient.get<PaginatedProperties>(`/properties${toQueryString(supported as Record<string, unknown>)}`);
+    // These were stripped while the API rejected them; it now filters and sorts
+    // on all of them, so pass them through.
+    const { has3DTour, hasVRTour, ...rest } = query;
+    const params: Record<string, unknown> = {
+      ...rest,
+      ...(has3DTour ? { has3DTour: 'true' } : {}),
+      ...(hasVRTour ? { hasVRTour: 'true' } : {}),
+    };
+    return apiClient.get<PaginatedProperties>(`/properties${toQueryString(params)}`);
   },
 
   get: (slug: string) => apiClient.get<Property>(`/properties/${slug}`),

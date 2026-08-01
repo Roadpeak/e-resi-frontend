@@ -1,4 +1,4 @@
-import { NavbarLight } from '../../../components/layout/NavbarLight';
+import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavbar';
 import { PropertiesPage } from '../../../components/marketplace/PropertiesPage';
 
 export const metadata = {
@@ -9,7 +9,7 @@ export const metadata = {
 export default function Properties() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavbarLight />
+      <PropertiesNavbar />
       <PropertiesPage />
     </div>
   );

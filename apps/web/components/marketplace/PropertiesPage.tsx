@@ -15,7 +15,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyCard } from './PropertyCard';
-import { PropertySearchBar } from './PropertySearchBar';
 import { PropertiesMapView } from './PropertiesMapView';
 import { cn } from '../../lib/utils';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
@@ -97,7 +96,7 @@ export function PropertiesPage() {
   }, [showFullMap]);
 
   return (
-    <div className="min-h-screen pt-20 pb-16">
+    <div className="min-h-screen pt-16 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         {/* ── Hero banner ── */}
         <HeroBanner
@@ -297,12 +296,8 @@ function FilterBar({
       className="rounded-2xl border border-gray-100 bg-white shadow-xl shadow-gray-300/30"
     >
       <div className="flex flex-wrap items-center gap-x-1 gap-y-2 p-2.5">
-        {/* Search */}
-        <div className="min-w-[220px] flex-1">
-          <PropertySearchBar bare />
-        </div>
-
-        <Divider />
+        {/* Search now lives in the persistent navbar — both wrote to the same
+            filters.query, so keeping it here duplicated the control. */}
 
         {/* Status — “For sale” slot */}
         <BarSelect

@@ -74,7 +74,11 @@ async function request<T>(
     ...rest,
   });
 
-  if (res.status === 401 && !isRetry && doRefresh) {
+  // Never attempt a refresh for the refresh/logout calls themselves: a 401 from
+  // /auth/refresh would re-enter doRefresh() and recurse indefinitely.
+  const isAuthEndpoint = path.startsWith('/auth/refresh') || path.startsWith('/auth/logout');
+
+  if (res.status === 401 && !isRetry && !isAuthEndpoint && doRefresh) {
     const refreshed = await doRefresh();
     if (refreshed) {
       return request<T>(method, path, opts, true);

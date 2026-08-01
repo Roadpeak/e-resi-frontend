@@ -20,6 +20,9 @@ interface AuthState {
   hydrate: () => Promise<void>;
 }
 
+/** Shared across callers so concurrent 401s trigger a single refresh. */
+let refreshInFlight: Promise<boolean> | null = null;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -47,15 +50,25 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshToken: async () => {
-        try {
-          const { accessToken } = await authApi.refresh();
-          const user = await authApi.me();
-          set({ accessToken, user, isAuthenticated: true });
-          return true;
-        } catch {
-          set({ user: null, accessToken: null, isAuthenticated: false });
-          return false;
-        }
+        // Several requests can 401 at once; share one refresh between them
+        // instead of firing a burst of parallel refresh calls.
+        if (refreshInFlight) return refreshInFlight;
+
+        refreshInFlight = (async () => {
+          try {
+            const { accessToken } = await authApi.refresh();
+            const user = await authApi.me();
+            set({ accessToken, user, isAuthenticated: true });
+            return true;
+          } catch {
+            set({ user: null, accessToken: null, isAuthenticated: false });
+            return false;
+          } finally {
+            refreshInFlight = null;
+          }
+        })();
+
+        return refreshInFlight;
       },
 
       hydrate: async () => {
