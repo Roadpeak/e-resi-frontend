@@ -170,6 +170,8 @@ export interface Property {
   address: Address;
   heroVideoUrl?: string;
   heroImageUrl: string;
+  /** Developer-uploaded property logo, if any. */
+  logoUrl?: string;
   galleryImages: string[];
   media: MediaAsset[];
   floorPlans: FloorPlan[];

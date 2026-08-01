@@ -6,6 +6,12 @@ import type { Property, PropertyTour, TourSection, TourScene } from '../types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+/** The property logo is stored as a media row tagged with a sentinel title. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findLogo(raw: any): string | undefined {
+  return (raw.media ?? []).find((m: any) => m?.title === '__logo__')?.url ?? undefined;
+}
+
 /** Gallery images may arrive as MediaAsset objects or plain URLs. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseGallery(raw: any): string[] {
@@ -34,6 +40,7 @@ function normaliseProperty(raw: any): Property {
     // Backend returns MediaAsset objects; the UI expects plain URLs.
     // The logo is stored as a media row with a sentinel title — keep it out of galleries.
     galleryImages: normaliseGallery(raw),
+    logoUrl: findLogo(raw),
     // Scene categories/enums arrive UPPER_SNAKE from Prisma; the UI keys off lower_snake.
     cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
       ...s,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Headset, Box, Heart, Share2, Menu, X, ChevronRight, Film,
@@ -27,6 +28,8 @@ interface Props {
 }
 
 export function PropertyTopbar({ property }: Props) {
+  // The developer's uploaded logo, stored as a media row with a sentinel title.
+  const logoUrl = property.logoUrl;
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('');
   const [saved, setSaved] = useState(false);
@@ -108,10 +111,22 @@ export function PropertyTopbar({ property }: Props) {
                   transition={{ duration: 0.2 }}
                   className="flex items-center gap-2"
                 >
-                  {/* Mini logo badge — unique per property */}
-                  <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white text-[10px] font-bold shrink-0', accent)}>
-                    {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                  </div>
+                  {/* Mini logo badge — the developer's uploaded logo, else initials */}
+                  {logoUrl ? (
+                    <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-black/5">
+                      <Image
+                        src={logoUrl}
+                        alt={`${property.name} logo`}
+                        fill
+                        className="object-contain p-0.5"
+                        sizes="28px"
+                      />
+                    </span>
+                  ) : (
+                    <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white text-[10px] font-bold shrink-0', accent)}>
+                      {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
                   <span className="text-sm font-semibold text-gray-900 hidden md:block truncate max-w-48">
                     {property.name}
                   </span>
