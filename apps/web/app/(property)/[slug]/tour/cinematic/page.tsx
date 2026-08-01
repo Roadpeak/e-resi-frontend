@@ -25,6 +25,6 @@ export async function generateStaticParams() {
 export default async function TourCinematicPage({ params }: Props) {
   const { slug } = await params;
   const property = await fetchProperty(slug);
-  if (!property || !property.hasCinematicTour) notFound();
+  if (!property || !(property.cinematicScenes ?? []).length) notFound();
   return <TourCinematicClient property={property} />;
 }

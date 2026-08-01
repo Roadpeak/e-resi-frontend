@@ -25,10 +25,11 @@ export async function generateStaticParams() {
 export default async function TourVRPage({ params }: Props) {
   const { slug } = await params;
   const property = await fetchProperty(slug);
-  if (!property || !property.hasVRTour) notFound();
+  if (!property) notFound();
 
   const tour = buildTour(property as Parameters<typeof buildTour>[0]);
-  if (!tour || !tour.hasVR) notFound();
+  // Gate on real scenes, not the flag — it can drift when scenes are removed.
+  if (!tour || !tour.sections.some((s) => s.scenes.length > 0)) notFound();
 
   return <TourVRClient property={property} tour={tour} />;
 }

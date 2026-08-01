@@ -84,14 +84,20 @@ function SceneThumbnail({
       )}
       style={{ width: 112, minWidth: 112 }}
     >
-      <div className="relative h-16 w-full overflow-hidden">
-        <Image
-          src={scene.thumbnailUrl}
-          alt={scene.label}
-          fill
-          className={cn('object-cover transition-transform duration-500', !active && 'group-hover:scale-105')}
-          sizes="112px"
-        />
+      <div className="relative h-16 w-full overflow-hidden bg-white/5">
+        {scene.thumbnailUrl ? (
+          <Image
+            src={scene.thumbnailUrl}
+            alt={scene.label}
+            fill
+            className={cn('object-cover transition-transform duration-500', !active && 'group-hover:scale-105')}
+            sizes="112px"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/25">
+            <BoxIcon size={16} />
+          </div>
+        )}
         {active && <div className="absolute inset-0 bg-brand-500/20" />}
       </div>
       <div className={cn('px-2 py-1.5', active ? 'bg-brand-900/40' : 'bg-surface-900')}>
@@ -110,13 +116,17 @@ interface Props {
 }
 
 export function Tour3DExperience({ property, tour }: Props) {
-  const [activeSection, setActiveSection] = useState<TourSection>(tour.sections[0]);
-  const [activeScene, setActiveScene] = useState<TourScene>(tour.sections[0].scenes[0]);
+  // A section can legitimately have no scenes yet — never index blindly.
+  const firstSection = tour.sections.find((s) => s.scenes.length > 0) ?? tour.sections[0];
+  const [activeSection, setActiveSection] = useState<TourSection>(firstSection);
+  const [activeScene, setActiveScene] = useState<TourScene | undefined>(firstSection?.scenes[0]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [infoVisible, setInfoVisible] = useState(true);
   const controlsRef = useRef<any>(null);
 
-  const camPos = cameraPresets[activeScene.cameraPreset ?? 'aerial'];
+  const camPos = cameraPresets[activeScene?.cameraPreset ?? 'aerial'];
+  // Real uploaded media wins over the abstract massing model.
+  const hasSceneMedia = Boolean(activeScene?.videoUrl || activeScene?.imageUrl);
 
   const selectScene = (section: TourSection, scene: TourScene) => {
     setActiveSection(section);
@@ -126,11 +136,30 @@ export function Tour3DExperience({ property, tour }: Props) {
     if (controlsRef.current) controlsRef.current.reset();
   };
 
-  const SectionIcon = sectionIcons[activeSection.icon] ?? Building2;
+  const SectionIcon = sectionIcons[activeSection?.icon] ?? Building2;
 
   // adjacent section navigation
-  const sectionIndex = tour.sections.findIndex((s) => s.id === activeSection.id);
+  const sectionIndex = tour.sections.findIndex((s) => s.id === activeSection?.id);
   const nextSection = tour.sections[sectionIndex + 1];
+
+  // No 3D scenes uploaded yet — show a graceful empty state rather than crashing.
+  if (!activeScene) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-950 px-6 text-center">
+        <BoxIcon size={34} className="mb-5 text-white/25" />
+        <p className="text-xl font-semibold text-white">No 3D scenes yet</p>
+        <p className="mt-2 max-w-sm text-sm text-white/45">
+          The developer hasn&apos;t published a 3D tour for {property.name} yet.
+        </p>
+        <Link
+          href={`/${property.slug}`}
+          className="mt-7 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft size={14} /> Back to {property.name}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-surface-950 flex flex-col overflow-hidden">
@@ -282,6 +311,41 @@ export function Tour3DExperience({ property, tour }: Props) {
 
         {/* ── 3D Canvas viewport ── */}
         <div className="relative flex-1 overflow-hidden">
+          {hasSceneMedia ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeScene.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0 bg-black"
+              >
+                {activeScene.videoUrl ? (
+                  <video
+                    key={activeScene.videoUrl}
+                    src={activeScene.videoUrl}
+                    poster={activeScene.thumbnailUrl || undefined}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                    className="absolute inset-0 h-full w-full object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={activeScene.imageUrl}
+                    alt={activeScene.label}
+                    fill
+                    className="object-contain"
+                    sizes="100vw"
+                    priority
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          ) : (
           <Canvas shadows key={activeScene.id}>
             <PerspectiveCamera makeDefault position={camPos} fov={45} />
             <OrbitControls
@@ -300,6 +364,7 @@ export function Tour3DExperience({ property, tour }: Props) {
               <BuildingModel />
             </Suspense>
           </Canvas>
+          )}
 
           {/* Scene info overlay */}
           <AnimatePresence>

@@ -25,10 +25,10 @@ export async function generateStaticParams() {
 export default async function Tour3DPage({ params }: Props) {
   const { slug } = await params;
   const property = await fetchProperty(slug);
-  if (!property || !property.has3DTour) notFound();
+  if (!property) notFound();
 
   const tour = buildTour(property as Parameters<typeof buildTour>[0]);
-  if (!tour) notFound();
+  if (!tour || !tour.sections.some((s) => s.scenes.length > 0)) notFound();
 
   return <Tour3DClient property={property} tour={tour} />;
 }

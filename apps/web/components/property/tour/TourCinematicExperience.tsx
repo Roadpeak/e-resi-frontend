@@ -37,6 +37,7 @@ interface Props { property: Property; }
 export function TourCinematicExperience({ property }: Props) {
   const scenes = property.cinematicScenes ?? [];
 
+  const scrollerRef     = useRef<HTMLDivElement>(null);
   const wrapperRef      = useRef<HTMLDivElement>(null);
   const videoRef        = useRef<HTMLVideoElement>(null);
   const phase1Ref       = useRef<HTMLDivElement>(null);
@@ -113,22 +114,24 @@ export function TourCinematicExperience({ property }: Props) {
         gsap.set(phase2Ref.current, { autoAlpha: 0, y: 30 });
 
         let lastTime = -1;
-        const minDelta = 1 / 24;
+        let seeking = false;
+        const minDelta = 1 / 30;
+        video.addEventListener('seeked', () => { seeking = false; });
 
         ScrollTrigger.create({
-          trigger: wrapperRef.current,
+          trigger: scrollerRef.current,
           start: 'top top',
-          end: '+=400%',
-          pin: true,
+          end: 'bottom bottom',
           scrub: 1.5,
           onUpdate: (self) => {
             const p = self.progress;
             setProgress(p);
 
             const target = p * duration;
-            if (Math.abs(target - lastTime) >= minDelta) {
-              video.currentTime = target;
+            if (!seeking && Math.abs(target - lastTime) >= minDelta) {
+              seeking = true;
               lastTime = target;
+              video.currentTime = target;
             }
 
             // Phase 1 — property identity fades out 0.25 → 0.38
@@ -157,10 +160,15 @@ export function TourCinematicExperience({ property }: Props) {
     const onMeta = () => setup();
 
     if (video.readyState >= 1) setup();
-    else video.addEventListener('loadedmetadata', onMeta, { once: true });
+    else {
+      video.addEventListener('loadedmetadata', onMeta, { once: true });
+      // Safari occasionally settles on readyState 1 without firing metadata again
+      video.addEventListener('canplay', onMeta, { once: true });
+    }
 
     return () => {
       video.removeEventListener('loadedmetadata', onMeta);
+      video.removeEventListener('canplay', onMeta);
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   // Re-run when active scene changes (video src swapped)
@@ -176,7 +184,8 @@ export function TourCinematicExperience({ property }: Props) {
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full h-screen overflow-hidden bg-black">
+    <div ref={scrollerRef} className="relative w-full bg-black" style={{ height: '500vh' }}>
+    <div ref={wrapperRef} className="sticky top-0 h-screen w-full overflow-hidden bg-black">
 
       {/* ── Video ── */}
       <video
@@ -464,6 +473,7 @@ export function TourCinematicExperience({ property }: Props) {
         </div>
       </div>
 
+    </div>
     </div>
   );
 }

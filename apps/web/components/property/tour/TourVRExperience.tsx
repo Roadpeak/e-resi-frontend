@@ -42,21 +42,38 @@ function useXRSupport() {
 }
 
 // ── 360° equirectangular sphere (inside WebXR session) ────────────────────────
-function PanoramaSphere({ imageUrl }: { imageUrl: string }) {
+function PanoramaSphere({ imageUrl, videoUrl }: { imageUrl?: string; videoUrl?: string }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const texture = useRef<THREE.Texture | null>(null);
 
   useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    loader.load(imageUrl, (tex) => {
+    const apply = (tex: THREE.Texture) => {
       tex.mapping = THREE.EquirectangularReflectionMapping;
       texture.current = tex;
       if (meshRef.current) {
         (meshRef.current.material as THREE.MeshBasicMaterial).map = tex;
         (meshRef.current.material as THREE.MeshBasicMaterial).needsUpdate = true;
       }
-    });
-  }, [imageUrl]);
+    };
+
+    // A 360° video scene wraps the sphere in a live VideoTexture.
+    if (videoUrl) {
+      const el = document.createElement('video');
+      el.src = videoUrl;
+      el.crossOrigin = 'anonymous';
+      el.loop = true;
+      el.muted = true;
+      el.playsInline = true;
+      el.play().catch(() => {});
+      apply(new THREE.VideoTexture(el));
+      return () => { el.pause(); el.src = ''; };
+    }
+
+    if (!imageUrl) return;
+    const loader = new THREE.TextureLoader();
+    loader.load(imageUrl, apply);
+    return undefined;
+  }, [imageUrl, videoUrl]);
 
   return (
     <mesh ref={meshRef} scale={[-1, 1, 1]}>
@@ -85,7 +102,7 @@ function VRCanvas({ scene, section }: { scene: TourScene; section: TourSection }
       <Canvas>
         <XR store={xrStore}>
           <Suspense fallback={null}>
-            <PanoramaSphere imageUrl={scene.imageUrl} />
+            <PanoramaSphere imageUrl={scene.imageUrl} videoUrl={scene.videoUrl} />
             <VRSceneLabel label={scene.label} section={section.label} />
           </Suspense>
           <ambientLight intensity={1} />
@@ -141,7 +158,9 @@ function SceneGrid({
                       )}
                     >
                       <div className="relative h-28 overflow-hidden">
-                        <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="240px" />
+                        {scene.thumbnailUrl ? (
+                          <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="240px" />
+                        ) : <div className="absolute inset-0 bg-white/5" />}
                         {isActive && (
                           <div className="absolute inset-0 bg-violet-500/20 flex items-center justify-center">
                             <Play size={16} className="text-white fill-white" />
@@ -213,13 +232,16 @@ interface Props {
 
 export function TourVRExperience({ property, tour }: Props) {
   const xrStatus = useXRSupport();
-  const [activeSection, setActiveSection] = useState<TourSection>(tour.sections[0]);
-  const [activeScene, setActiveScene] = useState<TourScene>(tour.sections[0].scenes[0]);
+  // A section can legitimately have no scenes yet — never index blindly.
+  const firstSection = tour.sections.find((s) => s.scenes.length > 0) ?? tour.sections[0];
+  const [activeSection, setActiveSection] = useState<TourSection>(firstSection);
+  const [activeScene, setActiveScene] = useState<TourScene | undefined>(firstSection?.scenes[0]);
   const [gridOpen, setGridOpen] = useState(false);
+  const noScenes = !activeScene;
   const [showHeadsets, setShowHeadsets] = useState(false);
 
   const allScenes = tour.sections.flatMap((s) => s.scenes.map((sc) => ({ section: s, scene: sc })));
-  const currentIndex = allScenes.findIndex((a) => a.scene.id === activeScene.id && a.section.id === activeSection.id);
+  const currentIndex = allScenes.findIndex((a) => a.scene.id === activeScene?.id && a.section.id === activeSection?.id);
   const prev = allScenes[currentIndex - 1];
   const next = allScenes[currentIndex + 1];
 
@@ -238,6 +260,25 @@ export function TourVRExperience({ property, tour }: Props) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [next, prev, selectScene]);
+
+  // No VR scenes uploaded yet — show a graceful empty state rather than crashing.
+  if (noScenes || !activeScene) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-950 px-6 text-center">
+        <Headset size={34} className="mb-5 text-white/25" />
+        <p className="text-xl font-semibold text-white">No VR scenes yet</p>
+        <p className="mt-2 max-w-sm text-sm text-white/45">
+          The developer hasn&apos;t published a VR experience for {property.name} yet.
+        </p>
+        <Link
+          href={`/${property.slug}`}
+          className="mt-7 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft size={14} /> Back to {property.name}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-950 flex flex-col">
@@ -278,14 +319,27 @@ export function TourVRExperience({ property, tour }: Props) {
                 transition={{ duration: 0.4 }}
                 className="absolute inset-0"
               >
-                <Image
-                  src={activeScene.imageUrl}
-                  alt={activeScene.label}
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  priority
-                />
+                {activeScene.videoUrl ? (
+                  <video
+                    key={activeScene.videoUrl}
+                    src={activeScene.videoUrl}
+                    poster={activeScene.thumbnailUrl || undefined}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : activeScene.imageUrl ? (
+                  <Image
+                    src={activeScene.imageUrl}
+                    alt={activeScene.label}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority
+                  />
+                ) : null}
                 {/* Immersive overlay */}
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)' }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-transparent to-transparent" />
@@ -382,7 +436,9 @@ export function TourVRExperience({ property, tour }: Props) {
                     )}
                     style={{ width: 96, height: 60 }}
                   >
-                    <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover" sizes="96px" />
+                    {scene.thumbnailUrl ? (
+                      <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover" sizes="96px" />
+                    ) : <div className="absolute inset-0 bg-white/5" />}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-1.5 pb-1 pt-3">
                       <p className="text-[9px] text-white/80 truncate font-medium">{scene.label}</p>
                     </div>

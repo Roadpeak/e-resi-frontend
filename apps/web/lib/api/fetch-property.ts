@@ -6,6 +6,16 @@ import type { Property, PropertyTour, TourSection, TourScene } from '../types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+/** Gallery images may arrive as MediaAsset objects or plain URLs. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normaliseGallery(raw: any): string[] {
+  const source = raw.galleryImages ?? raw.media ?? [];
+  return source
+    .filter((m: any) => typeof m === 'string' || (m?.title !== '__logo__' && m?.url))
+    .map((m: any) => (typeof m === 'string' ? m : m.url))
+    .filter(Boolean);
+}
+
 /** Normalise flat backend fields into the nested shape the frontend expects. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseProperty(raw: any): Property {
@@ -21,7 +31,14 @@ function normaliseProperty(raw: any): Property {
     availableUnits: raw.availableUnits ?? raw._count?.units ?? 0,
     currency: raw.currency ?? 'KES',
     status: raw.status?.toLowerCase() ?? raw.status,
-    galleryImages: raw.galleryImages ?? raw.media ?? [],
+    // Backend returns MediaAsset objects; the UI expects plain URLs.
+    // The logo is stored as a media row with a sentinel title — keep it out of galleries.
+    galleryImages: normaliseGallery(raw),
+    // Scene categories/enums arrive UPPER_SNAKE from Prisma; the UI keys off lower_snake.
+    cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
+      ...s,
+      category: String(s.category ?? 'full_tour').toLowerCase(),
+    })),
     floorPlans: raw.floorPlans ?? [],
     units: raw.units ?? [],
     amenities: raw.amenities ?? [],
@@ -84,7 +101,7 @@ export function buildTour(property: Property & {
       description: sc.description ?? undefined,
       imageUrl: sc.imageUrl ?? '',
       videoUrl: sc.videoUrl ?? undefined,
-      thumbnailUrl: sc.thumbnailUrl ?? sc.imageUrl ?? '',
+      thumbnailUrl: sc.thumbnailUrl ?? sc.imageUrl ?? property.heroImageUrl ?? '',
       cameraPreset: (sc.cameraPreset?.toLowerCase() as TourScene['cameraPreset']) ?? 'interior',
     })),
   }));
@@ -95,7 +112,7 @@ export function buildTour(property: Property & {
     description: sc.description ?? undefined,
     imageUrl: sc.imageUrl ?? '',
     videoUrl: sc.videoUrl ?? undefined,
-    thumbnailUrl: sc.thumbnailUrl ?? sc.imageUrl ?? '',
+    thumbnailUrl: sc.thumbnailUrl ?? sc.imageUrl ?? property.heroImageUrl ?? '',
     cameraPreset: (sc.cameraPreset?.toLowerCase() as TourScene['cameraPreset']) ?? 'interior',
   }));
 

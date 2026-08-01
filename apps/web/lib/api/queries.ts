@@ -40,7 +40,14 @@ function toProperty(raw: any) {
     // Normalise status to lowercase for frontend enums
     status: raw.status?.toLowerCase() ?? raw.status,
     // Ensure arrays are always defined
-    galleryImages: raw.galleryImages ?? raw.media ?? [],
+    galleryImages: (raw.galleryImages ?? raw.media ?? [])
+      .filter((m: any) => typeof m === 'string' || (m?.title !== '__logo__' && m?.url))
+      .map((m: any) => (typeof m === 'string' ? m : m.url))
+      .filter(Boolean),
+    cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
+      ...s,
+      category: String(s.category ?? 'full_tour').toLowerCase(),
+    })),
     floorPlans: raw.floorPlans ?? [],
     units: raw.units ?? [],
     amenities: raw.amenities ?? [],

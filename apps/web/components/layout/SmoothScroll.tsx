@@ -17,13 +17,15 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     });
 
     // Hook Lenis into GSAP's ticker so ScrollTrigger syncs perfectly
+    const raf = (time: number) => lenis.raf(time * 1000);
     lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      // must remove the same reference we added, or the ticker keeps driving a dead Lenis
+      gsap.ticker.remove(raf);
       lenis.destroy();
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
     };
   }, []);
 
