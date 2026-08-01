@@ -32,7 +32,7 @@ export function PaymentMethodsCard() {
     queryFn: () => billingApi.listMethods(),
   });
 
-  const [adding, setAdding] = useState<'card' | 'paypal' | 'mpesa' | null>(null);
+  const [adding, setAdding] = useState<'card' | 'paypal' | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -86,14 +86,13 @@ export function PaymentMethodsCard() {
         <div>
           <h3 className="text-[18px] font-normal text-[#202124]">Payment methods</h3>
           <p className="text-sm text-[#5f6368]">
-            Your invoices — monthly listing fees and production services — are charged to the default method.
+            Cards and PayPal are charged automatically for monthly invoices. You can also pay any pending bill instantly with M-Pesa below.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {([
             ['card', 'Add card'],
             ['paypal', 'Link PayPal'],
-            ['mpesa', 'Add M-Pesa'],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -133,21 +132,6 @@ export function PaymentMethodsCard() {
           onError={setError}
         />
       )}
-      {adding === 'mpesa' && (
-        <MpesaForm
-          onDone={(pending) => {
-            setAdding(null);
-            setNotice(
-              pending
-                ? 'Check your phone — confirm the KES 1 M-Pesa prompt to finish verification (it is reversed).'
-                : 'M-Pesa number linked and verified.',
-            );
-            refresh();
-          }}
-          onError={setError}
-        />
-      )}
-
       {/* ── Methods list ── */}
       <div className="mt-4">
         {isLoading ? (
@@ -318,62 +302,6 @@ function CardForm({
           {busy ? 'Verifying card…' : 'Verify & save card'}
         </button>
       </div>
-    </form>
-  );
-}
-
-/* ── M-Pesa form ─────────────────────────────────────────────────── */
-
-function MpesaForm({
-  onDone, onError,
-}: {
-  onDone: (pending: boolean) => void;
-  onError: (msg: string) => void;
-}) {
-  const [phone, setPhone] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    onError('');
-    const normalized = phone.replace(/\D/g, '').replace(/^0/, '254').replace(/^\+/, '');
-    if (!/^254(7|1)\d{8}$/.test(normalized)) {
-      return onError('Enter a valid Safaricom number, e.g. 0712 345 678.');
-    }
-    setBusy(true);
-    try {
-      const res = await billingApi.linkMpesa(normalized);
-      onDone(res.verification === 'PENDING');
-    } catch (err) {
-      onError(err instanceof ApiError ? err.message : 'Could not link the M-Pesa number.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="mt-4 grid gap-3 rounded-2xl bg-[#f8f9fa] p-5 sm:grid-cols-[1fr_auto]">
-      <div>
-        <label className={labelCls}>Safaricom phone number</label>
-        <input
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="0712 345 678"
-          required
-          inputMode="tel"
-          className={inputCls}
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={busy}
-        className="inline-flex items-center justify-center gap-1.5 self-end rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
-      >
-        {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Link
-      </button>
-      <p className="sm:col-span-2 text-[13px] text-[#5f6368]">
-        We send a KES 1 M-Pesa prompt to verify the number — approve it on your phone and the shilling is reversed.
-      </p>
     </form>
   );
 }

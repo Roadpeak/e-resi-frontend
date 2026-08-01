@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowRight, CalendarClock, Check, CreditCard, Info, Loader2, Plus, Receipt, Trash2, Wallet,
+  ArrowRight, CalendarClock, CreditCard, Loader2, Receipt, Smartphone, Wallet,
 } from 'lucide-react';
 import { propertiesApi } from '../../../../lib/api/properties';
 import { billingApi } from '../../../../lib/api/billing';
@@ -204,24 +204,7 @@ export default function BillingPage() {
       {/* ── Payment history + how you pay ── */}
       <div className="grid gap-4 lg:grid-cols-2">
         <PaymentHistoryCard />
-        <div className="rounded-3xl border border-transparent bg-[#f8f9fa] p-6">
-          <h3 className="text-[18px] font-normal text-[#202124]">How you pay</h3>
-          <div className="mt-4 flex items-start gap-3">
-            <Info size={16} className="mt-0.5 shrink-0 text-[#1a73e8]" />
-            <p className="text-[15px] leading-relaxed text-[#5f6368]">
-              Listing fees are invoiced monthly per live development. Production services are invoiced
-              directly by the e-resi team — 50% to confirm your shoot dates, 50% on delivery.
-              M-Pesa and card payments are coming to the dashboard; for now our billing team reaches
-              out with each invoice.
-            </p>
-          </div>
-          <a
-            href="mailto:billing@e-resi.co.ke"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
-          >
-            Contact billing <ArrowRight size={14} />
-          </a>
-        </div>
+        <PayWithMpesaCard />
       </div>
     </div>
   );
@@ -278,6 +261,116 @@ function PaymentHistoryCard() {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+
+/* ── Pay pending bills with M-Pesa (STK push — no linking) ───────── */
+
+function PayWithMpesaCard() {
+  const queryClient = useQueryClient();
+  const { data: summary } = useQuery({
+    queryKey: ['billing', 'summary'],
+    queryFn: () => billingApi.summary(),
+  });
+  const due = (summary?.production.pendingTotal ?? 0) + (summary?.monthly.total ?? 0);
+
+  const [phone, setPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setNotice('');
+    setError('');
+    const normalized = phone.replace(/\D/g, '').replace(/^0/, '254');
+    if (!/^254(7|1)\d{8}$/.test(normalized)) {
+      return setError('Enter a valid Safaricom number, e.g. 0712 345 678.');
+    }
+    const usd = Number.parseInt(amount || String(due), 10);
+    if (!Number.isFinite(usd) || usd < 1) return setError('Enter an amount of at least $1.');
+
+    setBusy(true);
+    try {
+      const res = await billingApi.payMpesa({
+        phone: normalized,
+        amountUsd: usd,
+        purpose: 'e-resi pending bills',
+      });
+      setNotice(
+        res.status === 'COMPLETED'
+          ? `Payment of KES ${res.amountKes.toLocaleString()} received${res.sandbox ? ' (sandbox)' : ''} — thank you!`
+          : `STK push sent for KES ${res.amountKes.toLocaleString()} — enter your M-Pesa PIN on your phone to complete.`,
+      );
+      setPhone('');
+      setAmount('');
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not start the M-Pesa payment.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-transparent bg-[#e6f4ea] p-6">
+      <div className="flex items-center gap-2">
+        <Smartphone size={16} className="text-[#188038]" />
+        <h3 className="text-[18px] font-normal text-[#202124]">Pay with M-Pesa</h3>
+      </div>
+      <p className="mt-1 text-sm text-[#3c4043]">
+        Settle pending bills instantly — we send an STK push to your phone, you confirm with your PIN.
+      </p>
+
+      <div className="mt-4 rounded-2xl bg-white p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[15px] text-[#5f6368]">Pending balance</span>
+          <span className="text-[18px] font-medium tabular-nums text-[#202124]">{fmtUsd(due)}</span>
+        </div>
+        {due > 0 && (
+          <div className="mt-1 flex items-center justify-between text-[13px] text-[#80868b]">
+            <span>listing fees {fmtUsd(summary?.monthly.total ?? 0)} · production {fmtUsd(summary?.production.pendingTotal ?? 0)}</span>
+          </div>
+        )}
+      </div>
+
+      {due <= 0 ? (
+        <p className="mt-4 text-[15px] text-[#3c4043]">
+          Nothing due right now — bills appear here when a development goes live or production is scheduled.
+        </p>
+      ) : (
+        <form onSubmit={submit} className="mt-4 grid gap-3">
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Safaricom number · 0712 345 678"
+            required
+            inputMode="tel"
+            className="w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#188038] focus:outline-none focus:ring-2 focus:ring-[#188038]/20"
+          />
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+            placeholder={`Amount in USD (default ${fmtUsd(due)})`}
+            inputMode="numeric"
+            className="w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#188038] focus:outline-none focus:ring-2 focus:ring-[#188038]/20"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#188038] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#0d652d] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {busy ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />}
+            {busy ? 'Sending STK push…' : 'Send M-Pesa prompt'}
+          </button>
+        </form>
+      )}
+
+      {notice && <p className="mt-3 rounded-xl bg-white px-4 py-2.5 text-sm text-[#188038]">{notice}</p>}
+      {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
     </div>
   );
 }

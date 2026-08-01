@@ -59,7 +59,11 @@ export const billingApi = {
     apiClient.post<{ approvalUrl: string; token: string; sandbox: boolean }>('/billing/methods/paypal/start'),
   paypalConfirm: (token: string) =>
     apiClient.post<LinkedMethod>('/billing/methods/paypal/confirm', { token }),
-  linkMpesa: (phone: string) => apiClient.post<LinkedMethod>('/billing/methods/mpesa', { phone }),
+  payMpesa: (body: { phone: string; amountUsd: number; purpose?: string }) =>
+    apiClient.post<{
+      paymentId: string; status: string; amountKes: number; amountUsd: number;
+      checkoutRequestId: string; sandbox: boolean;
+    }>('/billing/pay/mpesa', body),
   setDefault: (id: string) => apiClient.patch<{ message: string }>(`/billing/methods/${id}/default`),
   remove: (id: string) => apiClient.delete<{ message: string }>(`/billing/methods/${id}`),
 };
