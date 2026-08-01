@@ -44,9 +44,9 @@ export function RentFiltersPanel({ resultCount }: Props) {
       {/* Header */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(0,0,0,0.07)', flexShrink: 0 }}>
         <div className="flex items-center justify-between">
-          <p className="font-semibold text-gray-800">Filters</p>
+          <p className="text-lg font-bold text-gray-900">Filters</p>
           {hasFilters && (
-            <button onClick={resetFilters} className="text-xs text-orange-500 hover:text-orange-700 transition-colors cursor-pointer">
+            <button onClick={resetFilters} className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer">
               Clear all
             </button>
           )}
@@ -65,8 +65,8 @@ export function RentFiltersPanel({ resultCount }: Props) {
                 className="flex items-center gap-2 w-full group cursor-pointer py-1"
               >
                 <Checkbox checked={filters.city === city} />
-                <span className={cn('flex items-center gap-1.5 text-sm font-medium transition-colors', filters.city === city ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900')}>
-                  <MapPin size={11} className={filters.city === city ? 'text-orange-500' : 'text-gray-300'} />
+                <span className={cn('flex items-center gap-1.5 text-base font-bold transition-colors', filters.city === city ? 'text-gray-900' : 'text-gray-800 group-hover:text-gray-900')}>
+                  <MapPin size={14} className={filters.city === city ? 'text-orange-500' : 'text-gray-400'} />
                   {city}
                 </span>
               </button>
@@ -78,7 +78,7 @@ export function RentFiltersPanel({ resultCount }: Props) {
                     className="flex items-center gap-2 w-full group cursor-pointer py-1"
                   >
                     <Checkbox checked={filters.neighborhood === n} small />
-                    <span className={cn('text-xs transition-colors', filters.neighborhood === n ? 'text-gray-800 font-medium' : 'text-gray-400 group-hover:text-gray-700')}>
+                    <span className={cn('text-sm font-medium transition-colors', filters.neighborhood === n ? 'text-gray-900 font-semibold' : 'text-gray-600 group-hover:text-gray-900')}>
                       {n}
                     </span>
                   </button>
@@ -91,22 +91,22 @@ export function RentFiltersPanel({ resultCount }: Props) {
         {/* Bedrooms */}
         <FilterBlock title="Bedrooms">
           <div className="flex items-center justify-between py-1">
-            <span className="text-sm text-gray-500">Min bedrooms</span>
+            <span className="text-base font-semibold text-gray-800">Min bedrooms</span>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setFilter('bedrooms', bedrooms > 0 ? bedrooms - 1 : undefined)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800 transition-all cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-all cursor-pointer"
               >
-                <Minus size={11} />
+                <Minus size={14} />
               </button>
-              <span className="text-sm font-bold text-gray-800 w-5 text-center">
+              <span className="text-base font-bold text-gray-900 w-6 text-center">
                 {filters.bedrooms === undefined ? '0' : filters.bedrooms === 0 ? 'S' : filters.bedrooms}
               </span>
               <button
                 onClick={() => setFilter('bedrooms', (filters.bedrooms ?? 0) + 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800 transition-all cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-all cursor-pointer"
               >
-                <Plus size={11} />
+                <Plus size={14} />
               </button>
             </div>
           </div>
@@ -121,7 +121,7 @@ export function RentFiltersPanel({ resultCount }: Props) {
               className="flex items-center gap-2.5 w-full group cursor-pointer py-1"
             >
               <Checkbox checked={filters.furnishing === value} />
-              <span className={cn('text-sm transition-colors', filters.furnishing === value ? 'text-gray-900 font-medium' : 'text-gray-500 group-hover:text-gray-800')}>
+              <span className={cn('text-base font-semibold transition-colors', filters.furnishing === value ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900')}>
                 {label}
               </span>
             </button>
@@ -140,10 +140,10 @@ export function RentFiltersPanel({ resultCount }: Props) {
                   else { setFilter('priceMin', min); setFilter('priceMax', max); }
                 }}
                 className={cn(
-                  'w-full text-left rounded-xl border px-3 py-2.5 text-sm transition-all cursor-pointer mb-1.5',
+                  'w-full text-left rounded-xl border px-3.5 py-3 text-base font-semibold transition-all cursor-pointer mb-2',
                   active
-                    ? 'border-orange-300 bg-orange-50 text-orange-600 font-medium'
-                    : 'border-gray-100 bg-white/60 text-gray-500 hover:border-gray-200 hover:text-gray-700',
+                    ? 'border-orange-400 bg-orange-50 text-orange-700'
+                    : 'border-gray-200 bg-white/70 text-gray-700 hover:border-gray-400 hover:text-gray-900',
                 )}
               >
                 {label}
@@ -159,8 +159,8 @@ export function RentFiltersPanel({ resultCount }: Props) {
             className="flex items-center gap-2.5 w-full group cursor-pointer py-1"
           >
             <Checkbox checked={!!filters.showCinematicTour} />
-            <span className={cn('flex items-center gap-1.5 text-sm transition-colors', filters.showCinematicTour ? 'text-gray-900 font-medium' : 'text-gray-500 group-hover:text-gray-800')}>
-              <Film size={12} className={filters.showCinematicTour ? 'text-orange-500' : 'text-gray-300'} /> Cinematic Tour
+            <span className={cn('flex items-center gap-2 text-base font-semibold transition-colors', filters.showCinematicTour ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900')}>
+              <Film size={15} className={filters.showCinematicTour ? 'text-orange-500' : 'text-gray-400'} /> Cinematic Tour
             </span>
           </button>
           <button
@@ -168,8 +168,8 @@ export function RentFiltersPanel({ resultCount }: Props) {
             className="flex items-center gap-2.5 w-full group cursor-pointer py-1"
           >
             <Checkbox checked={!!filters.show3DTour} />
-            <span className={cn('flex items-center gap-1.5 text-sm transition-colors', filters.show3DTour ? 'text-gray-900 font-medium' : 'text-gray-500 group-hover:text-gray-800')}>
-              <Box size={12} className={filters.show3DTour ? 'text-orange-500' : 'text-gray-300'} /> 3D Tour
+            <span className={cn('flex items-center gap-2 text-base font-semibold transition-colors', filters.show3DTour ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900')}>
+              <Box size={15} className={filters.show3DTour ? 'text-orange-500' : 'text-gray-400'} /> 3D Tour
             </span>
           </button>
         </FilterBlock>
@@ -179,7 +179,7 @@ export function RentFiltersPanel({ resultCount }: Props) {
 
       {/* Footer CTA */}
       <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(0,0,0,0.07)', flexShrink: 0 }}>
-        <button className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-3 transition-colors cursor-pointer shadow-md shadow-orange-100">
+        <button className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-base font-bold py-3.5 transition-colors cursor-pointer shadow-md shadow-orange-100">
           Show {resultCount} listings
         </button>
       </div>
@@ -190,14 +190,14 @@ export function RentFiltersPanel({ resultCount }: Props) {
 function FilterBlock({ title, children, borderTop = true }: { title: string; children: React.ReactNode; borderTop?: boolean }) {
   return (
     <div style={{ padding: '16px 20px', borderTop: borderTop ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">{title}</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">{title}</p>
       {children}
     </div>
   );
 }
 
 function Checkbox({ checked, small = false }: { checked: boolean; small?: boolean }) {
-  const size = small ? 14 : 16;
+  const size = small ? 16 : 18;
   return (
     <div style={{
       width: size, height: size, minWidth: size, borderRadius: 4,
@@ -206,7 +206,7 @@ function Checkbox({ checked, small = false }: { checked: boolean; small?: boolea
       display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
     }}>
       {checked && (
-        <svg width={small ? 8 : 10} height={small ? 8 : 10} viewBox="0 0 12 12" fill="none">
+        <svg width={small ? 9 : 11} height={small ? 9 : 11} viewBox="0 0 12 12" fill="none">
           <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}

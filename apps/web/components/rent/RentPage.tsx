@@ -65,8 +65,8 @@ export function RentPage() {
         <div className="shrink-0 px-5 py-3 border-b border-black/[0.07] bg-white/60 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-base font-semibold text-gray-800">Rent in Nairobi</h1>
-              <p className="text-xs text-gray-400">{isLoading ? 'Loading…' : `${results.length} listings available`}</p>
+              <h1 className="text-xl font-bold text-gray-900">Rent in Nairobi</h1>
+              <p className="text-sm font-medium text-gray-600">{isLoading ? 'Loading…' : `${results.length} listings available`}</p>
             </div>
             <SortSelect />
           </div>
@@ -81,8 +81,8 @@ export function RentPage() {
           ) : results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-4xl mb-4">🏠</p>
-              <p className="font-semibold text-gray-700 mb-1">No listings found</p>
-              <p className="text-sm text-gray-400 mb-5">Try adjusting your filters.</p>
+              <p className="text-lg font-bold text-gray-900 mb-1">No listings found</p>
+              <p className="text-base font-medium text-gray-600 mb-5">Try adjusting your filters.</p>
               <button onClick={resetFilters} className="rounded-full bg-gray-900 text-white px-5 py-2.5 text-sm hover:bg-gray-700 transition-colors cursor-pointer">
                 Reset filters
               </button>
@@ -105,13 +105,13 @@ function SortSelect() {
       <select
         value={filters.sortBy ?? 'newest'}
         onChange={(e) => setFilter('sortBy', e.target.value as RentFilters['sortBy'])}
-        className="appearance-none rounded-full border border-gray-200 bg-white pl-3 pr-7 py-1.5 text-xs text-gray-500 focus:outline-none focus:border-gray-300 cursor-pointer"
+        className="appearance-none rounded-full border border-gray-300 bg-white pl-4 pr-8 py-2 text-sm font-semibold text-gray-800 focus:outline-none focus:border-gray-900 cursor-pointer"
       >
         <option value="newest">Newest</option>
         <option value="price_asc">Price ↑</option>
         <option value="price_desc">Price ↓</option>
       </select>
-      <ChevronDown size={10} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
     </div>
   );
 }
