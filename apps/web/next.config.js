@@ -29,6 +29,9 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', port: '4000', pathname: '/uploads/**' },
       { protocol: 'http', hostname: '127.0.0.1', port: '4000', pathname: '/uploads/**' },
     ],
+    // Next 16 blocks optimizing images from localhost by default (SSRF guard).
+    // Needed only while sandbox uploads are served from the local API.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== 'production',
   },
 };
 
