@@ -51,8 +51,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       .map((p) => ({
         kind: 'property' as const,
         label: p.name,
-        sub: `Property · ${p.status?.replace('_', ' ') ?? ''}`,
-        href: `/${p.slug}`,
+        sub: `Your property · ${p.status?.replace('_', ' ') ?? ''}`,
+        href: `/dashboard/properties/${p.slug}`,
         icon: Building2,
       }));
     return [...props, ...pages].slice(0, 9);
@@ -86,7 +86,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               if (e.key === 'Enter' && results[active]) go(results[active].href);
             }}
             placeholder="Search pages and properties…"
-            className="h-12 w-full bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+            className="h-12 w-full bg-transparent text-[15px] text-[#202124] placeholder-[#80868b] outline-none focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
           />
           <kbd className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">esc</kbd>
         </div>
