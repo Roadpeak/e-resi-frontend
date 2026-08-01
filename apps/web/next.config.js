@@ -23,6 +23,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'eresi-media.fra1.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'media.e-resi.com' },
+      // Cloudinary (production media storage)
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      // local API uploads (sandbox storage in development)
+      { protocol: 'http', hostname: 'localhost', port: '4000', pathname: '/uploads/**' },
+      { protocol: 'http', hostname: '127.0.0.1', port: '4000', pathname: '/uploads/**' },
     ],
   },
 };
