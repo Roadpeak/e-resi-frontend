@@ -6,6 +6,15 @@ import type { Property, PropertyTour, TourSection, TourScene } from '../types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+/** Map the backend developer profile onto the shape the UI expects. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normaliseDeveloper(dev: any) {
+  return {
+    ...dev,
+    name: dev?.name ?? dev?.companyName ?? '',
+  };
+}
+
 /** The property logo is stored as a media row tagged with a sentinel title. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findLogo(raw: any): string | undefined {
@@ -41,6 +50,8 @@ function normaliseProperty(raw: any): Property {
     // The logo is stored as a media row with a sentinel title — keep it out of galleries.
     galleryImages: normaliseGallery(raw),
     logoUrl: findLogo(raw),
+    // Backend exposes the developer as companyName; the UI reads .name.
+    developer: normaliseDeveloper(raw.developer),
     // Scene categories/enums arrive UPPER_SNAKE from Prisma; the UI keys off lower_snake.
     cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
       ...s,

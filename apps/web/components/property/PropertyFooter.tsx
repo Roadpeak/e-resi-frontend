@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, MapPin, Globe, ExternalLink } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Property } from '../../lib/types';
@@ -43,9 +44,15 @@ export function PropertyFooter({ property }: Props) {
           {/* Property identity */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white text-sm font-bold shrink-0', accent)}>
-                {initials}
-              </div>
+              {property.logoUrl ? (
+                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-gray-200">
+                  <Image src={property.logoUrl} alt={`${property.name} logo`} fill className="object-contain p-1" sizes="48px" />
+                </span>
+              ) : (
+                <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white text-sm font-bold shrink-0', accent)}>
+                  {initials}
+                </div>
+              )}
               <div>
                 <h3 className="font-semibold text-gray-900">{property.name}</h3>
                 <p className="text-xs font-medium text-gray-500">{property.developer.name}</p>
@@ -63,9 +70,15 @@ export function PropertyFooter({ property }: Props) {
           <div className="lg:col-span-1">
             <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-gray-400">Developer</h4>
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold text-gray-500">
-                {(property.developer?.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
-              </div>
+              {property.developer?.logoUrl ? (
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                  <Image src={property.developer.logoUrl} alt={`${property.developer.name} logo`} fill className="object-contain p-1" sizes="40px" />
+                </span>
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold text-gray-500">
+                  {(property.developer?.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
+                </div>
+              )}
               <div>
                 <p className="font-medium text-gray-900 text-sm">{property.developer.name}</p>
                 <p className="text-xs text-gray-500">{property.developer.establishedYear && `Est. ${property.developer.establishedYear}`}</p>

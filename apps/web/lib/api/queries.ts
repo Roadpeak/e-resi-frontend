@@ -45,6 +45,7 @@ function toProperty(raw: any) {
       .map((m: any) => (typeof m === 'string' ? m : m.url))
       .filter(Boolean),
     logoUrl: (raw.media ?? []).find((m: any) => m?.title === '__logo__')?.url ?? undefined,
+    developer: { ...raw.developer, name: raw.developer?.name ?? raw.developer?.companyName ?? '' },
     cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
       ...s,
       category: String(s.category ?? 'full_tour').toLowerCase(),
