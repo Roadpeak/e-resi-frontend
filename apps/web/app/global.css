@@ -1,3 +1,7 @@
+/* Google Material Symbols — loaded globally so any page using <MaterialIcon>
+   renders glyphs rather than the literal icon names. */
+@import 'material-symbols/rounded.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

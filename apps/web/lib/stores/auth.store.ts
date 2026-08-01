@@ -13,6 +13,8 @@ interface AuthState {
   isLoading: boolean;
 
   setUser: (user: User, token: string) => void;
+  /** Merge fresh fields into the cached user (e.g. after a profile save). */
+  patchUser: (patch: Partial<User>) => void;
   logout: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
   hydrate: () => Promise<void>;
@@ -28,6 +30,11 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user, accessToken) => {
         set({ user, accessToken, isAuthenticated: true });
+      },
+
+      patchUser: (patch) => {
+        const current = get().user;
+        if (current) set({ user: { ...current, ...patch } });
       },
 
       logout: async () => {

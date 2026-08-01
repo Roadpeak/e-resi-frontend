@@ -11,6 +11,26 @@ export interface UploadedFile {
 /** Upload a file (multipart) to the media endpoint — returns its public URL. */
 export type UploadFolder = 'properties' | 'rentals' | 'avatars' | 'logos' | 'documents' | 'tours';
 
+/**
+ * Upload the signed-in user's profile photo.
+ * Separate from uploadFile(): /media/upload is developer-only, so tenants and
+ * investors must go through the avatar-scoped endpoint.
+ */
+export async function uploadAvatar(file: File): Promise<UploadedFile> {
+  const token = useAuthStore.getState().accessToken;
+  const form = new FormData();
+  form.append('file', file);
+
+  const res = await fetch(`${BASE_URL}/media/avatar`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(json?.error ?? 'Upload failed');
+  return (json?.data ?? json) as UploadedFile;
+}
+
 export async function uploadFile(
   file: File,
   folder: UploadFolder = 'properties',
