@@ -146,14 +146,16 @@ export function PropertyTopbar({ property }: Props) {
                   active === section.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900',
                 )}
               >
-                {section.label}
+                {/* Pill sits behind the label — it's absolute and later in DOM order,
+                    so without explicit layering it paints over the text. */}
                 {active === section.id && (
                   <motion.span
                     layoutId="property-nav-indicator"
-                    className="absolute inset-0 rounded-full bg-gray-100"
+                    className="absolute inset-0 -z-10 rounded-full bg-gray-100"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                   />
                 )}
+                <span className="relative z-10">{section.label}</span>
               </button>
             ))}
           </nav>
