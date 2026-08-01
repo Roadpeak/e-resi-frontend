@@ -145,18 +145,19 @@ export default function DashboardProperties() {
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1">
                           <Link
-                            href={`/${p.slug}`}
+                            href={p.status === 'ready' || p.status === 'off_plan' || p.status === 'under_construction' ? `/${p.slug}` : `/dashboard/properties/${p.slug}`}
                             className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="View live"
+                            title="View"
                           >
                             <Eye size={14} />
                           </Link>
-                          <button
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors cursor-pointer"
+                          <Link
+                            href={`/dashboard/properties/${p.slug}`}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
                             title="Edit"
                           >
                             <Pencil size={14} />
-                          </button>
+                          </Link>
                           <div className="relative">
                             <button
                               onClick={() => setMenuOpen(menuOpen === p.id ? null : p.id)}
@@ -165,15 +166,21 @@ export default function DashboardProperties() {
                               <MoreHorizontal size={14} />
                             </button>
                             {menuOpen === p.id && (
-                              <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-2xl border border-[#dadce0] bg-white py-1 shadow-lg">
-                                {['Manage Units', 'View Analytics', 'Upload Media', 'Duplicate', 'Archive'].map((action) => (
-                                  <button
-                                    key={action}
+                              <div className="absolute right-0 top-9 z-20 w-48 overflow-hidden rounded-2xl border border-[#dadce0] bg-white py-1 shadow-lg">
+                                {[
+                                  { label: 'View & edit details', href: `/dashboard/properties/${p.slug}` },
+                                  { label: 'Manage units', href: '/dashboard/units' },
+                                  { label: 'View analytics', href: '/dashboard/analytics' },
+                                  { label: 'Billing for this listing', href: '/dashboard/billing' },
+                                ].map((action) => (
+                                  <Link
+                                    key={action.label}
+                                    href={action.href}
                                     onClick={() => setMenuOpen(null)}
-                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors cursor-pointer"
+                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors"
                                   >
-                                    {action}
-                                  </button>
+                                    {action.label}
+                                  </Link>
                                 ))}
                               </div>
                             )}
