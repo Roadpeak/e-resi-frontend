@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import {
   ChevronDown,
   MapPin,
@@ -16,7 +17,11 @@ import { useFiltersStore } from '../../lib/stores/filters.store';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyCard } from './PropertyCard';
 import { Pagination } from '../ui/Pagination';
-import { PropertiesMapView } from './PropertiesMapView';
+// MapLibre touches window/document on import — keep it out of the server bundle.
+const PropertiesMapView = dynamic(
+  () => import('./PropertiesMapView').then((m) => m.PropertiesMapView),
+  { ssr: false, loading: () => <div className="h-full w-full bg-[#e8eaed]" /> },
+);
 import { cn } from '../../lib/utils';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
@@ -187,7 +192,7 @@ export function PropertiesPage() {
 
           {/* Map panel — always visible on lg+ */}
           <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-[40%] max-w-[560px] shrink-0 overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm lg:block">
-            <div className="absolute inset-0">
+            <div className="relative h-full w-full">
               <PropertiesMapView properties={mapResults} />
             </div>
             <div className="absolute inset-x-5 bottom-4 z-30">
