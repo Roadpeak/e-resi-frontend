@@ -5,20 +5,24 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Building2, DoorOpen, MessageSquare,
   CalendarDays, BarChart3, FileText, Settings,
-  ChevronLeft, ChevronRight, Globe, Home,
+  ChevronLeft, ChevronRight, Globe, Home, BadgeCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { Logo, LogoMark } from '../brand/Logo';
+import { useDeveloperInquiries } from '../../lib/api/queries';
+import { useAuthStore } from '../../lib/stores/auth.store';
 
 const navItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Properties', href: '/dashboard/properties', icon: Building2 },
   { label: 'Units', href: '/dashboard/units', icon: DoorOpen },
   { label: 'Rentals', href: '/dashboard/rentals', icon: Home },
-  { label: 'Inquiries', href: '/dashboard/inquiries', icon: MessageSquare, badge: 14 },
+  { label: 'Inquiries', href: '/dashboard/inquiries', icon: MessageSquare },
   { label: 'Bookings', href: '/dashboard/bookings', icon: CalendarDays },
   { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { label: 'Documents', href: '/dashboard/documents', icon: FileText },
+  { label: 'Company Profile', href: '/dashboard/profile', icon: BadgeCheck },
 ];
 
 const bottomItems = [
@@ -29,6 +33,13 @@ const bottomItems = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  // live count of unanswered inquiries for the nav badge
+  const { data: newInquiries } = useDeveloperInquiries({ status: 'NEW', limit: 1 });
+  const user = useAuthStore((s) => s.user);
+  const initials = user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : '';
+  const badges: Record<string, number> = {
+    '/dashboard/inquiries': newInquiries?.total ?? 0,
+  };
 
   return (
     <aside
@@ -40,25 +51,21 @@ export function DashboardSidebar() {
       {/* Logo */}
       <div className={cn('flex h-16 items-center border-b border-gray-200 px-4', collapsed && 'justify-center')}>
         {collapsed ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-            <span className="text-xs font-bold text-white">VR</span>
-          </div>
+          <Link href="/" aria-label="e-resi home">
+            <LogoMark size={28} />
+          </Link>
         ) : (
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-              <span className="text-xs font-bold text-white">VR</span>
-            </div>
-            <span className="text-base font-semibold text-gray-900">
-              Hom<span className="text-brand-600">VR</span>
-            </span>
+          <Link href="/" aria-label="e-resi home">
+            <Logo markSize={26} textClassName="text-gray-900 text-[1.15rem]" />
           </Link>
         )}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
-        {navItems.map(({ label, href, icon: Icon, badge }) => {
+        {navItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+          const badge = badges[href] ?? 0;
           return (
             <Link
               key={href}
@@ -76,9 +83,9 @@ export function DashboardSidebar() {
               {!collapsed && (
                 <>
                   <span className="flex-1">{label}</span>
-                  {badge && (
+                  {badge > 0 && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                      {badge}
+                      {badge > 99 ? '99+' : badge}
                     </span>
                   )}
                 </>
@@ -106,16 +113,16 @@ export function DashboardSidebar() {
         ))}
 
         {/* User */}
-        {!collapsed && (
-          <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5">
+        {!collapsed && user && (
+          <Link href="/dashboard/profile" className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-100 transition-colors">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-semibold shrink-0">
-              PD
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-900 truncate">Pristine Dev.</p>
-              <p className="text-[10px] text-gray-400 truncate">developer</p>
+              <p className="text-xs font-medium text-gray-900 truncate">{user.firstName} {user.lastName}</p>
+              <p className="text-[10px] text-gray-400 truncate">{user.role.toLowerCase()}</p>
             </div>
-          </div>
+          </Link>
         )}
       </div>
 

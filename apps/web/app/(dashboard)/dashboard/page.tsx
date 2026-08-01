@@ -5,13 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { StatCard } from '../../../components/dashboard/StatCard';
 import { formatPrice, formatDate, getStatusColor, getStatusLabel, cn } from '../../../lib/utils';
-import { useDeveloperStats, useProperties, useDeveloperInquiries, useDeveloperBookings } from '../../../lib/api/queries';
+import { useDeveloperStats, useMyProperties, useDeveloperInquiries, useDeveloperBookings } from '../../../lib/api/queries';
 import { useAuthStore } from '../../../lib/stores/auth.store';
 
 export default function DashboardOverview() {
   const user = useAuthStore((s) => s.user);
   const { data: stats } = useDeveloperStats();
-  const { data: propertiesData } = useProperties({ limit: 5 });
+  const { data: propertiesData } = useMyProperties({ limit: 5 });
   const { data: inquiriesData } = useDeveloperInquiries({ limit: 4 });
   const { data: bookingsData } = useDeveloperBookings({ limit: 4 });
 
@@ -21,17 +21,20 @@ export default function DashboardOverview() {
 
   const firstName = user?.firstName ?? 'there';
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
   return (
     <div className="space-y-8 max-w-7xl">
       {/* Welcome */}
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Good morning, {firstName}. 👋</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">{greeting}, {firstName}. 👋</h2>
         <p className="mt-1 text-sm text-gray-500">Here's what's happening across your portfolio today.</p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Properties" value={stats?.properties.total ?? '—'} icon={Building2} change="0" positive />
+        <StatCard label="Total Properties" value={stats?.properties.total ?? '—'} icon={Building2} change="" positive />
         <StatCard label="Active Listings" value={stats?.properties.active ?? '—'} icon={DoorOpen} iconColor="text-emerald-600" iconBg="bg-emerald-50 border-emerald-200" change="" positive />
         <StatCard label="Inquiries (30d)" value={stats?.inquiries.last30Days ?? '—'} icon={MessageSquare} iconColor="text-gold-600" iconBg="bg-gold-50 border-gold-200" change="" positive />
         <StatCard label="Pending Bookings" value={stats?.bookings.pending ?? '—'} icon={Eye} iconColor="text-violet-600" iconBg="bg-violet-50 border-violet-200" change="" positive />

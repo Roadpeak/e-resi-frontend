@@ -3,7 +3,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { formatPrice, cn } from '../../../../lib/utils';
 import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
-import { useProperties } from '../../../../lib/api/queries';
+import { useMyProperties } from '../../../../lib/api/queries';
 import { propertiesApi } from '../../../../lib/api/properties';
 
 const statusConfig: Record<string, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
@@ -13,7 +13,7 @@ const statusConfig: Record<string, { label: string; icon: typeof CheckCircle2; c
 };
 
 export default function DashboardUnits() {
-  const { data: propertiesData, isLoading: loadingList } = useProperties({ limit: 50 });
+  const { data: propertiesData, isLoading: loadingList } = useMyProperties({ limit: 50 });
   const slugs = propertiesData?.items.map((p) => p.slug) ?? [];
 
   // Fetch each property detail to get units

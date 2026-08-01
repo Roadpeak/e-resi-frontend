@@ -7,11 +7,11 @@ import { motion } from 'framer-motion';
 import { Plus, Eye, Pencil, Box, Headset, Building2, MoreHorizontal, Loader2 } from 'lucide-react';
 import { formatPrice, getStatusLabel, getStatusColor, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
-import { useProperties } from '../../../../lib/api/queries';
+import { useMyProperties } from '../../../../lib/api/queries';
 
 export default function DashboardProperties() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const { data, isLoading } = useProperties({ limit: 50 });
+  const { data, isLoading } = useMyProperties({ limit: 50 });
   const properties = data?.items ?? [];
 
   if (isLoading) {

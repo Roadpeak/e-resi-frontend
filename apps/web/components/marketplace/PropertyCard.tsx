@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { MapPin, BedDouble, Bath, Maximize2, Box, Headset, Heart, Star, Film } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Maximize2, Box, Headset, Heart, Film } from 'lucide-react';
 import { useState } from 'react';
 import type { Property } from '../../lib/types';
 import { formatPrice, getStatusLabel, getStatusColor, cn } from '../../lib/utils';
@@ -21,16 +21,6 @@ const statusColors: Record<string, string> = {
   sold_out: 'bg-gray-100 text-gray-500',
 };
 
-// Fake ratings for visual richness (real data would come from API)
-const fakeRating = (id: string) => {
-  const seed = id.charCodeAt(0);
-  return (4.2 + (seed % 8) / 10).toFixed(1);
-};
-const fakeReviews = (id: string) => {
-  const seed = id.charCodeAt(0);
-  return 40 + (seed % 200);
-};
-
 const isNew = (property: Property) => {
   if (property.isFeatured) return true;
   const created = new Date(property.createdAt).getTime();
@@ -39,8 +29,6 @@ const isNew = (property: Property) => {
 
 export function PropertyCard({ property, index = 0, view = 'grid' }: PropertyCardProps) {
   const [saved, setSaved] = useState(false);
-  const rating = fakeRating(property.id);
-  const reviews = fakeReviews(property.id);
   const bed = property.floorPlans[0] ?? property.units[0];
 
   if (view === 'list') {
@@ -98,13 +86,8 @@ export function PropertyCard({ property, index = 0, view = 'grid' }: PropertyCar
             </div>
           </div>
 
-          {/* Rating + tour badges + availability */}
+          {/* Tour badges + availability */}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="flex items-center gap-1">
-              <Star size={11} className="fill-gold-400 text-gold-400" />
-              <span className="text-xs font-semibold text-gray-700">{rating}</span>
-              <span className="text-xs text-gray-400">({reviews})</span>
-            </span>
             {property.has3DTour && (
               <span className="flex items-center gap-0.5 text-[10px] font-medium text-brand-600"><Box size={9} /> 3D</span>
             )}
@@ -199,17 +182,10 @@ export function PropertyCard({ property, index = 0, view = 'grid' }: PropertyCar
 
       {/* Body */}
       <div className="p-4">
-        {/* Price + rating */}
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <div>
-            <span className="font-bold text-gray-900 text-base">{formatPrice(property.priceFrom, property.currency)}</span>
-            <span className="text-xs text-gray-400 ml-1">from</span>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Star size={11} className="fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-semibold text-gray-700">{rating}</span>
-            <span className="text-xs text-gray-400">({reviews})</span>
-          </div>
+        {/* Price */}
+        <div className="mb-1">
+          <span className="font-bold text-gray-900 text-base">{formatPrice(property.priceFrom, property.currency)}</span>
+          <span className="text-xs text-gray-400 ml-1">from</span>
         </div>
 
         {/* Name + location */}

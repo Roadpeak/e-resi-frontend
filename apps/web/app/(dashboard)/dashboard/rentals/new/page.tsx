@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../../../lib/utils';
 import { Button } from '../../../../../components/ui/Button';
-import { useProperties } from '../../../../../lib/api/queries';
+import { useMyProperties } from '../../../../../lib/api/queries';
 import type { FurnishingType, CinematicSceneCategory } from '../../../../../lib/types';
 
 type Step = 'property' | 'units' | 'media' | 'tours' | 'review';
@@ -50,7 +50,7 @@ function newUnit(): DraftUnit {
 }
 
 export default function NewRentalPage() {
-  const { data: propertiesData } = useProperties({ limit: 50 });
+  const { data: propertiesData } = useMyProperties({ limit: 50 });
   const liveProperties = propertiesData?.items ?? [];
 
   const [step, setStep] = useState<Step>('property');

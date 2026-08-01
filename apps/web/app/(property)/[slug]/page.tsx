@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { mockProperties } from '../../../lib/mock/properties';
 import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-property';
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
 import { PropertyFooter } from '../../../components/property/PropertyFooter';
@@ -37,7 +36,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const property = await fetchProperty(slug) ?? mockProperties.find((p) => p.slug === slug);
+  const property = await fetchProperty(slug);
   if (!property) return { title: 'Property Not Found' };
   return {
     title: property.name,
@@ -48,19 +47,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// Seed static params from mock slugs at build time; ISR handles new slugs at runtime
+// Static params come from the live API; ISR handles new slugs at runtime
 export async function generateStaticParams() {
   const liveSlugs = await fetchPropertySlugs();
-  const mockSlugs = mockProperties.map((p) => p.slug);
-  const all = Array.from(new Set([...liveSlugs, ...mockSlugs]));
-  return all.map((slug) => ({ slug }));
+  return liveSlugs.map((slug) => ({ slug }));
 }
 
 export default async function PropertyPage({ params }: Props) {
   const { slug } = await params;
 
-  // API first, fall back to mock for demo/build
-  const property = (await fetchProperty(slug) ?? mockProperties.find((p) => p.slug === slug)) as Property | undefined;
+  const property: Property | null = await fetchProperty(slug);
   if (!property) notFound();
 
   const rentListings = await fetchRentListings(property.id);

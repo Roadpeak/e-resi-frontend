@@ -33,6 +33,14 @@ function toQueryString(params: Record<string, unknown>): string {
 }
 
 export const propertiesApi = {
+  /** Developer: own properties only (any status, incl. drafts). */
+  myListings: (query: PropertiesQuery = {}) => {
+    const { limit, page, status, category, search } = query;
+    return apiClient.get<PaginatedProperties>(
+      `/properties/my/listings${toQueryString({ limit, page, status, category, q: search })}`,
+    );
+  },
+
   list: (query: PropertiesQuery = {}) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sortBy, priceMin, priceMax, has3DTour, hasVRTour, search, ...supported } = query;

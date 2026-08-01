@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Eye, MessageSquare, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { StatCard } from '../../../../components/dashboard/StatCard';
-import { useDeveloperStats, useProperties, useDeveloperInquiries } from '../../../../lib/api/queries';
+import { useDeveloperStats, useMyProperties, useDeveloperInquiries, useDeveloperEngagement } from '../../../../lib/api/queries';
 
 function BarChart({ data }: { data: { date: string; views: number }[] }) {
   const max = Math.max(...data.map((d) => d.views), 1);
@@ -24,32 +24,34 @@ function BarChart({ data }: { data: { date: string; views: number }[] }) {
   );
 }
 
-// Generate last-7-days placeholder bars from inquiry/booking counts
-function buildPlaceholderChart(total: number): { date: string; views: number }[] {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const base = Math.max(Math.floor(total / 7), 1);
-  return days.map((d, i) => ({ date: d, views: base + Math.floor(Math.sin(i) * base * 0.4) }));
-}
-
-const TRAFFIC_SOURCES = [
-  { source: 'Direct', gradient: 'from-brand-600 to-brand-400' },
-  { source: 'Search', gradient: 'from-violet-600 to-violet-400' },
-  { source: 'Social', gradient: 'from-emerald-600 to-emerald-400' },
-  { source: 'Referral', gradient: 'from-gold-600 to-gold-400' },
+const SOURCE_GRADIENTS = [
+  'from-brand-600 to-brand-400',
+  'from-violet-600 to-violet-400',
+  'from-emerald-600 to-emerald-400',
+  'from-gold-600 to-gold-400',
+  'from-rose-600 to-rose-400',
+  'from-sky-600 to-sky-400',
 ];
+
+const weekday = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-KE', { weekday: 'short' });
 
 export default function DashboardAnalytics() {
   const { data: stats } = useDeveloperStats();
-  const { data: propertiesData } = useProperties({ limit: 10 });
+  const { data: propertiesData } = useMyProperties({ limit: 10 });
   const { data: inquiriesData } = useDeveloperInquiries({ limit: 100 });
+  const { data: engagement } = useDeveloperEngagement(7);
 
   const properties = propertiesData?.items ?? [];
-  const totalInquiries = stats?.inquiries.last30Days ?? 0;
-  const totalBookings = stats?.bookings.pending ?? 0;
-  const chartData = buildPlaceholderChart(totalInquiries + totalBookings);
+  const daily = engagement?.daily ?? [];
+  const chartData = daily.map((d) => ({
+    date: weekday(d.date),
+    views: d.views + d.inquiries + d.bookings,
+  }));
+  const totalInteractions = daily.reduce((n, d) => n + d.views + d.inquiries + d.bookings, 0);
 
-  // Distribute traffic sources proportionally (placeholder until backend exposes event tracking)
-  const trafficPercents = [45, 30, 15, 10];
+  const sources = engagement?.sources ?? [];
+  const sourceTotal = sources.reduce((n, s) => n + s.count, 0);
 
   return (
     <div className="space-y-8 max-w-7xl">
@@ -73,36 +75,51 @@ export default function DashboardAnalytics() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-gray-900">Activity Trend</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Last 7 days (estimated)</p>
+              <p className="text-xs text-gray-400 mt-0.5">Views, inquiries & bookings — last 7 days</p>
             </div>
             <span className="text-sm font-semibold text-emerald-600">
-              {totalInquiries + totalBookings} total interactions
+              {totalInteractions} total interactions
             </span>
           </div>
-          <BarChart data={chartData} />
+          {totalInteractions === 0 ? (
+            <div className="flex h-40 items-center justify-center text-sm text-gray-400">
+              No activity yet — data appears as buyers view and inquire about your properties.
+            </div>
+          ) : (
+            <BarChart data={chartData} />
+          )}
         </div>
 
         {/* Traffic sources */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <h3 className="mb-5 font-semibold text-gray-900">Traffic Sources</h3>
-          <div className="space-y-4">
-            {TRAFFIC_SOURCES.map(({ source, gradient }, i) => (
-              <div key={source}>
-                <div className="mb-1.5 flex justify-between text-sm">
-                  <span className="text-gray-500">{source}</span>
-                  <span className="font-medium text-gray-900">{trafficPercents[i]}%</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${trafficPercents[i]}%` }}
-                    transition={{ duration: 0.8, delay: i * 0.1 }}
-                    className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          {sources.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              No traffic recorded yet — sources appear once visitors reach your property pages.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {sources.map(({ source, count }, i) => {
+                const pct = sourceTotal ? Math.round((count / sourceTotal) * 100) : 0;
+                return (
+                  <div key={source}>
+                    <div className="mb-1.5 flex justify-between text-sm">
+                      <span className="text-gray-500">{source}</span>
+                      <span className="font-medium text-gray-900">{pct}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, delay: i * 0.1 }}
+                        className={`h-full rounded-full bg-gradient-to-r ${SOURCE_GRADIENTS[i % SOURCE_GRADIENTS.length]}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

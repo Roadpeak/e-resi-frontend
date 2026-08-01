@@ -20,9 +20,6 @@ import { PropertiesMapView } from './PropertiesMapView';
 import { cn } from '../../lib/utils';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80';
-
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
   { value: 'residential', label: 'Residential' },
   { value: 'commercial', label: 'Commercial' },
@@ -106,6 +103,7 @@ export function PropertiesPage() {
         <HeroBanner
           city={filters.city}
           cities={cities}
+          image={results[0]?.heroImageUrl}
           onCityChange={(c) => {
             setFilter('city', c);
             setFilter('neighborhood', undefined);
@@ -219,10 +217,12 @@ export function PropertiesPage() {
 function HeroBanner({
   city,
   cities,
+  image,
   onCityChange,
 }: {
   city?: string;
   cities: string[];
+  image?: string;
   onCityChange: (city?: string) => void;
 }) {
   return (
@@ -232,18 +232,20 @@ function HeroBanner({
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative h-[240px] overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 sm:h-[280px]"
     >
-      {/* Architectural image, right side */}
-      <div className="absolute inset-y-0 right-0 w-[70%] sm:w-[60%]">
-        <Image
-          src={HERO_IMAGE}
-          alt="Modern architecture"
-          fill
-          priority
-          className="object-cover"
-          sizes="(max-width: 1024px) 70vw, 60vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-600/40 to-transparent" />
-      </div>
+      {/* Featured property image, right side (from live results) */}
+      {image && (
+        <div className="absolute inset-y-0 right-0 w-[70%] sm:w-[60%]">
+          <Image
+            src={image}
+            alt="Featured property"
+            fill
+            priority
+            className="object-cover"
+            sizes="(max-width: 1024px) 70vw, 60vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-600/40 to-transparent" />
+        </div>
+      )}
       {/* Soft brand wash over the left for legibility */}
       <div className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-brand-700/90 via-brand-600/70 to-transparent" />
 

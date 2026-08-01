@@ -2,6 +2,7 @@
  * TanStack Query hooks for e-resi data
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from './client';
 import { propertiesApi, type PropertiesQuery } from './properties';
 import { authApi } from './auth';
 import { inquiriesApi } from './inquiries';
@@ -54,6 +55,39 @@ export function useProperties(query: PropertiesQuery = {}) {
       const res = await propertiesApi.list(query);
       return { items: (res.data ?? []).map(toProperty), total: res.meta?.total ?? 0 };
     },
+  });
+}
+
+export function useMyProperties(query: PropertiesQuery = {}) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: ['my-properties', query],
+    queryFn: async () => {
+      const res = await propertiesApi.myListings(query);
+      return { items: (res.data ?? []).map(toProperty), total: res.meta?.total ?? 0 };
+    },
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+  });
+}
+
+export function useDeveloperEngagement(days = 7) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: ['analytics', 'developer-engagement', days],
+    queryFn: () => analyticsApi.developerEngagement(days),
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+  });
+}
+
+export function useUnreadNotificationCount() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: () => apiClient.get<{ count: number }>('/notifications/unread-count'),
+    enabled: isAuthenticated,
+    refetchInterval: 60_000,
   });
 }
 
