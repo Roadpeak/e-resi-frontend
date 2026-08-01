@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyCard } from './PropertyCard';
+import { Pagination } from '../ui/Pagination';
 import { PropertiesMapView } from './PropertiesMapView';
 import { cn } from '../../lib/utils';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
@@ -32,6 +33,8 @@ const STATUSES: { value: PropertyStatus; label: string }[] = [
   { value: 'ready', label: 'Ready to Move' },
 ];
 
+const PAGE_SIZE = 9;
+
 const PRICE_STEPS = [5, 10, 20, 30, 50, 80, 100, 150].map((m) => m * 1_000_000);
 
 function formatShortPrice(v: number) {
@@ -42,6 +45,7 @@ export function PropertiesPage() {
   const { filters, setFilter, resetFilters } = useFiltersStore();
   const [showFullMap, setShowFullMap] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Build API query from filter store state
   const query = {
@@ -56,11 +60,23 @@ export function PropertiesPage() {
     has3DTour: filters.has3DTour,
     hasVRTour: filters.hasVRTour,
     sortBy: filters.sortBy,
-    limit: 100,
   };
 
-  const { data, isLoading, isError } = useProperties(query);
+  // Paginated server-side: only the current page is fetched.
+  const { data, isLoading, isError } = useProperties({ ...query, page, limit: PAGE_SIZE });
   const results: Property[] = (data?.items as unknown as Property[]) ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // The map plots every match, not just the visible page.
+  const { data: mapData } = useProperties({ ...query, limit: 100 });
+  const mapResults: Property[] = (mapData?.items as unknown as Property[]) ?? [];
+
+  // Narrowing the filters can leave the current page out of range.
+  const filterKey = JSON.stringify(query);
+  useEffect(() => {
+    setPage(1);
+  }, [filterKey]);
 
   // Unfiltered set — used to derive city / neighborhood options (query dedup'd by react-query)
   const { data: allData } = useProperties({ limit: 100 });
@@ -102,7 +118,7 @@ export function PropertiesPage() {
         <HeroBanner
           city={filters.city}
           cities={cities}
-          image={results[0]?.heroImageUrl}
+          image={mapResults[0]?.heroImageUrl}
           onCityChange={(c) => {
             setFilter('city', c);
             setFilter('neighborhood', undefined);
@@ -126,7 +142,7 @@ export function PropertiesPage() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Best options</h2>
                 <p className="mt-0.5 text-sm text-gray-500">
-                  {isLoading ? 'Searching…' : `${data?.total ?? results.length} properties found`}
+                  {isLoading ? 'Searching…' : `${total} properties found`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -151,18 +167,28 @@ export function PropertiesPage() {
             ) : results.length === 0 ? (
               <EmptyState onReset={resetFilters} />
             ) : (
-              <div className="flex flex-col gap-4">
-                {results.map((p, i) => (
-                  <PropertyCard key={p.id} property={p} index={i} view="list" />
-                ))}
-              </div>
+              <>
+                <div className="flex flex-col gap-4">
+                  {results.map((p, i) => (
+                    <PropertyCard key={p.id} property={p} index={i} view="list" />
+                  ))}
+                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onChange={(p) => {
+                    setPage(p);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </>
             )}
           </section>
 
           {/* Map panel — always visible on lg+ */}
           <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-[40%] max-w-[560px] shrink-0 overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm lg:block">
             <div className="absolute inset-0">
-              <PropertiesMapView properties={results} />
+              <PropertiesMapView properties={mapResults} />
             </div>
             <div className="absolute inset-x-5 bottom-4 z-30">
               <button
@@ -194,7 +220,7 @@ export function PropertiesPage() {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[60] bg-white"
           >
-            <PropertiesMapView properties={results} />
+            <PropertiesMapView properties={mapResults} />
             <div className="absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-md">
               {results.length} properties
             </div>

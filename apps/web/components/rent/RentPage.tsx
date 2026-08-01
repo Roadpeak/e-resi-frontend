@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ChevronDown, Loader2, SlidersHorizontal } from 'lucide-react';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
 import { useRentListings } from '../../lib/api/queries';
 import { RentCard } from './RentCard';
+import { Pagination } from '../ui/Pagination';
 import { cn } from '../../lib/utils';
 import type { RentListing, RentFilters, FurnishingType } from '../../lib/types';
 
@@ -15,6 +16,8 @@ const FURNISHINGS: { value: FurnishingType; label: string }[] = [
   { value: 'semi_furnished', label: 'Semi-furnished' },
   { value: 'unfurnished', label: 'Unfurnished' },
 ];
+
+const PAGE_SIZE = 9;
 
 const PRICE_STEPS = [50_000, 80_000, 120_000, 200_000, 350_000, 500_000, 1_000_000];
 
@@ -36,6 +39,7 @@ function applyClientFilters(listings: RentListing[], filters: RentFilters): Rent
 export function RentPage() {
   const { filters, setFilter, resetFilters } = useRentFiltersStore();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Search query and city go to the server; everything else filters client-side
   const { data, isLoading } = useRentListings({
@@ -63,6 +67,16 @@ export function RentPage() {
       ),
     [all, filters.city],
   );
+
+  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // A narrower filter can leave the current page out of range. Key on the
+  // serialised values — the store hands back a new object every render.
+  const filterKey = JSON.stringify(filters);
+  useEffect(() => {
+    setPage(1);
+  }, [filterKey]);
 
   const hasActiveFilters = Object.entries(filters).some(
     ([k, v]) => k !== 'sortBy' && v !== undefined && v !== '',
@@ -131,11 +145,21 @@ export function RentPage() {
             </div>
           ) : (
             /* Tiled view — kept from the original rent page */
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((l, i) => (
-                <RentCard key={l.id} listing={l} index={i} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {pageResults.map((l, i) => (
+                  <RentCard key={l.id} listing={l} index={i} />
+                ))}
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onChange={(p) => {
+                  setPage(p);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            </>
           )}
         </section>
       </div>
