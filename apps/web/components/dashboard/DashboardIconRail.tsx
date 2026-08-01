@@ -4,6 +4,8 @@ import 'material-symbols/rounded.css';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { chatApi } from '../../lib/api/chat';
 import { useDeveloperInquiries } from '../../lib/api/queries';
 import { MaterialIcon } from './MaterialIcon';
 
@@ -12,6 +14,7 @@ const NAV = [
   { label: 'Properties', href: '/dashboard/properties', icon: 'apartment' },
   { label: 'Units', href: '/dashboard/units', icon: 'meeting_room' },
   { label: 'Rentals', href: '/dashboard/rentals', icon: 'home_work' },
+  { label: 'Messages', href: '/dashboard/messages', icon: 'chat' },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: 'forum' },
   { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring' },
@@ -63,6 +66,11 @@ function RailItem({
 export function DashboardIconRail() {
   const pathname = usePathname();
   const { data: newInquiries } = useDeveloperInquiries({ status: 'NEW', limit: 1 });
+  const { data: chatUnread } = useQuery({
+    queryKey: ['chat', 'unread'],
+    queryFn: () => chatApi.unreadCount(),
+    refetchInterval: 30_000,
+  });
 
   return (
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between border-r border-[#f1f3f4] py-4 md:flex">
@@ -74,7 +82,11 @@ export function DashboardIconRail() {
             href={href}
             icon={icon}
             active={pathname === href || (href !== '/dashboard' && pathname.startsWith(href))}
-            badge={href === '/dashboard/inquiries' ? newInquiries?.total ?? 0 : 0}
+            badge={
+              href === '/dashboard/inquiries' ? newInquiries?.total ?? 0
+                : href === '/dashboard/messages' ? chatUnread?.count ?? 0
+                : 0
+            }
           />
         ))}
       </nav>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Property, Unit } from '../../lib/types';
 import { formatPrice, formatCompletionDate, pluralize, cn } from '../../lib/utils';
+import { ChatWithDeveloper } from '../chat/ChatWithDeveloper';
 
 interface Props { property: Property }
 
@@ -215,6 +216,7 @@ export function PropertyOverview({ property }: Props) {
           >
             Book a Viewing
           </a>
+          <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
           <div className="flex flex-wrap items-center gap-2">
             {property.hasCinematicTour && (
               <Link

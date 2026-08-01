@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { NavbarLight } from '../../../../components/layout/NavbarLight';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
+import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { formatPrice } from '../../../../lib/utils';
 
 const FURNISHING_LABELS: Record<string, string> = {
@@ -210,6 +211,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   <button className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     Send Inquiry
                   </button>
+                  <ChatWithDeveloper rentListingSlug={listing.slug} className="mt-2 w-full" />
                 </div>
 
                 {/* Developer card */}

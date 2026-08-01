@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BadgeCheck, BarChart3, Building2, CalendarDays, DoorOpen, FileText,
-  Home, LayoutDashboard, MessageSquare, Plus, Receipt, Search, Settings,
+  Home, LayoutDashboard, MessageSquare, MessagesSquare, Plus, Receipt, Search, Settings,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useMyProperties } from '../../lib/api/queries';
@@ -14,6 +14,7 @@ const PAGES = [
   { label: 'Properties', href: '/dashboard/properties', icon: Building2 },
   { label: 'Units', href: '/dashboard/units', icon: DoorOpen },
   { label: 'Rentals', href: '/dashboard/rentals', icon: Home },
+  { label: 'Messages', href: '/dashboard/messages', icon: MessagesSquare },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: MessageSquare },
   { label: 'Bookings', href: '/dashboard/bookings', icon: CalendarDays },
   { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },

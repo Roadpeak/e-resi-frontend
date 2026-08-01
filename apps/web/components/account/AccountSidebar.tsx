@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, CalendarDays, MessageSquare, KeyRound, User, Settings, Globe } from 'lucide-react';
+import { Heart, CalendarDays, MessageSquare, MessagesSquare, KeyRound, User, Settings, Globe } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 
 const navItems = [
   { label: 'Saved Properties', href: '/account/saved', icon: Heart },
   { label: 'My Viewings', href: '/account/viewings', icon: CalendarDays },
+  { label: 'Messages', href: '/account/messages', icon: MessagesSquare },
   { label: 'My Inquiries', href: '/account/inquiries', icon: MessageSquare },
   { label: 'Reservations', href: '/account/reservations', icon: KeyRound },
 ];
