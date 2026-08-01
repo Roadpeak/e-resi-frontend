@@ -48,6 +48,11 @@ export interface BackendRentListingsResponse {
 }
 
 /** Transform backend shape → frontend RentListing type */
+/** Prisma enums arrive UPPER_SNAKE; the UI compares against lower_snake. */
+function lower(v?: string | null): string | undefined {
+  return v ? v.toLowerCase() : undefined;
+}
+
 export function toRentListing(b: BackendRentListingItem): RentListing {
   return {
     id: b.id,
@@ -76,12 +81,12 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
       currency: u.currency ?? b.currency,
       available: u.available,
       total: u.total,
-      furnishing: (u.furnishing ?? b.furnishing) as RentListing['furnishing'],
+      furnishing: lower(u.furnishing ?? b.furnishing) as RentListing['furnishing'],
       features: u.features ?? [],
     })),
     amenities: [],
-    status: b.status as RentListing['status'],
-    furnishing: b.furnishing as RentListing['furnishing'],
+    status: lower(b.status) as RentListing['status'],
+    furnishing: lower(b.furnishing) as RentListing['furnishing'],
     priceFrom: b.priceFrom ?? 0,
     priceTo: b.priceTo ?? 0,
     currency: b.currency,

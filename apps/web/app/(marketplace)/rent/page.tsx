@@ -9,7 +9,13 @@ export const metadata: Metadata = {
 
 export default function Rent() {
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <RentNavbar />
       <RentPage />
     </div>
