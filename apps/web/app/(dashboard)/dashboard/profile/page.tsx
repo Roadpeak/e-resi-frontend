@@ -25,10 +25,10 @@ interface DeveloperProfile {
 }
 
 const KYB_BADGES: Record<DeveloperProfile['kybStatus'], { label: string; className: string; icon: React.ReactNode }> = {
-  NOT_SUBMITTED: { label: 'Verification not submitted', className: 'bg-gray-100 text-gray-600', icon: <ShieldAlert size={13} /> },
-  PENDING: { label: 'Verification pending', className: 'bg-amber-50 text-amber-700 border border-amber-200', icon: <Clock3 size={13} /> },
-  APPROVED: { label: 'Verified developer', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: <ShieldCheck size={13} /> },
-  REJECTED: { label: 'Verification rejected', className: 'bg-red-50 text-red-700 border border-red-200', icon: <ShieldAlert size={13} /> },
+  NOT_SUBMITTED: { label: 'Verification not submitted', className: 'bg-[#f1f3f4] text-[#5f6368]', icon: <ShieldAlert size={13} /> },
+  PENDING: { label: 'Verification pending', className: 'bg-[#fef7e0] text-[#b06000]', icon: <Clock3 size={13} /> },
+  APPROVED: { label: 'Verified developer', className: 'bg-[#e6f4ea] text-[#188038]', icon: <ShieldCheck size={13} /> },
+  REJECTED: { label: 'Verification rejected', className: 'bg-[#fce8e6] text-[#c5221f]', icon: <ShieldAlert size={13} /> },
 };
 
 export default function CompanyProfilePage() {
@@ -81,7 +81,7 @@ export default function CompanyProfilePage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-gray-400" />
+        <Loader2 size={28} className="animate-spin text-[#80868b]" />
       </div>
     );
   }
@@ -91,10 +91,10 @@ export default function CompanyProfilePage() {
   return (
     <div className="max-w-3xl space-y-6">
       {/* Header card */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-brand-50 text-brand-600">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[#e8f0fe] text-[#1a73e8]">
               {profile?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.logoUrl} alt={profile.companyName} className="h-full w-full object-contain" />
@@ -103,25 +103,25 @@ export default function CompanyProfilePage() {
               )}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{profile?.companyName}</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">{profile?.companyName}</h2>
+              <p className="text-base text-[#5f6368]">
                 {user?.firstName} {user?.lastName} · member since{' '}
                 {profile ? new Date(profile.createdAt).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' }) : '—'}
               </p>
             </div>
           </div>
-          <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium', kyb.className)}>
+          <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium', kyb.className)}>
             {kyb.icon} {kyb.label}
           </span>
         </div>
 
         {profile?.kybStatus === 'NOT_SUBMITTED' && (
-          <div className="mt-5 flex items-start gap-3 rounded-xl border border-brand-100 bg-brand-50 p-4">
-            <BadgeCheck size={16} className="mt-0.5 shrink-0 text-brand-600" />
-            <p className="text-[13px] leading-relaxed text-gray-600">
+          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-transparent bg-[#e8f0fe] p-4">
+            <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#1a73e8]" />
+            <p className="text-[15px] leading-relaxed text-[#3c4043]">
               Complete your developer onboarding to submit verification documents — verified developers
               get a badge on every listing.{' '}
-              <Link href="/onboarding" className="font-medium text-brand-600 hover:text-brand-700">
+              <Link href="/onboarding" className="text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
                 Continue onboarding →
               </Link>
             </p>
@@ -130,10 +130,10 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Editable company details */}
-      <form onSubmit={handleSave} className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+      <form onSubmit={handleSave} className="rounded-3xl border border-[#dadce0] bg-white p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Company details</h3>
-          <p className="mt-0.5 text-xs text-gray-500">Shown on your public developer profile and every listing.</p>
+          <h3 className="text-[18px] font-normal text-[#202124]">Company details</h3>
+          <p className="mt-0.5 text-sm text-[#5f6368]">Shown on your public developer profile and every listing.</p>
         </div>
 
         <Input
@@ -141,18 +141,19 @@ export default function CompanyProfilePage() {
           value={form.companyName}
           onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
           leftIcon={<Building2 size={14} />}
+          className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
           required
         />
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Description</label>
+          <label className="mb-1.5 block text-[13px] font-medium text-[#5f6368]">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             rows={4}
             maxLength={1000}
             placeholder="Your company story, track record, and what sets your developments apart…"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] transition-colors focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
           />
         </div>
 
@@ -164,6 +165,7 @@ export default function CompanyProfilePage() {
             max={2100}
             value={form.establishedYear}
             onChange={(e) => setForm((f) => ({ ...f, establishedYear: e.target.value }))}
+            className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
           />
           <Input
             label="Website"
@@ -172,23 +174,24 @@ export default function CompanyProfilePage() {
             value={form.website}
             onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
             leftIcon={<Globe2 size={14} />}
+            className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
           />
         </div>
 
         {error && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
+          <p className="rounded-2xl border border-transparent bg-[#fce8e6] px-4 py-3 text-[13px] text-[#c5221f]">{error}</p>
         )}
 
-        <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+        <div className="flex items-center justify-end gap-3 border-t border-[#f1f3f4] pt-4">
           {saved && (
-            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600">
+            <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#188038]">
               <Check size={14} /> Saved
             </span>
           )}
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             Save changes
@@ -197,24 +200,24 @@ export default function CompanyProfilePage() {
       </form>
 
       {/* Read-only facts */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">Account</h3>
+      <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
+        <h3 className="mb-4 text-[18px] font-normal text-[#202124]">Account</h3>
         <dl className="grid gap-4 sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-gray-400">Completed projects</dt>
-            <dd className="mt-0.5 text-sm font-medium text-gray-900">{profile?.completedProjects ?? 0}</dd>
+            <dt className="text-[13px] text-[#80868b]">Completed projects</dt>
+            <dd className="mt-0.5 text-[15px] font-medium text-[#202124]">{profile?.completedProjects ?? 0}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-400">Onboarding</dt>
-            <dd className="mt-0.5 text-sm font-medium text-gray-900">
+            <dt className="text-[13px] text-[#80868b]">Onboarding</dt>
+            <dd className="mt-0.5 text-[15px] font-medium text-[#202124]">
               {profile?.onboardingSubmittedAt
                 ? `Submitted ${new Date(profile.onboardingSubmittedAt).toLocaleDateString('en-KE')}`
                 : 'Not submitted'}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-400">Account email</dt>
-            <dd className="mt-0.5 text-sm font-medium text-gray-900 break-words">{user?.email}</dd>
+            <dt className="text-[13px] text-[#80868b]">Account email</dt>
+            <dd className="mt-0.5 text-[15px] font-medium text-[#202124] break-words">{user?.email}</dd>
           </div>
         </dl>
       </div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Cormorant_Garamond } from 'next/font/google';
+import { Geist, Geist_Mono, Cormorant_Garamond, Roboto } from 'next/font/google';
 import './global.css';
 import { Providers } from './providers';
 
@@ -20,6 +20,14 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
   weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
+  display: 'swap',
+});
+
+// Google's UI font — used by the dashboard's `font-google` stack
+const roboto = Roboto({
+  subsets: ['latin'],
+  variable: '--font-roboto',
+  weight: ['400', '500', '700'],
   display: 'swap',
 });
 
@@ -49,7 +57,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,700&display=swap"
+        />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

@@ -1,5 +1,5 @@
-import { DashboardSidebar } from '../../../components/dashboard/DashboardSidebar';
-import { DashboardTopbar } from '../../../components/dashboard/DashboardTopbar';
+import { DashboardTopnav } from '../../../components/dashboard/DashboardTopnav';
+import { DashboardIconRail } from '../../../components/dashboard/DashboardIconRail';
 import { RequireAuth } from '../../../components/auth/RequireAuth';
 import type { Metadata } from 'next';
 
@@ -10,15 +10,17 @@ export const metadata: Metadata = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <RequireAuth roles={['DEVELOPER', 'ADMIN']}>
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardTopbar />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-          {children}
-        </main>
+      <div className="flex min-h-screen flex-col bg-white font-google text-[#202124]">
+        <div className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur">
+          <DashboardTopnav />
+        </div>
+        <div className="flex flex-1">
+          <DashboardIconRail />
+          <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
     </RequireAuth>
   );
 }

@@ -75,6 +75,7 @@ module.exports = {
         sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
         display: ['var(--font-cormorant)', 'Georgia', 'serif'],
+        google: ['"Google Sans"', 'var(--font-roboto)', 'Roboto', 'Arial', 'sans-serif'],
       },
       borderRadius: {
         '4xl': '2rem',

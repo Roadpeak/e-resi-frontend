@@ -128,19 +128,19 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col">
+    <div className="min-h-screen w-full bg-white flex flex-col font-google text-[#202124]">
       {/* ── Top bar ── */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-5 sm:px-8">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#f1f3f4] px-5 sm:px-8">
         <div className="flex items-center gap-4">
           <Link href="/" aria-label="e-resi home">
             <Logo markSize={26} textClassName="text-gray-900 text-[1.2rem]" />
           </Link>
-          <span className="h-5 w-px bg-gray-200" />
-          <span className="text-sm text-gray-600">Create your account</span>
+          <span className="h-5 w-px bg-[#dadce0]" />
+          <span className="text-sm text-[#5f6368]">Create your account</span>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#5f6368]">
           <span className="hidden sm:inline">Already have an account? </span>
-          <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700 transition-colors">
+          <Link href="/login" className="font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors">
             Sign in
           </Link>
         </p>
@@ -158,17 +158,17 @@ export function RegisterForm() {
                 <li key={label} className="flex items-center gap-3">
                   <span className="flex w-4 items-center justify-center">
                     {done ? (
-                      <Check size={15} strokeWidth={3} className="text-emerald-500" />
+                      <Check size={15} strokeWidth={3} className="text-[#188038]" />
                     ) : (
-                      <span className={cn('h-0.5 w-4 rounded-full', current ? 'bg-brand-600' : 'bg-gray-300')} />
+                      <span className={cn('h-0.5 w-4 rounded-full', current ? 'bg-[#1a73e8]' : 'bg-[#dadce0]')} />
                     )}
                   </span>
                   <span
                     className={cn(
                       'text-[13px]',
-                      done && 'text-gray-700',
-                      current && 'font-medium text-gray-900',
-                      !done && !current && 'text-gray-400',
+                      done && 'text-[#5f6368]',
+                      current && 'font-medium text-[#202124]',
+                      !done && !current && 'text-[#80868b]',
                     )}
                   >
                     {label}
@@ -183,12 +183,12 @@ export function RegisterForm() {
         <div className="min-w-0 flex-1">
           {/* Mobile progress */}
           <div className="mb-8 lg:hidden">
-            <p className="mb-2 text-xs font-medium text-gray-500">
+            <p className="mb-2 text-[13px] font-medium text-[#5f6368]">
               Step {step + 1} of {WIZARD_STEPS.length} · {WIZARD_STEPS[step]}
             </p>
-            <div className="h-1 w-full rounded-full bg-gray-100">
+            <div className="h-1 w-full rounded-full bg-[#f1f3f4]">
               <div
-                className="h-1 rounded-full bg-brand-600 transition-all duration-300"
+                className="h-1 rounded-full bg-[#1a73e8] transition-all duration-300"
                 style={{ width: `${((step + 1) / WIZARD_STEPS.length) * 100}%` }}
               />
             </div>
@@ -203,10 +203,10 @@ export function RegisterForm() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl">
+                <h1 className="text-[26px] font-normal leading-snug text-[#202124] sm:text-[32px]">
                   Choose your account type
                 </h1>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-base text-[#5f6368]">
                   This decides what e-resi looks like for you. You can&apos;t change it later.
                 </p>
 
@@ -221,15 +221,15 @@ export function RegisterForm() {
                         className={cn(
                           'relative flex flex-col rounded-3xl border p-6 text-left transition-all duration-200 cursor-pointer',
                           selected
-                            ? 'border-brand-600 ring-1 ring-brand-600 bg-brand-50/40 shadow-sm'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm',
+                            ? 'border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#e8f0fe]/50'
+                            : 'border-[#dadce0] bg-white hover:bg-[#f8f9fa]',
                         )}
                       >
                         {/* selected check */}
                         <span
                           className={cn(
                             'absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full transition-all',
-                            selected ? 'bg-brand-600 text-white scale-100' : 'scale-0',
+                            selected ? 'bg-[#1a73e8] text-white scale-100' : 'scale-0',
                           )}
                         >
                           <Check size={13} strokeWidth={3} />
@@ -238,30 +238,30 @@ export function RegisterForm() {
                         <span
                           className={cn(
                             'flex h-12 w-12 items-center justify-center rounded-2xl transition-colors',
-                            selected ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-600',
+                            selected ? 'bg-[#1a73e8] text-white' : 'bg-[#e8f0fe] text-[#1a73e8]',
                           )}
                         >
                           {r.icon}
                         </span>
 
                         <div className="mt-4 flex items-center gap-2">
-                          <h2 className="text-base font-semibold text-gray-900">{r.label}</h2>
+                          <h2 className="text-[18px] font-medium text-[#202124]">{r.label}</h2>
                           {r.recommended && !selected && (
-                            <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
+                            <span className="rounded-full bg-[#e8f0fe] px-2.5 py-0.5 text-[11px] font-medium text-[#1967d2]">
                               Popular
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-gray-500">{r.sublabel}</p>
-                        <p className="mt-3 text-[13px] leading-relaxed text-gray-500">{r.description}</p>
+                        <p className="mt-0.5 text-[13px] text-[#5f6368]">{r.sublabel}</p>
+                        <p className="mt-3 text-[15px] leading-relaxed text-[#5f6368]">{r.description}</p>
 
-                        <div className="my-4 border-t border-gray-100" />
+                        <div className="my-4 border-t border-[#f1f3f4]" />
 
                         <ul className="space-y-2">
                           {r.features.map((f) => (
                             <li key={f} className="flex items-start gap-2">
-                              <Check size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-brand-600" />
-                              <span className="text-xs leading-relaxed text-gray-600">{f}</span>
+                              <Check size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-[#188038]" />
+                              <span className="text-[13px] leading-relaxed text-[#3c4043]">{f}</span>
                             </li>
                           ))}
                         </ul>
@@ -281,13 +281,13 @@ export function RegisterForm() {
                 transition={{ duration: 0.2 }}
                 className="mx-auto max-w-xl"
               >
-                <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
+                <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-[#e8f0fe] px-3 py-1 text-[13px] font-medium text-[#1967d2]">
                   {selectedRole?.icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{selectedRole.icon}</span>}
                   {selectedRole?.label}
                 </div>
 
-                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl">Your details</h1>
-                <p className="mt-2 text-sm text-gray-500">
+                <h1 className="text-[26px] font-normal leading-snug text-[#202124] sm:text-[32px]">Your details</h1>
+                <p className="mt-2 text-base text-[#5f6368]">
                   {role === 'developer' ? 'Tell us about you and your company' : 'Set up your profile'}
                 </p>
 
@@ -470,19 +470,19 @@ export function RegisterForm() {
                       type="checkbox"
                       checked={form.agreeTerms}
                       onChange={(e) => setForm((f) => ({ ...f, agreeTerms: e.target.checked }))}
-                      className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 bg-white accent-brand-500 cursor-pointer"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#dadce0] bg-white accent-[#1a73e8] cursor-pointer"
                       required
                     />
-                    <span className="text-xs text-gray-500 leading-relaxed">
+                    <span className="text-[13px] text-[#5f6368] leading-relaxed">
                       I agree to the{' '}
-                      <Link href="/terms" className="text-brand-600 hover:text-brand-700">Terms of Service</Link>
+                      <Link href="/terms" className="text-[#1a73e8] hover:text-[#1765cc]">Terms of Service</Link>
                       {' '}and{' '}
-                      <Link href="/privacy" className="text-brand-600 hover:text-brand-700">Privacy Policy</Link>
+                      <Link href="/privacy" className="text-[#1a73e8] hover:text-[#1765cc]">Privacy Policy</Link>
                     </span>
                   </label>
 
                   {serverError && (
-                    <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                    <p className="text-sm text-[#c5221f] bg-[#fce8e6] rounded-xl px-3 py-2.5">
                       {serverError}
                     </p>
                   )}
@@ -498,10 +498,10 @@ export function RegisterForm() {
                 transition={{ duration: 0.25 }}
                 className="mx-auto max-w-md text-center"
               >
-                <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-brand-50 border border-brand-100">
-                  <Mail size={28} className="text-brand-600" />
+                <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-[#e8f0fe]">
+                  <Mail size={28} className="text-[#1a73e8]" />
                 </div>
-                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl mb-2">Check your inbox</h1>
+                <h1 className="text-[26px] font-normal leading-snug text-[#202124] sm:text-[32px] mb-2">Check your inbox</h1>
                 <p className="text-sm text-gray-500 mb-2">
                   We&apos;ve sent a verification link to
                 </p>
@@ -516,7 +516,7 @@ export function RegisterForm() {
                       `Access your ${role === 'developer' ? 'developer dashboard' : role === 'investor' ? 'investment portfolio' : 'rental dashboard'}`,
                     ].map((text, i) => (
                       <div key={i} className="flex items-start gap-2.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700 mt-0.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[10px] font-bold text-[#1967d2] mt-0.5">
                           {i + 1}
                         </div>
                         <p className="text-xs text-gray-500 leading-relaxed">{text}</p>
@@ -537,7 +537,7 @@ export function RegisterForm() {
           {/* ── Footer actions (wizard steps only) ── */}
           {step < 2 && (
             <div className="mt-10 flex items-center justify-between border-t border-gray-200 pt-6">
-              <Link href="/" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+              <Link href="/" className="text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors">
                 Cancel
               </Link>
               <div className="flex items-center gap-3">
@@ -546,7 +546,7 @@ export function RegisterForm() {
                     type="button"
                     onClick={() => setStep(0)}
                     disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-6 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer disabled:opacity-50"
                   >
                     <ArrowLeft size={15} /> Back
                   </button>
@@ -561,7 +561,7 @@ export function RegisterForm() {
                       else setStep(1);
                     }}
                     disabled={!role}
-                    className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-7 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
                   >
                     Continue <ArrowRight size={15} />
                   </button>
@@ -570,7 +570,7 @@ export function RegisterForm() {
                     type="submit"
                     form="register-details"
                     disabled={!form.agreeTerms || loading}
-                    className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-7 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
                   >
                     {loading ? (
                       <>Creating account <Loader2 size={15} className="animate-spin" /></>
@@ -599,7 +599,7 @@ function PasswordStrength({ password }: { password: string }) {
   ];
   const score = checks.filter(Boolean).length;
   const labels = ['Weak', 'Fair', 'Good', 'Strong'];
-  const colors = ['bg-red-500', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
+  const colors = ['bg-[#ea4335]', 'bg-[#fa903e]', 'bg-[#f9ab00]', 'bg-[#34a853]'];
 
   return (
     <div className="space-y-1.5 -mt-1">

@@ -59,17 +59,17 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 px-4 py-10">
+    <div className="flex min-h-screen w-full items-center justify-center bg-[#f0f4f9] px-4 py-10 font-google text-[#202124]">
       <div className="w-full max-w-[960px]">
-        <div className="rounded-[28px] border border-gray-200 bg-white p-8 sm:p-12 shadow-sm">
+        <div className="rounded-[28px] bg-white p-8 sm:p-12">
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-10 md:grid-cols-2 md:gap-16">
             {/* ── Left: identity ── */}
             <div>
               <Link href="/" aria-label="e-resi home" className="inline-block">
                 <Logo markSize={32} textClassName="text-gray-900 text-[1.4rem]" />
               </Link>
-              <h1 className="mt-6 text-[2rem] font-normal leading-tight text-gray-900">Sign in</h1>
-              <p className="mt-2 text-[15px] text-gray-600">to continue to e-resi</p>
+              <h1 className="mt-6 text-[2.5rem] font-normal leading-tight text-[#202124]">Sign in</h1>
+              <p className="mt-2 text-base text-[#202124]">to continue to e-resi</p>
             </div>
 
             {/* ── Right: form ── */}
@@ -79,6 +79,7 @@ export function LoginForm() {
                   label="Email address"
                   type="email"
                   placeholder="you@example.com"
+                  className="border-[#dadce0] py-3 text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
                   leftIcon={<Mail size={14} />}
                   error={errors.email?.message}
                   autoComplete="email"
@@ -90,6 +91,7 @@ export function LoginForm() {
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
+                    className="border-[#dadce0] py-3 text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
                     leftIcon={<Lock size={14} />}
                     rightIcon={
                       <button
@@ -107,19 +109,19 @@ export function LoginForm() {
                   />
                   <Link
                     href="/forgot-password"
-                    className="mt-2 inline-block text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+                    className="mt-2 inline-block text-sm font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors"
                   >
                     Forgot password?
                   </Link>
                 </div>
 
                 {serverError && (
-                  <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                  <p className="rounded-xl bg-[#fce8e6] px-3 py-2.5 text-sm text-[#c5221f]">
                     {serverError}
                   </p>
                 )}
 
-                <p className="text-xs leading-relaxed text-gray-500">
+                <p className="text-sm leading-relaxed text-[#5f6368]">
                   Not your device? Use a private browsing window to sign in.
                 </p>
               </div>
@@ -127,14 +129,14 @@ export function LoginForm() {
               <div className="mt-8 flex items-center justify-between">
                 <Link
                   href="/register"
-                  className="rounded-full px-3 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 transition-colors -ml-3"
+                  className="rounded-full px-3 py-2 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f0f4f9] transition-colors -ml-3"
                 >
                   Create account
                 </Link>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-7 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isSubmitting && <Loader2 size={15} className="animate-spin" />}
                   Sign in
@@ -144,11 +146,11 @@ export function LoginForm() {
           </form>
         </div>
 
-        <div className="mt-4 flex items-center justify-between px-2 text-xs text-gray-400">
+        <div className="mt-4 flex items-center justify-between px-2 text-[13px] text-[#5f6368]">
           <span>e-resi · Immersive real estate</span>
           <div className="flex gap-5">
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-[#202124] transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-[#202124] transition-colors">Privacy</Link>
           </div>
         </div>
       </div>

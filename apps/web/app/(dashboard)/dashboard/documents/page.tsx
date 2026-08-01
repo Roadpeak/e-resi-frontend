@@ -14,10 +14,10 @@ function formatBytes(bytes?: number | null) {
 }
 
 const typeColors: Record<string, string> = {
-  Brochure: 'text-brand-700 bg-brand-50 border-brand-200',
-  'Floor Plans': 'text-violet-700 bg-violet-50 border-violet-200',
-  Legal: 'text-gold-700 bg-gold-50 border-gold-200',
-  Technical: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  Brochure: 'bg-[#e8f0fe] text-[#1967d2]',
+  'Floor Plans': 'bg-[#e8f0fe] text-[#1967d2]',
+  Legal: 'bg-[#fef7e0] text-[#b06000]',
+  Technical: 'bg-[#e6f4ea] text-[#188038]',
 };
 
 export default function DashboardDocuments() {
@@ -38,74 +38,80 @@ export default function DashboardDocuments() {
     <div className="space-y-6 max-w-7xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Documents</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{documents.length} file{documents.length !== 1 ? 's' : ''} across all properties</p>
+          <h2 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Documents</h2>
+          <p className="text-base text-[#5f6368] mt-1">{documents.length} file{documents.length !== 1 ? 's' : ''} across all properties</p>
         </div>
-        <Button icon={<Upload size={14} />} variant="secondary">Upload Document</Button>
+        <Button
+          icon={<Upload size={14} />}
+          variant="secondary"
+          className="rounded-full border border-[#dadce0] bg-white hover:bg-[#f8fbff] text-[15px] font-medium text-[#1a73e8] h-10 px-5"
+        >
+          Upload Document
+        </Button>
       </div>
 
       {/* Upload zone */}
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center cursor-pointer hover:border-brand-300 hover:bg-brand-50 transition-all">
-        <Upload size={28} className="mb-3 text-gray-300" />
-        <p className="text-sm font-medium text-gray-600">Drag & drop files here or click to browse</p>
-        <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, JPG, PNG — max 50MB per file</p>
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#dadce0] bg-white p-10 text-center cursor-pointer hover:border-[#1a73e8] hover:bg-[#f8fbff] transition-all">
+        <Upload size={28} className="mb-3 text-[#dadce0]" />
+        <p className="text-[15px] font-medium text-[#202124]">Drag & drop files here or click to browse</p>
+        <p className="text-[13px] text-[#5f6368] mt-1">PDF, DOC, DOCX, JPG, PNG — max 50MB per file</p>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-gray-400" />
+          <Loader2 size={24} className="animate-spin text-[#80868b]" />
         </div>
       ) : documents.length === 0 ? (
-        <div className="rounded-2xl border border-gray-200 bg-white px-6 py-16 text-center text-sm text-gray-500">
+        <div className="rounded-3xl border border-[#dadce0] bg-white px-6 py-16 text-center text-base text-[#5f6368]">
           No documents uploaded yet.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">File</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Property</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Size</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                <tr className="border-b border-[#f1f3f4]">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">File</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Property</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Size</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-[#f1f3f4]">
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={doc.id} className="hover:bg-[#f8f9fa] transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100">
-                          <FileText size={15} className="text-gray-500" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f3f4]">
+                          <FileText size={15} className="text-[#5f6368]" />
                         </div>
-                        <p className="text-sm text-gray-900 truncate max-w-64">{doc.name}</p>
+                        <p className="text-[15px] font-medium text-[#202124] truncate max-w-64">{doc.name}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-4 text-[15px] text-[#5f6368] whitespace-nowrap">
                       {doc.reservation?.unit.property.name ?? '—'}
                     </td>
                     <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${typeColors[doc.type] ?? 'text-gray-500 bg-gray-100 border-gray-200'}`}>
+                      <span className={`inline-flex rounded-full px-3 py-1 text-[13px] font-medium ${typeColors[doc.type] ?? 'bg-[#f1f3f4] text-[#5f6368]'}`}>
                         {doc.type}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{formatBytes(doc.sizeBytes)}</td>
+                    <td className="px-4 py-4 text-[15px] text-[#5f6368]">{formatBytes(doc.sizeBytes)}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-end gap-1">
                         <a
                           href={doc.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#1a73e8] hover:bg-[#f1f3f4] transition-colors"
                         >
                           <Eye size={14} />
                         </a>
                         <a
                           href={doc.url}
                           download={doc.name}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#1a73e8] hover:bg-[#f1f3f4] transition-colors"
                         >
                           <Download size={14} />
                         </a>

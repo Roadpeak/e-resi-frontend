@@ -87,25 +87,25 @@ export default function NewDevelopmentPage() {
   if (createdSlug !== null) {
     return (
       <div className="mx-auto max-w-2xl py-10 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F7EF]">
-          <CheckCircle2 size={32} className="text-[#37B978]" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#e6f4ea]">
+          <CheckCircle2 size={32} className="text-[#188038]" />
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Development submitted</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-gray-500">
+        <h1 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Development submitted</h1>
+        <p className="mx-auto mt-3 max-w-md text-base text-[#5f6368]">
           It&apos;s saved as a draft while our team reviews the details{billing.oneTimeTotal > 0 ? ' and schedules your production services' : ''}.
           The {fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee starts only when it goes live.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/dashboard/properties"
-            className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 transition-all"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors"
           >
             View my developments <ArrowRight size={15} />
           </Link>
           <button
             type="button"
             onClick={() => setCreatedSlug(null)}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer"
           >
             Add another
           </button>
@@ -118,8 +118,8 @@ export default function NewDevelopmentPage() {
     <div className="mx-auto max-w-4xl">
       {/* Heading + stepper */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Add a development</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Add a development</h1>
+        <p className="mt-1 text-base text-[#5f6368]">
           Each development gets its own branded page — listing costs {fmtUsd(LISTING_FEE_MONTHLY)}/month once live.
         </p>
         <ol className="mt-6 flex items-center gap-2">
@@ -128,24 +128,24 @@ export default function NewDevelopmentPage() {
             const current = i === step;
             return (
               <li key={label} className="flex items-center gap-2">
-                {i > 0 && <span className={cn('h-px w-6', i <= step ? 'bg-brand-600' : 'bg-gray-200')} />}
+                {i > 0 && <span className={cn('h-px w-6', i <= step ? 'bg-[#1a73e8]' : 'bg-[#dadce0]')} />}
                 <button
                   type="button"
                   onClick={() => i < step && setStep(i)}
                   disabled={i > step}
                   className={cn(
-                    'flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
-                    current && 'bg-brand-50 text-brand-700',
-                    done && 'text-gray-600 hover:bg-gray-100 cursor-pointer',
-                    !done && !current && 'text-gray-400',
+                    'flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                    current && 'bg-[#e8f0fe] text-[#1967d2]',
+                    done && 'text-[#5f6368] hover:bg-[#f1f3f4] cursor-pointer',
+                    !done && !current && 'text-[#80868b]',
                   )}
                 >
                   <span
                     className={cn(
                       'flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold',
-                      current && 'bg-brand-600 text-white',
-                      done && 'bg-emerald-100 text-emerald-700',
-                      !done && !current && 'bg-gray-100 text-gray-400',
+                      current && 'bg-[#1a73e8] text-white',
+                      done && 'bg-[#e6f4ea] text-[#188038]',
+                      !done && !current && 'bg-[#f1f3f4] text-[#80868b]',
                     )}
                   >
                     {done ? <Check size={11} strokeWidth={3} /> : i + 1}
@@ -174,14 +174,14 @@ export default function NewDevelopmentPage() {
       </AnimatePresence>
 
       {/* Footer */}
-      <div className="mt-10 border-t border-gray-200 pt-6">
+      <div className="mt-10 border-t border-[#dadce0] pt-6">
         {error && (
-          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <p className="mb-4 rounded-2xl border border-transparent bg-[#fce8e6] px-4 py-3 text-[15px] text-[#c5221f]">
             {error}
           </p>
         )}
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          <Link href="/dashboard" className="text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors">
             Cancel
           </Link>
           <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export default function NewDevelopmentPage() {
                 type="button"
                 onClick={back}
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer disabled:opacity-50"
               >
                 <ArrowLeft size={15} /> Back
               </button>
@@ -199,7 +199,7 @@ export default function NewDevelopmentPage() {
               type="button"
               onClick={handleContinue}
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
             >
               {submitting ? (
                 <>Submitting <Loader2 size={15} className="animate-spin" /></>
@@ -224,25 +224,25 @@ function ReviewAndCosts() {
   const Block = ({ title, step, items }: { title: string; step: number; items: [string, string][] }) => {
     const filled = items.filter(([, v]) => v);
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-[18px] font-normal text-[#202124]">{title}</h3>
           <button
             type="button"
             onClick={() => setStep(step)}
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:text-brand-700"
+            className="inline-flex items-center gap-1 text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]"
           >
             <Pencil size={12} /> Edit
           </button>
         </div>
         {filled.length === 0 ? (
-          <p className="text-sm text-gray-400">Nothing provided yet.</p>
+          <p className="text-[15px] text-[#80868b]">Nothing provided yet.</p>
         ) : (
           <dl className="grid gap-2 sm:grid-cols-2">
             {filled.map(([k, v]) => (
               <div key={k}>
-                <dt className="text-xs text-gray-400">{k}</dt>
-                <dd className="text-sm text-gray-800 break-words">{v}</dd>
+                <dt className="text-[13px] text-[#80868b]">{k}</dt>
+                <dd className="text-[15px] text-[#202124] break-words">{v}</dd>
               </div>
             ))}
           </dl>
@@ -274,53 +274,53 @@ function ReviewAndCosts() {
       />
 
       {/* Costs */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Costs for this development</h3>
+          <h3 className="text-[18px] font-normal text-[#202124]">Costs for this development</h3>
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:text-brand-700"
+            className="inline-flex items-center gap-1 text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]"
           >
             <Pencil size={12} /> Change services
           </button>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-[#f1f3f4]">
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-gray-700">Listing fee</span>
-            <span className="text-sm font-medium text-gray-900 tabular-nums">
+            <span className="text-[15px] text-[#5f6368]">Listing fee</span>
+            <span className="text-[15px] font-medium text-[#202124] tabular-nums">
               {fmtUsd(billing.listingFeeMonthly)} / month
             </span>
           </div>
           {[...billing.production, ...billing.marketing].map((s) => (
             <div key={s.id} className="flex items-center justify-between py-2.5">
-              <span className="flex items-center gap-2 text-sm text-gray-700">
+              <span className="flex items-center gap-2 text-[15px] text-[#5f6368]">
                 <button
                   type="button"
                   onClick={() => toggleService(s.id)}
-                  className="text-gray-300 hover:text-red-500 transition-colors"
+                  className="text-[#bdc1c6] hover:text-[#c5221f] transition-colors"
                   aria-label={`Remove ${s.label}`}
                 >
                   ×
                 </button>
                 {s.label}
               </span>
-              <span className="text-sm font-medium text-gray-900 tabular-nums">{fmtUsd(s.price)}</span>
+              <span className="text-[15px] font-medium text-[#202124] tabular-nums">{fmtUsd(s.price)}</span>
             </div>
           ))}
           <div className="flex items-center justify-between pt-4">
-            <span className="text-base font-semibold text-gray-900">Total</span>
+            <span className="text-base font-medium text-[#202124]">Total</span>
             <span className="text-right">
-              <span className="block text-xl font-semibold text-gray-900 tabular-nums">
-                {fmtUsd(billing.oneTimeTotal)} <span className="text-sm font-normal text-gray-500">one-time</span>
+              <span className="block text-[22px] font-normal text-[#202124] tabular-nums">
+                {fmtUsd(billing.oneTimeTotal)} <span className="text-[15px] text-[#5f6368]">one-time</span>
               </span>
-              <span className="block text-sm text-gray-500 tabular-nums">
+              <span className="block text-[15px] text-[#5f6368] tabular-nums">
                 + {fmtUsd(billing.listingFeeMonthly)} / month when live
               </span>
             </span>
           </div>
         </div>
-        <p className="mt-4 rounded-xl bg-gray-50 border border-gray-100 p-4 text-[13px] leading-relaxed text-gray-500">
+        <p className="mt-4 rounded-2xl bg-[#f8f9fa] border border-transparent p-4 text-sm leading-relaxed text-[#5f6368]">
           Production fees are one-time and payable 50% before the shoot, 50% on delivery.
           The monthly listing fee starts only when this development goes live. All prices exclude VAT.
         </p>

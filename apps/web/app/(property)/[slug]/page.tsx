@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-property';
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
+import { TrackPageView } from '../../../components/property/TrackPageView';
 import { PropertyFooter } from '../../../components/property/PropertyFooter';
 import { PropertyHero } from '../../../components/property/PropertyHero';
 import { PropertyOverview } from '../../../components/property/PropertyOverview';
@@ -63,6 +64,7 @@ export default async function PropertyPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white">
+      <TrackPageView propertyId={property.id} />
       <PropertyTopbar property={property} />
       <PropertyHero property={property} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
