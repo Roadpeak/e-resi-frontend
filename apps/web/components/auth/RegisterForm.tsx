@@ -147,14 +147,14 @@ export function RegisterForm() {
           <div key={label} className="flex items-center gap-1">
             <div className={cn(
               'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold transition-all',
-              i < step ? 'bg-brand-500 text-white' : i === step ? 'bg-brand-600 text-white ring-2 ring-brand-500/30' : 'bg-white/8 text-white/30',
+              i < step ? 'bg-brand-500 text-white' : i === step ? 'bg-brand-600 text-white ring-2 ring-brand-500/30' : 'bg-gray-100 text-gray-400',
             )}>
               {i < step ? <Check size={10} /> : i + 1}
             </div>
-            <span className={cn('text-[10px] font-medium tracking-wide', i === step ? 'text-white/70' : 'text-white/25')}>
+            <span className={cn('text-[10px] font-medium tracking-wide', i === step ? 'text-gray-600' : 'text-gray-400')}>
               {label}
             </span>
-            {i < STEPS.length - 1 && <div className="w-6 h-px bg-white/10 mx-0.5" />}
+            {i < STEPS.length - 1 && <div className="w-6 h-px bg-gray-200 mx-0.5" />}
           </div>
         ))}
       </div>
@@ -168,8 +168,8 @@ export function RegisterForm() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <h1 className="font-display font-light text-white text-3xl mb-1">Create account</h1>
-            <p className="text-sm text-white/40 mb-6">How will you use e-resi?</p>
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Create account</h1>
+            <p className="text-sm text-gray-500 mb-6">How will you use e-resi?</p>
 
             <div className="space-y-3">
               {ROLES.map((r) => (
@@ -181,19 +181,19 @@ export function RegisterForm() {
                     'w-full rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer',
                     role === r.id
                       ? 'border-brand-500/50 bg-brand-600/10 ring-1 ring-brand-500/20'
-                      : 'border-white/8 bg-white/4 hover:border-white/15 hover:bg-white/6',
+                      : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100',
                   )}
                 >
                   <div className="flex items-start gap-3">
                     <div className={cn(
                       'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all',
-                      role === r.id ? 'bg-brand-600/20 text-brand-400' : 'bg-white/8 text-white/40',
+                      role === r.id ? 'bg-brand-600/20 text-brand-600' : 'bg-gray-100 text-gray-400',
                     )}>
                       {r.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className={cn('font-semibold text-sm transition-colors', role === r.id ? 'text-white' : 'text-white/70')}>
+                        <p className={cn('font-semibold text-sm transition-colors', role === r.id ? 'text-gray-900' : 'text-gray-600')}>
                           {r.label}
                         </p>
                         {role === r.id && (
@@ -202,7 +202,7 @@ export function RegisterForm() {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-white/35 mt-0.5">{r.sublabel}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{r.sublabel}</p>
                       {role === r.id && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
@@ -212,7 +212,7 @@ export function RegisterForm() {
                           {r.features.map((f) => (
                             <div key={f} className="flex items-center gap-2">
                               <div className="h-1 w-1 rounded-full bg-brand-400 shrink-0" />
-                              <span className="text-[11px] text-white/50">{f}</span>
+                              <span className="text-[11px] text-gray-500">{f}</span>
                             </div>
                           ))}
                         </motion.div>
@@ -234,9 +234,9 @@ export function RegisterForm() {
               Continue
             </Button>
 
-            <p className="text-center text-xs text-white/30 mt-6">
+            <p className="text-center text-xs text-gray-400 mt-6">
               Already have an account?{' '}
-              <Link href="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+              <Link href="/login" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
                 Sign in
               </Link>
             </p>
@@ -255,22 +255,22 @@ export function RegisterForm() {
               <button
                 type="button"
                 onClick={() => setStep(0)}
-                className="text-xs text-white/30 hover:text-white/70 transition-colors cursor-pointer"
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 ← Back
               </button>
-              <span className="text-white/15">·</span>
+              <span className="text-gray-300">·</span>
               <div className={cn(
                 'flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border',
-                'border-brand-500/20 bg-brand-500/10 text-brand-400',
+                'border-brand-500/20 bg-brand-500/10 text-brand-600',
               )}>
                 {selectedRole?.icon && <span className="[&>svg]:w-3 [&>svg]:h-3">{selectedRole.icon}</span>}
                 {selectedRole?.label}
               </div>
             </div>
 
-            <h1 className="font-display font-light text-white text-3xl mb-1">Your details</h1>
-            <p className="text-sm text-white/40 mb-6">
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Your details</h1>
+            <p className="text-sm text-gray-500 mb-6">
               {role === 'developer' ? 'Tell us about you and your company' : 'Set up your profile'}
             </p>
 
@@ -279,7 +279,7 @@ export function RegisterForm() {
               {/* Avatar / Logo upload */}
               {role === 'developer' ? (
                 <div>
-                  <p className="text-sm font-medium text-white/70 mb-2">Company logo</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Company logo</p>
                   <input
                     ref={logoInputRef}
                     type="file"
@@ -294,7 +294,7 @@ export function RegisterForm() {
                       'relative w-full h-24 rounded-2xl border-2 border-dashed transition-all duration-200 overflow-hidden cursor-pointer group',
                       logoPreview
                         ? 'border-brand-500/40 bg-transparent'
-                        : 'border-white/10 bg-white/4 hover:border-white/20 hover:bg-white/6',
+                        : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100',
                     )}
                   >
                     {logoPreview ? (
@@ -313,9 +313,9 @@ export function RegisterForm() {
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full gap-1.5">
-                        <Upload size={18} className="text-white/25" />
-                        <p className="text-xs text-white/30">Click to upload logo</p>
-                        <p className="text-[10px] text-white/20">PNG, JPG, SVG — recommended 400×120px</p>
+                        <Upload size={18} className="text-gray-400" />
+                        <p className="text-xs text-gray-500">Click to upload logo</p>
+                        <p className="text-[10px] text-gray-400">PNG, JPG, SVG — recommended 400×120px</p>
                       </div>
                     )}
                   </button>
@@ -333,7 +333,7 @@ export function RegisterForm() {
                     <button
                       type="button"
                       onClick={() => avatarInputRef.current?.click()}
-                      className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-dashed border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/8 transition-all cursor-pointer group"
+                      className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 transition-all cursor-pointer group"
                     >
                       {avatarPreview ? (
                         <>
@@ -344,7 +344,7 @@ export function RegisterForm() {
                         </>
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <User size={20} className="text-white/25" />
+                          <User size={20} className="text-gray-400" />
                         </div>
                       )}
                     </button>
@@ -352,19 +352,19 @@ export function RegisterForm() {
                       <button
                         type="button"
                         onClick={() => { setAvatarPreview(null); if (avatarInputRef.current) avatarInputRef.current.value = ''; }}
-                        className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-surface-700 border border-white/10 text-white/60 hover:text-white cursor-pointer"
+                        className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-gray-300 text-gray-500 hover:text-gray-900 cursor-pointer"
                       >
                         <X size={8} />
                       </button>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white/70 mb-0.5">Profile photo</p>
-                    <p className="text-xs text-white/30">Optional · JPG or PNG, max 5MB</p>
+                    <p className="text-sm font-medium text-gray-700 mb-0.5">Profile photo</p>
+                    <p className="text-xs text-gray-500">Optional · JPG or PNG, max 5MB</p>
                     <button
                       type="button"
                       onClick={() => avatarInputRef.current?.click()}
-                      className="mt-1.5 text-xs text-brand-400 hover:text-brand-300 transition-colors cursor-pointer"
+                      className="mt-1.5 text-xs text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
                     >
                       {avatarPreview ? 'Change photo' : 'Upload photo'}
                     </button>
@@ -435,7 +435,7 @@ export function RegisterForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="cursor-pointer hover:text-white/70 transition-colors"
+                    className="cursor-pointer hover:text-gray-600 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -454,19 +454,19 @@ export function RegisterForm() {
                   type="checkbox"
                   checked={form.agreeTerms}
                   onChange={(e) => setForm((f) => ({ ...f, agreeTerms: e.target.checked }))}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-white/20 bg-surface-800 accent-brand-500 cursor-pointer"
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 bg-white accent-brand-500 cursor-pointer"
                   required
                 />
-                <span className="text-xs text-white/40 leading-relaxed">
+                <span className="text-xs text-gray-500 leading-relaxed">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-brand-400 hover:text-brand-300">Terms of Service</Link>
+                  <Link href="/terms" className="text-brand-600 hover:text-brand-700">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-brand-400 hover:text-brand-300">Privacy Policy</Link>
+                  <Link href="/privacy" className="text-brand-600 hover:text-brand-700">Privacy Policy</Link>
                 </span>
               </label>
 
               {serverError && (
-                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                   {serverError}
                 </p>
               )}
@@ -495,16 +495,16 @@ export function RegisterForm() {
             className="text-center"
           >
             <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-brand-600/20 border border-brand-500/20">
-              <Mail size={28} className="text-brand-400" />
+              <Mail size={28} className="text-brand-600" />
             </div>
-            <h1 className="font-display font-light text-white text-3xl mb-2">Check your inbox</h1>
-            <p className="text-sm text-white/40 mb-2">
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Check your inbox</h1>
+            <p className="text-sm text-gray-500 mb-2">
               We&apos;ve sent a verification link to
             </p>
-            <p className="text-sm font-medium text-white mb-6">{form.email || 'your email'}</p>
+            <p className="text-sm font-medium text-gray-900 mb-6">{form.email || 'your email'}</p>
 
-            <div className="rounded-2xl border border-white/8 bg-white/4 p-5 text-left mb-6">
-              <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">What happens next</p>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-left mb-6">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">What happens next</p>
               <div className="space-y-2.5">
                 {[
                   'Click the link in your email to verify your account',
@@ -512,16 +512,16 @@ export function RegisterForm() {
                   `Access your ${role === 'developer' ? 'developer dashboard' : role === 'investor' ? 'investment portfolio' : 'rental dashboard'}`,
                 ].map((text, i) => (
                   <div key={i} className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600/20 text-[10px] font-bold text-brand-400 mt-0.5">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600/20 text-[10px] font-bold text-brand-600 mt-0.5">
                       {i + 1}
                     </div>
-                    <p className="text-xs text-white/50 leading-relaxed">{text}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{text}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <p className="text-xs text-white/30 mb-4">
+            <p className="text-xs text-gray-500 mb-4">
               Didn&apos;t receive it?{' '}
               <button
                 type="button"
@@ -532,7 +532,7 @@ export function RegisterForm() {
                     // ignore
                   }
                 }}
-                className="text-brand-400 hover:text-brand-300 transition-colors cursor-pointer"
+                className="text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
               >
                 Resend email
               </button>
@@ -567,12 +567,12 @@ function PasswordStrength({ password }: { password: string }) {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={cn('h-1 flex-1 rounded-full transition-all duration-300', i < score ? colors[score - 1] : 'bg-white/10')}
+            className={cn('h-1 flex-1 rounded-full transition-all duration-300', i < score ? colors[score - 1] : 'bg-gray-200')}
           />
         ))}
       </div>
-      <p className="text-[10px] text-white/30">
-        Strength: <span className="font-medium text-white/60">{labels[score - 1] ?? 'Too short'}</span>
+      <p className="text-[10px] text-gray-500">
+        Strength: <span className="font-medium text-gray-700">{labels[score - 1] ?? 'Too short'}</span>
       </p>
     </div>
   );

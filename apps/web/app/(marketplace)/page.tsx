@@ -7,7 +7,7 @@ import { SplitFeature } from '../../components/marketplace/SplitFeature';
 
 export default function HomePage() {
   return (
-    <main className="relative bg-ink">
+    <main className="relative bg-ink text-chalk">
       <Navbar />
       <HeroSection />
       <PropertyShowcase />

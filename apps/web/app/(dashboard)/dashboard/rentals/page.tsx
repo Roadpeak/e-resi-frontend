@@ -10,10 +10,10 @@ import { cn } from '../../../../lib/utils';
 import { useMyRentListings } from '../../../../lib/api/queries';
 
 const STATUS_STYLES: Record<string, string> = {
-  AVAILABLE: 'bg-green-500/15 text-green-400 border border-green-500/20',
-  PARTIALLY_AVAILABLE: 'bg-orange-500/15 text-orange-400 border border-orange-500/20',
-  FULLY_LET: 'bg-white/5 text-white/30 border border-white/10',
-  ARCHIVED: 'bg-white/5 text-white/20 border border-white/5',
+  AVAILABLE: 'bg-green-50 text-green-700 border border-green-200',
+  PARTIALLY_AVAILABLE: 'bg-orange-50 text-orange-700 border border-orange-200',
+  FULLY_LET: 'bg-gray-100 text-gray-500 border border-gray-200',
+  ARCHIVED: 'bg-gray-100 text-gray-400 border border-gray-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -37,7 +37,7 @@ export default function DashboardRentals() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Loader2 size={24} className="animate-spin text-white/30" />
+        <Loader2 size={24} className="animate-spin text-gray-400" />
       </div>
     );
   }
@@ -47,8 +47,8 @@ export default function DashboardRentals() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Rent Listings</h2>
-          <p className="text-sm text-white/40 mt-0.5">{listings.length} active listing{listings.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-xl font-semibold text-gray-900">Rent Listings</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{listings.length} active listing{listings.length !== 1 ? 's' : ''}</p>
         </div>
         <Link href="/dashboard/rentals/new">
           <Button icon={<Plus size={15} />}>New Listing</Button>
@@ -56,10 +56,10 @@ export default function DashboardRentals() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-surface-900/50 p-16 text-center">
-          <Home size={32} className="mx-auto mb-3 text-white/20" />
-          <p className="text-sm font-medium text-white/50">No rent listings yet</p>
-          <p className="text-xs text-white/25 mt-1">Create a rent listing and connect it to your property with available unit types.</p>
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-16 text-center">
+          <Home size={32} className="mx-auto mb-3 text-gray-300" />
+          <p className="text-sm font-medium text-gray-600">No rent listings yet</p>
+          <p className="text-xs text-gray-400 mt-1">Create a rent listing and connect it to your property with available unit types.</p>
           <Link href="/dashboard/rentals/new">
             <Button size="sm" className="mt-4" icon={<Plus size={13} />}>New Listing</Button>
           </Link>
@@ -67,20 +67,20 @@ export default function DashboardRentals() {
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-hidden rounded-2xl border border-white/5 bg-surface-800">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Listing</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Units</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Price From</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Tours</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Actions</th>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Listing</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Units</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Price From</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tours</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-gray-200">
                   {listings.map((listing, i) => {
                     const totalAvailable = listing.units.reduce((s, u) => s + u.available, 0);
                     const totalUnits = listing.units.reduce((s, u) => s + u.total, 0);
@@ -91,7 +91,7 @@ export default function DashboardRentals() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.05 }}
-                        className="hover:bg-white/[0.02] transition-colors"
+                        className="hover:bg-gray-50 transition-colors"
                       >
                         {/* Listing name + thumbnail */}
                         <td className="px-6 py-4">
@@ -102,8 +102,8 @@ export default function DashboardRentals() {
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="font-medium text-white text-sm truncate max-w-48">{listing.name}</p>
-                              <p className="text-xs text-white/40">{listing.address.neighborhood}, {listing.address.city}</p>
+                              <p className="font-medium text-gray-900 text-sm truncate max-w-48">{listing.name}</p>
+                              <p className="text-xs text-gray-500">{listing.address.neighborhood}, {listing.address.city}</p>
                             </div>
                           </div>
                         </td>
@@ -117,31 +117,31 @@ export default function DashboardRentals() {
 
                         {/* Units */}
                         <td className="px-4 py-4">
-                          <p className="text-sm text-white">{totalAvailable} <span className="text-white/30">/ {totalUnits}</span></p>
-                          <p className="text-xs text-white/30">available</p>
+                          <p className="text-sm text-gray-900">{totalAvailable} <span className="text-gray-400">/ {totalUnits}</span></p>
+                          <p className="text-xs text-gray-400">available</p>
                         </td>
 
                         {/* Price */}
                         <td className="px-4 py-4">
-                          <p className="text-sm font-medium text-white">{formatRent(listing.priceFrom)}</p>
-                          <p className="text-xs text-white/30">/mo</p>
+                          <p className="text-sm font-medium text-gray-900">{formatRent(listing.priceFrom)}</p>
+                          <p className="text-xs text-gray-400">/mo</p>
                         </td>
 
                         {/* Tours */}
                         <td className="px-4 py-4">
                           <div className="flex gap-1.5">
                             {listing.showCinematicTour && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-warm-500/20 bg-warm-500/10 px-2 py-0.5 text-[10px] text-warm-400">
+                              <span className="inline-flex items-center gap-1 rounded-full border border-warm-200 bg-warm-50 px-2 py-0.5 text-[10px] text-warm-700">
                                 <Film size={9} /> Cinematic
                               </span>
                             )}
                             {listing.show3DTour && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-brand-500/20 bg-brand-500/10 px-2 py-0.5 text-[10px] text-brand-300">
+                              <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-[10px] text-brand-700">
                                 <Box size={9} /> 3D
                               </span>
                             )}
                             {!listing.showCinematicTour && !listing.show3DTour && (
-                              <span className="text-xs text-white/20">—</span>
+                              <span className="text-xs text-gray-400">—</span>
                             )}
                           </div>
                         </td>
@@ -151,13 +151,13 @@ export default function DashboardRentals() {
                           <div className="flex items-center gap-1">
                             <Link
                               href={`/rent/${listing.slug}`}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                               title="View live"
                             >
                               <Eye size={14} />
                             </Link>
                             <button
-                              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                               title="Edit"
                             >
                               <Pencil size={14} />
@@ -165,17 +165,17 @@ export default function DashboardRentals() {
                             <div className="relative">
                               <button
                                 onClick={() => setMenuOpen(menuOpen === listing.id ? null : listing.id)}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                               >
                                 <MoreHorizontal size={14} />
                               </button>
                               {menuOpen === listing.id && (
-                                <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-xl border border-white/10 bg-surface-700 shadow-2xl shadow-black/40">
+                                <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                                   {['Edit Units', 'View Analytics', 'Update Availability', 'Duplicate', 'Archive'].map((action) => (
                                     <button
                                       key={action}
                                       onClick={() => setMenuOpen(null)}
-                                      className="block w-full px-4 py-2.5 text-left text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                                      className="block w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                                     >
                                       {action}
                                     </button>
@@ -194,9 +194,9 @@ export default function DashboardRentals() {
           </div>
 
           {/* Add more CTA */}
-          <div className="rounded-2xl border border-dashed border-white/10 bg-surface-900/50 p-10 text-center">
-            <Home size={32} className="mx-auto mb-3 text-white/20" />
-            <p className="text-sm font-medium text-white/50">Ready to add another listing?</p>
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <Home size={32} className="mx-auto mb-3 text-gray-300" />
+            <p className="text-sm font-medium text-gray-600">Ready to add another listing?</p>
             <Link href="/dashboard/rentals/new">
               <Button size="sm" className="mt-4" icon={<Plus size={13} />}>New Listing</Button>
             </Link>

@@ -17,7 +17,7 @@ export default function DashboardProperties() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Loader2 size={24} className="animate-spin text-white/30" />
+        <Loader2 size={24} className="animate-spin text-gray-400" />
       </div>
     );
   }
@@ -27,43 +27,43 @@ export default function DashboardProperties() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Your Properties</h2>
-          <p className="text-sm text-white/40 mt-0.5">{properties.length} development{properties.length !== 1 ? 's' : ''} in your portfolio</p>
+          <h2 className="text-xl font-semibold text-gray-900">Your Properties</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{properties.length} development{properties.length !== 1 ? 's' : ''} in your portfolio</p>
         </div>
         <Button icon={<Plus size={15} />}>Add Property</Button>
       </div>
 
       {properties.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-surface-900/50 p-16 text-center">
-          <Building2 size={32} className="mx-auto mb-3 text-white/20" />
-          <p className="text-sm font-medium text-white/50">No properties yet</p>
-          <p className="text-xs text-white/25 mt-1">List a property and start receiving inquiries within minutes.</p>
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-16 text-center">
+          <Building2 size={32} className="mx-auto mb-3 text-gray-300" />
+          <p className="text-sm font-medium text-gray-600">No properties yet</p>
+          <p className="text-xs text-gray-400 mt-1">List a property and start receiving inquiries within minutes.</p>
           <Button size="sm" className="mt-4" icon={<Plus size={13} />}>Add Property</Button>
         </div>
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-hidden rounded-2xl border border-white/5 bg-surface-800">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Property</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Units</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Price From</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Features</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-white/30">Actions</th>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Property</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Units</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Price From</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Features</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-gray-200">
                   {properties.map((p, i) => (
                     <motion.tr
                       key={p.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.05 }}
-                      className="hover:bg-white/[0.02] transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       {/* Property name + thumbnail */}
                       <td className="px-6 py-4">
@@ -72,12 +72,12 @@ export default function DashboardProperties() {
                             {p.heroImageUrl ? (
                               <Image src={p.heroImageUrl} alt={p.name} fill className="object-cover" sizes="64px" />
                             ) : (
-                              <div className="h-full w-full bg-surface-700" />
+                              <div className="h-full w-full bg-gray-100" />
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-white text-sm truncate max-w-48">{p.name}</p>
-                            <p className="text-xs text-white/40">{p.address?.neighborhood ?? '—'}, {p.address?.city ?? '—'}</p>
+                            <p className="font-medium text-gray-900 text-sm truncate max-w-48">{p.name}</p>
+                            <p className="text-xs text-gray-500">{p.address?.neighborhood ?? '—'}, {p.address?.city ?? '—'}</p>
                           </div>
                         </div>
                       </td>
@@ -91,30 +91,30 @@ export default function DashboardProperties() {
 
                       {/* Units */}
                       <td className="px-4 py-4">
-                        <p className="text-sm text-white">{p.availableUnits} <span className="text-white/30">/ {p.totalUnits}</span></p>
-                        <p className="text-xs text-white/30">available</p>
+                        <p className="text-sm text-gray-900">{p.availableUnits} <span className="text-gray-400">/ {p.totalUnits}</span></p>
+                        <p className="text-xs text-gray-400">available</p>
                       </td>
 
                       {/* Price */}
                       <td className="px-4 py-4">
-                        <p className="text-sm font-medium text-white">{formatPrice(p.priceFrom, p.currency)}</p>
+                        <p className="text-sm font-medium text-gray-900">{formatPrice(p.priceFrom, p.currency)}</p>
                       </td>
 
                       {/* Features */}
                       <td className="px-4 py-4">
                         <div className="flex gap-1.5">
                           {p.has3DTour && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-brand-500/20 bg-brand-500/10 px-2 py-0.5 text-[10px] text-brand-300">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-[10px] text-brand-700">
                               <Box size={9} /> 3D
                             </span>
                           )}
                           {p.hasVRTour && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-300">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] text-violet-700">
                               <Headset size={9} /> VR
                             </span>
                           )}
                           {p.hasDigitalTwin && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700">
                               ✦ Twin
                             </span>
                           )}
@@ -126,13 +126,13 @@ export default function DashboardProperties() {
                         <div className="flex items-center gap-1">
                           <Link
                             href={`/${p.slug}`}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                             title="View live"
                           >
                             <Eye size={14} />
                           </Link>
                           <button
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                             title="Edit"
                           >
                             <Pencil size={14} />
@@ -140,17 +140,17 @@ export default function DashboardProperties() {
                           <div className="relative">
                             <button
                               onClick={() => setMenuOpen(menuOpen === p.id ? null : p.id)}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                             >
                               <MoreHorizontal size={14} />
                             </button>
                             {menuOpen === p.id && (
-                              <div className="absolute right-0 top-9 z-20 w-40 overflow-hidden rounded-xl border border-white/10 bg-surface-700 shadow-2xl shadow-black/40">
+                              <div className="absolute right-0 top-9 z-20 w-40 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                                 {['Manage Units', 'View Analytics', 'Upload Media', 'Duplicate', 'Archive'].map((action) => (
                                   <button
                                     key={action}
                                     onClick={() => setMenuOpen(null)}
-                                    className="block w-full px-4 py-2.5 text-left text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                                    className="block w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                                   >
                                     {action}
                                   </button>
@@ -168,10 +168,10 @@ export default function DashboardProperties() {
           </div>
 
           {/* Add more CTA */}
-          <div className="rounded-2xl border border-dashed border-white/10 bg-surface-900/50 p-10 text-center">
-            <Building2 size={32} className="mx-auto mb-3 text-white/20" />
-            <p className="text-sm font-medium text-white/50">Ready to add your next development?</p>
-            <p className="text-xs text-white/25 mt-1">List a property and start receiving inquiries within minutes.</p>
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <Building2 size={32} className="mx-auto mb-3 text-gray-300" />
+            <p className="text-sm font-medium text-gray-600">Ready to add your next development?</p>
+            <p className="text-xs text-gray-400 mt-1">List a property and start receiving inquiries within minutes.</p>
             <Button size="sm" className="mt-4" icon={<Plus size={13} />}>Add Property</Button>
           </div>
         </>

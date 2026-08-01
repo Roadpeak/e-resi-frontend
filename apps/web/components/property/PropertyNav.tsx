@@ -50,7 +50,7 @@ export function PropertyNav({ has3D, hasConstruction }: Props) {
   };
 
   return (
-    <div className="sticky top-[57px] z-40 border-b border-white/5 glass">
+    <div className="sticky top-[57px] z-40 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center gap-1 overflow-x-auto py-1 scrollbar-hide">
           {visible.map((section) => (
@@ -60,8 +60,8 @@ export function PropertyNav({ has3D, hasConstruction }: Props) {
               className={cn(
                 'shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all cursor-pointer',
                 active === section.id
-                  ? 'text-white bg-white/10'
-                  : 'text-white/40 hover:text-white/70 hover:bg-white/5',
+                  ? 'text-gray-900 bg-gray-100'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100',
               )}
             >
               {section.label}

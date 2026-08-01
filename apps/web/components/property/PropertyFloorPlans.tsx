@@ -18,7 +18,7 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
   return (
     <section id="floorplans" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Layouts</p>
-      <h2 className="mb-8 text-3xl font-semibold text-white">Floor Plans</h2>
+      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Floor Plans</h2>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Plan selector */}
@@ -31,11 +31,11 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
                 'flex flex-col items-start gap-1 rounded-2xl border p-5 text-left transition-all cursor-pointer',
                 active === i
                   ? 'border-brand-500/40 bg-brand-500/10'
-                  : 'border-white/5 bg-surface-800 hover:border-white/10',
+                  : 'border-gray-200 bg-white hover:border-gray-300',
               )}
             >
-              <span className="font-medium text-white">{fp.name}</span>
-              <div className="flex items-center gap-3 text-xs text-white/40 mt-1">
+              <span className="font-medium text-gray-900">{fp.name}</span>
+              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                 <span className="flex items-center gap-1"><BedDouble size={12} />{fp.bedrooms === 0 ? 'Studio' : `${fp.bedrooms} Bed`}</span>
                 <span className="flex items-center gap-1"><Bath size={12} />{fp.bathrooms} Bath</span>
                 <span className="flex items-center gap-1"><Maximize2 size={12} />{fp.sqm} sqm</span>
@@ -53,7 +53,7 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
-              className="relative overflow-hidden rounded-3xl border border-white/5 bg-surface-800"
+              className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white"
               style={{ aspectRatio: '4/3' }}
             >
               {plan.imageUrl ? (
@@ -65,7 +65,7 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
                   sizes="(max-width: 1024px) 100vw, 66vw"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-white/20 text-sm">No floor plan image</div>
+                <div className="flex h-full items-center justify-center text-gray-400 text-sm">No floor plan image</div>
               )}
             </motion.div>
           </AnimatePresence>
@@ -77,9 +77,9 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
               { label: 'Bathrooms', value: plan.bathrooms },
               { label: 'Floor Area', value: `${plan.sqm} sqm` },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-white/5 bg-surface-800 px-4 py-3 text-center">
-                <p className="text-lg font-semibold text-white">{value}</p>
-                <p className="text-xs text-white/40">{label}</p>
+              <div key={label} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center">
+                <p className="text-lg font-semibold text-gray-900">{value}</p>
+                <p className="text-xs text-gray-500">{label}</p>
               </div>
             ))}
           </div>

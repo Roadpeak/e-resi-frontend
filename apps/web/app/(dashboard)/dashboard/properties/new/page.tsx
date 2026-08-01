@@ -40,10 +40,10 @@ const tiers: TierDefinition[] = [
     icon: FileText,
     price: 0,
     monthlyFee: 49,
-    color: 'white/40',
-    borderColor: 'border-white/10',
-    bgColor: 'bg-white/3',
-    textColor: 'text-white/60',
+    color: 'gray',
+    borderColor: 'border-gray-300',
+    bgColor: 'bg-gray-50',
+    textColor: 'text-gray-600',
     features: [
       { label: 'Property details & description', included: true },
       { label: 'Up to 10 photos (self-upload)', included: true },
@@ -66,9 +66,9 @@ const tiers: TierDefinition[] = [
     price: 850,
     monthlyFee: 79,
     color: 'amber',
-    borderColor: 'border-amber-500/20',
-    bgColor: 'bg-amber-500/5',
-    textColor: 'text-amber-300',
+    borderColor: 'border-amber-300',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
     features: [
       { label: 'Property details & description', included: true },
       { label: 'Professional photography (unlimited)', included: true },
@@ -90,9 +90,9 @@ const tiers: TierDefinition[] = [
     price: 1_800,
     monthlyFee: 99,
     color: 'emerald',
-    borderColor: 'border-emerald-500/20',
-    bgColor: 'bg-emerald-500/5',
-    textColor: 'text-emerald-300',
+    borderColor: 'border-emerald-300',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
     features: [
       { label: 'Everything in Photography', included: true },
       { label: 'Cinematic property video (3–5 min)', included: true },
@@ -111,9 +111,9 @@ const tiers: TierDefinition[] = [
     price: 3_500,
     monthlyFee: 149,
     color: 'brand',
-    borderColor: 'border-brand-500/25',
-    bgColor: 'bg-brand-500/8',
-    textColor: 'text-brand-300',
+    borderColor: 'border-brand-300',
+    bgColor: 'bg-brand-50',
+    textColor: 'text-brand-700',
     popular: true,
     features: [
       { label: 'Everything in Photo + Video', included: true },
@@ -134,9 +134,9 @@ const tiers: TierDefinition[] = [
     price: 6_500,
     monthlyFee: 199,
     color: 'violet',
-    borderColor: 'border-violet-500/25',
-    bgColor: 'bg-violet-500/8',
-    textColor: 'text-violet-300',
+    borderColor: 'border-violet-300',
+    bgColor: 'bg-violet-50',
+    textColor: 'text-violet-700',
     features: [
       { label: 'Everything in 3D Tour', included: true },
       { label: '360° VR panorama capture', included: true },
@@ -154,9 +154,9 @@ const tiers: TierDefinition[] = [
     price: 12_000,
     monthlyFee: 299,
     color: 'gold',
-    borderColor: 'border-gold-500/30',
-    bgColor: 'bg-gold-500/8',
-    textColor: 'text-gold-300',
+    borderColor: 'border-gold-300',
+    bgColor: 'bg-gold-50',
+    textColor: 'text-gold-700',
     features: [
       { label: 'Everything in VR Tour', included: true },
       { label: 'Live digital twin', included: true },
@@ -184,8 +184,8 @@ function TierCard({
       className={cn(
         'relative w-full rounded-2xl border p-5 text-left transition-all duration-200 cursor-pointer',
         selected
-          ? `${tier.borderColor} ${tier.bgColor} ring-1 ring-inset ring-white/10`
-          : 'border-white/5 bg-surface-800 hover:border-white/10',
+          ? `${tier.borderColor} ${tier.bgColor} ring-1 ring-inset ring-black/5`
+          : 'border-gray-200 bg-white hover:border-gray-300',
       )}
     >
       {tier.popular && (
@@ -195,8 +195,8 @@ function TierCard({
       )}
 
       <div className="flex items-start justify-between gap-3 mb-4">
-        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', selected ? tier.bgColor : 'bg-white/5')}>
-          <Icon size={18} className={selected ? tier.textColor : 'text-white/30'} />
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', selected ? tier.bgColor : 'bg-gray-100')}>
+          <Icon size={18} className={selected ? tier.textColor : 'text-gray-400'} />
         </div>
         {selected && (
           <div className={cn('flex h-6 w-6 items-center justify-center rounded-full', tier.bgColor)}>
@@ -205,20 +205,20 @@ function TierCard({
         )}
       </div>
 
-      <h3 className={cn('font-semibold text-sm mb-0.5', selected ? 'text-white' : 'text-white/70')}>{tier.name}</h3>
-      <p className="text-xs text-white/35 mb-4 leading-relaxed">{tier.tagline}</p>
+      <h3 className={cn('font-semibold text-sm mb-0.5', selected ? 'text-gray-900' : 'text-gray-600')}>{tier.name}</h3>
+      <p className="text-xs text-gray-500 mb-4 leading-relaxed">{tier.tagline}</p>
 
       {/* Pricing */}
       <div className="space-y-1">
         {tier.price > 0 ? (
-          <p className={cn('text-base font-bold', selected ? tier.textColor : 'text-white/50')}>
+          <p className={cn('text-base font-bold', selected ? tier.textColor : 'text-gray-600')}>
             ${tier.price.toLocaleString()}
-            <span className="text-xs font-normal text-white/30 ml-1">production</span>
+            <span className="text-xs font-normal text-gray-400 ml-1">production</span>
           </p>
         ) : (
-          <p className={cn('text-base font-bold', selected ? tier.textColor : 'text-white/50')}>Free setup</p>
+          <p className={cn('text-base font-bold', selected ? tier.textColor : 'text-gray-600')}>Free setup</p>
         )}
-        <p className="text-xs text-white/30">
+        <p className="text-xs text-gray-400">
           + ${tier.monthlyFee}/mo listing fee
         </p>
       </div>
@@ -235,13 +235,13 @@ function FeatureList({ tier }: { tier: TierDefinition }) {
         <div key={f.label} className="flex items-center gap-2.5">
           <div className={cn(
             'flex h-4 w-4 shrink-0 items-center justify-center rounded-full',
-            f.included ? `${tier.bgColor}` : 'bg-white/3',
+            f.included ? `${tier.bgColor}` : 'bg-gray-100',
           )}>
             {f.included
               ? <Check size={9} className={tier.textColor} />
-              : <span className="text-white/15 text-[9px]">–</span>}
+              : <span className="text-gray-400 text-[9px]">–</span>}
           </div>
-          <span className={cn('text-xs', f.included ? 'text-white/60' : 'text-white/20')}>{f.label}</span>
+          <span className={cn('text-xs', f.included ? 'text-gray-600' : 'text-gray-400')}>{f.label}</span>
         </div>
       ))}
     </div>
@@ -261,8 +261,8 @@ export default function NewPropertyPage() {
     <div className="max-w-5xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-white">Create a New Listing</h1>
-        <p className="text-sm text-white/40 mt-1">Choose how you want e-resi to present your development to buyers.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Create a New Listing</h1>
+        <p className="text-sm text-gray-500 mt-1">Choose how you want e-resi to present your development to buyers.</p>
       </div>
 
       {/* Step indicator */}
@@ -274,15 +274,15 @@ export default function NewPropertyPage() {
               step === s
                 ? 'bg-brand-500 text-white'
                 : i < (['tier', 'details'].indexOf(step))
-                  ? 'bg-brand-900/50 text-brand-400 border border-brand-500/30'
-                  : 'bg-white/5 text-white/30 border border-white/10',
+                  ? 'bg-brand-100 text-brand-700 border border-brand-200'
+                  : 'bg-gray-100 text-gray-400 border border-gray-200',
             )}>
               {i + 1}
             </div>
-            <span className={cn('text-sm', step === s ? 'text-white font-medium' : 'text-white/30')}>
+            <span className={cn('text-sm', step === s ? 'text-gray-900 font-medium' : 'text-gray-500')}>
               {s === 'tier' ? 'Production Package' : 'Property Details'}
             </span>
-            {i < 1 && <ChevronRight size={14} className="text-white/20" />}
+            {i < 1 && <ChevronRight size={14} className="text-gray-300" />}
           </div>
         ))}
       </div>
@@ -299,8 +299,8 @@ export default function NewPropertyPage() {
           >
             {/* Tier grid */}
             <div>
-              <h2 className="text-base font-medium text-white mb-1">Select a production package</h2>
-              <p className="text-sm text-white/40 mb-5">
+              <h2 className="text-base font-medium text-gray-900 mb-1">Select a production package</h2>
+              <p className="text-sm text-gray-500 mb-5">
                 e-resi's production team will handle the entire media capture — photography, video, 3D modelling, and VR filming.
                 Choose the experience level that matches your development.
               </p>
@@ -325,18 +325,18 @@ export default function NewPropertyPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-white">{tier.name}</h3>
+                    <h3 className="font-semibold text-gray-900">{tier.name}</h3>
                     {tier.popular && (
-                      <span className="rounded-full bg-brand-500/20 border border-brand-500/30 px-2 py-0.5 text-[10px] font-medium text-brand-300">Popular</span>
+                      <span className="rounded-full bg-brand-100 border border-brand-200 px-2 py-0.5 text-[10px] font-medium text-brand-700">Popular</span>
                     )}
                   </div>
-                  <p className="text-sm text-white/40 mt-0.5">{tier.tagline}</p>
+                  <p className="text-sm text-gray-500 mt-0.5">{tier.tagline}</p>
                 </div>
                 <div className="ml-auto text-right shrink-0">
                   <p className={cn('text-xl font-bold', tier.textColor)}>
                     {tier.price > 0 ? `$${tier.price.toLocaleString()}` : 'Free'}
                   </p>
-                  <p className="text-xs text-white/30">+ ${tier.monthlyFee}/mo</p>
+                  <p className="text-xs text-gray-500">+ ${tier.monthlyFee}/mo</p>
                 </div>
               </div>
 
@@ -344,9 +344,9 @@ export default function NewPropertyPage() {
 
               {/* Info note */}
               {tier.id !== 'listing_only' && (
-                <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-white/5 bg-white/3 p-3">
-                  <Info size={13} className="text-white/30 shrink-0 mt-0.5" />
-                  <p className="text-xs text-white/40 leading-relaxed">
+                <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-gray-200 bg-white p-3">
+                  <Info size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-500 leading-relaxed">
                     Production is scheduled within 5–10 business days of listing approval.
                     Our team will contact you to coordinate access and capture.
                   </p>
@@ -355,9 +355,9 @@ export default function NewPropertyPage() {
             </div>
 
             {/* Pricing comparison note */}
-            <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-surface-800 p-4">
-              <AlertCircle size={15} className="text-white/25 shrink-0 mt-0.5" />
-              <p className="text-xs text-white/35 leading-relaxed">
+            <div className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+              <AlertCircle size={15} className="text-gray-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-500 leading-relaxed">
                 Production fees are a one-time charge per property for content capture and processing.
                 Monthly listing fees keep your property active on the e-resi platform and include analytics, inquiry management, and support.
                 All prices are in USD and exclude local taxes.
@@ -369,7 +369,7 @@ export default function NewPropertyPage() {
                 Continue with {tier.name}
                 <ChevronRight size={16} className="ml-1" />
               </Button>
-              <p className="text-sm text-white/30">You can upgrade your package later</p>
+              <p className="text-sm text-gray-500">You can upgrade your package later</p>
             </div>
           </motion.div>
         )}
@@ -387,22 +387,22 @@ export default function NewPropertyPage() {
             <div className={cn('flex items-center gap-3 rounded-2xl border p-4', tier.borderColor, tier.bgColor)}>
               <TierIcon size={16} className={tier.textColor} />
               <div>
-                <p className="text-sm font-medium text-white">{tier.name} package selected</p>
-                <p className="text-xs text-white/40">
+                <p className="text-sm font-medium text-gray-900">{tier.name} package selected</p>
+                <p className="text-xs text-gray-500">
                   {tier.price > 0 ? `$${tier.price.toLocaleString()} production + ` : ''}${tier.monthlyFee}/mo
                 </p>
               </div>
               <button
                 onClick={() => setStep('tier')}
-                className="ml-auto text-xs text-white/30 hover:text-white transition-colors cursor-pointer"
+                className="ml-auto text-xs text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 Change
               </button>
             </div>
 
             {/* Property form */}
-            <div className="rounded-2xl border border-white/5 bg-surface-800 p-6 space-y-5">
-              <h3 className="font-semibold text-white">Property Details</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-5">
+              <h3 className="font-semibold text-gray-900">Property Details</h3>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
@@ -412,33 +412,33 @@ export default function NewPropertyPage() {
                   { label: 'Number of Units', placeholder: 'Total units' },
                 ].map(({ label, placeholder }) => (
                   <div key={label} className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-white/40 uppercase tracking-wider">{label}</label>
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</label>
                     <input
                       type="text"
                       placeholder={placeholder}
-                      className="rounded-xl border border-white/5 bg-surface-900 px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/20 focus:outline-none transition-colors"
+                      className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 focus:outline-none transition-colors"
                     />
                   </div>
                 ))}
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-white/40 uppercase tracking-wider">Property Description</label>
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Property Description</label>
                 <textarea
                   rows={4}
                   placeholder="Describe your development — architecture, vision, target buyers..."
-                  className="rounded-xl border border-white/5 bg-surface-900 px-4 py-3 text-sm text-white placeholder-white/20 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/20 focus:outline-none transition-colors resize-none"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 focus:outline-none transition-colors resize-none"
                 />
               </div>
 
               {/* Category */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-white/40 uppercase tracking-wider">Category</label>
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {['Residential', 'Commercial', 'Mixed Use', 'Land'].map((cat) => (
                     <button
                       key={cat}
-                      className="rounded-xl border border-white/5 bg-surface-900 px-4 py-2 text-sm text-white/50 hover:text-white hover:border-white/15 transition-colors cursor-pointer first-of-type:border-brand-500/40 first-of-type:bg-brand-500/8 first-of-type:text-brand-300"
+                      className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors cursor-pointer first-of-type:border-brand-300 first-of-type:bg-brand-50 first-of-type:text-brand-700"
                     >
                       {cat}
                     </button>
@@ -448,8 +448,8 @@ export default function NewPropertyPage() {
             </div>
 
             {/* What happens next */}
-            <div className="rounded-2xl border border-white/5 bg-surface-800 p-6">
-              <h3 className="font-semibold text-white mb-4">What happens next</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">What happens next</h3>
               <div className="space-y-4">
                 {[
                   { step: '1', title: 'Listing review', body: 'Our team reviews your submission within 24 hours.' },
@@ -457,10 +457,10 @@ export default function NewPropertyPage() {
                   { step: '3', title: 'Go live', body: 'Your property goes live on e-resi once production is complete and approved.' },
                 ].map(({ step: s, title, body }) => (
                   <div key={s} className="flex gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-white/40">{s}</div>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-500">{s}</div>
                     <div>
-                      <p className="text-sm font-medium text-white">{title}</p>
-                      <p className="text-xs text-white/40 mt-0.5">{body}</p>
+                      <p className="text-sm font-medium text-gray-900">{title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{body}</p>
                     </div>
                   </div>
                 ))}
@@ -470,7 +470,7 @@ export default function NewPropertyPage() {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setStep('tier')}
-                className="text-sm text-white/30 hover:text-white transition-colors cursor-pointer"
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 ← Back
               </button>

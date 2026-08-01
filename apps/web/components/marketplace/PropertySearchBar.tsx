@@ -7,7 +7,7 @@ import { useProperties } from '../../lib/api/queries';
 import Link from 'next/link';
 import { cn } from '../../lib/utils';
 
-export function PropertySearchBar() {
+export function PropertySearchBar({ bare = false }: { bare?: boolean }) {
   const { filters, setFilter } = useFiltersStore();
   const [localQuery, setLocalQuery] = useState(filters.query ?? '');
   const [focused, setFocused] = useState(false);
@@ -24,8 +24,12 @@ export function PropertySearchBar() {
   return (
     <div className="relative flex-1">
       <div className={cn(
-        'flex items-center gap-2.5 rounded-xl border bg-gray-50 px-4 py-2.5 transition-all',
-        focused ? 'border-gray-300 bg-white shadow-sm' : 'border-gray-200',
+        bare
+          ? 'flex items-center gap-2.5 rounded-xl px-3 py-2 transition-all'
+          : cn(
+              'flex items-center gap-2.5 rounded-xl border bg-gray-50 px-4 py-2.5 transition-all',
+              focused ? 'border-gray-300 bg-white shadow-sm' : 'border-gray-200',
+            ),
       )}>
         <Search size={15} className="shrink-0 text-gray-400" />
         <input

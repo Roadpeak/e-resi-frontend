@@ -5,32 +5,21 @@ import { usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
-    const overlay = overlayRef.current;
-    if (!overlay) return;
+    const content = contentRef.current;
+    if (!content) return;
 
-    // Push in from right → cover → push out to left
-    const tl = gsap.timeline();
-    tl.set(overlay, { x: '100%', display: 'block' })
-      .to(overlay, { x: '0%', duration: 0.45, ease: 'power3.inOut' })
-      .to(overlay, { x: '-100%', duration: 0.45, ease: 'power3.inOut', delay: 0.05 })
-      .set(overlay, { display: 'none' });
+    const tween = gsap.fromTo(
+      content,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, ease: 'power1.out' },
+    );
 
-    return () => { tl.kill(); };
+    return () => { tween.kill(); };
   }, [pathname]);
 
-  return (
-    <>
-      {/* Transition overlay */}
-      <div
-        ref={overlayRef}
-        className="fixed inset-0 z-[9999] pointer-events-none hidden"
-        style={{ background: '#0a0a0a' }}
-      />
-      {children}
-    </>
-  );
+  return <div ref={contentRef}>{children}</div>;
 }

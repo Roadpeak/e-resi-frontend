@@ -8,13 +8,13 @@ interface BadgeProps {
 }
 
 const variants = {
-  default: 'bg-white/10 text-white/80 border border-white/10',
-  brand: 'bg-brand-500/15 text-brand-300 border border-brand-500/20',
-  gold: 'bg-gold-500/15 text-gold-300 border border-gold-500/20',
-  success: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
-  warning: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
-  danger: 'bg-red-500/15 text-red-300 border border-red-500/20',
-  outline: 'bg-transparent text-white/60 border border-white/20',
+  default: 'bg-gray-100 text-gray-700 border border-gray-200',
+  brand: 'bg-brand-50 text-brand-700 border border-brand-200',
+  gold: 'bg-gold-50 text-gold-700 border border-gold-200',
+  success: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  warning: 'bg-amber-50 text-amber-700 border border-amber-200',
+  danger: 'bg-red-50 text-red-700 border border-red-200',
+  outline: 'bg-transparent text-gray-500 border border-gray-300',
 };
 
 const sizes = {

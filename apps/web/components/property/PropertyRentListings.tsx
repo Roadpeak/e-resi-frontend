@@ -18,9 +18,9 @@ const FURNISHING_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  available: 'bg-green-500/15 text-green-400 border-green-500/20',
-  partially_available: 'bg-orange-500/15 text-orange-400 border-orange-500/20',
-  fully_let: 'bg-white/5 text-white/30 border-white/10',
+  available: 'bg-green-500/15 text-green-600 border-green-500/20',
+  partially_available: 'bg-orange-500/15 text-orange-600 border-orange-500/20',
+  fully_let: 'bg-gray-100 text-gray-400 border-gray-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -33,19 +33,18 @@ export function PropertyRentListings({ listings }: Props) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Home size={14} className="text-brand-400" />
-            <span className="text-xs text-white/30 tracking-[0.2em] uppercase">For Rent</span>
-          </div>
-          <h2 className="font-display font-light text-white text-2xl sm:text-3xl">
+          <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-brand-400">
+            <Home size={13} /> For Rent
+          </p>
+          <h2 className="text-3xl font-semibold text-gray-900">
             Rental units available
           </h2>
         </div>
         <Link
           href="/rent"
-          className="hidden sm:inline-flex items-center gap-2 text-white/30 hover:text-white text-xs tracking-[0.1em] uppercase transition-colors"
+          className="hidden sm:inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 text-xs font-medium uppercase tracking-wider transition-colors"
         >
           All rentals <ArrowRight size={11} />
         </Link>
@@ -55,16 +54,16 @@ export function PropertyRentListings({ listings }: Props) {
         {listings.map((listing) => {
           const totalAvailable = listing.units.reduce((s, u) => s + u.available, 0);
           return (
-            <div key={listing.id} className="rounded-2xl border border-white/8 bg-white/4 overflow-hidden">
+            <div key={listing.id} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
               {/* Listing header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
                   <span className={cn('text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border', STATUS_STYLES[listing.status])}>
                     {STATUS_LABELS[listing.status]}
                   </span>
-                  <span className="text-white/40 text-xs">{totalAvailable} units available</span>
-                  <span className="text-white/20 text-xs">·</span>
-                  <span className="text-white/40 text-xs">{FURNISHING_LABELS[listing.furnishing]}</span>
+                  <span className="text-gray-500 text-xs">{totalAvailable} units available</span>
+                  <span className="text-gray-400 text-xs">·</span>
+                  <span className="text-gray-500 text-xs">{FURNISHING_LABELS[listing.furnishing]}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {listing.showCinematicTour && (
@@ -87,23 +86,23 @@ export function PropertyRentListings({ listings }: Props) {
               </div>
 
               {/* Unit types grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-200">
                 {listing.units.map((unit) => (
-                  <div key={unit.id} className="bg-surface-950 p-5">
+                  <div key={unit.id} className="bg-white p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-semibold text-white text-sm">{unit.label}</p>
-                        <p className="text-white/30 text-xs mt-0.5">{FURNISHING_LABELS[unit.furnishing]}</p>
+                        <p className="font-semibold text-gray-900 text-sm">{unit.label}</p>
+                        <p className="text-gray-400 text-xs mt-0.5">{FURNISHING_LABELS[unit.furnishing]}</p>
                       </div>
                       <span className={cn(
                         'text-[10px] px-2 py-0.5 rounded-full',
-                        unit.available > 0 ? 'bg-green-500/15 text-green-400' : 'bg-white/5 text-white/30',
+                        unit.available > 0 ? 'bg-green-500/15 text-green-600' : 'bg-gray-100 text-gray-400',
                       )}>
                         {unit.available > 0 ? `${unit.available} free` : 'Let'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-white/40 mb-3">
+                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
                       <span className="flex items-center gap-1">
                         <BedDouble size={10} />
                         {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}
@@ -113,8 +112,8 @@ export function PropertyRentListings({ listings }: Props) {
                     </div>
 
                     <div className="flex items-center gap-1 mb-3">
-                      <Calendar size={10} className="text-white/25" />
-                      <span className="text-[10px] text-white/30">
+                      <Calendar size={10} className="text-gray-400" />
+                      <span className="text-[10px] text-gray-400">
                         From {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
                         · {listing.minLeaseTerm}mo min
                       </span>
@@ -122,8 +121,8 @@ export function PropertyRentListings({ listings }: Props) {
 
                     <div className="flex items-end justify-between">
                       <div>
-                        <span className="text-base font-bold text-white">{formatRent(unit.pricePerMonth, unit.currency)}</span>
-                        <span className="text-xs text-white/30 ml-1">/mo</span>
+                        <span className="text-base font-bold text-gray-900">{formatRent(unit.pricePerMonth, unit.currency)}</span>
+                        <span className="text-xs text-gray-400 ml-1">/mo</span>
                       </div>
                       <Link
                         href={`/rent/${listing.slug}#${unit.id}`}
@@ -137,11 +136,11 @@ export function PropertyRentListings({ listings }: Props) {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-6 py-3 border-t border-white/5">
-                <p className="text-white/25 text-xs">{listing.developer.name}</p>
+              <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200">
+                <p className="text-gray-400 text-xs">{listing.developer.name}</p>
                 <Link
                   href={`/rent/${listing.slug}`}
-                  className="text-xs text-white/40 hover:text-white transition-colors flex items-center gap-1"
+                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1"
                 >
                   View full listing <ArrowRight size={10} />
                 </Link>

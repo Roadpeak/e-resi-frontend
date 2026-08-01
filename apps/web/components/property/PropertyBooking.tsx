@@ -62,10 +62,10 @@ export function PropertyBooking({ property }: Props) {
 
   return (
     <section id="booking" className="scroll-mt-24">
-      <div className="overflow-hidden rounded-3xl border border-white/5 bg-surface-900">
+      <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-5">
           {/* Left panel */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-brand-900 to-surface-950 p-8 lg:col-span-2">
+          <div className="relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-950 p-8 lg:col-span-2">
             {/* Glow */}
             <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-brand-600/20 blur-3xl pointer-events-none" />
 
@@ -117,10 +117,10 @@ export function PropertyBooking({ property }: Props) {
                 className="flex h-full flex-col items-center justify-center gap-4 py-8 text-center"
               >
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <CheckCircle2 size={28} className="text-emerald-400" />
+                  <CheckCircle2 size={28} className="text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-white">Booking Request Sent!</h3>
-                <p className="max-w-xs text-sm text-white/50">
+                <h3 className="text-xl font-semibold text-gray-900">Booking Request Sent!</h3>
+                <p className="max-w-xs text-sm text-gray-500">
                   Thank you! The team at {property.developer.name} will confirm your viewing within 24 hours.
                 </p>
                 <Button variant="outline" size="sm" onClick={() => setSubmitted(false)}>
@@ -131,7 +131,7 @@ export function PropertyBooking({ property }: Props) {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* Tour type toggle */}
                 <div>
-                  <p className="mb-2 text-sm font-medium text-white/60">Tour type</p>
+                  <p className="mb-2 text-sm font-medium text-gray-600">Tour type</p>
                   <div className="grid grid-cols-2 gap-2">
                     {([
                       { value: 'virtual', label: 'Virtual Tour', icon: Video },
@@ -144,8 +144,8 @@ export function PropertyBooking({ property }: Props) {
                         className={cn(
                           'flex items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-all cursor-pointer',
                           viewType === value
-                            ? 'border-brand-500/40 bg-brand-500/10 text-brand-300'
-                            : 'border-white/5 bg-surface-800 text-white/50 hover:border-white/10',
+                            ? 'border-brand-500/40 bg-brand-500/10 text-brand-700'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
                         )}
                       >
                         <Icon size={15} />
@@ -202,20 +202,20 @@ export function PropertyBooking({ property }: Props) {
                 />
 
                 {serverError && (
-                  <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+                  <p className="text-xs text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
                     {serverError}
                   </p>
                 )}
 
                 {/* Message */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-white/70">Message (optional)</label>
+                  <label className="text-sm font-medium text-gray-600">Message (optional)</label>
                   <div className="relative">
-                    <MessageSquare size={14} className="absolute left-3.5 top-3 text-white/40" />
+                    <MessageSquare size={14} className="absolute left-3.5 top-3 text-gray-400" />
                     <textarea
                       rows={3}
                       placeholder="Any specific units or questions..."
-                      className="w-full resize-none rounded-xl border border-white/10 bg-surface-800 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
+                      className="w-full resize-none rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-colors"
                       {...register('message')}
                     />
                   </div>
@@ -225,7 +225,7 @@ export function PropertyBooking({ property }: Props) {
                   {isSubmitting ? 'Sending...' : 'Request a Viewing'}
                 </Button>
 
-                <p className="text-center text-xs text-white/25">
+                <p className="text-center text-xs text-gray-400">
                   By submitting, you agree to our Terms of Service and Privacy Policy.
                 </p>
               </form>

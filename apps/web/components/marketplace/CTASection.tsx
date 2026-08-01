@@ -32,7 +32,7 @@ export function CTASection() {
               <Button href="/dashboard" size="lg" icon={<ArrowRight size={18} />} iconPosition="right">
                 Get Started Free
               </Button>
-              <Button href="/services" variant="outline" size="lg">
+              <Button href="/services" variant="outline" size="lg" className="border-white/20 hover:border-white/40 text-white">
                 View Services
               </Button>
             </div>

@@ -19,7 +19,7 @@ export function PropertyGallery({ images, name }: Props) {
   return (
     <section id="gallery" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Gallery</p>
-      <h2 className="mb-8 text-3xl font-semibold text-white">Photography & Visuals</h2>
+      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Photography & Visuals</h2>
 
       {/* Grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

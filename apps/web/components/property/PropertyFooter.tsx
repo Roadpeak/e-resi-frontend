@@ -35,7 +35,7 @@ export function PropertyFooter({ property }: Props) {
   const initials = (property.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   return (
-    <footer className="border-t border-white/5 bg-surface-950">
+    <footer className="border-t border-gray-200 bg-white">
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
@@ -47,13 +47,13 @@ export function PropertyFooter({ property }: Props) {
                 {initials}
               </div>
               <div>
-                <h3 className="font-semibold text-white">{property.name}</h3>
-                <p className="text-xs font-medium text-white/50">{property.developer.name}</p>
+                <h3 className="font-semibold text-gray-900">{property.name}</h3>
+                <p className="text-xs font-medium text-gray-500">{property.developer.name}</p>
               </div>
             </div>
-            <p className="text-sm text-white/40 leading-relaxed max-w-xs">{property.tagline}</p>
+            <p className="text-sm text-gray-500 leading-relaxed max-w-xs">{property.tagline}</p>
 
-            <div className="mt-6 flex items-center gap-1.5 text-sm text-white/35">
+            <div className="mt-6 flex items-center gap-1.5 text-sm text-gray-500">
               <MapPin size={13} />
               <span>{property.address.neighborhood}, {property.address.city}</span>
             </div>
@@ -61,32 +61,32 @@ export function PropertyFooter({ property }: Props) {
 
           {/* Developer contact */}
           <div className="lg:col-span-1">
-            <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-white/30">Developer</h4>
+            <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-gray-400">Developer</h4>
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-800 border border-white/5 text-xs font-bold text-white/60">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold text-gray-500">
                 {(property.developer?.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
               </div>
               <div>
-                <p className="font-medium text-white text-sm">{property.developer.name}</p>
-                <p className="text-xs text-white/35">{property.developer.establishedYear && `Est. ${property.developer.establishedYear}`}</p>
+                <p className="font-medium text-gray-900 text-sm">{property.developer.name}</p>
+                <p className="text-xs text-gray-500">{property.developer.establishedYear && `Est. ${property.developer.establishedYear}`}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-sm text-white/40 leading-relaxed">{property.developer.description}</p>
+              <p className="text-sm text-gray-500 leading-relaxed">{property.developer.description}</p>
               {property.developer.website && (
                 <a
                   href={property.developer.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 text-sm text-white/40 hover:text-white transition-colors group"
+                  className="flex items-center gap-2.5 text-sm text-gray-500 hover:text-gray-900 transition-colors group"
                 >
                   <Globe size={13} className="shrink-0" />
                   {property.developer.website.replace(/^https?:\/\//, '')}
                   <ExternalLink size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
               )}
-              <p className="text-sm text-white/25">
+              <p className="text-sm text-gray-400">
                 {property.developer.completedProjects} completed projects
               </p>
             </div>
@@ -94,7 +94,7 @@ export function PropertyFooter({ property }: Props) {
 
           {/* Quick links */}
           <div className="lg:col-span-1">
-            <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-white/30">Quick Links</h4>
+            <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-gray-400">Quick Links</h4>
             <ul className="space-y-2.5">
               {[
                 { label: 'Overview', href: '#overview' },
@@ -108,7 +108,7 @@ export function PropertyFooter({ property }: Props) {
                 <li key={label}>
                   <a
                     href={href}
-                    className={cn('text-sm text-white/35 transition-colors', accentHoverText)}
+                    className={cn('text-sm text-gray-500 transition-colors', accentHoverText)}
                   >
                     {label}
                   </a>
@@ -124,18 +124,18 @@ export function PropertyFooter({ property }: Props) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link
             href="/properties"
-            className="flex items-center gap-2 text-sm text-white/25 hover:text-white/60 transition-colors group"
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors group"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
             Back to e-resi
           </Link>
 
-          <p className="text-xs text-white/20">
+          <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} {property.developer.name} · Listed on{' '}
-            <Link href="/" className="text-white/35 hover:text-white/60 transition-colors">e-resi</Link>
+            <Link href="/" className="text-gray-500 hover:text-gray-700 transition-colors">e-resi</Link>
           </p>
 
-          <p className="text-xs text-white/20">
+          <p className="text-xs text-gray-400">
             All property details are provided by the developer.
           </p>
         </div>

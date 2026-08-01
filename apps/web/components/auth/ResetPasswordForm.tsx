@@ -64,11 +64,11 @@ export function ResetPasswordForm() {
       <div>
         {!done ? (
           <>
-            <h1 className="font-display font-light text-white text-3xl mb-1">Reset password</h1>
-            <p className="text-sm text-white/40 mb-8">Choose a new secure password for your account.</p>
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Reset password</h1>
+            <p className="text-sm text-gray-500 mb-8">Choose a new secure password for your account.</p>
 
             {!token && (
-              <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 mb-4">
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
                 No reset token found. Please use the link from your email.
               </p>
             )}
@@ -85,7 +85,7 @@ export function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="cursor-pointer hover:text-white/70 transition-colors"
+                    className="cursor-pointer hover:text-gray-600 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -100,8 +100,8 @@ export function ResetPasswordForm() {
                 <div className="grid grid-cols-2 gap-1.5 -mt-1">
                   {checks.map(({ label, pass }) => (
                     <div key={label} className="flex items-center gap-1.5">
-                      <div className={cn('h-1.5 w-1.5 rounded-full shrink-0 transition-colors', pass ? 'bg-green-400' : 'bg-white/15')} />
-                      <span className={cn('text-[10px] transition-colors', pass ? 'text-green-400' : 'text-white/30')}>
+                      <div className={cn('h-1.5 w-1.5 rounded-full shrink-0 transition-colors', pass ? 'bg-green-500' : 'bg-gray-300')} />
+                      <span className={cn('text-[10px] transition-colors', pass ? 'text-green-600' : 'text-gray-400')}>
                         {label}
                       </span>
                     </div>
@@ -120,7 +120,7 @@ export function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowConfirm((v) => !v)}
-                    className="cursor-pointer hover:text-white/70 transition-colors"
+                    className="cursor-pointer hover:text-gray-600 transition-colors"
                     tabIndex={-1}
                   >
                     {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -144,11 +144,11 @@ export function ResetPasswordForm() {
           </>
         ) : (
           <div className="text-center">
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-500/15 border border-green-500/20">
-              <CheckCircle size={28} className="text-green-400" />
+            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-50 border border-green-200">
+              <CheckCircle size={28} className="text-green-600" />
             </div>
-            <h1 className="font-display font-light text-white text-3xl mb-2">Password updated</h1>
-            <p className="text-sm text-white/40 mb-8">
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Password updated</h1>
+            <p className="text-sm text-gray-500 mb-8">
               Your password has been reset successfully. You can now sign in with your new password.
             </p>
             <Button href="/login" className="w-full">
@@ -157,8 +157,8 @@ export function ResetPasswordForm() {
           </div>
         )}
 
-        <p className="text-center text-xs text-white/25 mt-8">
-          <Link href="/login" className="hover:text-white/50 transition-colors">
+        <p className="text-center text-xs text-gray-400 mt-8">
+          <Link href="/login" className="hover:text-gray-600 transition-colors">
             Back to Sign In
           </Link>
         </p>

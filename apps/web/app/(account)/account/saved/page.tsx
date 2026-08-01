@@ -13,7 +13,7 @@ export default function AccountSaved() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={28} className="text-white/30 animate-spin" />
+        <Loader2 size={28} className="text-gray-400 animate-spin" />
       </div>
     );
   }
@@ -22,14 +22,14 @@ export default function AccountSaved() {
 
   return (
     <div className="max-w-5xl space-y-6">
-      <p className="text-sm text-white/40">{items.length} saved properties</p>
+      <p className="text-sm text-gray-500">{items.length} saved properties</p>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-20 text-center">
-          <Heart size={32} className="mb-3 text-white/15" />
-          <p className="text-sm font-medium text-white/50">No saved properties yet</p>
-          <p className="text-xs text-white/25 mt-1">Browse properties and tap the heart icon to save them here.</p>
-          <Link href="/properties" className="mt-5 rounded-xl border border-white/10 bg-surface-800 px-5 py-2.5 text-sm text-white/60 hover:text-white transition-colors">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 py-20 text-center">
+          <Heart size={32} className="mb-3 text-gray-300" />
+          <p className="text-sm font-medium text-gray-500">No saved properties yet</p>
+          <p className="text-xs text-gray-400 mt-1">Browse properties and tap the heart icon to save them here.</p>
+          <Link href="/properties" className="mt-5 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
             Browse Properties
           </Link>
         </div>
@@ -38,11 +38,11 @@ export default function AccountSaved() {
           {items.map((item) => {
             const p = item.property;
             return (
-              <div key={item.id} className="group overflow-hidden rounded-2xl border border-white/5 bg-surface-800 hover:border-white/10 transition-all">
+              <div key={item.id} className="group overflow-hidden rounded-2xl border border-gray-200 bg-white hover:border-gray-300 transition-all">
                 {/* Image */}
                 <Link href={`/${p.slug}`} className="relative block overflow-hidden aspect-video">
                   <Image src={p.heroImageUrl} alt={p.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 768px) 100vw, 50vw" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-surface-900/60 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <span className={cn('absolute top-3 left-3 rounded-full px-2.5 py-1 text-xs font-medium', getStatusColor(p.status))}>
                     {getStatusLabel(p.status)}
                   </span>
@@ -59,16 +59,16 @@ export default function AccountSaved() {
                 <div className="p-5 space-y-3">
                   <div>
                     <Link href={`/${p.slug}`}>
-                      <h3 className="font-semibold text-white hover:text-brand-300 transition-colors">{p.name}</h3>
+                      <h3 className="font-semibold text-gray-900 hover:text-brand-600 transition-colors">{p.name}</h3>
                     </Link>
-                    <div className="mt-1 flex items-center gap-1 text-xs text-white/40">
+                    <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
                       <MapPin size={11} /> {p.city}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                    <p className="text-base font-semibold text-white">{formatPrice(p.priceFrom, 'KES')}</p>
-                    <Link href={`/${p.slug}`} className="rounded-xl bg-brand-600/15 border border-brand-500/20 px-3 py-1.5 text-xs font-medium text-brand-300 hover:bg-brand-600/25 transition-colors">
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                    <p className="text-base font-semibold text-gray-900">{formatPrice(p.priceFrom, 'KES')}</p>
+                    <Link href={`/${p.slug}`} className="rounded-xl bg-brand-50 border border-brand-200 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100 transition-colors">
                       View →
                     </Link>
                   </div>

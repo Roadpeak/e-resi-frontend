@@ -19,17 +19,17 @@ export function DashboardTopbar() {
   const title = titles[pathname] ?? 'Dashboard';
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-white/5 bg-surface-900/50 backdrop-blur-sm px-6 lg:px-8 shrink-0">
-      <h1 className="text-lg font-semibold text-white">{title}</h1>
+    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 backdrop-blur-sm px-6 lg:px-8 shrink-0">
+      <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
 
       <div className="flex items-center gap-2">
         {/* Search */}
-        <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-surface-800 text-white/40 hover:text-white transition-colors cursor-pointer">
+        <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
           <Search size={15} />
         </button>
 
         {/* Notifications */}
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-surface-800 text-white/40 hover:text-white transition-colors cursor-pointer">
+        <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
           <Bell size={15} />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-brand-500" />
         </button>

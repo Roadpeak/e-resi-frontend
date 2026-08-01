@@ -17,7 +17,7 @@ function BarChart({ data }: { data: { date: string; views: number }[] }) {
             transition={{ duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
             className="w-full rounded-t-lg bg-gradient-to-t from-brand-700 to-brand-500 min-h-1"
           />
-          <span className="text-[10px] text-white/30">{point.date}</span>
+          <span className="text-[10px] text-gray-400">{point.date}</span>
         </div>
       ))}
     </div>
@@ -54,28 +54,28 @@ export default function DashboardAnalytics() {
   return (
     <div className="space-y-8 max-w-7xl">
       <div>
-        <h2 className="text-xl font-semibold text-white">Analytics</h2>
-        <p className="text-sm text-white/40 mt-0.5">Performance overview for all your properties</p>
+        <h2 className="text-xl font-semibold text-gray-900">Analytics</h2>
+        <p className="text-sm text-gray-500 mt-0.5">Performance overview for all your properties</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total Properties" value={stats?.properties.total ?? '—'} icon={Eye} change="" positive />
-        <StatCard label="Active Listings" value={stats?.properties.active ?? '—'} icon={Users} iconColor="text-emerald-400" iconBg="bg-emerald-500/10 border-emerald-500/20" change="" positive />
-        <StatCard label="Inquiries (30d)" value={stats?.inquiries.last30Days ?? '—'} icon={MessageSquare} iconColor="text-gold-400" iconBg="bg-gold-500/10 border-gold-500/20" change="" positive />
-        <StatCard label="Pending Bookings" value={stats?.bookings.pending ?? '—'} icon={TrendingUp} iconColor="text-violet-400" iconBg="bg-violet-500/10 border-violet-500/20" change="" positive />
+        <StatCard label="Active Listings" value={stats?.properties.active ?? '—'} icon={Users} iconColor="text-emerald-600" iconBg="bg-emerald-50 border-emerald-200" change="" positive />
+        <StatCard label="Inquiries (30d)" value={stats?.inquiries.last30Days ?? '—'} icon={MessageSquare} iconColor="text-gold-600" iconBg="bg-gold-50 border-gold-200" change="" positive />
+        <StatCard label="Pending Bookings" value={stats?.bookings.pending ?? '—'} icon={TrendingUp} iconColor="text-violet-600" iconBg="bg-violet-50 border-violet-200" change="" positive />
       </div>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Page views chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-surface-800 p-6">
+        <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white">Activity Trend</h3>
-              <p className="text-xs text-white/30 mt-0.5">Last 7 days (estimated)</p>
+              <h3 className="font-semibold text-gray-900">Activity Trend</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Last 7 days (estimated)</p>
             </div>
-            <span className="text-sm font-semibold text-emerald-400">
+            <span className="text-sm font-semibold text-emerald-600">
               {totalInquiries + totalBookings} total interactions
             </span>
           </div>
@@ -83,16 +83,16 @@ export default function DashboardAnalytics() {
         </div>
 
         {/* Traffic sources */}
-        <div className="rounded-2xl border border-white/5 bg-surface-800 p-6">
-          <h3 className="mb-5 font-semibold text-white">Traffic Sources</h3>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6">
+          <h3 className="mb-5 font-semibold text-gray-900">Traffic Sources</h3>
           <div className="space-y-4">
             {TRAFFIC_SOURCES.map(({ source, gradient }, i) => (
               <div key={source}>
                 <div className="mb-1.5 flex justify-between text-sm">
-                  <span className="text-white/60">{source}</span>
-                  <span className="font-medium text-white">{trafficPercents[i]}%</span>
+                  <span className="text-gray-500">{source}</span>
+                  <span className="font-medium text-gray-900">{trafficPercents[i]}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-surface-700">
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${trafficPercents[i]}%` }}
@@ -107,25 +107,25 @@ export default function DashboardAnalytics() {
       </div>
 
       {/* Property performance table */}
-      <div className="rounded-2xl border border-white/5 bg-surface-800 overflow-hidden">
-        <div className="border-b border-white/5 px-6 py-4 flex items-center gap-2">
-          <BarChart3 size={16} className="text-brand-400" />
-          <h3 className="font-semibold text-white">Property Performance</h3>
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+        <div className="border-b border-gray-200 px-6 py-4 flex items-center gap-2">
+          <BarChart3 size={16} className="text-brand-600" />
+          <h3 className="font-semibold text-gray-900">Property Performance</h3>
         </div>
         {properties.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-white/30">No properties yet</div>
+          <div className="px-6 py-10 text-center text-sm text-gray-500">No properties yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/5">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/30">Property</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white/30">Units Available</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white/30">Total Units</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white/30">Inquiries (30d)</th>
+                <tr className="border-b border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Property</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Units Available</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Units</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Inquiries (30d)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {properties.map((p, i) => {
                   const propertyInquiries = (inquiriesData?.items ?? []).filter(
                     (inq) => inq.property?.slug === p.slug,
@@ -136,12 +136,12 @@ export default function DashboardAnalytics() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.06 }}
-                      className="hover:bg-white/[0.02] transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm font-medium text-white">{p.name}</td>
-                      <td className="px-6 py-4 text-sm text-right text-white/70">{p.availableUnits}</td>
-                      <td className="px-6 py-4 text-sm text-right text-white/70">{p.totalUnits}</td>
-                      <td className="px-6 py-4 text-sm text-right text-emerald-400">{propertyInquiries}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.name}</td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-600">{p.availableUnits}</td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-600">{p.totalUnits}</td>
+                      <td className="px-6 py-4 text-sm text-right text-emerald-600">{propertyInquiries}</td>
                     </motion.tr>
                   );
                 })}

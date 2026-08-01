@@ -70,8 +70,8 @@ export function PropertyViewer3D({ property }: Props) {
     <section id="viewer3d" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Immersive Experience</p>
       <div className="mb-8 flex items-end justify-between">
-        <h2 className="text-3xl font-semibold text-white">Interactive 3D Model</h2>
-        <button className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-brand-500/20 bg-brand-500/10 px-4 py-2 text-sm text-brand-300 hover:bg-brand-500/20 transition-colors cursor-pointer">
+        <h2 className="text-3xl font-semibold text-gray-900">Interactive 3D Model</h2>
+        <button className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-brand-500/20 bg-brand-500/10 px-4 py-2 text-sm text-brand-700 hover:bg-brand-500/20 transition-colors cursor-pointer">
           <Headset size={15} /> Enter VR Mode
         </button>
       </div>
@@ -80,7 +80,7 @@ export function PropertyViewer3D({ property }: Props) {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="relative overflow-hidden rounded-3xl border border-white/5 bg-surface-900"
+        className="relative overflow-hidden rounded-3xl border border-gray-200 bg-surface-900"
         style={{ height: '560px' }}
       >
         {/* 3D Canvas */}

@@ -12,21 +12,20 @@ export function PropertyCinematicPreview({ property }: Props) {
   return (
     <div>
       {/* Section header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Film size={14} className="text-warm-400" />
-            <span className="text-xs text-white/30 tracking-[0.2em] uppercase">Cinematic Tour</span>
-          </div>
-          <h2 className="font-display font-light text-white text-2xl sm:text-3xl">
+          <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-brand-400">
+            <Film size={13} className="text-warm-500" /> Cinematic Tour
+          </p>
+          <h2 className="text-3xl font-semibold text-gray-900">
             Scroll-driven flythrough
           </h2>
         </div>
         <Link
           href={`/${property.slug}/tour/cinematic`}
-          className="hidden sm:inline-flex items-center gap-2 border border-warm-500/25 bg-warm-500/10 hover:bg-warm-500/20 text-warm-300 text-xs tracking-[0.12em] uppercase px-5 py-2.5 transition-all duration-300"
+          className="hidden sm:inline-flex items-center gap-2 rounded-full border border-warm-500/25 bg-warm-500/10 hover:bg-warm-500/20 text-warm-700 text-xs font-medium px-5 py-2.5 transition-all duration-300"
         >
-          <Play size={11} className="fill-warm-300" />
+          <Play size={11} className="fill-warm-700" />
           Enter Tour
         </Link>
       </div>
@@ -68,9 +67,9 @@ export function PropertyCinematicPreview({ property }: Props) {
       <div className="mt-4 sm:hidden">
         <Link
           href={`/${property.slug}/tour/cinematic`}
-          className="flex items-center justify-center gap-2 w-full border border-warm-500/25 bg-warm-500/10 text-warm-300 text-xs tracking-[0.12em] uppercase py-3 transition-all duration-300"
+          className="flex items-center justify-center gap-2 w-full rounded-full border border-warm-500/25 bg-warm-500/10 text-warm-700 text-xs font-medium py-3 transition-all duration-300"
         >
-          <Play size={11} className="fill-warm-300" />
+          <Play size={11} className="fill-warm-700" />
           Enter Cinematic Tour
         </Link>
       </div>

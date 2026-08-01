@@ -20,10 +20,10 @@ type ButtonProps = BaseProps &
 
 const variants = {
   primary: 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/20 active:scale-[0.98]',
-  secondary: 'bg-surface-700 hover:bg-surface-600 text-white border border-white/10 active:scale-[0.98]',
-  ghost: 'bg-transparent hover:bg-white/5 text-white/80 hover:text-white',
-  outline: 'bg-transparent border border-white/20 hover:border-white/40 text-white active:scale-[0.98]',
-  gold: 'bg-gold-500 hover:bg-gold-400 text-surface-950 font-semibold shadow-lg shadow-gold-500/20 active:scale-[0.98]',
+  secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200 active:scale-[0.98]',
+  ghost: 'bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-900',
+  outline: 'bg-transparent border border-gray-300 hover:border-gray-400 text-gray-900 active:scale-[0.98]',
+  gold: 'bg-gold-500 hover:bg-gold-400 text-gray-900 font-semibold shadow-lg shadow-gold-500/20 active:scale-[0.98]',
   danger: 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20 active:scale-[0.98]',
 };
 
@@ -35,7 +35,7 @@ const sizes = {
 };
 
 const base =
-  'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-950 disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
+  'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
 
 export function Button({
   variant = 'primary',

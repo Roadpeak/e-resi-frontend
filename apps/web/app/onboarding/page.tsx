@@ -27,7 +27,9 @@ export default function OnboardingPage() {
   // Avoid hydration mismatch: the persisted store only exists client-side.
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
-  useEffect(() => window.scrollTo({ top: 0 }), [step]);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [step]);
   if (!hydrated) return null;
 
   const isWelcome = step === 0;

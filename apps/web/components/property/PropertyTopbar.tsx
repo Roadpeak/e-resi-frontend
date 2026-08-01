@@ -80,10 +80,8 @@ export function PropertyTopbar({ property }: Props) {
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          scrolled
-            ? 'bg-surface-950/90 backdrop-blur-xl border-b border-white/5'
-            : 'bg-transparent',
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/85 backdrop-blur-xl',
+          scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-gray-100',
         )}
       >
         <div className="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
@@ -92,13 +90,13 @@ export function PropertyTopbar({ property }: Props) {
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/properties"
-              className="group flex items-center gap-1.5 text-white/30 hover:text-white transition-colors text-sm"
+              className="group flex items-center gap-1.5 transition-colors text-sm text-gray-400 hover:text-gray-900"
             >
               <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-              <span className="hidden sm:inline">e-resi</span>
+              <span className="hidden sm:inline font-semibold text-gray-900">e-resi</span>
             </Link>
 
-            <ChevronRight size={13} className="text-white/15 hidden sm:block" />
+            <ChevronRight size={13} className="hidden sm:block text-gray-300" />
 
             {/* Property wordmark */}
             <AnimatePresence>
@@ -114,7 +112,7 @@ export function PropertyTopbar({ property }: Props) {
                   <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white text-[10px] font-bold shrink-0', accent)}>
                     {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
-                  <span className="text-sm font-semibold text-white hidden md:block truncate max-w-48">
+                  <span className="text-sm font-semibold text-gray-900 hidden md:block truncate max-w-48">
                     {property.name}
                   </span>
                 </motion.div>
@@ -129,17 +127,15 @@ export function PropertyTopbar({ property }: Props) {
                 key={section.id}
                 onClick={() => scrollTo(section.id)}
                 className={cn(
-                  'relative rounded-lg px-3.5 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
-                  active === section.id
-                    ? 'text-white'
-                    : 'text-white/35 hover:text-white/70',
+                  'relative rounded-full px-3.5 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
+                  active === section.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900',
                 )}
               >
                 {section.label}
                 {active === section.id && (
                   <motion.span
                     layoutId="property-nav-indicator"
-                    className="absolute inset-0 rounded-lg bg-white/8"
+                    className="absolute inset-0 rounded-full bg-gray-100"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                   />
                 )}
@@ -153,7 +149,7 @@ export function PropertyTopbar({ property }: Props) {
             {property.hasCinematicTour && (
               <Link
                 href={`/${property.slug}/tour/cinematic`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-warm-500/25 bg-warm-500/10 px-3 py-1.5 text-xs font-medium text-warm-300 hover:bg-warm-500/20 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-warm-500/25 bg-warm-500/10 px-3 py-1.5 text-xs font-medium text-warm-700 hover:bg-warm-500/20 transition-colors"
               >
                 <Film size={13} /> Cinematic
               </Link>
@@ -161,7 +157,7 @@ export function PropertyTopbar({ property }: Props) {
             {property.hasVRTour && (
               <Link
                 href={`/${property.slug}/tour/vr`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300 hover:bg-violet-500/20 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-500/20 transition-colors"
               >
                 <Headset size={13} /> VR Tour
               </Link>
@@ -169,7 +165,7 @@ export function PropertyTopbar({ property }: Props) {
             {property.has3DTour && (
               <Link
                 href={`/${property.slug}/tour/3d`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-brand-500/25 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-300 hover:bg-brand-500/20 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-500/20 transition-colors"
               >
                 <Box size={13} /> 3D Tour
               </Link>
@@ -179,29 +175,32 @@ export function PropertyTopbar({ property }: Props) {
             <button
               onClick={() => setSaved((v) => !v)}
               className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-xl border transition-all cursor-pointer',
+                'flex h-9 w-9 items-center justify-center rounded-full border transition-all cursor-pointer',
                 saved
-                  ? 'border-red-500/30 bg-red-500/10 text-red-400'
-                  : 'border-white/10 bg-white/5 text-white/40 hover:text-white hover:bg-white/10',
+                  ? 'border-red-500/30 bg-red-500/10 text-red-500'
+                  : 'border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100',
               )}
             >
-              <Heart size={15} className={saved ? 'fill-red-400' : ''} />
+              <Heart size={15} className={saved ? 'fill-red-500' : ''} />
             </button>
 
             {/* Share */}
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer">
               <Share2 size={15} />
             </button>
 
             {/* Book CTA */}
-            <div className="hidden sm:block">
-              <Button size="sm" onClick={() => scrollTo('booking')}>Book a Viewing</Button>
-            </div>
+            <button
+              onClick={() => scrollTo('booking')}
+              className="hidden sm:inline-flex items-center rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer"
+            >
+              Book a Viewing
+            </button>
 
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:text-white transition-colors cursor-pointer"
+              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
             >
               {mobileOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
@@ -217,16 +216,16 @@ export function PropertyTopbar({ property }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 top-16 z-40 border-b border-white/5 bg-surface-950/95 backdrop-blur-xl pb-5 pt-3 px-4 lg:hidden"
+            className="fixed inset-x-0 top-16 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-xl pb-5 pt-3 px-4 lg:hidden"
           >
             {/* Property identity on mobile */}
-            <div className="mb-4 flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-4">
               <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-xs font-bold', accent)}>
                 {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold text-white text-sm">{property.name}</p>
-                <p className="text-xs text-white/40">{property.address.neighborhood}, {property.address.city}</p>
+                <p className="font-semibold text-gray-900 text-sm">{property.name}</p>
+                <p className="text-xs text-gray-500">{property.address.neighborhood}, {property.address.city}</p>
               </div>
             </div>
 
@@ -238,8 +237,8 @@ export function PropertyTopbar({ property }: Props) {
                     className={cn(
                       'block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors cursor-pointer',
                       active === section.id
-                        ? 'bg-white/8 text-white'
-                        : 'text-white/50 hover:text-white hover:bg-white/5',
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
                     )}
                   >
                     {section.label}
@@ -248,7 +247,7 @@ export function PropertyTopbar({ property }: Props) {
               ))}
             </ul>
 
-            <div className="mt-4 border-t border-white/5 pt-4 flex gap-2">
+            <div className="mt-4 border-t border-gray-200 pt-4 flex gap-2">
               <Button size="md" className="flex-1" onClick={() => scrollTo('booking')}>
                 Book a Viewing
               </Button>

@@ -15,40 +15,38 @@
   }
 
   body {
-    @apply bg-ink text-chalk font-sans antialiased;
+    @apply bg-white text-gray-900 font-sans antialiased;
     line-height: 1.6;
     overflow-x: hidden;
   }
 
   ::selection {
-    background: rgba(190, 145, 85, 0.3);
-    color: #f5f2ee;
+    background: rgba(97, 114, 243, 0.25);
   }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: #0a0a0a; }
-  ::-webkit-scrollbar-thumb { background: #4a301e; border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: #a67c52; }
+  ::-webkit-scrollbar-track { background: #f3f4f6; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-warm-500 ring-offset-2 ring-offset-ink;
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
   }
 
-  /* Prevent browser autofill from painting a white/yellow background */
+  /* Prevent browser autofill from painting a yellow background */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 9999px #131c30 inset !important;
-    box-shadow: 0 0 0 9999px #131c30 inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-    caret-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 9999px #ffffff inset !important;
+    box-shadow: 0 0 0 9999px #ffffff inset !important;
+    -webkit-text-fill-color: #111827 !important;
+    caret-color: #111827;
     transition: background-color 9999s ease-in-out 0s;
   }
 
-  /* Placeholder always readable on dark inputs */
   input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: #9ca3af;
     opacity: 1;
   }
 }

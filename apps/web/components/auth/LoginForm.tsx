@@ -62,8 +62,8 @@ export function LoginForm() {
       quoteAuthor="e-resi — Nairobi's immersive real estate platform"
     >
       <div>
-        <h1 className="font-display font-light text-white text-3xl mb-1">Welcome back</h1>
-        <p className="text-sm text-white/40 mb-8">Sign in to your e-resi account</p>
+        <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Welcome back</h1>
+        <p className="text-sm text-gray-500 mb-8">Sign in to your e-resi account</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
@@ -85,7 +85,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="cursor-pointer hover:text-white/70 transition-colors"
+                className="cursor-pointer hover:text-gray-600 transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -97,7 +97,7 @@ export function LoginForm() {
           />
 
           {serverError && (
-            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
               {serverError}
             </p>
           )}
@@ -106,11 +106,11 @@ export function LoginForm() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                className="h-3.5 w-3.5 rounded border-white/20 bg-surface-800 accent-brand-500 cursor-pointer"
+                className="h-3.5 w-3.5 rounded border-gray-300 bg-white accent-brand-500 cursor-pointer"
               />
-              <span className="text-xs text-white/40">Remember me</span>
+              <span className="text-xs text-gray-500">Remember me</span>
             </label>
-            <Link href="/forgot-password" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+            <Link href="/forgot-password" className="text-xs text-brand-600 hover:text-brand-700 transition-colors">
               Forgot password?
             </Link>
           </div>
@@ -122,9 +122,9 @@ export function LoginForm() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">
-          <div className="h-px flex-1 bg-white/8" />
-          <span className="text-xs text-white/25">or continue with</span>
-          <div className="h-px flex-1 bg-white/8" />
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs text-gray-400">or continue with</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
 
         {/* Social */}
@@ -133,9 +133,9 @@ export function LoginForm() {
           <SocialButton icon={<AppleIcon />} label="Apple" />
         </div>
 
-        <p className="text-center text-xs text-white/30 mt-8">
+        <p className="text-center text-xs text-gray-400 mt-8">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+          <Link href="/register" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
             Create one
           </Link>
         </p>
@@ -149,8 +149,8 @@ function SocialButton({ icon, label }: { icon: React.ReactNode; label: string })
     <button
       type="button"
       className={cn(
-        'flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5',
-        'px-4 py-2.5 text-sm text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20',
+        'flex items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white',
+        'px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-300',
         'transition-all duration-150 cursor-pointer',
       )}
     >

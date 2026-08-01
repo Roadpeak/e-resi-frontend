@@ -66,10 +66,10 @@ export default async function PropertyPage({ params }: Props) {
   const rentListings = await fetchRentListings(property.id);
 
   return (
-    <main className="min-h-screen bg-surface-950">
+    <main className="min-h-screen bg-white">
       <PropertyTopbar property={property} />
       <PropertyHero property={property} />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
         <section id="overview"><PropertyOverview property={property} /></section>
         <section id="gallery"><PropertyGallery images={property.galleryImages} name={property.name} /></section>
         {property.hasCinematicTour && (

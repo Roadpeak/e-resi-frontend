@@ -52,12 +52,12 @@ export function getStatusLabel(status: string): string {
 
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    off_plan: 'text-brand-400 bg-brand-400/10',
-    under_construction: 'text-gold-400 bg-gold-400/10',
-    ready: 'text-emerald-400 bg-emerald-400/10',
-    sold_out: 'text-red-400 bg-red-400/10',
+    off_plan: 'text-brand-700 bg-brand-100',
+    under_construction: 'text-gold-700 bg-gold-100',
+    ready: 'text-emerald-700 bg-emerald-100',
+    sold_out: 'text-red-700 bg-red-100',
   };
-  return map[status] ?? 'text-slate-400 bg-slate-400/10';
+  return map[status] ?? 'text-slate-700 bg-slate-100';
 }
 
 export function formatDate(dateString: string): string {

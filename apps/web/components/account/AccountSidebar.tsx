@@ -26,28 +26,28 @@ export function AccountSidebar() {
   const fullName = user ? `${user.firstName} ${user.lastName}` : '';
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-white/5 bg-surface-900">
+    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-white/5 px-5">
+      <div className="flex h-16 items-center border-b border-gray-200 px-5">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
             <span className="text-xs font-bold text-white">VR</span>
           </div>
-          <span className="text-base font-semibold text-white">
-            Hom<span className="text-brand-400">VR</span>
+          <span className="text-base font-semibold text-gray-900">
+            Hom<span className="text-brand-600">VR</span>
           </span>
         </Link>
       </div>
 
       {/* User card */}
-      <div className="border-b border-white/5 px-5 py-5">
+      <div className="border-b border-gray-200 px-5 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white">
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{fullName}</p>
-            <p className="text-xs text-white/30 truncate">{user?.email ?? ''}</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{fullName}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email ?? ''}</p>
           </div>
         </div>
       </div>
@@ -63,8 +63,8 @@ export function AccountSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                 active
-                  ? 'bg-brand-600/15 text-brand-300 border border-brand-500/20'
-                  : 'text-white/40 hover:text-white hover:bg-white/5',
+                  ? 'bg-brand-50 text-brand-700 border border-brand-100'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               )}
             >
               <Icon size={17} className="shrink-0" />
@@ -75,12 +75,12 @@ export function AccountSidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="border-t border-white/5 py-3 px-3 space-y-0.5">
+      <div className="border-t border-gray-200 py-3 px-3 space-y-0.5">
         {bottomItems.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/30 hover:text-white/70 hover:bg-white/5 transition-all"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
           >
             <Icon size={17} className="shrink-0" />
             {label}

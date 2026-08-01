@@ -15,15 +15,15 @@ export function PropertyConstruction({ updates }: Props) {
     <section id="construction" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Construction</p>
       <div className="mb-8 flex items-end justify-between">
-        <h2 className="text-3xl font-semibold text-white">Development Progress</h2>
+        <h2 className="text-3xl font-semibold text-gray-900">Development Progress</h2>
         <div className="text-right">
-          <p className="text-3xl font-semibold text-white">{latest?.percentComplete}%</p>
-          <p className="text-xs text-white/40">Overall completion</p>
+          <p className="text-3xl font-semibold text-gray-900">{latest?.percentComplete}%</p>
+          <p className="text-xs text-gray-500">Overall completion</p>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-12 h-2 overflow-hidden rounded-full bg-surface-700">
+      <div className="mb-12 h-2 overflow-hidden rounded-full bg-gray-200">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${latest?.percentComplete ?? 0}%` }}
@@ -34,7 +34,7 @@ export function PropertyConstruction({ updates }: Props) {
       </div>
 
       {/* Timeline */}
-      <div className="relative space-y-8 pl-6 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
+      <div className="relative space-y-8 pl-6 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-px before:bg-gray-200">
         {[...updates].reverse().map((update, i) => (
           <motion.div
             key={update.id}
@@ -49,15 +49,15 @@ export function PropertyConstruction({ updates }: Props) {
               <span className="h-2 w-2 rounded-full bg-brand-500" />
             </span>
 
-            <div className="rounded-2xl border border-white/5 bg-surface-800 p-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6">
               <div className="mb-3 flex items-center gap-3 flex-wrap">
-                <span className="font-semibold text-white">{update.title}</span>
-                <span className="flex items-center gap-1 text-xs text-white/30">
+                <span className="font-semibold text-gray-900">{update.title}</span>
+                <span className="flex items-center gap-1 text-xs text-gray-400">
                   <Calendar size={11} /> {formatDate(update.date)}
                 </span>
                 <span className="ml-auto text-xs font-medium text-brand-400">{update.percentComplete}% complete</span>
               </div>
-              <p className="text-sm text-white/50">{update.description}</p>
+              <p className="text-sm text-gray-500">{update.description}</p>
 
               {update.images.length > 0 && (
                 <div className="mt-4 flex gap-3 overflow-x-auto pb-1">

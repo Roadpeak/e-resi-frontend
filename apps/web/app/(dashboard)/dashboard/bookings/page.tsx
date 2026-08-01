@@ -9,11 +9,11 @@ import { useDeveloperBookings, useUpdateBookingStatus } from '../../../../lib/ap
 
 type StatusEntry = { label: string; icon: (props: { size: number }) => React.ReactNode; color: string; bg: string };
 const statusConfig: Record<string, StatusEntry> = {
-  CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  PENDING: { label: 'Pending', icon: Clock, color: 'text-gold-400', bg: 'bg-gold-500/10 border-gold-500/20' },
-  CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  COMPLETED: { label: 'Completed', icon: CheckCircle2, color: 'text-white/40', bg: 'bg-white/5 border-white/10' },
-  NO_SHOW: { label: 'No Show', icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+  CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+  PENDING: { label: 'Pending', icon: Clock, color: 'text-gold-700', bg: 'bg-gold-50 border-gold-200' },
+  CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+  COMPLETED: { label: 'Completed', icon: CheckCircle2, color: 'text-gray-500', bg: 'bg-gray-100 border-gray-200' },
+  NO_SHOW: { label: 'No Show', icon: XCircle, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
 };
 
 export default function DashboardBookings() {
@@ -28,17 +28,17 @@ export default function DashboardBookings() {
     <div className="space-y-6 max-w-7xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Bookings</h2>
-          <p className="text-sm text-white/40 mt-0.5">{upcoming.length} upcoming viewings</p>
+          <h2 className="text-xl font-semibold text-gray-900">Bookings</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{upcoming.length} upcoming viewings</p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-white/5 bg-surface-800 p-1">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
           {(['list', 'calendar'] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={cn(
                 'rounded-lg px-4 py-1.5 text-sm font-medium capitalize transition-all cursor-pointer',
-                view === v ? 'bg-brand-600 text-white' : 'text-white/40 hover:text-white',
+                view === v ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900',
               )}
             >
               {v}
@@ -50,12 +50,12 @@ export default function DashboardBookings() {
       {/* List view */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={28} className="text-white/30 animate-spin" />
+          <Loader2 size={28} className="text-gray-400 animate-spin" />
         </div>
       ) : bookings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-white/10">
-          <CalendarDays size={32} className="mb-3 text-white/15" />
-          <p className="text-sm text-white/30">No bookings yet</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-gray-300">
+          <CalendarDays size={32} className="mb-3 text-gray-300" />
+          <p className="text-sm text-gray-500">No bookings yet</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -68,19 +68,19 @@ export default function DashboardBookings() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="flex items-center gap-5 rounded-2xl border border-white/5 bg-surface-800 p-5 hover:border-white/10 transition-colors"
+                className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-5 hover:border-gray-300 transition-colors"
               >
                 {/* Date block */}
-                <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-white/5 bg-surface-700 leading-none">
-                  <span className="text-[10px] text-white/40 uppercase">{new Date(b.date).toLocaleDateString('en', { month: 'short' })}</span>
-                  <span className="text-xl font-bold text-white mt-0.5">{new Date(b.date).getDate()}</span>
+                <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-100 leading-none">
+                  <span className="text-[10px] text-gray-500 uppercase">{new Date(b.date).toLocaleDateString('en', { month: 'short' })}</span>
+                  <span className="text-xl font-bold text-gray-900 mt-0.5">{new Date(b.date).getDate()}</span>
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white">{b.name}</p>
-                  <p className="text-sm text-white/40">{b.property.name}</p>
-                  <div className="mt-1.5 flex items-center gap-3 text-xs text-white/30">
+                  <p className="font-semibold text-gray-900">{b.name}</p>
+                  <p className="text-sm text-gray-500">{b.property.name}</p>
+                  <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <CalendarDays size={11} />{b.time}
                     </span>
@@ -127,14 +127,14 @@ export default function DashboardBookings() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="rounded-2xl border border-white/5 bg-surface-800 p-6"
+          className="rounded-2xl border border-gray-200 bg-white p-6"
         >
-          <p className="text-sm font-semibold text-white mb-4">
+          <p className="text-sm font-semibold text-gray-900 mb-4">
             {new Date().toLocaleDateString('en', { month: 'long', year: 'numeric' })}
           </p>
           <div className="grid grid-cols-7 gap-1 text-center">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-              <p key={d} className="text-xs text-white/30 py-1">{d}</p>
+              <p key={d} className="text-xs text-gray-400 py-1">{d}</p>
             ))}
             {/* Offset for month start */}
             {Array.from({ length: (new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() + 6) % 7 }).map((_, i) => (
@@ -150,7 +150,7 @@ export default function DashboardBookings() {
                   key={day}
                   className={cn(
                     'rounded-xl py-2 text-sm transition-all cursor-pointer',
-                    hasBooking ? 'bg-brand-600 text-white font-semibold' : 'text-white/40 hover:bg-white/5 hover:text-white',
+                    hasBooking ? 'bg-brand-600 text-white font-semibold' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900',
                   )}
                 >
                   {day}

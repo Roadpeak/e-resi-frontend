@@ -52,15 +52,15 @@ export function ForgotPasswordForm() {
       <div>
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs text-white/30 hover:text-white/70 transition-colors mb-10"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mb-10"
         >
           <ArrowLeft size={12} /> Back to Sign In
         </Link>
 
         {!sent ? (
           <>
-            <h1 className="font-display font-light text-white text-3xl mb-1">Forgot password?</h1>
-            <p className="text-sm text-white/40 mb-8">
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Forgot password?</h1>
+            <p className="text-sm text-gray-500 mb-8">
               Enter your email and we&apos;ll send you a reset link.
             </p>
 
@@ -77,7 +77,7 @@ export function ForgotPasswordForm() {
               />
 
               {serverError && (
-                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                   {serverError}
                 </p>
               )}
@@ -96,19 +96,19 @@ export function ForgotPasswordForm() {
           </>
         ) : (
           <div className="text-center">
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-500/15 border border-green-500/20">
-              <CheckCircle size={28} className="text-green-400" />
+            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-50 border border-green-200">
+              <CheckCircle size={28} className="text-green-600" />
             </div>
-            <h1 className="font-display font-light text-white text-3xl mb-2">Link sent</h1>
-            <p className="text-sm text-white/40 mb-2">We sent a password reset link to</p>
-            <p className="text-sm font-medium text-white mb-8">{sentEmail}</p>
+            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Link sent</h1>
+            <p className="text-sm text-gray-500 mb-2">We sent a password reset link to</p>
+            <p className="text-sm font-medium text-gray-900 mb-8">{sentEmail}</p>
 
-            <p className="text-xs text-white/30 mb-6">
+            <p className="text-xs text-gray-500 mb-6">
               Didn&apos;t receive it? Check your spam folder or{' '}
               <button
                 type="button"
                 onClick={() => setSent(false)}
-                className="text-brand-400 hover:text-brand-300 transition-colors cursor-pointer"
+                className="text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
               >
                 try again
               </button>

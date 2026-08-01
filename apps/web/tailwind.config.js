@@ -41,13 +41,6 @@ module.exports = {
           600: '#233050',
           500: '#2e3e66',
         },
-      },
-      fontFamily: {
-        sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
-        display: ['var(--font-cormorant)', 'Georgia', 'serif'],
-      },
-      colors: {
         // HomVR luxury palette — black / white / warm brown / gold accent
         ink: '#0a0a0a',
         chalk: '#f5f2ee',
@@ -77,6 +70,11 @@ module.exports = {
           800: '#6e4a25',
           900: '#573a1d',
         },
+      },
+      fontFamily: {
+        sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        display: ['var(--font-cormorant)', 'Georgia', 'serif'],
       },
       borderRadius: {
         '4xl': '2rem',

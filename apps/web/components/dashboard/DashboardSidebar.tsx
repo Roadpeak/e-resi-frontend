@@ -33,12 +33,12 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        'relative hidden md:flex flex-col border-r border-white/5 bg-surface-900 transition-all duration-300',
+        'relative hidden md:flex flex-col border-r border-gray-200 bg-white transition-all duration-300',
         collapsed ? 'w-16' : 'w-60',
       )}
     >
       {/* Logo */}
-      <div className={cn('flex h-16 items-center border-b border-white/5 px-4', collapsed && 'justify-center')}>
+      <div className={cn('flex h-16 items-center border-b border-gray-200 px-4', collapsed && 'justify-center')}>
         {collapsed ? (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
             <span className="text-xs font-bold text-white">VR</span>
@@ -48,8 +48,8 @@ export function DashboardSidebar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
               <span className="text-xs font-bold text-white">VR</span>
             </div>
-            <span className="text-base font-semibold text-white">
-              Hom<span className="text-brand-400">VR</span>
+            <span className="text-base font-semibold text-gray-900">
+              Hom<span className="text-brand-600">VR</span>
             </span>
           </Link>
         )}
@@ -67,8 +67,8 @@ export function DashboardSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                 active
-                  ? 'bg-brand-600/15 text-brand-300 border border-brand-500/20'
-                  : 'text-white/40 hover:text-white hover:bg-white/5',
+                  ? 'bg-brand-50 text-brand-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
                 collapsed && 'justify-center px-2',
               )}
             >
@@ -89,14 +89,14 @@ export function DashboardSidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="border-t border-white/5 py-3 px-2 space-y-0.5">
+      <div className="border-t border-gray-200 py-3 px-2 space-y-0.5">
         {bottomItems.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             title={collapsed ? label : undefined}
             className={cn(
-              'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/30 hover:text-white/70 hover:bg-white/5 transition-all',
+              'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all',
               collapsed && 'justify-center px-2',
             )}
           >
@@ -108,12 +108,12 @@ export function DashboardSidebar() {
         {/* User */}
         {!collapsed && (
           <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600/20 text-brand-300 text-xs font-semibold shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-semibold shrink-0">
               PD
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-white truncate">Pristine Dev.</p>
-              <p className="text-[10px] text-white/30 truncate">developer</p>
+              <p className="text-xs font-medium text-gray-900 truncate">Pristine Dev.</p>
+              <p className="text-[10px] text-gray-400 truncate">developer</p>
             </div>
           </div>
         )}
@@ -122,7 +122,7 @@ export function DashboardSidebar() {
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed((v) => !v)}
-        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-surface-800 text-white/40 hover:text-white transition-colors cursor-pointer z-10"
+        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-900 transition-colors cursor-pointer z-10"
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>

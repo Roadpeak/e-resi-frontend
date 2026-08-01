@@ -21,15 +21,15 @@ export function AuthSplit({
   return (
     <>
       {/* Left panel — form */}
-      <div className="flex flex-1 flex-col px-6 py-10 sm:px-10 lg:px-16 xl:px-24 justify-center bg-surface-950 overflow-y-auto">
+      <div className="flex flex-1 flex-col px-6 py-10 sm:px-10 lg:px-16 xl:px-24 justify-center bg-white overflow-y-auto">
         {/* Logo */}
         <div className="mb-10">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
               <span className="text-xs font-bold text-white">VR</span>
             </div>
-            <span className="text-lg font-semibold text-white">
-              Hom<span className="text-brand-400">VR</span>
+            <span className="text-lg font-semibold text-gray-900">
+              Hom<span className="text-brand-600">VR</span>
             </span>
           </Link>
         </div>

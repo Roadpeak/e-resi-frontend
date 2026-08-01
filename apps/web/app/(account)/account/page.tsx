@@ -17,8 +17,8 @@ export default function AccountProfile() {
   if (!isAuthenticated || !user) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <Loader2 size={28} className="text-white/30 animate-spin mb-4" />
-        <p className="text-sm text-white/40">Loading your profile…</p>
+        <Loader2 size={28} className="text-gray-400 animate-spin mb-4" />
+        <p className="text-sm text-gray-500">Loading your profile…</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function AccountProfile() {
   return (
     <div className="max-w-3xl space-y-8">
       {/* Profile card */}
-      <div className="rounded-2xl border border-white/5 bg-surface-800 p-8">
+      <div className="rounded-2xl border border-gray-200 bg-white p-8">
         <div className="flex items-start gap-6 flex-wrap">
           {/* Avatar */}
           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-2xl font-bold text-white">
@@ -46,19 +46,19 @@ export default function AccountProfile() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-semibold text-white">{user.firstName} {user.lastName}</h2>
-            <p className="text-sm text-white/40 mt-1">
+            <h2 className="text-2xl font-semibold text-gray-900">{user.firstName} {user.lastName}</h2>
+            <p className="text-sm text-gray-500 mt-1">
               Member since {new Date(user.createdAt).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <div className="flex items-center gap-1.5 text-sm text-white/50">
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <Mail size={14} /> {user.email}
                 {user.emailVerified
-                  ? <ShieldCheck size={13} className="text-emerald-400" />
-                  : <ShieldAlert size={13} className="text-amber-400" />}
+                  ? <ShieldCheck size={13} className="text-emerald-600" />
+                  : <ShieldAlert size={13} className="text-amber-600" />}
               </div>
               {user.phone && (
-                <div className="flex items-center gap-1.5 text-sm text-white/50">
+                <div className="flex items-center gap-1.5 text-sm text-gray-500">
                   <Phone size={14} /> {user.phone}
                 </div>
               )}
@@ -71,12 +71,12 @@ export default function AccountProfile() {
 
       {/* Email verification nudge */}
       {!user.emailVerified && (
-        <div className="flex items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/5 px-6 py-4">
+        <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4">
           <div className="flex items-center gap-3">
-            <ShieldAlert size={18} className="text-amber-400 shrink-0" />
+            <ShieldAlert size={18} className="text-amber-600 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-white">Verify your email address</p>
-              <p className="text-xs text-white/40">Check your inbox for the verification link</p>
+              <p className="text-sm font-medium text-gray-900">Verify your email address</p>
+              <p className="text-xs text-gray-500">Check your inbox for the verification link</p>
             </div>
           </div>
         </div>
@@ -88,18 +88,18 @@ export default function AccountProfile() {
           <Link
             key={label}
             href={href}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-white/5 bg-surface-800 p-5 text-center hover:border-white/10 hover:bg-surface-700/50 transition-all group"
+            className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-5 text-center hover:border-gray-300 hover:bg-gray-50 transition-all group"
           >
-            <Icon size={20} className="text-brand-400 group-hover:scale-110 transition-transform" />
-            <p className="text-2xl font-semibold text-white">{value}</p>
-            <p className="text-xs text-white/40">{label}</p>
+            <Icon size={20} className="text-brand-600 group-hover:scale-110 transition-transform" />
+            <p className="text-2xl font-semibold text-gray-900">{value}</p>
+            <p className="text-xs text-gray-500">{label}</p>
           </Link>
         ))}
       </div>
 
       {/* Profile form */}
-      <div className="rounded-2xl border border-white/5 bg-surface-800 p-6">
-        <h3 className="mb-5 font-semibold text-white">Personal Information</h3>
+      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+        <h3 className="mb-5 font-semibold text-gray-900">Personal Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[
             { label: 'First Name', value: user.firstName },
@@ -108,8 +108,8 @@ export default function AccountProfile() {
             { label: 'Phone Number', value: user.phone ?? '—' },
           ].map(({ label, value }) => (
             <div key={label} className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-white/40 uppercase tracking-wider">{label}</label>
-              <div className="rounded-xl border border-white/5 bg-surface-900 px-4 py-2.5 text-sm text-white/70">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</label>
+              <div className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600">
                 {value}
               </div>
             </div>
@@ -122,9 +122,9 @@ export default function AccountProfile() {
       </div>
 
       {/* Danger zone */}
-      <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-6">
-        <h3 className="mb-1 font-semibold text-white">Delete Account</h3>
-        <p className="text-sm text-white/40 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+        <h3 className="mb-1 font-semibold text-gray-900">Delete Account</h3>
+        <p className="text-sm text-gray-500 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
         <Button variant="danger" size="sm">Delete Account</Button>
       </div>
     </div>
