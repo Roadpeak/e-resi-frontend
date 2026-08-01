@@ -7,9 +7,9 @@ import Link from 'next/link';
 import {
   Building2,
   MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
-  ArrowLeft, CheckCircle2, Loader2, Phone, Mail,
+  ArrowLeft, CheckCircle2, Loader2,
 } from 'lucide-react';
-import { NavbarLight } from '../../../../components/layout/NavbarLight';
+import { RentNavbar } from '../../../../components/rent/RentNavbar';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { formatPrice } from '../../../../lib/utils';
@@ -53,8 +53,14 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   const listing = raw ? toRentListing(raw as any) : null;
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)' }}>
-      <NavbarLight />
+    <div
+      className="min-h-screen pt-16"
+      style={{
+        background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      <RentNavbar />
 
       {isLoading && (
         <div className="flex items-center justify-center py-32">

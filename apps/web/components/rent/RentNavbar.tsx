@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Search, User, X } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
@@ -21,6 +21,7 @@ const links = [
  */
 export function RentNavbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { filters, setFilter } = useRentFiltersStore();
 
@@ -28,11 +29,22 @@ export function RentNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // debounce into the filter store so results update as you type
+  // On /rent the results filter live; on a listing page there's nothing to
+  // filter, so searching navigates back to the browse view instead.
+  const isBrowse = pathname === '/rent';
+
   useEffect(() => {
+    if (!isBrowse) return;
     const t = setTimeout(() => setFilter('query', query.trim() || undefined), 300);
     return () => clearTimeout(t);
-  }, [query, setFilter]);
+  }, [query, setFilter, isBrowse]);
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (isBrowse) return;
+    setFilter('query', query.trim() || undefined);
+    router.push('/rent');
+  }
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -73,7 +85,7 @@ export function RentNavbar() {
         </nav>
 
         {/* Search — the heart of the rent nav */}
-        <div className="relative flex min-w-0 flex-1 items-center">
+        <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center">
           <Search size={18} className="pointer-events-none absolute left-4 text-gray-500" />
           <input
             value={query}
@@ -84,6 +96,7 @@ export function RentNavbar() {
           />
           {query && (
             <button
+              type="button"
               onClick={() => setQuery('')}
               aria-label="Clear search"
               className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors cursor-pointer"
@@ -91,7 +104,7 @@ export function RentNavbar() {
               <X size={14} />
             </button>
           )}
-        </div>
+        </form>
 
         {/* Account */}
         <div className="relative shrink-0" ref={menuRef}>
