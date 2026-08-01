@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowRight, CalendarClock, CreditCard, Info, Loader2, Receipt, Wallet,
+  ArrowRight, CalendarClock, Check, CreditCard, Info, Loader2, Plus, Receipt, Trash2, Wallet,
 } from 'lucide-react';
 import { propertiesApi } from '../../../../lib/api/properties';
+import { billingApi, detectBrand, type LinkedMethod } from '../../../../lib/api/billing';
+import { ApiError } from '../../../../lib/api/client';
 import { LISTING_FEE_MONTHLY, fmtUsd, serviceById } from '../../../../lib/onboarding/catalog';
 
 interface RawListing {
@@ -195,17 +198,12 @@ export default function BillingPage() {
         )}
       </div>
 
-      {/* ── Payment history + method ── */}
+      {/* ── Payment methods ── */}
+      <PaymentMethodsCard />
+
+      {/* ── Payment history + how you pay ── */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
-          <h3 className="text-[18px] font-normal text-[#202124]">Payment history</h3>
-          <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center">
-            <CreditCard size={20} className="text-[#dadce0]" />
-            <p className="max-w-xs text-[15px] leading-relaxed text-[#5f6368]">
-              No payments recorded yet. Invoices and receipts will appear here once your first development goes live.
-            </p>
-          </div>
-        </div>
+        <PaymentHistoryCard />
         <div className="rounded-3xl border border-transparent bg-[#f8f9fa] p-6">
           <h3 className="text-[18px] font-normal text-[#202124]">How you pay</h3>
           <div className="mt-4 flex items-start gap-3">
@@ -225,6 +223,265 @@ export default function BillingPage() {
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+/* ── Payment methods ─────────────────────────────────────────────── */
+
+function PaymentMethodsCard() {
+  const queryClient = useQueryClient();
+  const { data: methods, isLoading } = useQuery({
+    queryKey: ['billing', 'methods'],
+    queryFn: () => billingApi.listMethods(),
+  });
+  const [adding, setAdding] = useState<'card' | 'paypal' | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const [card, setCard] = useState({ number: '', expiry: '' });
+  const [paypalEmail, setPaypalEmail] = useState('');
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['billing', 'methods'] });
+
+  async function submitCard(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    const digits = card.number.replace(/\D/g, '');
+    const [mm, yy] = card.expiry.split('/').map((v) => Number.parseInt(v?.trim(), 10));
+    if (digits.length < 12) { setError('Enter a valid card number.'); return; }
+    if (!mm || mm < 1 || mm > 12 || !yy) { setError('Expiry must be MM/YY.'); return; }
+    setBusy(true);
+    try {
+      // Only display metadata leaves the browser — never the full number.
+      await billingApi.linkCard({
+        brand: detectBrand(digits),
+        last4: digits.slice(-4),
+        expMonth: mm,
+        expYear: 2000 + yy,
+      });
+      setCard({ number: '', expiry: '' });
+      setAdding(null);
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not link card.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitPaypal(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    try {
+      await billingApi.linkPaypal(paypalEmail.trim());
+      setPaypalEmail('');
+      setAdding(null);
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not link PayPal.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-[18px] font-normal text-[#202124]">Payment methods</h3>
+          <p className="text-sm text-[#5f6368]">Used for listing fees and production invoices once payments go live.</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setAdding(adding === 'card' ? null : 'card'); setError(''); }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer"
+          >
+            <Plus size={14} /> Link card
+          </button>
+          <button
+            onClick={() => { setAdding(adding === 'paypal' ? null : 'paypal'); setError(''); }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer"
+          >
+            <Plus size={14} /> Link PayPal
+          </button>
+        </div>
+      </div>
+
+      {/* Add forms */}
+      {adding === 'card' && (
+        <form onSubmit={submitCard} className="mt-4 grid gap-3 rounded-2xl bg-[#f8f9fa] p-4 sm:grid-cols-[1fr_130px_auto]">
+          <input
+            value={card.number}
+            onChange={(e) => setCard((c) => ({ ...c, number: e.target.value.replace(/[^\d ]/g, '') }))}
+            placeholder="Card number"
+            inputMode="numeric"
+            autoComplete="cc-number"
+            className="rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
+          />
+          <input
+            value={card.expiry}
+            onChange={(e) => setCard((c) => ({ ...c, expiry: e.target.value }))}
+            placeholder="MM/YY"
+            autoComplete="cc-exp"
+            className="rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Link
+          </button>
+          <p className="sm:col-span-3 text-[13px] text-[#5f6368]">
+            Your full card number never leaves this device — we keep only the brand, last 4 digits and expiry for reference.
+          </p>
+        </form>
+      )}
+      {adding === 'paypal' && (
+        <form onSubmit={submitPaypal} className="mt-4 grid gap-3 rounded-2xl bg-[#f8f9fa] p-4 sm:grid-cols-[1fr_auto]">
+          <input
+            type="email"
+            value={paypalEmail}
+            onChange={(e) => setPaypalEmail(e.target.value)}
+            placeholder="PayPal email address"
+            required
+            className="rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Link
+          </button>
+        </form>
+      )}
+      {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
+
+      {/* Methods list */}
+      <div className="mt-4">
+        {isLoading ? (
+          <div className="flex h-16 items-center justify-center">
+            <Loader2 size={18} className="animate-spin text-[#80868b]" />
+          </div>
+        ) : (methods ?? []).length === 0 ? (
+          <div className="flex items-center gap-3 rounded-2xl bg-[#f8f9fa] px-4 py-4">
+            <CreditCard size={18} className="text-[#80868b]" />
+            <p className="text-[15px] text-[#5f6368]">No payment methods linked yet — add a card or PayPal above.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-[#f1f3f4]">
+            {(methods ?? []).map((m) => (
+              <MethodRow key={m.id} method={m} onChanged={refresh} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MethodRow({ method, onChanged }: { method: LinkedMethod; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <li className="flex items-center gap-4 py-3.5">
+      <span className={`flex h-10 w-14 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold ${
+        method.type === 'PAYPAL' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'bg-[#202124] text-white'
+      }`}>
+        {method.type === 'PAYPAL' ? 'PayPal' : (method.brand ?? 'Card')}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] font-medium text-[#202124]">
+          {method.type === 'PAYPAL' ? method.paypalEmail : `${method.brand} •••• ${method.last4}`}
+        </p>
+        <p className="text-[13px] text-[#5f6368]">
+          {method.type === 'PAYPAL'
+            ? 'PayPal account'
+            : `Expires ${String(method.expMonth).padStart(2, '0')}/${String(method.expYear).slice(-2)}`}
+        </p>
+      </div>
+      {method.isDefault ? (
+        <span className="rounded-full bg-[#e6f4ea] px-3 py-1 text-[13px] font-medium text-[#188038]">Default</span>
+      ) : (
+        <button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            await billingApi.setDefault(method.id).catch(() => {});
+            onChanged();
+            setBusy(false);
+          }}
+          className="text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
+        >
+          Set default
+        </button>
+      )}
+      <button
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          await billingApi.remove(method.id).catch(() => {});
+          onChanged();
+          setBusy(false);
+        }}
+        aria-label="Remove payment method"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-[#80868b] hover:bg-[#fce8e6] hover:text-[#c5221f] transition-colors cursor-pointer disabled:opacity-50"
+      >
+        <Trash2 size={15} />
+      </button>
+    </li>
+  );
+}
+
+/* ── Payment history (live from the billing API) ─────────────────── */
+
+function PaymentHistoryCard() {
+  const { data: summary } = useQuery({
+    queryKey: ['billing', 'summary'],
+    queryFn: () => billingApi.summary(),
+  });
+  const payments = summary?.payments ?? [];
+
+  return (
+    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
+      <h3 className="text-[18px] font-normal text-[#202124]">Payment history</h3>
+      {payments.length === 0 ? (
+        <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center">
+          <CreditCard size={20} className="text-[#dadce0]" />
+          <p className="max-w-xs text-[15px] leading-relaxed text-[#5f6368]">
+            No payments recorded yet. Invoices and receipts will appear here once your first development goes live.
+          </p>
+        </div>
+      ) : (
+        <ul className="mt-4 divide-y divide-[#f1f3f4]">
+          {payments.map((p) => (
+            <li key={p.id} className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-[15px] font-medium text-[#202124]">
+                  {p.reference ?? p.method.replace('_', ' ').toLowerCase()}
+                </p>
+                <p className="text-[13px] text-[#5f6368]">
+                  {new Date(p.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[15px] font-medium tabular-nums text-[#202124]">
+                  {p.currency} {p.amount.toLocaleString()}
+                </p>
+                <span className={`text-[13px] font-medium ${
+                  p.status === 'COMPLETED' ? 'text-[#188038]' : p.status === 'FAILED' ? 'text-[#c5221f]' : 'text-[#b06000]'
+                }`}>
+                  {p.status.toLowerCase()}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
