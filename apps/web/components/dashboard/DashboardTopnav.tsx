@@ -130,28 +130,37 @@ export function DashboardTopnav() {
       </div>
 
       {/* Right cluster */}
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+        {/* Search (⌘K) — Google-style wide search bar */}
+        <button
+          onClick={() => setPaletteOpen(true)}
+          className="hidden md:flex h-10 w-full max-w-md items-center gap-3 rounded-full bg-[#f1f3f4] px-4 text-left text-[#5f6368] hover:bg-[#e8eaed] transition-colors cursor-pointer"
+          aria-label="Search (Cmd+K)"
+        >
+          <Search size={16} className="shrink-0" />
+          <span className="flex-1 truncate text-[15px]">Search pages and properties</span>
+          <kbd className="hidden lg:inline rounded-md border border-[#dadce0] bg-white px-1.5 py-0.5 text-[11px] font-medium text-[#80868b]">⌘K</kbd>
+        </button>
+        {/* compact icon on small screens */}
+        <button
+          onClick={() => setPaletteOpen(true)}
+          className="flex md:hidden h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+          aria-label="Search"
+        >
+          <Search size={15} />
+        </button>
+
         <Link
           href="/dashboard/developments/new"
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-gray-700 transition-colors"
+          className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-gray-700 transition-colors"
         >
           <Plus size={14} /> Add Development
         </Link>
 
-        {/* Search (⌘K) */}
-        <button
-          onClick={() => setPaletteOpen(true)}
-          className="flex h-9 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-          aria-label="Search (Cmd+K)"
-        >
-          <Search size={14} />
-          <kbd className="hidden lg:inline text-[10px] font-medium text-gray-400">⌘K</kbd>
-        </button>
-
         {/* Help */}
         <a
           href="mailto:support@e-resi.co.ke"
-          className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors"
+          className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors"
           aria-label="Contact support"
         >
           <HelpCircle size={15} />
