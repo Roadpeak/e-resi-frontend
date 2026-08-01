@@ -4,8 +4,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ── Form data shapes ─────────────────────────────────────────────────────────
+//
+// The onboarding wizard is the DEVELOPER SIGNUP flow: account creation happens
+// on step 1, then company/KYB/preferences. Per-development data (details,
+// media, production services) lives in lib/stores/development.store.ts and is
+// collected when the developer adds a development from the dashboard.
 
 export interface CompanyInfo {
+  /** Set during account creation (register step) — not asked again. */
   companyName: string;
   registrationNumber: string;
   taxPin: string;
@@ -37,47 +43,6 @@ export type VerificationDocKey =
   | 'companyLogo'
   | 'brandAssets';
 
-export interface DevelopmentInfo {
-  name: string;
-  type: string;
-  category: string;
-  status: string;
-  expectedCompletion: string;
-  country: string;
-  county: string;
-  city: string;
-  area: string;
-  mapsPin: string;
-  gpsCoordinates: string;
-  numberOfUnits: string;
-  unitTypes: string[];
-  bedrooms: string;
-  bathrooms: string;
-  parking: string;
-  amenities: string[];
-  securityFeatures: string[];
-  utilities: string[];
-  startingPrice: string;
-  priceRange: string;
-  paymentPlans: string[];
-  mortgageOptions: string;
-  shortDescription: string;
-  fullDescription: string;
-}
-
-export interface ServiceSelection {
-  preferredDate: string;
-  instructions: string;
-  accessInfo: string;
-}
-
-export interface MediaState {
-  hasOwnMedia: boolean;
-  uploads: Record<string, string[]>; // kind -> file names
-  /** serviceId -> per-service options; presence of key = selected */
-  services: Record<string, ServiceSelection>;
-}
-
 export interface PreferencesState {
   visibility: 'public' | 'private' | 'invite_only';
   leadChannels: string[];
@@ -91,14 +56,13 @@ export interface PreferencesState {
 
 // ── Store ────────────────────────────────────────────────────────────────────
 
-export const TOTAL_STEPS = 9;
+// Welcome, Account, Company, Verification, Preferences, Billing, Review, Done
+export const TOTAL_STEPS = 8;
 
 interface OnboardingState {
-  step: number; // 0-indexed, 0..8
+  step: number; // 0-indexed, 0..7
   company: CompanyInfo;
   verificationDocs: Record<VerificationDocKey, string>; // file names
-  development: DevelopmentInfo;
-  media: MediaState;
   preferences: PreferencesState;
   submitted: boolean;
 
@@ -107,10 +71,6 @@ interface OnboardingState {
   back: () => void;
   patchCompany: (patch: Partial<CompanyInfo>) => void;
   setVerificationDoc: (key: VerificationDocKey, fileName: string) => void;
-  patchDevelopment: (patch: Partial<DevelopmentInfo>) => void;
-  patchMedia: (patch: Partial<MediaState>) => void;
-  toggleService: (id: string) => void;
-  patchService: (id: string, patch: Partial<ServiceSelection>) => void;
   patchPreferences: (patch: Partial<PreferencesState>) => void;
   markSubmitted: () => void;
   reset: () => void;
@@ -130,17 +90,6 @@ const emptyDocs: Record<VerificationDocKey, string> = {
   proofOfAddress: '', companyLogo: '', brandAssets: '',
 };
 
-const emptyDevelopment: DevelopmentInfo = {
-  name: '', type: '', category: '', status: '', expectedCompletion: '',
-  country: 'Kenya', county: '', city: '', area: '', mapsPin: '', gpsCoordinates: '',
-  numberOfUnits: '', unitTypes: [], bedrooms: '', bathrooms: '', parking: '',
-  amenities: [], securityFeatures: [], utilities: [],
-  startingPrice: '', priceRange: '', paymentPlans: [], mortgageOptions: '',
-  shortDescription: '', fullDescription: '',
-};
-
-const emptyMedia: MediaState = { hasOwnMedia: false, uploads: {}, services: {} };
-
 const emptyPreferences: PreferencesState = {
   visibility: 'public',
   leadChannels: ['email'],
@@ -158,8 +107,6 @@ export const useOnboardingStore = create<OnboardingState>()(
       step: 0,
       company: emptyCompany,
       verificationDocs: emptyDocs,
-      development: emptyDevelopment,
-      media: emptyMedia,
       preferences: emptyPreferences,
       submitted: false,
 
@@ -169,33 +116,16 @@ export const useOnboardingStore = create<OnboardingState>()(
       patchCompany: (patch) => set({ company: { ...get().company, ...patch } }),
       setVerificationDoc: (key, fileName) =>
         set({ verificationDocs: { ...get().verificationDocs, [key]: fileName } }),
-      patchDevelopment: (patch) => set({ development: { ...get().development, ...patch } }),
-      patchMedia: (patch) => set({ media: { ...get().media, ...patch } }),
-      toggleService: (id) => {
-        const services = { ...get().media.services };
-        if (services[id]) delete services[id];
-        else services[id] = { preferredDate: '', instructions: '', accessInfo: '' };
-        set({ media: { ...get().media, services } });
-      },
-      patchService: (id, patch) => {
-        const existing = get().media.services[id];
-        if (!existing) return;
-        set({
-          media: {
-            ...get().media,
-            services: { ...get().media.services, [id]: { ...existing, ...patch } },
-          },
-        });
-      },
       patchPreferences: (patch) => set({ preferences: { ...get().preferences, ...patch } }),
       markSubmitted: () => set({ submitted: true }),
       reset: () =>
         set({
           step: 0, company: emptyCompany, verificationDocs: emptyDocs,
-          development: emptyDevelopment, media: emptyMedia,
           preferences: emptyPreferences, submitted: false,
         }),
     }),
-    { name: 'e-resi-onboarding' },
+    // v2: developer-signup flow — new key so stale drafts from the old
+    // 9-step wizard (with development/media steps) don't corrupt state
+    { name: 'e-resi-onboarding-v2' },
   ),
 );

@@ -35,7 +35,7 @@ export function DashboardTopbar() {
         </button>
 
         {/* Add property */}
-        <Button href="/dashboard/properties/new" size="sm" icon={<Plus size={14} />}>
+        <Button href="/dashboard/developments/new" size="sm" icon={<Plus size={14} />}>
           Add Property
         </Button>
       </div>

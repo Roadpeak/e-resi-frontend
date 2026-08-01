@@ -2,13 +2,14 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
-  Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight,
-  Building2, TrendingUp, Home, Check, Upload, X, Camera,
+  Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, ArrowLeft,
+  Building2, TrendingUp, Home, Check, Upload, X, Camera, Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AuthSplit } from './AuthSplit';
+import { Logo } from '../brand/Logo';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
@@ -24,38 +25,32 @@ const ROLES: {
   icon: React.ReactNode;
   description: string;
   features: string[];
-  image: string;
-  quote: string;
+  recommended?: boolean;
 }[] = [
   {
     id: 'developer',
     label: 'Developer',
     sublabel: 'List & sell properties',
-    icon: <Building2 size={20} />,
-    description: 'List developments, manage units, publish cinematic and 3D tours, and track inquiries.',
-    features: ['Property listings & management', 'Cinematic & 3D tour publishing', 'Inquiry & booking management', 'Sales analytics dashboard', 'Rent listing management'],
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=90',
-    quote: 'Reach serious buyers with immersive experiences that close deals faster.',
+    icon: <Building2 size={22} />,
+    description: 'List developments, manage units, publish cinematic and 3D tours, and track inquiries. Uses the guided developer onboarding.',
+    features: ['Property listings & management', 'Cinematic & 3D tour publishing', 'Inquiry & booking management', 'Sales analytics dashboard'],
   },
   {
     id: 'investor',
     label: 'Investor / Buyer',
     sublabel: 'Buy & invest in property',
-    icon: <TrendingUp size={20} />,
-    description: 'Browse off-plan and completed properties, take virtual tours, track investments, and make informed purchase decisions.',
-    features: ['Full VR & 3D tour access', 'Saved properties & shortlists', 'Investment yield tracking', 'Direct developer inquiries', 'Early access to off-plan launches'],
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1400&q=90',
-    quote: 'Tour every property from your screen — and invest with confidence.',
+    icon: <TrendingUp size={22} />,
+    description: 'Browse off-plan and completed properties, take virtual tours, and invest with confidence.',
+    features: ['Full VR & 3D tour access', 'Saved properties & shortlists', 'Direct developer inquiries', 'Early access to off-plan launches'],
+    recommended: true,
   },
   {
     id: 'tenant',
     label: 'Tenant',
     sublabel: 'Rent a home',
-    icon: <Home size={20} />,
-    description: 'Find furnished and unfurnished rentals, tour units virtually, schedule viewings, and manage your lease.',
-    features: ['Browse rental listings', 'Cinematic & 3D unit tours', 'Schedule viewings online', 'Rental application management', 'Lease document storage'],
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400&q=90',
-    quote: 'Find your next home before you leave yours — from anywhere in the world.',
+    icon: <Home size={22} />,
+    description: 'Find rentals, tour units virtually, schedule viewings, and manage your lease online.',
+    features: ['Browse rental listings', 'Cinematic & 3D unit tours', 'Schedule viewings online', 'Lease document storage'],
   },
 ];
 
@@ -66,11 +61,12 @@ function toBackendRole(role: Role): 'DEVELOPER' | 'INVESTOR' | 'TENANT' {
   return 'TENANT';
 }
 
-const STEPS = ['Role', 'Details', 'Verify'];
+const WIZARD_STEPS = ['Account type', 'Your details', 'Verify email'];
 
 type Step = 0 | 1 | 2;
 
 export function RegisterForm() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [role, setRole] = useState<Role | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -104,10 +100,6 @@ export function RegisterForm() {
 
   const selectedRole = ROLES.find((r) => r.id === role);
 
-  function handleNext() {
-    if (step === 0 && role) setStep(1);
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (step !== 1) return;
@@ -136,400 +128,463 @@ export function RegisterForm() {
   }
 
   return (
-    <AuthSplit
-      image={selectedRole?.image ?? ROLES[1].image}
-      quote={selectedRole?.quote ?? 'Experience properties like never before.'}
-      quoteAuthor={selectedRole ? `e-resi for ${selectedRole.label}s` : 'e-resi Platform'}
-    >
-      {/* Step indicator */}
-      <div className="flex items-center gap-1 mb-8">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center gap-1">
-            <div className={cn(
-              'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold transition-all',
-              i < step ? 'bg-brand-500 text-white' : i === step ? 'bg-brand-600 text-white ring-2 ring-brand-500/30' : 'bg-gray-100 text-gray-400',
-            )}>
-              {i < step ? <Check size={10} /> : i + 1}
-            </div>
-            <span className={cn('text-[10px] font-medium tracking-wide', i === step ? 'text-gray-600' : 'text-gray-400')}>
-              {label}
-            </span>
-            {i < STEPS.length - 1 && <div className="w-6 h-px bg-gray-200 mx-0.5" />}
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen w-full bg-white flex flex-col">
+      {/* ── Top bar ── */}
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-5 sm:px-8">
+        <div className="flex items-center gap-4">
+          <Link href="/" aria-label="e-resi home">
+            <Logo markSize={26} textClassName="text-gray-900 text-[1.2rem]" />
+          </Link>
+          <span className="h-5 w-px bg-gray-200" />
+          <span className="text-sm text-gray-600">Create your account</span>
+        </div>
+        <p className="text-sm text-gray-500">
+          <span className="hidden sm:inline">Already have an account? </span>
+          <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700 transition-colors">
+            Sign in
+          </Link>
+        </p>
+      </header>
 
-      <AnimatePresence mode="wait">
-        {step === 0 && (
-          <motion.div
-            key="step-role"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Create account</h1>
-            <p className="text-sm text-gray-500 mb-6">How will you use e-resi?</p>
-
-            <div className="space-y-3">
-              {ROLES.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setRole(r.id)}
-                  className={cn(
-                    'w-full rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer',
-                    role === r.id
-                      ? 'border-brand-500/50 bg-brand-600/10 ring-1 ring-brand-500/20'
-                      : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100',
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all',
-                      role === r.id ? 'bg-brand-600/20 text-brand-600' : 'bg-gray-100 text-gray-400',
-                    )}>
-                      {r.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className={cn('font-semibold text-sm transition-colors', role === r.id ? 'text-gray-900' : 'text-gray-600')}>
-                          {r.label}
-                        </p>
-                        {role === r.id && (
-                          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-500">
-                            <Check size={9} className="text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">{r.sublabel}</p>
-                      {role === r.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="mt-3 space-y-1.5 overflow-hidden"
-                        >
-                          {r.features.map((f) => (
-                            <div key={f} className="flex items-center gap-2">
-                              <div className="h-1 w-1 rounded-full bg-brand-400 shrink-0" />
-                              <span className="text-[11px] text-gray-500">{f}</span>
-                            </div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <Button
-              className="w-full mt-6"
-              size="lg"
-              disabled={!role}
-              onClick={handleNext}
-              icon={<ArrowRight size={16} />}
-              iconPosition="right"
-            >
-              Continue
-            </Button>
-
-            <p className="text-center text-xs text-gray-400 mt-6">
-              Already have an account?{' '}
-              <Link href="/login" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
-                Sign in
-              </Link>
-            </p>
-          </motion.div>
-        )}
-
-        {step === 1 && (
-          <motion.div
-            key="step-details"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <button
-                type="button"
-                onClick={() => setStep(0)}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                ← Back
-              </button>
-              <span className="text-gray-300">·</span>
-              <div className={cn(
-                'flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border',
-                'border-brand-500/20 bg-brand-500/10 text-brand-600',
-              )}>
-                {selectedRole?.icon && <span className="[&>svg]:w-3 [&>svg]:h-3">{selectedRole.icon}</span>}
-                {selectedRole?.label}
-              </div>
-            </div>
-
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Your details</h1>
-            <p className="text-sm text-gray-500 mb-6">
-              {role === 'developer' ? 'Tell us about you and your company' : 'Set up your profile'}
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              {/* Avatar / Logo upload */}
-              {role === 'developer' ? (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Company logo</p>
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => logoInputRef.current?.click()}
+      {/* ── Body ── */}
+      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-12 px-5 py-8 sm:px-8 lg:py-12">
+        {/* Step rail */}
+        <nav aria-label="Registration progress" className="hidden w-44 shrink-0 lg:block pt-1.5">
+          <ol className="space-y-5">
+            {WIZARD_STEPS.map((label, i) => {
+              const done = i < step;
+              const current = i === step;
+              return (
+                <li key={label} className="flex items-center gap-3">
+                  <span className="flex w-4 items-center justify-center">
+                    {done ? (
+                      <Check size={15} strokeWidth={3} className="text-emerald-500" />
+                    ) : (
+                      <span className={cn('h-0.5 w-4 rounded-full', current ? 'bg-brand-600' : 'bg-gray-300')} />
+                    )}
+                  </span>
+                  <span
                     className={cn(
-                      'relative w-full h-24 rounded-2xl border-2 border-dashed transition-all duration-200 overflow-hidden cursor-pointer group',
-                      logoPreview
-                        ? 'border-brand-500/40 bg-transparent'
-                        : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100',
+                      'text-[13px]',
+                      done && 'text-gray-700',
+                      current && 'font-medium text-gray-900',
+                      !done && !current && 'text-gray-400',
                     )}
                   >
-                    {logoPreview ? (
-                      <>
-                        <Image src={logoPreview} alt="Logo preview" fill className="object-contain p-3" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Camera size={18} className="text-white" />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setLogoPreview(null); if (logoInputRef.current) logoInputRef.current.value = ''; }}
-                          className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white cursor-pointer z-10"
+                    {label}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          {/* Mobile progress */}
+          <div className="mb-8 lg:hidden">
+            <p className="mb-2 text-xs font-medium text-gray-500">
+              Step {step + 1} of {WIZARD_STEPS.length} · {WIZARD_STEPS[step]}
+            </p>
+            <div className="h-1 w-full rounded-full bg-gray-100">
+              <div
+                className="h-1 rounded-full bg-brand-600 transition-all duration-300"
+                style={{ width: `${((step + 1) / WIZARD_STEPS.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {step === 0 && (
+              <motion.div
+                key="step-role"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl">
+                  Choose your account type
+                </h1>
+                <p className="mt-2 text-sm text-gray-500">
+                  This decides what e-resi looks like for you. You can&apos;t change it later.
+                </p>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  {ROLES.map((r) => {
+                    const selected = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className={cn(
+                          'relative flex flex-col rounded-3xl border p-6 text-left transition-all duration-200 cursor-pointer',
+                          selected
+                            ? 'border-brand-600 ring-1 ring-brand-600 bg-brand-50/40 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm',
+                        )}
+                      >
+                        {/* selected check */}
+                        <span
+                          className={cn(
+                            'absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full transition-all',
+                            selected ? 'bg-brand-600 text-white scale-100' : 'scale-0',
+                          )}
                         >
-                          <X size={10} />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full gap-1.5">
-                        <Upload size={18} className="text-gray-400" />
-                        <p className="text-xs text-gray-500">Click to upload logo</p>
-                        <p className="text-[10px] text-gray-400">PNG, JPG, SVG — recommended 400×120px</p>
-                      </div>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <div className="relative shrink-0">
-                    <input
-                      ref={avatarInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 transition-all cursor-pointer group"
-                    >
-                      {avatarPreview ? (
-                        <>
-                          <Image src={avatarPreview} alt="Avatar preview" fill className="object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Camera size={14} className="text-white" />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <User size={20} className="text-gray-400" />
+                          <Check size={13} strokeWidth={3} />
+                        </span>
+
+                        <span
+                          className={cn(
+                            'flex h-12 w-12 items-center justify-center rounded-2xl transition-colors',
+                            selected ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-600',
+                          )}
+                        >
+                          {r.icon}
+                        </span>
+
+                        <div className="mt-4 flex items-center gap-2">
+                          <h2 className="text-base font-semibold text-gray-900">{r.label}</h2>
+                          {r.recommended && !selected && (
+                            <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
+                              Popular
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </button>
-                    {avatarPreview && (
+                        <p className="mt-0.5 text-xs text-gray-500">{r.sublabel}</p>
+                        <p className="mt-3 text-[13px] leading-relaxed text-gray-500">{r.description}</p>
+
+                        <div className="my-4 border-t border-gray-100" />
+
+                        <ul className="space-y-2">
+                          {r.features.map((f) => (
+                            <li key={f} className="flex items-start gap-2">
+                              <Check size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-brand-600" />
+                              <span className="text-xs leading-relaxed text-gray-600">{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {step === 1 && (
+              <motion.div
+                key="step-details"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="mx-auto max-w-xl"
+              >
+                <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
+                  {selectedRole?.icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{selectedRole.icon}</span>}
+                  {selectedRole?.label}
+                </div>
+
+                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl">Your details</h1>
+                <p className="mt-2 text-sm text-gray-500">
+                  {role === 'developer' ? 'Tell us about you and your company' : 'Set up your profile'}
+                </p>
+
+                <form id="register-details" onSubmit={handleSubmit} className="mt-8 space-y-4">
+                  {/* Avatar / Logo upload */}
+                  {role === 'developer' ? (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Company logo</p>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoChange}
+                      />
                       <button
                         type="button"
-                        onClick={() => { setAvatarPreview(null); if (avatarInputRef.current) avatarInputRef.current.value = ''; }}
-                        className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-gray-300 text-gray-500 hover:text-gray-900 cursor-pointer"
+                        onClick={() => logoInputRef.current?.click()}
+                        className={cn(
+                          'relative w-full h-24 rounded-2xl border-2 border-dashed transition-all duration-200 overflow-hidden cursor-pointer group',
+                          logoPreview
+                            ? 'border-brand-500/40 bg-transparent'
+                            : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100',
+                        )}
                       >
-                        <X size={8} />
+                        {logoPreview ? (
+                          <>
+                            <Image src={logoPreview} alt="Logo preview" fill className="object-contain p-3" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Camera size={18} className="text-white" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLogoPreview(null); if (logoInputRef.current) logoInputRef.current.value = ''; }}
+                              className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white cursor-pointer z-10"
+                            >
+                              <X size={10} />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full gap-1.5">
+                            <Upload size={18} className="text-gray-400" />
+                            <p className="text-xs text-gray-500">Click to upload logo</p>
+                            <p className="text-[10px] text-gray-400">PNG, JPG, SVG — recommended 400×120px</p>
+                          </div>
+                        )}
                       </button>
-                    )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <div className="relative shrink-0">
+                        <input
+                          ref={avatarInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleAvatarChange}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => avatarInputRef.current?.click()}
+                          className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 transition-all cursor-pointer group"
+                        >
+                          {avatarPreview ? (
+                            <>
+                              <Image src={avatarPreview} alt="Avatar preview" fill className="object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Camera size={14} className="text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <User size={20} className="text-gray-400" />
+                            </div>
+                          )}
+                        </button>
+                        {avatarPreview && (
+                          <button
+                            type="button"
+                            onClick={() => { setAvatarPreview(null); if (avatarInputRef.current) avatarInputRef.current.value = ''; }}
+                            className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-gray-300 text-gray-500 hover:text-gray-900 cursor-pointer"
+                          >
+                            <X size={8} />
+                          </button>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-0.5">Profile photo</p>
+                        <p className="text-xs text-gray-500">Optional · JPG or PNG, max 5MB</p>
+                        <button
+                          type="button"
+                          onClick={() => avatarInputRef.current?.click()}
+                          className="mt-1.5 text-xs text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
+                        >
+                          {avatarPreview ? 'Change photo' : 'Upload photo'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="First name"
+                      placeholder="John"
+                      value={form.firstName}
+                      onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                      leftIcon={<User size={13} />}
+                      required
+                      autoComplete="given-name"
+                    />
+                    <Input
+                      label="Last name"
+                      placeholder="Doe"
+                      value={form.lastName}
+                      onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                      required
+                      autoComplete="family-name"
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-0.5">Profile photo</p>
-                    <p className="text-xs text-gray-500">Optional · JPG or PNG, max 5MB</p>
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      className="mt-1.5 text-xs text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
-                    >
-                      {avatarPreview ? 'Change photo' : 'Upload photo'}
-                    </button>
+
+                  <Input
+                    label="Email address"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={form.email}
+                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                    leftIcon={<Mail size={14} />}
+                    required
+                    autoComplete="email"
+                  />
+
+                  <Input
+                    label="Phone number"
+                    type="tel"
+                    placeholder="+254 700 000 000"
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    leftIcon={<Phone size={14} />}
+                    autoComplete="tel"
+                  />
+
+                  {role === 'developer' && (
+                    <Input
+                      label="Company / Developer name"
+                      placeholder="Pristine Developments Ltd"
+                      value={form.company}
+                      onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
+                      leftIcon={<Building2 size={14} />}
+                      required
+                    />
+                  )}
+
+                  <Input
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Min. 8 characters"
+                    value={form.password}
+                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                    leftIcon={<Lock size={14} />}
+                    rightIcon={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="cursor-pointer hover:text-gray-600 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    }
+                    hint="Use 8+ characters with a mix of letters, numbers & symbols"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+
+                  <PasswordStrength password={form.password} />
+
+                  <label className="flex items-start gap-2.5 cursor-pointer mt-2">
+                    <input
+                      type="checkbox"
+                      checked={form.agreeTerms}
+                      onChange={(e) => setForm((f) => ({ ...f, agreeTerms: e.target.checked }))}
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 bg-white accent-brand-500 cursor-pointer"
+                      required
+                    />
+                    <span className="text-xs text-gray-500 leading-relaxed">
+                      I agree to the{' '}
+                      <Link href="/terms" className="text-brand-600 hover:text-brand-700">Terms of Service</Link>
+                      {' '}and{' '}
+                      <Link href="/privacy" className="text-brand-600 hover:text-brand-700">Privacy Policy</Link>
+                    </span>
+                  </label>
+
+                  {serverError && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                      {serverError}
+                    </p>
+                  )}
+                </form>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key="step-verify"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25 }}
+                className="mx-auto max-w-md text-center"
+              >
+                <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-brand-50 border border-brand-100">
+                  <Mail size={28} className="text-brand-600" />
+                </div>
+                <h1 className="text-[1.75rem] font-semibold leading-snug text-gray-900 sm:text-3xl mb-2">Check your inbox</h1>
+                <p className="text-sm text-gray-500 mb-2">
+                  We&apos;ve sent a verification link to
+                </p>
+                <p className="text-sm font-medium text-gray-900 mb-6">{form.email || 'your email'}</p>
+
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-left mb-6">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">What happens next</p>
+                  <div className="space-y-2.5">
+                    {[
+                      'Click the link in your email to verify your account',
+                      role === 'developer' ? 'Submit your KYB documents for developer verification' : 'Complete your profile to unlock all features',
+                      `Access your ${role === 'developer' ? 'developer dashboard' : role === 'investor' ? 'investment portfolio' : 'rental dashboard'}`,
+                    ].map((text, i) => (
+                      <div key={i} className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700 mt-0.5">
+                          {i + 1}
+                        </div>
+                        <p className="text-xs text-gray-500 leading-relaxed">{text}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="First name"
-                  placeholder="John"
-                  value={form.firstName}
-                  onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-                  leftIcon={<User size={13} />}
-                  required
-                  autoComplete="given-name"
-                />
-                <Input
-                  label="Last name"
-                  placeholder="Doe"
-                  value={form.lastName}
-                  onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-                  required
-                  autoComplete="family-name"
-                />
-              </div>
+                <VerificationCodePanel email={form.email} />
 
-              <Input
-                label="Email address"
-                type="email"
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                leftIcon={<Mail size={14} />}
-                required
-                autoComplete="email"
-              />
+                <Button href="/login" variant="secondary" className="w-full">
+                  Back to Sign In
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              <Input
-                label="Phone number"
-                type="tel"
-                placeholder="+254 700 000 000"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                leftIcon={<Phone size={14} />}
-                autoComplete="tel"
-              />
-
-              {role === 'developer' && (
-                <Input
-                  label="Company / Developer name"
-                  placeholder="Pristine Developments Ltd"
-                  value={form.company}
-                  onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-                  leftIcon={<Building2 size={14} />}
-                  required
-                />
-              )}
-
-              <Input
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Min. 8 characters"
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                leftIcon={<Lock size={14} />}
-                rightIcon={
+          {/* ── Footer actions (wizard steps only) ── */}
+          {step < 2 && (
+            <div className="mt-10 flex items-center justify-between border-t border-gray-200 pt-6">
+              <Link href="/" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+                Cancel
+              </Link>
+              <div className="flex items-center gap-3">
+                {step === 1 && (
                   <button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="cursor-pointer hover:text-gray-600 transition-colors"
-                    tabIndex={-1}
+                    onClick={() => setStep(0)}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    <ArrowLeft size={15} /> Back
                   </button>
-                }
-                hint="Use 8+ characters with a mix of letters, numbers & symbols"
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-
-              <PasswordStrength password={form.password} />
-
-              <label className="flex items-start gap-2.5 cursor-pointer mt-2">
-                <input
-                  type="checkbox"
-                  checked={form.agreeTerms}
-                  onChange={(e) => setForm((f) => ({ ...f, agreeTerms: e.target.checked }))}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 bg-white accent-brand-500 cursor-pointer"
-                  required
-                />
-                <span className="text-xs text-gray-500 leading-relaxed">
-                  I agree to the{' '}
-                  <Link href="/terms" className="text-brand-600 hover:text-brand-700">Terms of Service</Link>
-                  {' '}and{' '}
-                  <Link href="/privacy" className="text-brand-600 hover:text-brand-700">Privacy Policy</Link>
-                </span>
-              </label>
-
-              {serverError && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                  {serverError}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full mt-2"
-                size="lg"
-                loading={loading}
-                disabled={!form.agreeTerms}
-                icon={<ArrowRight size={16} />}
-                iconPosition="right"
-              >
-                Create Account
-              </Button>
-            </form>
-          </motion.div>
-        )}
-
-        {step === 2 && (
-          <motion.div
-            key="step-verify"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-center"
-          >
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-brand-600/20 border border-brand-500/20">
-              <Mail size={28} className="text-brand-600" />
-            </div>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Check your inbox</h1>
-            <p className="text-sm text-gray-500 mb-2">
-              We&apos;ve sent a verification link to
-            </p>
-            <p className="text-sm font-medium text-gray-900 mb-6">{form.email || 'your email'}</p>
-
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-left mb-6">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">What happens next</p>
-              <div className="space-y-2.5">
-                {[
-                  'Click the link in your email to verify your account',
-                  role === 'developer' ? 'Submit your KYB documents for developer verification' : 'Complete your profile to unlock all features',
-                  `Access your ${role === 'developer' ? 'developer dashboard' : role === 'investor' ? 'investment portfolio' : 'rental dashboard'}`,
-                ].map((text, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600/20 text-[10px] font-bold text-brand-600 mt-0.5">
-                      {i + 1}
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">{text}</p>
-                  </div>
-                ))}
+                )}
+                {step === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!role) return;
+                      // Developers sign up through the guided onboarding wizard
+                      if (role === 'developer') router.push('/onboarding');
+                      else setStep(1);
+                    }}
+                    disabled={!role}
+                    className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    Continue <ArrowRight size={15} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    form="register-details"
+                    disabled={!form.agreeTerms || loading}
+                    className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    {loading ? (
+                      <>Creating account <Loader2 size={15} className="animate-spin" /></>
+                    ) : (
+                      <>Create account <ArrowRight size={15} /></>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
-
-            <VerificationCodePanel email={form.email} />
-
-            <Button href="/login" variant="secondary" className="w-full">
-              Back to Sign In
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </AuthSplit>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

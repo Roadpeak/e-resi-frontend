@@ -30,7 +30,7 @@ export default function DashboardProperties() {
           <h2 className="text-xl font-semibold text-gray-900">Your Properties</h2>
           <p className="text-sm text-gray-500 mt-0.5">{properties.length} development{properties.length !== 1 ? 's' : ''} in your portfolio</p>
         </div>
-        <Button icon={<Plus size={15} />}>Add Property</Button>
+        <Button href="/dashboard/developments/new" icon={<Plus size={15} />}>Add Development</Button>
       </div>
 
       {properties.length === 0 ? (
@@ -38,7 +38,7 @@ export default function DashboardProperties() {
           <Building2 size={32} className="mx-auto mb-3 text-gray-300" />
           <p className="text-sm font-medium text-gray-600">No properties yet</p>
           <p className="text-xs text-gray-400 mt-1">List a property and start receiving inquiries within minutes.</p>
-          <Button size="sm" className="mt-4" icon={<Plus size={13} />}>Add Property</Button>
+          <Button href="/dashboard/developments/new" size="sm" className="mt-4" icon={<Plus size={13} />}>Add Development</Button>
         </div>
       ) : (
         <>
@@ -172,7 +172,7 @@ export default function DashboardProperties() {
             <Building2 size={32} className="mx-auto mb-3 text-gray-300" />
             <p className="text-sm font-medium text-gray-600">Ready to add your next development?</p>
             <p className="text-xs text-gray-400 mt-1">List a property and start receiving inquiries within minutes.</p>
-            <Button size="sm" className="mt-4" icon={<Plus size={13} />}>Add Property</Button>
+            <Button href="/dashboard/developments/new" size="sm" className="mt-4" icon={<Plus size={13} />}>Add Development</Button>
           </div>
         </>
       )}

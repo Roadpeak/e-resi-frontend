@@ -1,8 +1,6 @@
 import { apiClient } from './client';
 import type {
   CompanyInfo,
-  DevelopmentInfo,
-  MediaState,
   PreferencesState,
   VerificationDocKey,
 } from '../stores/onboarding.store';
@@ -10,8 +8,6 @@ import type {
 export interface OnboardingPayload {
   company: CompanyInfo;
   verificationDocs: Record<VerificationDocKey, string>;
-  development: DevelopmentInfo;
-  media: MediaState;
   preferences: PreferencesState;
 }
 

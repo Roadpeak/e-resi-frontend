@@ -1,121 +1,73 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import {
-  BadgeCheck, CalendarClock, CheckCircle2, ChevronRight, ClipboardList,
-  FileCheck2, Pencil, Trash2,
+  BadgeCheck, Building2, CheckCircle2, ChevronRight, FileCheck2, Pencil, PlusCircle,
 } from 'lucide-react';
-import { computeBilling, fmtUsd, serviceById } from '../../lib/onboarding/catalog';
+import { LISTING_FEE_MONTHLY, fmtUsd } from '../../lib/onboarding/catalog';
 import { useOnboardingStore } from '../../lib/stores/onboarding.store';
 import { PrimaryButton, SectionCard } from './ui';
 
-// ── Step 7: Subscription & Billing (dynamic, no packages) ────────────────────
+// ── Billing: fixed listing fee per development ────────────────────────────────
+//
+// Production/marketing services (photography, video, VR…) are priced per
+// development inside the development-creation flow — the only recurring
+// platform cost is the flat listing fee for each development you list.
 
 export function StepBilling() {
-  const { media, toggleService, setStep } = useOnboardingStore();
-  const billing = computeBilling(Object.keys(media.services));
-  const [showBreakdown, setShowBreakdown] = useState(true);
-
-  const Row = ({ label, amount, onRemove }: { label: string; amount: string; onRemove?: () => void }) => (
-    <div className="flex items-center justify-between py-2.5">
-      <span className="flex items-center gap-2 text-sm text-gray-700">
-        {onRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="text-gray-300 hover:text-[#F0594C] transition-colors"
-            aria-label={`Remove ${label}`}
-          >
-            <Trash2 size={14} />
-          </button>
-        )}
-        {label}
-      </span>
-      <span className="text-sm font-medium text-gray-900 tabular-nums">{amount}</span>
-    </div>
-  );
-
   return (
     <div className="grid gap-6">
       <SectionCard
-        title="Your estimate"
-        subtitle="Calculated from the services you selected — nothing is charged until your listing is approved."
+        title="Simple, per-development pricing"
+        subtitle="No subscription for your account — you only pay for what you list."
       >
-        <div className="divide-y divide-gray-100">
-          <Row label="Listing fee" amount={`${fmtUsd(billing.listingFeeMonthly)} / month`} />
-
-          {billing.production.length > 0 && (
-            <div className="py-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 pt-1 pb-1">
-                Production services
-              </p>
-              {billing.production.map((s) => (
-                <Row key={s.id} label={s.label} amount={fmtUsd(s.price)} onRemove={() => toggleService(s.id)} />
-              ))}
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Listing fee</p>
+              <p className="mt-1 text-xs text-gray-500">per development, per month — starts when it goes live</p>
             </div>
-          )}
-
-          {billing.marketing.length > 0 && (
-            <div className="py-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 pt-1 pb-1">
-                Marketing & design services
-              </p>
-              {billing.marketing.map((s) => (
-                <Row key={s.id} label={s.label} amount={fmtUsd(s.price)} onRemove={() => toggleService(s.id)} />
-              ))}
-            </div>
-          )}
-
-          {billing.production.length === 0 && billing.marketing.length === 0 && (
-            <p className="py-4 text-sm text-gray-400">
-              No production services selected — your listing will use the media you upload yourself.
+            <p className="text-3xl font-semibold text-gray-900 tabular-nums">
+              {fmtUsd(LISTING_FEE_MONTHLY)}
+              <span className="text-sm font-normal text-gray-500"> /mo</span>
             </p>
-          )}
-
-          <div className="flex items-center justify-between pt-4">
-            <span className="text-base font-semibold text-gray-900">Estimated total</span>
-            <span className="text-right">
-              <span className="block text-xl font-semibold text-gray-900 tabular-nums">
-                {fmtUsd(billing.oneTimeTotal)} <span className="text-sm font-normal text-gray-500">one-time</span>
-              </span>
-              <span className="block text-sm text-gray-500 tabular-nums">
-                + {fmtUsd(billing.listingFeeMonthly)} / month listing
-              </span>
-            </span>
+          </div>
+          <div className="mt-5 border-t border-gray-200 pt-4 grid gap-2.5">
+            {[
+              'Dedicated branded page for each development',
+              'Hosting, analytics, inquiry & booking management',
+              'Unlimited units and floor plans per development',
+              'Cancel a listing any time — billing stops immediately',
+            ].map((line) => (
+              <div key={line} className="flex items-start gap-2.5">
+                <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-500" />
+                <span className="text-[13px] leading-relaxed text-gray-600">{line}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => setStep(4)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Pencil size={13} /> Add or change services
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowBreakdown((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <ClipboardList size={13} /> {showBreakdown ? 'Hide' : 'View'} pricing notes
-          </button>
+        <div className="flex items-start gap-3 rounded-xl bg-brand-50 border border-brand-100 p-4">
+          <Building2 size={16} className="mt-0.5 shrink-0 text-brand-600" />
+          <p className="text-[13px] leading-relaxed text-gray-600">
+            You&apos;ll add developments from your dashboard after verification. Each development
+            you list adds one {fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee — list two developments,
+            pay {fmtUsd(LISTING_FEE_MONTHLY * 2)}/month. Media production services (photography,
+            cinematic video, 3D & VR tours) are optional one-time costs chosen per development
+            when you create it.
+          </p>
         </div>
 
-        {showBreakdown && (
-          <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 text-[13px] leading-relaxed text-gray-500">
-            Production fees are one-time and payable 50% before the shoot, 50% on delivery.
-            The monthly listing fee starts only when your development goes live and covers hosting,
-            analytics, inquiry management and support. All prices exclude VAT.
-          </div>
-        )}
+        <p className="text-[13px] leading-relaxed text-gray-500">
+          Nothing is charged today. The listing fee for a development starts only when it is
+          approved and published. All prices exclude VAT.
+        </p>
       </SectionCard>
     </div>
   );
 }
 
-// ── Step 8: Review ───────────────────────────────────────────────────────────
+// ── Review ────────────────────────────────────────────────────────────────────
 
 function ReviewBlock({
   title, step, items,
@@ -133,7 +85,7 @@ function ReviewBlock({
         <button
           type="button"
           onClick={() => setStep(step)}
-          className="inline-flex items-center gap-1 text-[13px] font-medium text-[#4A80F5] hover:text-[#3457E0]"
+          className="inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:text-brand-700"
         >
           <Pencil size={12} /> Edit
         </button>
@@ -155,16 +107,14 @@ function ReviewBlock({
 }
 
 export function StepReview() {
-  const { company, verificationDocs, development: dev, media, preferences: prefs } = useOnboardingStore();
-  const billing = computeBilling(Object.keys(media.services));
+  const { company, verificationDocs, preferences: prefs } = useOnboardingStore();
   const docCount = Object.values(verificationDocs).filter(Boolean).length;
-  const uploadCount = Object.values(media.uploads).reduce((n, files) => n + files.length, 0);
 
   return (
     <div className="grid gap-4">
       <ReviewBlock
-        title="Developer information"
-        step={1}
+        title="Company information"
+        step={2}
         items={[
           ['Company', company.companyName],
           ['Registration no.', company.registrationNumber],
@@ -178,41 +128,12 @@ export function StepReview() {
       />
       <ReviewBlock
         title="Verification documents"
-        step={2}
+        step={3}
         items={[['Documents uploaded', docCount ? `${docCount} of 6` : '']]}
       />
       <ReviewBlock
-        title="Development information"
-        step={3}
-        items={[
-          ['Name', dev.name],
-          ['Type', [dev.type, dev.category].filter(Boolean).join(' · ')],
-          ['Status', dev.status],
-          ['Location', [dev.area, dev.city, dev.county].filter(Boolean).join(', ')],
-          ['Units', dev.numberOfUnits],
-          ['Unit types', dev.unitTypes.join(', ')],
-          ['Starting price', dev.startingPrice],
-          ['Payment plans', dev.paymentPlans.join(', ')],
-        ]}
-      />
-      <ReviewBlock
-        title="Media"
-        step={4}
-        items={[
-          ['Own media', media.hasOwnMedia ? `Yes — ${uploadCount} file${uploadCount === 1 ? '' : 's'}` : 'No'],
-        ]}
-      />
-      <ReviewBlock
-        title="Selected services"
-        step={4}
-        items={Object.keys(media.services).map((id) => {
-          const s = serviceById(id);
-          return [s?.label ?? id, s ? fmtUsd(s.price) : ''] as [string, string];
-        })}
-      />
-      <ReviewBlock
         title="Listing preferences"
-        step={5}
+        step={4}
         items={[
           ['Visibility', prefs.visibility.replace('_', ' ')],
           ['Leads via', prefs.leadChannels.join(', ')],
@@ -223,28 +144,27 @@ export function StepReview() {
       />
       <ReviewBlock
         title="Billing"
-        step={6}
+        step={5}
         items={[
-          ['One-time services', fmtUsd(billing.oneTimeTotal)],
-          ['Monthly listing fee', `${fmtUsd(billing.listingFeeMonthly)} / month`],
+          ['Listing fee', `${fmtUsd(LISTING_FEE_MONTHLY)} / month per development`],
+          ['Charged today', 'Nothing'],
         ]}
       />
     </div>
   );
 }
 
-// ── Step 9: Submitted ────────────────────────────────────────────────────────
+// ── Submitted ─────────────────────────────────────────────────────────────────
 
 export function StepSubmitted() {
-  const hasServices = useOnboardingStore((s) => Object.keys(s.media.services).length > 0);
   return (
     <div className="text-center">
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#E8F7EF]">
         <CheckCircle2 size={32} className="text-[#37B978]" />
       </div>
-      <h2 className="text-2xl font-semibold text-gray-900">Your development is now under review</h2>
+      <h2 className="text-2xl font-semibold text-gray-900">Your developer account is under review</h2>
       <p className="mx-auto mt-3 max-w-md text-gray-500">
-        Thank you — we've received everything. Here's what happens next.
+        Thank you — we&apos;ve received everything. Here&apos;s what happens next.
       </p>
 
       <div className="mt-10 grid gap-4 text-left">
@@ -254,21 +174,19 @@ export function StepSubmitted() {
             title: 'Verification — 1 to 2 business days',
             body: "Our compliance team reviews your business documents. You'll get an email once your company is verified.",
           },
-          ...(hasServices
-            ? [{
-                icon: CalendarClock,
-                title: 'Media production scheduling',
-                body: 'A producer will contact you within 48 hours of verification to confirm shoot dates for your selected services.',
-              }]
-            : []),
+          {
+            icon: PlusCircle,
+            title: 'Add your developments',
+            body: 'Create your first development from the dashboard — details, media, and any production services you need, priced per development.',
+          },
           {
             icon: BadgeCheck,
-            title: 'Listing goes live',
-            body: 'Once verification (and any production) is complete and approved, your development is published to buyers.',
+            title: 'Listings go live',
+            body: 'Each approved development gets its own branded page and starts its monthly listing fee only when published.',
           },
         ].map(({ icon: Icon, title, body }) => (
           <div key={title} className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-5">
-            <Icon size={20} className="mt-0.5 shrink-0 text-[#4A80F5]" />
+            <Icon size={20} className="mt-0.5 shrink-0 text-brand-600" />
             <div>
               <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
               <p className="mt-1 text-[13px] leading-relaxed text-gray-500">{body}</p>
@@ -277,14 +195,19 @@ export function StepSubmitted() {
         ))}
       </div>
 
-      <p className="mt-8 text-sm text-gray-500">
-        You can track review progress, respond to questions and manage your listing from your dashboard.
-      </p>
-      <Link href="/dashboard" className="mt-4 inline-block">
-        <PrimaryButton type="button">
-          Go to Dashboard <ChevronRight size={15} />
-        </PrimaryButton>
-      </Link>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Link href="/dashboard/developments/new">
+          <PrimaryButton type="button">
+            Add your first development <ChevronRight size={15} />
+          </PrimaryButton>
+        </Link>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
     </div>
   );
 }

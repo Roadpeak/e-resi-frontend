@@ -210,7 +210,7 @@ export function PrimaryButton({
     <button
       {...props}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-full bg-[#4A80F5] px-7 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#3457E0] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none',
+        'inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-7 py-3 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none',
         props.className,
       )}
     >

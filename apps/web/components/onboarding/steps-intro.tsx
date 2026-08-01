@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Building2, Clock3, Globe2, LineChart, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuthStore } from '../../lib/stores/auth.store';
 import { useOnboardingStore, type VerificationDocKey } from '../../lib/stores/onboarding.store';
+import { apiClient } from '../../lib/api/client';
 import {
   Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
 } from './ui';
@@ -25,7 +28,8 @@ export function StepWelcome() {
         List your development on e-resi
       </h2>
       <p className="mx-auto mt-3 max-w-md text-gray-500">
-        A few steps to get your company verified and your development in front of buyers.
+        Create your developer account and get your company verified — then list as many
+        developments as you like from your dashboard.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 text-left">
@@ -40,7 +44,7 @@ export function StepWelcome() {
 
       <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-[13px] text-gray-600">
         <Clock3 size={14} />
-        Takes about 15–20 minutes — your progress is saved automatically
+        Takes about 10 minutes — your progress is saved automatically
       </p>
     </div>
   );
@@ -55,13 +59,37 @@ const COMPANY_TYPES = [
 
 export function StepCompany() {
   const { company, patchCompany } = useOnboardingStore();
+  const user = useAuthStore((s) => s.user);
+
+  // No repeat data collection: company name comes from account creation and
+  // contact details default to the account holder (still editable).
+  useEffect(() => {
+    if (!company.companyName) {
+      apiClient
+        .get<{ success: boolean; data: { companyName?: string } }>('/users/developers/me')
+        .then((res) => {
+          const name = res?.data?.companyName;
+          if (name) patchCompany({ companyName: name });
+        })
+        .catch(() => {});
+    }
+    if (user) {
+      patchCompany({
+        ...(!company.contactName && { contactName: `${user.firstName} ${user.lastName}`.trim() }),
+        ...(!company.contactEmail && { contactEmail: user.email }),
+        ...(!company.contactPhone && user.phone && { contactPhone: user.phone }),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="grid gap-6">
-      <SectionCard title="Company details">
+      <SectionCard
+        title="Company details"
+        subtitle={company.companyName ? `Registering: ${company.companyName} — set at account creation.` : undefined}
+      >
         <FieldGrid>
-          <Field label="Company name" required>
-            <TextInput value={company.companyName} onChange={(e) => patchCompany({ companyName: e.target.value })} placeholder="Acme Developments Ltd" />
-          </Field>
           <Field label="Registration number" required>
             <TextInput value={company.registrationNumber} onChange={(e) => patchCompany({ registrationNumber: e.target.value })} placeholder="PVT-XXXXXXX" />
           </Field>

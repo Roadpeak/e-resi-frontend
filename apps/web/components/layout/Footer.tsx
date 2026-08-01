@@ -15,7 +15,7 @@ const cols = [
     heading: 'Developers',
     links: [
       { label: 'List a Property', href: '/dashboard' },
-      { label: 'Production Packages', href: '/dashboard/properties/new' },
+      { label: 'Production Packages', href: '/dashboard/developments/new' },
       { label: 'Analytics', href: '/dashboard/analytics' },
       { label: 'Pricing', href: '/dashboard' },
     ],

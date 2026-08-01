@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Logo } from '../../components/brand/Logo';
-import { RequireAuth } from '../../components/auth/RequireAuth';
 
 export const metadata: Metadata = {
   title: 'List your development',
@@ -11,19 +10,26 @@ export const metadata: Metadata = {
 /** Pure light-mode shell — the onboarding flow does not follow the site theme. */
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <Link href="/" aria-label="e-resi home">
-            <Logo markSize={28} textClassName="text-gray-900 text-[1.3rem]" />
-          </Link>
-          <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Save & exit
-          </Link>
+        <div className="flex h-16 items-center justify-between px-5 sm:px-8">
+          <div className="flex items-center gap-4">
+            <Link href="/" aria-label="e-resi home">
+              <Logo markSize={26} textClassName="text-gray-900 text-[1.2rem]" />
+            </Link>
+            <span className="h-5 w-px bg-gray-200" />
+            <span className="text-sm text-gray-600">Become a developer</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            <span className="hidden sm:inline">Already onboarded? </span>
+            <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700 transition-colors">
+              Sign in
+            </Link>
+          </p>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <RequireAuth roles={['DEVELOPER', 'ADMIN']}>{children}</RequireAuth>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-8 sm:px-8 lg:py-12">
+        {children}
       </main>
     </div>
   );
