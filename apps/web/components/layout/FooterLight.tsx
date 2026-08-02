@@ -14,19 +14,20 @@ const cols = [
   {
     heading: 'Developers',
     links: [
-      { label: 'List a Property', href: '/dashboard' },
-      { label: 'Production Packages', href: '/dashboard/developments/new' },
-      { label: 'Analytics', href: '/dashboard/analytics' },
-      { label: 'Pricing', href: '/dashboard' },
+      { label: 'List a Property', href: '/for-developers' },
+      { label: 'Production Packages', href: '/for-developers' },
+      { label: 'For Investors', href: '/for-investors' },
+      { label: 'Pricing', href: '/pricing' },
     ],
   },
   {
     heading: 'Company',
     links: [
-      { label: 'About e-resi', href: '/' },
-      { label: 'Contact', href: '/' },
-      { label: 'Careers', href: '/' },
-      { label: 'Privacy Policy', href: '/' },
+      { label: 'About e-resi', href: '/about' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Careers', href: '/careers' },
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
     ],
   },
 ];

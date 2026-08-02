@@ -4,6 +4,7 @@ import { HeroSection } from '../../components/marketplace/HeroSection';
 import { PropertyShowcase } from '../../components/marketplace/PropertyShowcase';
 import { ManifestoSection } from '../../components/marketplace/ManifestoSection';
 import { SplitFeature } from '../../components/marketplace/SplitFeature';
+import { AudienceSection } from '../../components/marketplace/AudienceSection';
 
 export default function HomePage() {
   return (
@@ -13,6 +14,7 @@ export default function HomePage() {
       <PropertyShowcase />
       <ManifestoSection />
       <SplitFeature />
+      <AudienceSection />
       <Footer />
     </main>
   );
