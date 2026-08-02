@@ -92,14 +92,19 @@ export function HeroSection() {
 
         // ── Main scroll driver ──
         let lastTime = -1;
-        const minDelta = 1 / 24;
+        // A phone travels five screen-heights of finger-scrolling to clear a
+        // 500% pin while seeking a video frame the whole way. Shorten the
+        // travel, lighten the scrub, and ask for fewer seeks — mobile decoders
+        // are far slower, and a seek queue that cannot keep up is the stutter.
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        const minDelta = isMobile ? 1 / 12 : 1 / 24;
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
           start: 'top top',
-          end: '+=500%',   // 5× height = lots of scroll travel
+          end: isMobile ? '+=250%' : '+=500%',
           pin: true,
-          scrub: 1.5,
+          scrub: isMobile ? 0.6 : 1.5,
           onUpdate: (self) => {
             const p = self.progress;
 
@@ -279,7 +284,10 @@ export function HeroSection() {
       <div
         ref={phase2Ref}
         className="absolute inset-0 z-20 flex flex-col items-center justify-center px-8 sm:px-14 lg:px-20"
-        style={{ pointerEvents: 'none' }}
+        // Hidden in markup, not only via gsap.set() in the video's ready
+        // handler — on a connection where the video never loads that handler
+        // never runs, and this phase would otherwise render over phase 1.
+        style={{ pointerEvents: 'none', visibility: 'hidden', opacity: 0 }}
       >
         {/* Eyebrow + headline */}
         <div ref={phase2HeadRef} className="text-center mb-14">
