@@ -52,3 +52,7 @@ Thumbs.db
 # Next.js
 .next
 out
+
+# Pre-optimisation source videos — kept locally for re-encoding, never shipped.
+# The originals are large enough to bloat the repo permanently.
+apps/web/public/videos/*-original.mp4
