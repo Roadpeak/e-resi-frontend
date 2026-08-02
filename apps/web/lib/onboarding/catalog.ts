@@ -14,7 +14,11 @@ export interface ServiceDefinition {
   description: string;
 }
 
-export const LISTING_FEE_MONTHLY = 49;
+/**
+ * Fallback pricing, used until the admin-managed catalogue loads.
+ * `applyCatalogOverrides` replaces these at runtime — see useCatalog().
+ */
+export let LISTING_FEE_MONTHLY = 49;
 
 export const SERVICE_CATEGORIES: Record<ServiceCategory, string> = {
   capture: 'Photography & Film',
@@ -23,7 +27,7 @@ export const SERVICE_CATEGORIES: Record<ServiceCategory, string> = {
   design: 'Design & Branding',
 };
 
-export const SERVICES: ServiceDefinition[] = [
+export let SERVICES: ServiceDefinition[] = [
   // ── Photography & Film ──────────────────────────────────────────────
   { id: 'photography', label: 'Professional Photography', category: 'capture', price: 850, description: 'Full interior & exterior stills shoot, edited and colour-graded.' },
   { id: 'videography', label: 'Professional Videography', category: 'capture', price: 1200, description: 'Ground-level cinematic filming of the development.' },
@@ -89,3 +93,15 @@ export function computeBilling(selectedIds: string[]): BillingBreakdown {
 
 export const fmtUsd = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/**
+ * Patch the fallback constants with admin-managed values.
+ *
+ * Mutating module state is deliberate: six screens already read SERVICES and
+ * LISTING_FEE_MONTHLY synchronously, and this lets them all reflect admin
+ * pricing without each becoming async. Called only by useCatalog().
+ */
+export function applyCatalogOverrides(services: ServiceDefinition[], listingFee: number): void {
+  if (services.length > 0) SERVICES = services;
+  if (Number.isFinite(listingFee)) LISTING_FEE_MONTHLY = listingFee;
+}

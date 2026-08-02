@@ -9,6 +9,7 @@ import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { DEV_TOTAL_STEPS, useDevelopmentStore } from '../../../../../lib/stores/development.store';
 import { StepDevelopment, StepServices } from '../../../../../components/development/steps';
 import { LISTING_FEE_MONTHLY, computeBilling, fmtUsd } from '../../../../../lib/onboarding/catalog';
+import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
 
 const STEPS = ['Development details', 'Media & services', 'Review & costs'];
 
@@ -42,6 +43,8 @@ function parseCoordinates(raw?: string): { latitude?: number; longitude?: number
 }
 
 export default function NewDevelopmentPage() {
+  // Hydrates the catalogue with admin-managed pricing.
+  useCatalog();
   const { step, setStep, next, back, development, media, reset } = useDevelopmentStore();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

@@ -11,6 +11,7 @@ import {
 import { apiClient } from '../../../lib/api/client';
 import { propertiesApi } from '../../../lib/api/properties';
 import { LISTING_FEE_MONTHLY, fmtUsd } from '../../../lib/onboarding/catalog';
+import { useCatalog } from '../../../lib/onboarding/useCatalog';
 import { useAuthStore } from '../../../lib/stores/auth.store';
 import {
   useDeveloperStats, useDeveloperEngagement, useMyProperties, useMyRentListings,
@@ -103,6 +104,8 @@ function Card({ children, className = '', delay = 0 }: { children: React.ReactNo
 /* ── Page ────────────────────────────────────────────────────────── */
 
 export default function DashboardOverview() {
+  // Hydrates the catalogue with admin-managed pricing.
+  useCatalog();
   const user = useAuthStore((s) => s.user);
   const { data: stats } = useDeveloperStats();
   const { data: engagement } = useDeveloperEngagement(7);

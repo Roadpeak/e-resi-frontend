@@ -10,6 +10,7 @@ import { propertiesApi } from '../../../../lib/api/properties';
 import { billingApi } from '../../../../lib/api/billing';
 import { PaymentMethodsCard } from '../../../../components/dashboard/PaymentMethods';
 import { LISTING_FEE_MONTHLY, fmtUsd, serviceById } from '../../../../lib/onboarding/catalog';
+import { useCatalog } from '../../../../lib/onboarding/useCatalog';
 
 interface RawListing {
   id: string;
@@ -31,6 +32,8 @@ const STATUS_CHIPS: Record<string, { label: string; className: string }> = {
 };
 
 export default function BillingPage() {
+  // Hydrates the catalogue with admin-managed pricing.
+  useCatalog();
   const { data, isLoading } = useQuery({
     queryKey: ['my-listings-raw'],
     queryFn: () => propertiesApi.myListings({ limit: 50 }),
