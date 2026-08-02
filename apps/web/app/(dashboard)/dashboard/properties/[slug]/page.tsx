@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { propertiesApi } from '../../../../../lib/api/properties';
-import { serviceById, fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
+import { fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
+import { ProductionServicesPanel } from '../../../../../components/dashboard/ProductionServicesPanel';
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
@@ -214,8 +215,6 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
   }
 
   const chip = STATUS_CHIPS[property.status] ?? STATUS_CHIPS.DRAFT;
-  const serviceIds = Object.keys(property.submissionData?.media?.services ?? {});
-  const services = serviceIds.map(serviceById).filter((s): s is NonNullable<ReturnType<typeof serviceById>> => Boolean(s));
   const dev = property.submissionData?.development as Record<string, unknown> | undefined;
 
   return (
@@ -412,8 +411,11 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
       {/* ── Units ── */}
       <UnitsManager slug={property.slug} currency={property.currency} units={property.units} />
 
+      {/* ── Production services: order more at any time ── */}
+      <ProductionServicesPanel slug={property.slug} />
+
       {/* ── Submission summary (from the creation wizard) ── */}
-      {(dev || services.length > 0) && (
+      {dev && (
         <div className="rounded-3xl border border-transparent bg-[#f8f9fa] p-6">
           <h3 className="text-[18px] font-normal text-[#202124]">Submission details</h3>
           <p className="text-sm text-[#5f6368]">What you provided when creating this development — used by the review and production teams.</p>
@@ -430,19 +432,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
               ))}
             </dl>
           )}
-          {services.length > 0 && (
-            <div className="mt-4 border-t border-[#dadce0]/60 pt-4">
-              <p className="text-[13px] font-medium uppercase tracking-[0.08em] text-[#5f6368]">Ordered production services</p>
-              <ul className="mt-2 space-y-1.5">
-                {services.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between">
-                    <span className="text-[15px] text-[#3c4043]">{s.label}</span>
-                    <span className="text-[15px] tabular-nums text-[#202124]">{fmtUsd(s.price)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+
         </div>
       )}
     </div>
