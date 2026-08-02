@@ -17,11 +17,11 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Users', href: '/admin/users', icon: 'group' },
   { label: 'Developers', href: '/admin/developers', icon: 'apartment' },
   { label: 'Properties', href: '/admin/properties', icon: 'domain' },
-  { label: 'Rentals', href: '/admin/rentals', icon: 'key', soon: true },
+  { label: 'Operations', href: '/admin/rentals', icon: 'key' },
   { label: 'Production', href: '/admin/production', icon: 'movie' },
   { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
   { label: 'Billing', href: '/admin/billing', icon: 'payments' },
-  { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring', soon: true },
+  { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
   { label: 'System', href: '/admin/system', icon: 'settings', soon: true },
 ];

@@ -269,3 +269,86 @@ export const adminBillingApi = {
   updateOrder: (id: string, body: { orderStatus?: string; scheduledAt?: string; crewNotes?: string }) =>
     apiClient.patch<ProductionOrder>(`/admin/billing/production-orders/${id}`, body),
 };
+
+/* ── Operations ──────────────────────────────────────────────────── */
+
+export interface AdminRental {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  priceFrom?: number | null;
+  currency: string;
+  createdAt: string;
+  developer?: { companyName?: string | null } | null;
+  property?: { slug: string; name: string } | null;
+  rentUnits?: { id: string; label: string; floor?: number | null; available: number; total: number; pricePerMonth: number }[];
+}
+
+export interface AdminInquiry {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  property?: { slug: string; name: string; developer?: { companyName?: string | null } | null } | null;
+}
+
+export interface AdminBooking {
+  id: string;
+  status: string;
+  scheduledAt?: string | null;
+  createdAt: string;
+  property?: { slug: string; name: string; developer?: { companyName?: string | null } | null } | null;
+  user?: { email: string; firstName?: string; lastName?: string } | null;
+}
+
+export interface AdminConversation {
+  id: string;
+  subject?: string | null;
+  lastMessageAt: string;
+  customer?: { id: string; email: string; firstName?: string; lastName?: string } | null;
+  developer?: { id: string; email: string; firstName?: string; lastName?: string } | null;
+  _count?: { messages: number };
+}
+
+export interface AdminFunnel {
+  funnel: { views: number; inquiries: number; bookings: number; reservations: number };
+  topProperties: {
+    views: number;
+    property?: { slug: string; name: string; developer?: { companyName?: string | null } | null } | null;
+  }[];
+}
+
+function qs(params: Record<string, unknown>) {
+  const s = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== '') s.set(k, String(v));
+  });
+  return s.toString() ? `?${s}` : '';
+}
+
+interface Meta { meta: { total: number; totalPages: number } }
+
+export const adminOpsApi = {
+  rentals: (p: { status?: string; limit?: number } = {}) =>
+    apiClient.get<{ data: AdminRental[] } & Meta>(`/admin/rentals${qs(p)}`),
+  setRentalStatus: (id: string, status: string) =>
+    apiClient.patch<AdminRental>(`/admin/rentals/${id}/status`, { status }),
+
+  inquiries: (p: { status?: string; limit?: number } = {}) =>
+    apiClient.get<{ data: AdminInquiry[] } & Meta>(`/admin/inquiries${qs(p)}`),
+  bookings: (p: { status?: string; limit?: number } = {}) =>
+    apiClient.get<{ data: AdminBooking[] } & Meta>(`/admin/bookings${qs(p)}`),
+
+  conversations: (p: { limit?: number } = {}) =>
+    apiClient.get<{ data: AdminConversation[] } & Meta>(`/admin/conversations${qs(p)}`),
+  transcript: (id: string) =>
+    apiClient.get<{
+      conversation: AdminConversation;
+      messages: { id: string; body: string; createdAt: string; sender?: { firstName?: string; lastName?: string; email?: string } | null }[];
+    }>(`/admin/conversations/${id}/messages`),
+
+  funnel: (days = 30) => apiClient.get<AdminFunnel>(`/admin/funnel?days=${days}`),
+};
