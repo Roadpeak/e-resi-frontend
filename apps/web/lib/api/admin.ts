@@ -202,3 +202,70 @@ export const adminPropertiesApi = {
   feature: (slug: string, isFeatured: boolean) =>
     apiClient.patch<AdminProperty>(`/admin/properties/${slug}/feature`, { isFeatured }),
 };
+
+/* ── Billing & production ────────────────────────────────────────── */
+
+export interface BillingSummary {
+  collected: number;
+  collectedCount: number;
+  pending: number;
+  pendingCount: number;
+  failedCount: number;
+  refunded: number;
+  recurring: {
+    liveProperties: number;
+    feePerProperty: number;
+    currency: string;
+    monthly: number;
+  };
+}
+
+export interface AdminPayment {
+  id: string;
+  amount: number;
+  currency: string;
+  method: string;
+  status: string;
+  reference?: string | null;
+  createdAt: string;
+  user?: { id: string; email: string; firstName?: string; lastName?: string } | null;
+}
+
+export interface ProductionOrder {
+  id: string;
+  tier: string;
+  orderStatus: string;
+  scheduledAt?: string | null;
+  deliveredAt?: string | null;
+  crewNotes?: string | null;
+  paidAmount?: number | null;
+  createdAt: string;
+  property?: {
+    slug: string;
+    name: string;
+    heroImageUrl?: string | null;
+    developer?: { companyName?: string | null } | null;
+  } | null;
+}
+
+export const adminBillingApi = {
+  summary: () => apiClient.get<BillingSummary>('/admin/billing/summary'),
+  payments: (params: { status?: string; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') qs.set(k, String(v));
+    });
+    return apiClient.get<{ data: AdminPayment[]; meta: { total: number } }>(
+      `/admin/billing/payments${qs.toString() ? `?${qs}` : ''}`,
+    );
+  },
+  refund: (id: string) => apiClient.post<AdminPayment>(`/admin/billing/payments/${id}/refund`),
+  retry: (id: string) => apiClient.post<AdminPayment>(`/admin/billing/payments/${id}/retry`),
+
+  orders: (status?: string) =>
+    apiClient.get<ProductionOrder[]>(
+      `/admin/billing/production-orders${status ? `?status=${status}` : ''}`,
+    ),
+  updateOrder: (id: string, body: { orderStatus?: string; scheduledAt?: string; crewNotes?: string }) =>
+    apiClient.patch<ProductionOrder>(`/admin/billing/production-orders/${id}`, body),
+};
