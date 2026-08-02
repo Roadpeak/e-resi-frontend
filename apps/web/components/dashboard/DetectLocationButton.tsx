@@ -64,6 +64,25 @@ export function DetectLocationButton({
       return;
     }
 
+    // Chrome only exposes geolocation on secure origins. Over plain http on a
+    // non-localhost host the call is blocked by policy and still reports
+    // PERMISSION_DENIED, which reads as "you denied it" even when you allowed it.
+    if (!window.isSecureContext) {
+      setError(
+        'Location needs a secure connection (https, or localhost). Open the dashboard on localhost or over https, or type the address manually.',
+      );
+      return;
+    }
+
+    // Blocked by Permissions-Policy rather than by the user.
+    const policy = (document as Document & {
+      featurePolicy?: { allowsFeature(f: string): boolean };
+    }).featurePolicy;
+    if (policy && typeof policy.allowsFeature === 'function' && !policy.allowsFeature('geolocation')) {
+      setError('Location is blocked for this page by a browser permissions policy.');
+      return;
+    }
+
     setBusy(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -76,7 +95,7 @@ export function DetectLocationButton({
         setBusy(false);
         setError(
           err.code === err.PERMISSION_DENIED
-            ? 'Location permission denied. Allow it in your browser, or type the address manually.'
+            ? 'Location was blocked. Check the padlock/location icon in the address bar and allow it for this site, then try again.'
             : err.code === err.TIMEOUT
               ? 'Timed out finding your location. Try again.'
               : 'Could not determine your location.',
