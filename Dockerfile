@@ -26,8 +26,10 @@ COPY . .
 # them as build args. Set placeholders so pnpm build never fails on unset.
 ARG NEXT_PUBLIC_API_URL=https://api.e-resi.com
 ARG NEXT_PUBLIC_APP_URL=https://app.e-resi.com
+ARG NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=$NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm nx build web --configuration=production
 
