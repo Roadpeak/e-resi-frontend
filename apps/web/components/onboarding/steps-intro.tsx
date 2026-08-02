@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Building2, Clock3, Globe2, LineChart, ShieldCheck, Sparkles } from 'lucide-react';
+import { Building2, Clock3, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useOnboardingStore, type VerificationDocKey } from '../../lib/stores/onboarding.store';
 import { apiClient } from '../../lib/api/client';
@@ -11,40 +11,44 @@ import {
 
 // ── Step 1: Welcome ──────────────────────────────────────────────────────────
 
-const benefits = [
-  { icon: Globe2, title: 'Reach serious buyers', body: 'Your development gets its own branded experience page seen by local and diaspora buyers.' },
-  { icon: Sparkles, title: 'World-class media', body: 'Photography, drone, 3D scans and VR tours produced by the e-resi team.' },
-  { icon: LineChart, title: 'Leads & analytics', body: 'Every inquiry, viewing and booking tracked in one dashboard.' },
-  { icon: ShieldCheck, title: 'Verified badge', body: 'KYB verification builds buyer trust and unlocks premium placement.' },
+/**
+ * What the flow will actually ask for. Someone who has clicked "become a
+ * developer" has already decided — they need to know what is ahead, not why.
+ */
+const WHAT_TO_EXPECT = [
+  { icon: Building2, title: 'Your company', body: 'Name, registration number and where you operate.' },
+  { icon: ShieldCheck, title: 'Verification', body: 'Certificate of incorporation, KRA PIN and an ID.' },
+  { icon: Sparkles, title: 'Production', body: 'Choose the photography, 3D and VR services you want.' },
 ];
 
 export function StepWelcome() {
   return (
-    <div className="text-center">
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4A80F5] to-[#3457E0]">
-        <Building2 size={28} className="text-white" />
-      </div>
-      <h2 className="text-3xl font-semibold text-gray-900" style={{ textWrap: 'balance' }}>
-        List your development on e-resi
+    <div className="mx-auto max-w-xl">
+      <h2 className="text-[32px] font-normal leading-tight text-gray-900" style={{ textWrap: 'balance' }}>
+        Let&apos;s get your company set up
       </h2>
-      <p className="mx-auto mt-3 max-w-md text-gray-500">
-        Create your developer account and get your company verified — then list as many
-        developments as you like from your dashboard.
+      <p className="mt-3 text-[15px] leading-relaxed text-gray-500">
+        Once you&apos;re verified you can list as many developments as you like from your
+        dashboard.
       </p>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 text-left">
-        {benefits.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="rounded-2xl border border-gray-200 bg-white p-5">
-            <Icon size={20} className="text-[#4A80F5]" />
-            <h3 className="mt-3 text-sm font-semibold text-gray-900">{title}</h3>
-            <p className="mt-1 text-[13px] leading-relaxed text-gray-500">{body}</p>
-          </div>
+      <ol className="mt-10 space-y-6">
+        {WHAT_TO_EXPECT.map(({ icon: Icon, title, body }, i) => (
+          <li key={title} className="flex gap-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+              <Icon size={17} />
+            </span>
+            <span className="min-w-0 pt-1">
+              <span className="block text-[15px] font-medium text-gray-900">{title}</span>
+              <span className="mt-0.5 block text-[14px] leading-relaxed text-gray-500">{body}</span>
+            </span>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-[13px] text-gray-600">
+      <p className="mt-10 flex items-center gap-2 text-[13px] text-gray-500">
         <Clock3 size={14} />
-        Takes about 10 minutes — your progress is saved automatically
+        About 10 minutes. Your progress saves as you go.
       </p>
     </div>
   );

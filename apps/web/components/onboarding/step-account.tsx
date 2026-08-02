@@ -132,7 +132,7 @@ export function StepAccount({ onCompleted }: { onCompleted: () => void }) {
           onSubmit={handleRegister}
         >
           <SectionCard
-            title="Create your developer account"
+            title="Your account"
             subtitle="One account for your whole company — you can invite teammates later."
           >
             <div className="grid grid-cols-2 gap-3">
