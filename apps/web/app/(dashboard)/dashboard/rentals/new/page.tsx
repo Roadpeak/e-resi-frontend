@@ -26,6 +26,24 @@ interface UnitSelection {
   rent: string;
   furnishing: 'FURNISHED' | 'SEMI_FURNISHED' | 'UNFURNISHED';
   total: string;
+  /** Layout being let — drives which unit-type videos a tenant sees. */
+  unitType: string;
+  showCinematicTour: boolean;
+  show3DTour: boolean;
+  showVRTour: boolean;
+}
+
+/** Layouts a unit can be let as — matches the media manager's unit types. */
+const UNIT_TYPES = [
+  'Studio', '1 Bedroom', '2 Bedroom', '3 Bedroom', '4 Bedroom',
+  '5 Bedroom', 'Penthouse', 'Maisonette', 'Duplex', 'Townhouse',
+] as const;
+
+/** Best-guess layout from a unit's bedroom count. */
+function defaultUnitType(bedrooms?: number | null): string {
+  if (bedrooms === 0) return 'Studio';
+  if (bedrooms && bedrooms >= 1 && bedrooms <= 5) return `${bedrooms} Bedroom`;
+  return '2 Bedroom';
 }
 
 const FURNISHING = [
@@ -79,7 +97,16 @@ export default function NewRentListingPage() {
     setSelections((prev) => {
       const next = { ...prev };
       if (next[unit.id]) delete next[unit.id];
-      else next[unit.id] = { rent: '', furnishing: 'UNFURNISHED', total: '1' };
+      else
+        next[unit.id] = {
+          rent: '',
+          furnishing: 'UNFURNISHED',
+          total: '1',
+          unitType: defaultUnitType(unit.bedrooms),
+          showCinematicTour: false,
+          show3DTour: false,
+          showVRTour: false,
+        };
       return next;
     });
   }
@@ -117,6 +144,12 @@ export default function NewRentListingPage() {
         const sel = selections[u.id];
         await apiClient.post(`/rent-listings/${listing.id}/units`, {
           label: u.name,
+          // links the offer to the physical unit so it can be reserved
+          unitId: u.id,
+          unitType: sel.unitType,
+          showCinematicTour: sel.showCinematicTour,
+          show3DTour: sel.show3DTour,
+          showVRTour: sel.showVRTour,
           // carried from the property unit so tenants see "A12, 10th floor"
           floor: u.floor ?? undefined,
           bedrooms: u.bedrooms ?? 1,
@@ -333,6 +366,47 @@ export default function NewRentListingPage() {
                                       className={inputCls}
                                     />
                                   </div>
+                                  <div>
+                                    <label className={labelCls}>Unit type</label>
+                                    <select
+                                      value={sel.unitType}
+                                      onChange={(e) => setSelections((prev) => ({ ...prev, [u.id]: { ...prev[u.id], unitType: e.target.value } }))}
+                                      className={inputCls}
+                                    >
+                                      {UNIT_TYPES.map((t) => (
+                                        <option key={t} value={t}>{t}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* Which of the property's tours a tenant sees for this unit type */}
+                                <div className="mt-3 pl-8">
+                                  <label className={labelCls}>Show tours for this unit type</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {([
+                                      ['showCinematicTour', 'Cinematic'],
+                                      ['show3DTour', '3D tour'],
+                                      ['showVRTour', 'VR / 360°'],
+                                    ] as const).map(([key, label]) => (
+                                      <button
+                                        key={key}
+                                        type="button"
+                                        onClick={() => setSelections((prev) => ({ ...prev, [u.id]: { ...prev[u.id], [key]: !prev[u.id][key] } }))}
+                                        className={cn(
+                                          'rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer',
+                                          sel[key]
+                                            ? 'bg-[#1a73e8] text-white'
+                                            : 'border border-[#dadce0] bg-white text-[#5f6368] hover:bg-[#f1f3f4]',
+                                        )}
+                                      >
+                                        {label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <p className="mt-1.5 text-[12px] text-[#80868b]">
+                                    Uses the videos uploaded for {sel.unitType} on the property page.
+                                  </p>
                                 </div>
                               </motion.div>
                             )}

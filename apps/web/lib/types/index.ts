@@ -223,6 +223,11 @@ export interface RentUnit {
   label: string;           // e.g. "1 Bedroom", "2 Bedroom", "Studio", "Penthouse"
   /** Floor this unit sits on — shown to tenants as "A12, 10th floor". */
   floor?: number;
+  /** Layout being let — selects which unit-type videos to show. */
+  unitType?: string;
+  showCinematicTour?: boolean;
+  show3DTour?: boolean;
+  showVRTour?: boolean;
   bedrooms: number;
   bathrooms: number;
   sqm: number;

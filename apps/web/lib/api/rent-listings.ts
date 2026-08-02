@@ -39,6 +39,10 @@ export interface BackendRentListingItem {
     total: number;
     furnishing?: string;
     floor?: number | null;
+    unitType?: string | null;
+    showCinematicTour?: boolean;
+    show3DTour?: boolean;
+    showVRTour?: boolean;
     features?: string[];
   }>;
 }
@@ -78,6 +82,10 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
       bedrooms: u.bedrooms,
       bathrooms: u.bathrooms ?? 1,
       floor: u.floor ?? undefined,
+      unitType: u.unitType ?? undefined,
+      showCinematicTour: !!u.showCinematicTour,
+      show3DTour: !!u.show3DTour,
+      showVRTour: !!u.showVRTour,
       sqm: u.sqm ?? 0,
       pricePerMonth: u.pricePerMonth,
       currency: u.currency ?? b.currency,

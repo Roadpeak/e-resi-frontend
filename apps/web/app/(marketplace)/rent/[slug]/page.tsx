@@ -1,9 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Building2,
   MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
@@ -13,6 +14,9 @@ import { RentNavbar } from '../../../../components/rent/RentNavbar';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { formatPrice } from '../../../../lib/utils';
+import { apiClient, ApiError } from '../../../../lib/api/client';
+import { useAuthStore } from '../../../../lib/stores/auth.store';
+import type { RentUnit } from '../../../../lib/types';
 
 const FURNISHING_LABELS: Record<string, string> = {
   furnished: 'Furnished',
@@ -183,9 +187,13 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                             </div>
                           )}
                         </div>
-                        <div className="text-right shrink-0">
+                        <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">{formatPrice(unit.pricePerMonth, unit.currency)}</p>
                           <p className="text-xs text-gray-400">/month</p>
+                          <ReserveUnitButton
+                            unit={unit}
+                            propertySlug={listing.propertySlug}
+                          />
                         </div>
                       </div>
                     ))}
@@ -293,6 +301,81 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Reserve one unit of this type, plus links to whichever tours the developer
+ * chose to show for the layout.
+ */
+function ReserveUnitButton({
+  unit,
+  propertySlug,
+}: {
+  unit: RentUnit;
+  propertySlug?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const router = useRouter();
+
+  const soldOut = unit.available < 1;
+
+  const tours = [
+    unit.showCinematicTour && { href: `/${propertySlug}/tour/cinematic`, label: 'Cinematic' },
+    unit.show3DTour && { href: `/${propertySlug}/tour/3d`, label: '3D' },
+    unit.showVRTour && { href: `/${propertySlug}/tour/vr`, label: 'VR' },
+  ].filter(Boolean) as { href: string; label: string }[];
+
+  async function reserve() {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      await apiClient.post(`/reservations/rent-units/${unit.id}`);
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not reserve.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 flex flex-col items-end gap-1.5">
+      {tours.length > 0 && propertySlug && (
+        <div className="flex gap-1.5">
+          {tours.map((t) => (
+            <Link
+              key={t.label}
+              href={t.href}
+              className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-900"
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+      )}
+      {done ? (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+          <CheckCircle2 size={12} /> Reserved
+        </span>
+      ) : (
+        <button
+          onClick={reserve}
+          disabled={busy || soldOut}
+          className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+        >
+          {busy ? 'Reserving…' : soldOut ? 'Fully let' : 'Reserve'}
+        </button>
+      )}
+      {error && <span className="text-[11px] text-red-600">{error}</span>}
     </div>
   );
 }
