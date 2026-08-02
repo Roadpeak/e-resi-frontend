@@ -38,6 +38,7 @@ export interface BackendRentListingItem {
     available: number;
     total: number;
     furnishing?: string;
+    floor?: number | null;
     features?: string[];
   }>;
 }
@@ -76,6 +77,7 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
       label: u.label,
       bedrooms: u.bedrooms,
       bathrooms: u.bathrooms ?? 1,
+      floor: u.floor ?? undefined,
       sqm: u.sqm ?? 0,
       pricePerMonth: u.pricePerMonth,
       currency: u.currency ?? b.currency,

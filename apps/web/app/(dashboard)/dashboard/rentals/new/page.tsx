@@ -117,6 +117,8 @@ export default function NewRentListingPage() {
         const sel = selections[u.id];
         await apiClient.post(`/rent-listings/${listing.id}/units`, {
           label: u.name,
+          // carried from the property unit so tenants see "A12, 10th floor"
+          floor: u.floor ?? undefined,
           bedrooms: u.bedrooms ?? 1,
           bathrooms: u.bathrooms ?? 1,
           sqm: u.sqm ?? undefined,

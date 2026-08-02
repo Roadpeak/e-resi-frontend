@@ -51,7 +51,24 @@ const VIDEO_KINDS: { key: VideoKind; label: string; icon: React.ReactNode; hint:
   { key: 'vr', label: 'VR / 360°', icon: <Headset size={14} />, hint: 'Immersive headset-ready scenes' },
 ];
 
-/** Unit-type spaces — the breakdown requested for unit videos. */
+/**
+ * Unit types a development can offer. A unit type is the layout being sold or
+ * let (Studio, 2 Bedroom…), not a room.
+ */
+const UNIT_TYPES = [
+  'Studio',
+  '1 Bedroom',
+  '2 Bedroom',
+  '3 Bedroom',
+  '4 Bedroom',
+  '5 Bedroom',
+  'Penthouse',
+  'Maisonette',
+  'Duplex',
+  'Townhouse',
+] as const;
+
+/** Rooms filmed within a unit type — each gets its own video slot. */
 const UNIT_SPACES = [
   { key: 'FULL_TOUR', label: 'Full house' },
   { key: 'LIVING_ROOM', label: 'Living room' },
@@ -297,6 +314,7 @@ function SceneGroup({
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [space, setSpace] = useState<string>(scope === 'units' ? 'FULL_TOUR' : '');
+  const [unitType, setUnitType] = useState<string>(UNIT_TYPES[1]);
   const [customLabel, setCustomLabel] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -334,8 +352,9 @@ function SceneGroup({
     if (!file) return;
     setError('');
 
+    const room = UNIT_SPACES.find((u) => u.key === space)?.label ?? 'Full house';
     const label = scope === 'units'
-      ? UNIT_SPACES.find((u) => u.key === space)?.label ?? 'Unit'
+      ? `${unitType} · ${room}`
       : scope === 'amenities'
         ? customLabel.trim()
         : 'Property overview';
@@ -356,14 +375,14 @@ function SceneGroup({
           : scope === 'amenities' ? 'AMENITIES' : 'FULL_TOUR';
         await apiClient.post(`/properties/${slug}/tours/cinematic`, {
           label,
-          sublabel: `${prefix}${scope === 'units' ? ' · ' + label : ''}`,
+          sublabel: `${prefix}${scope === 'units' ? ' · ' + unitType : ''}`,
           category,
           videoUrl: uploaded.url,
         });
       } else if (kind === 'vr') {
         await apiClient.post(`/properties/${slug}/tours/vr`, {
           label,
-          description: `${prefix} · ${label}`,
+          description: scope === 'units' ? `${prefix} · ${unitType}` : `${prefix} · ${label}`,
           videoUrl: uploaded.url,
         });
       } else {
@@ -375,7 +394,7 @@ function SceneGroup({
         }
         await apiClient.post(`/properties/${slug}/tours/3d/sections/${section.id}/scenes`, {
           label,
-          description: `${prefix} · ${label}`,
+          description: scope === 'units' ? `${prefix} · ${unitType}` : `${prefix} · ${label}`,
           videoUrl: uploaded.url,
         });
       }
@@ -418,7 +437,23 @@ function SceneGroup({
       {/* group-specific controls */}
       {scope === 'units' && (
         <div className="mt-3">
-          <label className={labelCls}>Space</label>
+          <label className={labelCls}>Unit type</label>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {UNIT_TYPES.map((t) => (
+              <button
+                key={t}
+                onClick={() => setUnitType(t)}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer',
+                  unitType === t ? 'bg-[#202124] text-white' : 'bg-white text-[#5f6368] hover:bg-[#f1f3f4]',
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <label className={labelCls}>Space in {unitType}</label>
           <div className="flex flex-wrap gap-2">
             {UNIT_SPACES.map((u) => (
               <button
@@ -458,6 +493,43 @@ function SceneGroup({
           <div className="flex h-16 items-center justify-center"><Loader2 size={16} className="animate-spin text-[#80868b]" /></div>
         ) : mine.length === 0 ? (
           <p className="text-[13px] text-[#80868b]">No videos yet.</p>
+        ) : scope === 'units' ? (
+          // Group by unit type so each layout's videos sit together.
+          <div className="space-y-4">
+            {Object.entries(
+              mine.reduce<Record<string, typeof mine>>((acc, s) => {
+                const type = (s.sublabel ?? s.description ?? '').replace(/^Unit\s*·\s*/, '') || 'Unit';
+                (acc[type] ||= []).push(s);
+                return acc;
+              }, {}),
+            ).map(([type, list]) => (
+              <div key={type}>
+                <p className="mb-1.5 text-[13px] font-medium text-[#202124]">{type}</p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {list.map((s) => (
+                    <li key={s.id} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e8f0fe] text-[#1967d2]">
+                        <Video size={15} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-medium text-[#202124]">
+                          {s.label.replace(/^.*?·\s*/, '')}
+                        </span>
+                        <span className="block truncate text-[12px] text-[#80868b]">{type}</span>
+                      </span>
+                      <button
+                        onClick={() => remove(s.id)}
+                        aria-label={`Remove ${s.label}`}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#80868b] hover:bg-[#fce8e6] hover:text-[#c5221f] transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2">
             {mine.map((s) => (

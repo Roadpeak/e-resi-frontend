@@ -221,6 +221,8 @@ export type FurnishingType = 'furnished' | 'semi_furnished' | 'unfurnished';
 export interface RentUnit {
   id: string;
   label: string;           // e.g. "1 Bedroom", "2 Bedroom", "Studio", "Penthouse"
+  /** Floor this unit sits on — shown to tenants as "A12, 10th floor". */
+  floor?: number;
   bedrooms: number;
   bathrooms: number;
   sqm: number;

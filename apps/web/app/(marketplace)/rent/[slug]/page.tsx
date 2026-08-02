@@ -41,6 +41,23 @@ const STATUS_LABELS: Record<string, string> = {
   FULLY_LET: 'Fully Let',
 };
 
+/** 10 -> "10th floor"; 0 -> "ground floor". */
+function ordinalFloor(n: number): string {
+  if (n === 0) return 'ground floor';
+  const rem100 = n % 100;
+  const suffix =
+    rem100 >= 11 && rem100 <= 13
+      ? 'th'
+      : n % 10 === 1
+        ? 'st'
+        : n % 10 === 2
+          ? 'nd'
+          : n % 10 === 3
+            ? 'rd'
+            : 'th';
+  return `${n}${suffix} floor`;
+}
+
 export default function RentListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
 
@@ -142,7 +159,12 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     {listing.units.map((unit) => (
                       <div key={unit.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 gap-4">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">{unit.label}</p>
+                          <p className="font-medium text-gray-900">
+                            {unit.label}
+                            {unit.floor != null && (
+                              <span className="font-normal text-gray-500">, {ordinalFloor(unit.floor)}</span>
+                            )}
+                          </p>
                           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                               <BedDouble size={11} />
