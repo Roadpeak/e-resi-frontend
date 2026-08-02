@@ -338,22 +338,38 @@ const CURRENCIES = ['KES', 'USD', 'NGN', 'GHS', 'ZAR', 'EUR', 'GBP'];
  */
 function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: string) => void }) {
   const [currency, setCurrency] = useState(current);
-  const [mode, setMode] = useState<'convert' | 'relabel'>('convert');
-  const [rate, setRate] = useState('129');
+  const [mode, setMode] = useState<'live' | 'manual' | 'relabel'>('live');
+  const [rate, setRate] = useState('');
   const [error, setError] = useState('');
 
   const changed = currency !== current;
+
+  // Fetched for display so the operator sees the figure before committing, and
+  // again server-side at the moment of conversion so a page left open for an
+  // hour cannot apply an hour-old rate.
+  const { data: live, isFetching: rateLoading, refetch } = useQuery({
+    queryKey: ['fx-rate', current, currency],
+    queryFn: () => pricingApi.exchangeRate(current, currency),
+    enabled: changed,
+    staleTime: 60_000,
+  });
+
   const numericRate = Number(rate);
-  const rateValid = mode === 'relabel' || (Number.isFinite(numericRate) && numericRate > 0);
+  const rateValid = mode !== 'manual' || (Number.isFinite(numericRate) && numericRate > 0);
 
   const save = useMutation({
-    mutationFn: () => pricingApi.setCurrency(currency, mode === 'relabel' ? 1 : numericRate),
+    mutationFn: () => pricingApi.setCurrency(
+      currency,
+      mode === 'relabel' ? 1 : numericRate,
+      mode === 'live',
+    ),
     onSuccess: (r) => {
       setError('');
       onSaved(
         `Platform currency is now ${r.currency}`
         + (r.pricesConverted > 0
-          ? ` — ${r.pricesConverted} price${r.pricesConverted === 1 ? '' : 's'} converted`
+          ? ` — ${r.pricesConverted} price${r.pricesConverted === 1 ? '' : 's'} converted at `
+            + `${r.rate}${r.rateSource !== 'manual' ? ` (${r.rateSource})` : ''}`
           : ' — prices relabelled, figures unchanged'),
       );
     },
@@ -387,21 +403,23 @@ function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: stri
               <span className="text-[12px] text-[#5f6368]">Existing prices</span>
               <select
                 value={mode}
-                onChange={(e) => setMode(e.target.value as 'convert' | 'relabel')}
+                onChange={(e) => setMode(e.target.value as 'live' | 'manual' | 'relabel')}
                 className="rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] text-[#202124]"
               >
-                <option value="convert">Convert at a rate</option>
+                <option value="live">Convert at today&apos;s rate</option>
+                <option value="manual">Convert at my own rate</option>
                 <option value="relabel">Relabel — keep the numbers</option>
               </select>
             </label>
 
-            {mode === 'convert' && (
+            {mode === 'manual' && (
               <label className="flex flex-col gap-1">
                 <span className="text-[12px] text-[#5f6368]">1 {current} =</span>
                 <input
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
                   inputMode="decimal"
+                  placeholder={live ? String(live.rate) : ''}
                   className="w-28 rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] text-[#202124]"
                 />
               </label>
@@ -410,7 +428,7 @@ function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: stri
             <button
               type="button"
               onClick={() => save.mutate()}
-              disabled={save.isPending || !rateValid}
+              disabled={save.isPending || !rateValid || (mode === 'live' && !live)}
               className="rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
             >
               {save.isPending ? 'Applying…' : `Switch to ${currency}`}
@@ -418,6 +436,45 @@ function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: stri
           </>
         )}
       </div>
+
+      {changed && mode === 'live' && (
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-[#5f6368]">
+          {rateLoading ? (
+            <span>Checking today&apos;s rate…</span>
+          ) : live ? (
+            <>
+              <span className="text-[#202124]">
+                1 {live.from} = {live.rate.toLocaleString()} {live.to}
+              </span>
+              <span>· {live.source} ·{' '}
+                {new Date(live.fetchedAt).toLocaleString(undefined, {
+                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="text-[#1a73e8] hover:underline"
+              >
+                Refresh
+              </button>
+              {live.stale && (
+                <span className="rounded-full bg-[#fef7e0] px-2 py-0.5 text-[12px] text-[#b06000]">
+                  Rate is over 48h old
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-[#b06000]">
+              Live rate unavailable — switch to &ldquo;my own rate&rdquo; to continue.
+            </span>
+          )}
+          <span className="w-full text-[12px]">
+            The rate is fetched again when you apply, so this cannot convert at a
+            figure that has since moved.
+          </span>
+        </p>
+      )}
 
       {changed && mode === 'relabel' && (
         <p className="mt-3 rounded-xl bg-[#fef7e0] px-3 py-2 text-[13px] text-[#b06000]">

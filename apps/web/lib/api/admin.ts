@@ -103,11 +103,19 @@ export const pricingApi = {
    * Change the platform billing currency. `rate` multiplies catalog prices;
    * 1 relabels without converting. Existing invoices are never touched.
    */
-  setCurrency: (currency: string, rate?: number) =>
+  setCurrency: (currency: string, rate?: number, useLiveRate?: boolean) =>
     apiClient.post<{
-      currency: string; rate: number; tiersUpdated: number;
-      servicesUpdated: number; pricesConverted: number; listingFee: number;
-    }>('/admin/pricing/currency', { currency, rate }),
+      currency: string; rate: number; rateSource: string; rateFetchedAt: string | null;
+      tiersUpdated: number; servicesUpdated: number; pricesConverted: number;
+      listingFee: number;
+    }>('/admin/pricing/currency', { currency, rate, useLiveRate }),
+
+  /** Live FX rate, with the time it was fetched so the UI can flag staleness. */
+  exchangeRate: (from: string, to: string) =>
+    apiClient.get<{
+      rate: number; from: string; to: string;
+      fetchedAt: string; source: string; stale: boolean;
+    }>(`/admin/pricing/exchange-rate?from=${from}&to=${to}`),
 
   settings: (group?: string) =>
     apiClient.get<PlatformSetting[]>(`/admin/pricing/settings${group ? `?group=${group}` : ''}`),
@@ -431,11 +439,19 @@ export const adminSystemApi = {
    * Change the platform billing currency. `rate` multiplies catalog prices;
    * 1 relabels without converting. Existing invoices are never touched.
    */
-  setCurrency: (currency: string, rate?: number) =>
+  setCurrency: (currency: string, rate?: number, useLiveRate?: boolean) =>
     apiClient.post<{
-      currency: string; rate: number; tiersUpdated: number;
-      servicesUpdated: number; pricesConverted: number; listingFee: number;
-    }>('/admin/pricing/currency', { currency, rate }),
+      currency: string; rate: number; rateSource: string; rateFetchedAt: string | null;
+      tiersUpdated: number; servicesUpdated: number; pricesConverted: number;
+      listingFee: number;
+    }>('/admin/pricing/currency', { currency, rate, useLiveRate }),
+
+  /** Live FX rate, with the time it was fetched so the UI can flag staleness. */
+  exchangeRate: (from: string, to: string) =>
+    apiClient.get<{
+      rate: number; from: string; to: string;
+      fetchedAt: string; source: string; stale: boolean;
+    }>(`/admin/pricing/exchange-rate?from=${from}&to=${to}`),
 
   settings: (group?: string) =>
     apiClient.get<PlatformSetting[]>(`/admin/system/settings${group ? `?group=${group}` : ''}`),
