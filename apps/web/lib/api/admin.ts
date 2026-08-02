@@ -162,3 +162,43 @@ export const peopleApi = {
   reviewKyb: (profileId: string, status: string, notes?: string) =>
     apiClient.patch<AdminDeveloper>(`/admin/developers/${profileId}/kyb`, { status, notes }),
 };
+
+/* ── Properties ──────────────────────────────────────────────────── */
+
+export interface AdminProperty {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  city?: string | null;
+  neighborhood?: string | null;
+  heroImageUrl?: string | null;
+  isFeatured: boolean;
+  priceFrom?: number | null;
+  currency: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  reviewNotes?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  developer?: { id: string; companyName?: string | null } | null;
+  _count?: { units: number; media: number; inquiries: number };
+}
+
+export const adminPropertiesApi = {
+  list: (params: { status?: string; q?: string; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') qs.set(k, String(v));
+    });
+    return apiClient.get<{ data: AdminProperty[]; meta: { total: number; totalPages: number } }>(
+      `/admin/properties${qs.toString() ? `?${qs}` : ''}`,
+    );
+  },
+  review: (slug: string, decision: 'APPROVE' | 'REJECT', notes?: string) =>
+    apiClient.patch<AdminProperty>(`/admin/properties/${slug}/review`, { decision, notes }),
+  setStatus: (slug: string, status: string) =>
+    apiClient.patch<AdminProperty>(`/admin/properties/${slug}/status`, { status }),
+  feature: (slug: string, isFeatured: boolean) =>
+    apiClient.patch<AdminProperty>(`/admin/properties/${slug}/feature`, { isFeatured }),
+};

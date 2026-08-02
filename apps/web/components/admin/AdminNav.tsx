@@ -16,7 +16,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Overview', href: '/admin', icon: 'space_dashboard' },
   { label: 'Users', href: '/admin/users', icon: 'group' },
   { label: 'Developers', href: '/admin/developers', icon: 'apartment' },
-  { label: 'Properties', href: '/admin/properties', icon: 'domain', soon: true },
+  { label: 'Properties', href: '/admin/properties', icon: 'domain' },
   { label: 'Rentals', href: '/admin/rentals', icon: 'key', soon: true },
   { label: 'Production', href: '/admin/production', icon: 'movie', soon: true },
   { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
