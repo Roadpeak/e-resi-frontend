@@ -21,6 +21,8 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Production', href: '/admin/production', icon: 'movie' },
   { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
   { label: 'Billing', href: '/admin/billing', icon: 'payments' },
+  { label: 'Invoices', href: '/admin/billing/invoices', icon: 'receipt_long' },
+  { label: 'Listing fees', href: '/admin/billing/listing-fees', icon: 'payments' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
   { label: 'System', href: '/admin/system', icon: 'settings' },
@@ -98,7 +100,15 @@ export function AdminNav() {
       <nav className="border-t border-[#3c4043]">
         <div className="mx-auto flex max-w-[1600px] items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SECTIONS.map((s) => {
-            const active = s.href === '/admin' ? pathname === s.href : pathname.startsWith(s.href);
+            // Prefix matching alone would light up a parent alongside its own
+            // sub-page (/admin/billing and /admin/billing/listing-fees), so a
+            // parent only counts as active when no deeper entry matches.
+            const active = s.href === '/admin'
+              ? pathname === s.href
+              : pathname.startsWith(s.href)
+                && !SECTIONS.some((o) => o.href !== s.href
+                  && o.href.startsWith(`${s.href}/`)
+                  && pathname.startsWith(o.href));
             return (
               <Link
                 key={s.href}

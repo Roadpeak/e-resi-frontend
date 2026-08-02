@@ -9,6 +9,7 @@ import {
 import { propertiesApi } from '../../../../lib/api/properties';
 import { billingApi } from '../../../../lib/api/billing';
 import { PaymentMethodsCard } from '../../../../components/dashboard/PaymentMethods';
+import { InvoiceTable } from '../../../../components/billing/InvoiceTable';
 import { LISTING_FEE_MONTHLY, fmtUsd, serviceById } from '../../../../lib/onboarding/catalog';
 import { useCatalog } from '../../../../lib/onboarding/useCatalog';
 
@@ -201,6 +202,9 @@ export default function BillingPage() {
         )}
       </div>
 
+      {/* ── Invoices & receipts ── */}
+      <InvoicesCard />
+
       {/* ── Payment methods ── */}
       <PaymentMethodsCard />
 
@@ -374,6 +378,32 @@ function PayWithMpesaCard() {
 
       {notice && <p className="mt-3 rounded-xl bg-white px-4 py-2.5 text-sm text-[#188038]">{notice}</p>}
       {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * A developer's own invoices and receipts. Read-only — reminders and dispatch
+ * are admin actions, so no controls appear here.
+ */
+function InvoicesCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['my-invoices'],
+    queryFn: () => billingApi.invoices(),
+  });
+
+  return (
+    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
+      <h2 className="text-[18px] font-medium text-[#202124]">Invoices &amp; receipts</h2>
+      <p className="mt-1 text-[14px] text-[#5f6368]">
+        Listing fees are invoiced three days before they are charged. Receipts are
+        issued automatically once payment clears.
+      </p>
+      <div className="mt-4">
+        {isLoading
+          ? <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
+          : <InvoiceTable invoices={data ?? []} />}
+      </div>
     </div>
   );
 }

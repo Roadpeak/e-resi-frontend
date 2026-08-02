@@ -20,19 +20,6 @@ export interface LinkedMethod {
   sandbox?: boolean;
 }
 
-export interface CardDetails {
-  cardNumber: string;
-  expMonth: number;
-  expYear: number;
-  cvc: string;
-  cardholderName: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  postalCode: string;
-  country: string;
-}
-
 export interface BillingSummary {
   feePerListing: number;
   currency: string;
@@ -53,9 +40,6 @@ export interface BillingSummary {
 export const billingApi = {
   summary: () => apiClient.get<BillingSummary>('/billing/summary'),
   listMethods: () => apiClient.get<LinkedMethod[]>('/billing/methods'),
-  /** Full card details go to the API for the $1 verification only — never persisted. */
-  linkCard: (card: CardDetails) => apiClient.post<LinkedMethod>('/billing/methods/card', card),
-
   /**
    * Begin card linking on Paystack's hosted checkout. Card details are entered
    * there, never here — which is what keeps this app out of PCI scope.
@@ -78,18 +62,98 @@ export const billingApi = {
     }>('/billing/pay/mpesa', body),
   setDefault: (id: string) => apiClient.patch<{ message: string }>(`/billing/methods/${id}/default`),
   remove: (id: string) => apiClient.delete<{ message: string }>(`/billing/methods/${id}`),
+
+  /** Invoices and receipts for the signed-in account. */
+  invoices: () => apiClient.get<Invoice[]>('/billing/invoices'),
+  invoice: (id: string) => apiClient.get<Invoice>(`/billing/invoices/${id}`),
+
+  /** Admin: every invoice, filterable. */
+  allInvoices: (params: { status?: string; kind?: string; q?: string } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+    return apiClient.get<Invoice[]>(`/billing/invoices/all${qs.toString() ? `?${qs}` : ''}`);
+  },
+  /** Admin: chase an unpaid invoice with a termination warning. */
+  remindInvoice: (id: string) => apiClient.post<Invoice>(`/billing/invoices/${id}/remind`),
+  /** Admin: force the daily issue/overdue sweep. */
+  dispatchInvoices: () =>
+    apiClient.post<{ issued: number; markedOverdue: number }>('/billing/invoices/dispatch'),
+
+  /** Admin: what a billing period collected. Period is YYYY-MM. */
+  listingFeeReport: (period: string) =>
+    apiClient.get<ListingFeeReport>(`/billing/listing-fees/${period}`),
+
+  /** Admin: collect listing fees for a period. Idempotent. */
+  runListingFees: (period: string) =>
+    apiClient.post<ListingFeeRunSummary>(`/billing/listing-fees/${period}/run`),
 };
 
-/** Detect card brand from the number's leading digits (client-side, for the live badge). */
-export function detectBrand(cardNumber: string): string {
-  const n = cardNumber.replace(/\D/g, '');
-  if (/^4/.test(n)) return 'Visa';
-  if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return 'Mastercard';
-  if (/^3[47]/.test(n)) return 'Amex';
-  if (/^6/.test(n)) return 'Discover';
-  return '';
+export interface InvoiceLine {
+  description: string;
+  quantity?: number;
+  unitAmount?: number;
+  amount: number;
 }
 
-export function formatCardNumber(v: string): string {
-  return v.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
+export interface Invoice {
+  id: string;
+  number: string;
+  kind: 'SUBSCRIPTION' | 'PRODUCTION';
+  status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
+  billedToName: string;
+  billedToEmail: string;
+  lineItems: InvoiceLine[];
+  subtotal: number;
+  taxPercent: number;
+  taxAmount: number;
+  total: number;
+  currency: string;
+  issuedAt?: string | null;
+  dueAt: string;
+  paidAt?: string | null;
+  terminatesAt?: string | null;
+  remindersSent: number;
+  lastReminderAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  receipt?: {
+    id: string; number: string; amount: number; currency: string;
+    method: string; reference?: string | null; paidAt: string;
+  } | null;
+  user?: { id: string; email: string } | null;
+  property?: { name: string; slug: string } | null;
+}
+
+export interface ListingFeeRunSummary {
+  period: string;
+  developersConsidered: number;
+  charged: number;
+  failed: number;
+  skipped: number;
+  alreadyDone: number;
+  totalCollected: number;
+  currency: string;
+}
+
+export interface ListingFeeRun {
+  id: string;
+  period: string;
+  listingCount: number;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'SKIPPED';
+  reference?: string | null;
+  failureText?: string | null;
+  attempts: number;
+  chargedAt?: string | null;
+  developer: { id: string; companyName: string };
+}
+
+export interface ListingFeeReport {
+  period: string;
+  totals: {
+    collected: number; currency: string;
+    paid: number; failed: number; pending: number; skipped: number;
+  };
+  runs: ListingFeeRun[];
 }

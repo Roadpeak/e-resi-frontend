@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { peopleApi, type AdminDeveloper } from '../../../../lib/api/admin';
-import { ApiError } from '../../../../lib/api/client';
 import { cn } from '../../../../lib/utils';
 
 const KYB_STYLES: Record<string, string> = {
@@ -23,27 +23,11 @@ const FILTERS = [
 ];
 
 export default function AdminDevelopers() {
-  const queryClient = useQueryClient();
   const [kybStatus, setKybStatus] = useState('');
-  const [toast, setToast] = useState('');
-  const [error, setError] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-developers', kybStatus],
     queryFn: () => peopleApi.developers({ kybStatus, limit: 50 }),
-  });
-
-  const review = useMutation({
-    mutationFn: ({ id, status, notes }: { id: string; status: string; notes?: string }) =>
-      peopleApi.reviewKyb(id, status, notes),
-    onSuccess: (d) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-developers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
-      setError('');
-      setToast(`${d.companyName} — KYB ${d.kybStatus.toLowerCase()}`);
-      setTimeout(() => setToast(''), 3000);
-    },
-    onError: (e) => setError(e instanceof ApiError ? e.message : 'Review failed'),
   });
 
   const developers = data?.data ?? [];
@@ -53,18 +37,9 @@ export default function AdminDevelopers() {
       <div>
         <h1 className="text-[26px] font-normal text-[#202124]">Developers</h1>
         <p className="text-[14px] text-[#5f6368]">
-          {data?.meta.total ?? 0} developer accounts. Approve KYB before they can list.
+          {data?.meta.total ?? 0} developer accounts. Review each submission before approving — approving lets them publish listings.
         </p>
       </div>
-
-      {toast && (
-        <div className="flex items-center gap-2 rounded-xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">
-          <MaterialIcon name="check_circle" size={18} fill /> {toast}
-        </div>
-      )}
-      {error && (
-        <div className="rounded-xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</div>
-      )}
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
@@ -95,12 +70,7 @@ export default function AdminDevelopers() {
       ) : (
         <div className="space-y-3">
           {developers.map((d) => (
-            <DeveloperRow
-              key={d.id}
-              developer={d}
-              busy={review.isPending}
-              onReview={(status, notes) => review.mutate({ id: d.id, status, notes })}
-            />
+            <DeveloperRow key={d.id} developer={d} />
           ))}
         </div>
       )}
@@ -108,15 +78,7 @@ export default function AdminDevelopers() {
   );
 }
 
-function DeveloperRow({
-  developer,
-  busy,
-  onReview,
-}: {
-  developer: AdminDeveloper;
-  busy: boolean;
-  onReview: (status: string, notes?: string) => void;
-}) {
+function DeveloperRow({ developer }: { developer: AdminDeveloper }) {
   const pending = developer.kybStatus === 'PENDING';
 
   return (
@@ -148,36 +110,12 @@ function DeveloperRow({
           {developer.kybStatus.replace(/_/g, ' ').toLowerCase()}
         </span>
 
-        {pending && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => onReview('APPROVED')}
-              disabled={busy}
-              className="rounded-full bg-[#188038] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#137333] cursor-pointer disabled:opacity-50"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => {
-                const notes = window.prompt('Why is this being rejected? (shown to the developer)');
-                if (notes !== null) onReview('REJECTED', notes || undefined);
-              }}
-              disabled={busy}
-              className="rounded-full border border-[#dadce0] px-4 py-2 text-[13px] font-medium text-[#c5221f] transition-colors hover:bg-[#fce8e6] cursor-pointer disabled:opacity-50"
-            >
-              Reject
-            </button>
-          </div>
-        )}
-        {!pending && developer.kybStatus !== 'APPROVED' && (
-          <button
-            onClick={() => onReview('APPROVED')}
-            disabled={busy}
-            className="rounded-full border border-[#dadce0] px-4 py-2 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] cursor-pointer disabled:opacity-50"
-          >
-            Approve
-          </button>
-        )}
+        <Link
+          href={`/admin/developers/${developer.id}`}
+          className="rounded-full bg-[#1a73e8] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#1765cc]"
+        >
+          {pending ? 'Review submission' : 'View details'}
+        </Link>
       </div>
     </div>
   );
