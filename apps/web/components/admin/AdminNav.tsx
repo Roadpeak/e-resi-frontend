@@ -19,7 +19,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Properties', href: '/admin/properties', icon: 'domain', soon: true },
   { label: 'Rentals', href: '/admin/rentals', icon: 'key', soon: true },
   { label: 'Production', href: '/admin/production', icon: 'movie', soon: true },
-  { label: 'Pricing', href: '/admin/pricing', icon: 'sell', soon: true },
+  { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
   { label: 'Billing', href: '/admin/billing', icon: 'payments', soon: true },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring', soon: true },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },

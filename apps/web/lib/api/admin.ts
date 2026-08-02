@@ -47,3 +47,60 @@ export const adminApi = {
   audit: (limit = 20) =>
     apiClient.get<{ data: AuditRow[]; meta: { total: number } }>(`/admin/audit?limit=${limit}`),
 };
+
+/* ── Pricing ─────────────────────────────────────────────────────── */
+
+export interface PricingTier {
+  id: string;
+  tier: string;
+  label: string;
+  price: number;
+  currency: string;
+  features: string[];
+  description?: string | null;
+  isActive: boolean;
+}
+
+export interface ServiceItem {
+  id: string;
+  key: string;
+  label: string;
+  category: 'CAPTURE' | 'IMMERSIVE' | 'MARKETING' | 'DESIGN';
+  price: number;
+  currency: string;
+  unit?: string | null;
+  description?: string | null;
+  isActive: boolean;
+}
+
+export interface PlatformSetting {
+  id: string;
+  key: string;
+  value: string;
+  valueType: string;
+  label: string;
+  description?: string | null;
+  group: string;
+}
+
+export const pricingApi = {
+  seed: () => apiClient.post<{ tiers: number; services: number; settings: number }>('/admin/pricing/seed'),
+
+  tiers: () => apiClient.get<PricingTier[]>('/admin/pricing/tiers'),
+  tierImpact: (tier: string) =>
+    apiClient.get<{ tier: string; affectedProperties: number }>(`/admin/pricing/tiers/${tier}/impact`),
+  updateTier: (id: string, body: Partial<PricingTier>) =>
+    apiClient.patch<PricingTier>(`/admin/pricing/tiers/${id}`, body),
+
+  services: () => apiClient.get<ServiceItem[]>('/admin/pricing/services'),
+  createService: (body: Partial<ServiceItem>) =>
+    apiClient.post<ServiceItem>('/admin/pricing/services', body),
+  updateService: (id: string, body: Partial<ServiceItem>) =>
+    apiClient.patch<ServiceItem>(`/admin/pricing/services/${id}`, body),
+  retireService: (id: string) => apiClient.delete<ServiceItem>(`/admin/pricing/services/${id}`),
+
+  settings: (group?: string) =>
+    apiClient.get<PlatformSetting[]>(`/admin/pricing/settings${group ? `?group=${group}` : ''}`),
+  updateSetting: (key: string, value: string) =>
+    apiClient.patch<PlatformSetting>(`/admin/pricing/settings/${key}`, { value }),
+};
