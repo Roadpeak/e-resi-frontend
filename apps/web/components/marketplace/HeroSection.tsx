@@ -41,11 +41,18 @@ export function HeroSection() {
     if (!video) return;
 
     video.pause();
-    video.currentTime = 0;
+    // Paused, scrub-driven video paints nothing until a seek resolves. Ask for
+    // a frame immediately so the hero shows imagery before the first scroll.
+    if (video.currentTime === 0) video.currentTime = 0.01;
 
+    let initialised = false;
     const onReady = () => {
+      // loadedmetadata and canplay can both fire; without this the timeline and
+      // ScrollTrigger get built twice and fight each other.
+      if (initialised) return;
       const duration = video.duration;
       if (!duration || isNaN(duration)) return;
+      initialised = true;
 
       const ctx = gsap.context(() => {
 
@@ -179,14 +186,9 @@ export function HeroSection() {
       // from this callback went nowhere, so every re-init leaked a context.
       ctxRef.current = ctx;
 
-      // The browser restores scroll position on refresh, and does so before this
-      // runs — so ScrollTrigger measures a page that has already moved, the pin
-      // never engages, and the hero scrolls away. Re-measure after layout has
-      // settled, then push the scrubbed values to the restored position.
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-        ScrollTrigger.update();
-      });
+      // No refresh() here on purpose. The scrollRestoration effect above already
+      // guarantees the page starts at the top, so the trigger measures a settled
+      // layout; re-measuring afterwards only risked disturbing it.
     };
 
     if (video.readyState >= 1) {
@@ -211,9 +213,15 @@ export function HeroSection() {
     <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-ink">
 
       {/* ── Scrubbed video ── */}
+      {/*
+        The source is ~50MB and the video is paused and scrub-driven, so it
+        paints nothing until enough has downloaded to seek. The poster is 47KB
+        and shows the first frame immediately, so the hero is never blank.
+      */}
       <video
         ref={videoRef}
         src="/videos/hero1.mp4"
+        poster="/videos/hero1-poster.jpg"
         muted
         playsInline
         preload="auto"
