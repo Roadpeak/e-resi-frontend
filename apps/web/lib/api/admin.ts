@@ -308,6 +308,9 @@ export interface AdminConversation {
   id: string;
   subject?: string | null;
   lastMessageAt: string;
+  /** What the conversation is about — a sale listing or a rental. */
+  property?: { slug: string; name: string } | null;
+  rentListing?: { slug: string; name: string } | null;
   customer?: { id: string; email: string; firstName?: string; lastName?: string } | null;
   developer?: { id: string; email: string; firstName?: string; lastName?: string } | null;
   _count?: { messages: number };

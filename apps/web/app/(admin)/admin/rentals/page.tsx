@@ -276,6 +276,11 @@ function ChatTab() {
               {c._count?.messages ?? 0} message{(c._count?.messages ?? 0) === 1 ? '' : 's'} · last{' '}
               {new Date(c.lastMessageAt).toLocaleDateString()}
             </p>
+            {(c.property || c.rentListing) && (
+              <p className="mt-0.5 truncate text-[12px] text-[#1967d2]">
+                about {c.property?.name ?? c.rentListing?.name}
+              </p>
+            )}
           </button>
         ))}
       </div>
@@ -292,6 +297,14 @@ function ChatTab() {
           <Loading />
         ) : (
           <>
+            {(transcript?.conversation.property || transcript?.conversation.rentListing) && (
+              <p className="mb-2 text-[13px] text-[#5f6368]">
+                About{' '}
+                <span className="font-medium text-[#202124]">
+                  {transcript.conversation.property?.name ?? transcript.conversation.rentListing?.name}
+                </span>
+              </p>
+            )}
             <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-[#f9ab00] bg-[#fffbf0] px-3.5 py-2.5">
               <MaterialIcon name="visibility" size={16} className="mt-0.5 text-[#b06000]" />
               <p className="text-[12px] text-[#5f6368]">
