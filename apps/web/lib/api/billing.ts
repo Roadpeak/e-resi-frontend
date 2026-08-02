@@ -20,19 +20,6 @@ export interface LinkedMethod {
   sandbox?: boolean;
 }
 
-export interface CardDetails {
-  cardNumber: string;
-  expMonth: number;
-  expYear: number;
-  cvc: string;
-  cardholderName: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  postalCode: string;
-  country: string;
-}
-
 export interface BillingSummary {
   feePerListing: number;
   currency: string;
@@ -53,9 +40,6 @@ export interface BillingSummary {
 export const billingApi = {
   summary: () => apiClient.get<BillingSummary>('/billing/summary'),
   listMethods: () => apiClient.get<LinkedMethod[]>('/billing/methods'),
-  /** Full card details go to the API for the $1 verification only — never persisted. */
-  linkCard: (card: CardDetails) => apiClient.post<LinkedMethod>('/billing/methods/card', card),
-
   /**
    * Begin card linking on Paystack's hosted checkout. Card details are entered
    * there, never here — which is what keeps this app out of PCI scope.
@@ -78,18 +62,46 @@ export const billingApi = {
     }>('/billing/pay/mpesa', body),
   setDefault: (id: string) => apiClient.patch<{ message: string }>(`/billing/methods/${id}/default`),
   remove: (id: string) => apiClient.delete<{ message: string }>(`/billing/methods/${id}`),
+
+  /** Admin: what a billing period collected. Period is YYYY-MM. */
+  listingFeeReport: (period: string) =>
+    apiClient.get<ListingFeeReport>(`/billing/listing-fees/${period}`),
+
+  /** Admin: collect listing fees for a period. Idempotent. */
+  runListingFees: (period: string) =>
+    apiClient.post<ListingFeeRunSummary>(`/billing/listing-fees/${period}/run`),
 };
 
-/** Detect card brand from the number's leading digits (client-side, for the live badge). */
-export function detectBrand(cardNumber: string): string {
-  const n = cardNumber.replace(/\D/g, '');
-  if (/^4/.test(n)) return 'Visa';
-  if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return 'Mastercard';
-  if (/^3[47]/.test(n)) return 'Amex';
-  if (/^6/.test(n)) return 'Discover';
-  return '';
+export interface ListingFeeRunSummary {
+  period: string;
+  developersConsidered: number;
+  charged: number;
+  failed: number;
+  skipped: number;
+  alreadyDone: number;
+  totalCollected: number;
+  currency: string;
 }
 
-export function formatCardNumber(v: string): string {
-  return v.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
+export interface ListingFeeRun {
+  id: string;
+  period: string;
+  listingCount: number;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'SKIPPED';
+  reference?: string | null;
+  failureText?: string | null;
+  attempts: number;
+  chargedAt?: string | null;
+  developer: { id: string; companyName: string };
+}
+
+export interface ListingFeeReport {
+  period: string;
+  totals: {
+    collected: number; currency: string;
+    paid: number; failed: number; pending: number; skipped: number;
+  };
+  runs: ListingFeeRun[];
 }
