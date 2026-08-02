@@ -139,6 +139,7 @@ export function RegisterForm() {
       </header>
 
       {/* ── Body ── */}
+      <div className="flex flex-1">
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-12 px-5 py-8 sm:px-8 lg:py-12">
         {/* Step rail */}
         <nav aria-label="Registration progress" className="hidden w-44 shrink-0 lg:block pt-1.5">
@@ -571,6 +572,33 @@ export function RegisterForm() {
             </div>
           )}
         </div>
+      </div>
+
+      {/*
+        A single quiet image, only where there is genuinely room for it.
+        Decorative, so hidden from assistive tech, and never rendered at
+        widths where it would compete with the form.
+      */}
+      <aside
+        aria-hidden="true"
+        className="relative hidden w-[38%] max-w-[560px] shrink-0 overflow-hidden xl:block"
+      >
+        <Image
+          src="/images/prop1.jpg"
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 1280px) 0px, 38vw"
+          className="object-cover"
+        />
+        {/* Softens the join with the form and keeps the caption legible. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-8">
+          <p className="text-[15px] font-medium leading-snug text-white">
+            Every development gets its own branded page — with cinematic, 3D and VR tours.
+          </p>
+        </div>
+      </aside>
       </div>
     </div>
   );

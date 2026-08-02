@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { Building2, Clock3, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useOnboardingStore, type VerificationDocKey } from '../../lib/stores/onboarding.store';
@@ -24,6 +25,21 @@ const WHAT_TO_EXPECT = [
 export function StepWelcome() {
   return (
     <div className="mx-auto max-w-xl">
+      {/*
+        One image, on the opening screen only. The later steps are long forms
+        where a decorative panel would fight the scroll.
+      */}
+      <div className="relative mb-8 h-44 overflow-hidden rounded-2xl bg-gray-100">
+        <Image
+          src="/images/prop3.jpg"
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, 576px"
+          className="object-cover"
+        />
+      </div>
+
       <h2 className="text-[32px] font-normal leading-tight text-gray-900" style={{ textWrap: 'balance' }}>
         Let&apos;s get your company set up
       </h2>
