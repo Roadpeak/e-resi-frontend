@@ -23,7 +23,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Billing', href: '/admin/billing', icon: 'payments' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
-  { label: 'System', href: '/admin/system', icon: 'settings', soon: true },
+  { label: 'System', href: '/admin/system', icon: 'settings' },
 ];
 
 export function AdminNav() {

@@ -352,3 +352,31 @@ export const adminOpsApi = {
 
   funnel: (days = 30) => apiClient.get<AdminFunnel>(`/admin/funnel?days=${days}`),
 };
+
+/* ── System ──────────────────────────────────────────────────────── */
+
+export interface SystemHealth {
+  checks: { name: string; ok: boolean; detail: string }[];
+  uptimeSeconds: number;
+  environment: string;
+  counts: { users: number; properties: number; payments: number };
+}
+
+export interface DeliveredNotification {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  user?: { email: string; role: string } | null;
+}
+
+export const adminSystemApi = {
+  health: () => apiClient.get<SystemHealth>('/admin/system/health'),
+  settings: (group?: string) =>
+    apiClient.get<PlatformSetting[]>(`/admin/system/settings${group ? `?group=${group}` : ''}`),
+  updateSetting: (key: string, value: string) =>
+    apiClient.patch<PlatformSetting>(`/admin/system/settings/${key}`, { value }),
+  notifications: () => apiClient.get<DeliveredNotification[]>('/admin/system/notifications'),
+  broadcast: (body: { role?: string; title: string; body: string }) =>
+    apiClient.post<{ sent: number }>('/admin/system/broadcast', body),
+};
