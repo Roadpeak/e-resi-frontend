@@ -123,13 +123,12 @@ export function StepAccount({ onCompleted }: { onCompleted: () => void }) {
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence initial={false}>
       {phase === 'form' ? (
         <motion.form
           key="account-form"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
           onSubmit={handleRegister}
         >
           <SectionCard
@@ -207,7 +206,6 @@ export function StepAccount({ onCompleted }: { onCompleted: () => void }) {
           key="account-verify"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
         >
           <SectionCard
             title="Verify your email"

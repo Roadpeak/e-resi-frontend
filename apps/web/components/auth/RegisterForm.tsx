@@ -23,8 +23,6 @@ const ROLES: {
   label: string;
   sublabel: string;
   icon: React.ReactNode;
-  description: string;
-  features: string[];
   recommended?: boolean;
 }[] = [
   {
@@ -32,16 +30,12 @@ const ROLES: {
     label: 'Developer',
     sublabel: 'List & sell properties',
     icon: <Building2 size={22} />,
-    description: 'List developments, manage units, publish cinematic and 3D tours, and track inquiries. Uses the guided developer onboarding.',
-    features: ['Property listings & management', 'Cinematic & 3D tour publishing', 'Inquiry & booking management', 'Sales analytics dashboard'],
   },
   {
     id: 'investor',
     label: 'Investor / Buyer',
     sublabel: 'Buy & invest in property',
     icon: <TrendingUp size={22} />,
-    description: 'Browse off-plan and completed properties, take virtual tours, and invest with confidence.',
-    features: ['Full VR & 3D tour access', 'Saved properties & shortlists', 'Direct developer inquiries', 'Early access to off-plan launches'],
     recommended: true,
   },
   {
@@ -49,8 +43,6 @@ const ROLES: {
     label: 'Tenant',
     sublabel: 'Rent a home',
     icon: <Home size={22} />,
-    description: 'Find rentals, tour units virtually, schedule viewings, and manage your lease online.',
-    features: ['Browse rental listings', 'Cinematic & 3D unit tours', 'Schedule viewings online', 'Lease document storage'],
   },
 ];
 
@@ -194,23 +186,24 @@ export function RegisterForm() {
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence initial={false}>
             {step === 0 && (
               <motion.div
                 key="step-role"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-[26px] font-normal leading-snug text-[#202124] sm:text-[32px]">
-                  Choose your account type
-                </h1>
-                <p className="mt-2 text-base text-[#5f6368]">
-                  This decides what e-resi looks like for you. You can&apos;t change it later.
-                </p>
+                <div className="mx-auto max-w-2xl">
+                  <h1 className="text-[28px] font-normal leading-snug text-[#202124] sm:text-[32px]">
+                    How will you use e-resi?
+                  </h1>
+                  <p className="mt-2 text-[15px] text-[#5f6368]">
+                    This can&apos;t be changed later.
+                  </p>
+                </div>
 
-                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="mx-auto mt-8 max-w-2xl space-y-3">
                   {ROLES.map((r) => {
                     const selected = role === r.id;
                     return (
@@ -218,53 +211,44 @@ export function RegisterForm() {
                         key={r.id}
                         type="button"
                         onClick={() => setRole(r.id)}
+                        aria-pressed={selected}
                         className={cn(
-                          'relative flex flex-col rounded-3xl border p-6 text-left transition-all duration-200 cursor-pointer',
+                          'flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition-colors cursor-pointer',
                           selected
-                            ? 'border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#e8f0fe]/50'
+                            ? 'border-[#1a73e8] bg-[#f8fbff]'
                             : 'border-[#dadce0] bg-white hover:bg-[#f8f9fa]',
                         )}
                       >
-                        {/* selected check */}
                         <span
                           className={cn(
-                            'absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full transition-all',
-                            selected ? 'bg-[#1a73e8] text-white scale-100' : 'scale-0',
-                          )}
-                        >
-                          <Check size={13} strokeWidth={3} />
-                        </span>
-
-                        <span
-                          className={cn(
-                            'flex h-12 w-12 items-center justify-center rounded-2xl transition-colors',
-                            selected ? 'bg-[#1a73e8] text-white' : 'bg-[#e8f0fe] text-[#1a73e8]',
+                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors',
+                            selected ? 'bg-[#1a73e8] text-white' : 'bg-[#f1f3f4] text-[#5f6368]',
                           )}
                         >
                           {r.icon}
                         </span>
 
-                        <div className="mt-4 flex items-center gap-2">
-                          <h2 className="text-[18px] font-medium text-[#202124]">{r.label}</h2>
-                          {r.recommended && !selected && (
-                            <span className="rounded-full bg-[#e8f0fe] px-2.5 py-0.5 text-[11px] font-medium text-[#1967d2]">
-                              Popular
-                            </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="text-[16px] font-medium text-[#202124]">{r.label}</span>
+                            {r.recommended && (
+                              <span className="rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] font-medium text-[#5f6368]">
+                                Most common
+                              </span>
+                            )}
+                          </span>
+                          <span className="mt-0.5 block text-[14px] text-[#5f6368]">{r.sublabel}</span>
+                        </span>
+
+                        {/* A radio, not a tick — one of three, not a checklist. */}
+                        <span
+                          className={cn(
+                            'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                            selected ? 'border-[#1a73e8]' : 'border-[#dadce0]',
                           )}
-                        </div>
-                        <p className="mt-0.5 text-[13px] text-[#5f6368]">{r.sublabel}</p>
-                        <p className="mt-3 text-[15px] leading-relaxed text-[#5f6368]">{r.description}</p>
-
-                        <div className="my-4 border-t border-[#f1f3f4]" />
-
-                        <ul className="space-y-2">
-                          {r.features.map((f) => (
-                            <li key={f} className="flex items-start gap-2">
-                              <Check size={13} strokeWidth={2.5} className="mt-0.5 shrink-0 text-[#188038]" />
-                              <span className="text-[13px] leading-relaxed text-[#3c4043]">{f}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        >
+                          {selected && <span className="h-2.5 w-2.5 rounded-full bg-[#1a73e8]" />}
+                        </span>
                       </button>
                     );
                   })}
@@ -277,7 +261,6 @@ export function RegisterForm() {
                 key="step-details"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
                 className="mx-auto max-w-xl"
               >
@@ -536,7 +519,12 @@ export function RegisterForm() {
 
           {/* ── Footer actions (wizard steps only) ── */}
           {step < 2 && (
-            <div className="mt-10 flex items-center justify-between border-t border-gray-200 pt-6">
+            <div
+              className={cn(
+                'mx-auto mt-10 flex items-center justify-between border-t border-gray-200 pt-6',
+                step === 0 ? 'max-w-2xl' : 'max-w-xl',
+              )}
+            >
               <Link href="/" className="text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors">
                 Cancel
               </Link>

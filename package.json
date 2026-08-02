@@ -2,7 +2,9 @@
   "name": "@org/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "seed:admin": "tsx prisma/seed-admin.ts"
+  },
   "private": true,
   "devDependencies": {
     "@nx/js": "23.0.1",

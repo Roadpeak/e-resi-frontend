@@ -175,12 +175,11 @@ export default function NewDevelopmentPage() {
       </div>
 
       {/* Step body */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         <motion.div
           key={step}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
           {step === 0 && <StepDevelopment />}
