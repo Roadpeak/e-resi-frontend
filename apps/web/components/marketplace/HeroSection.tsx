@@ -10,6 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const headlineRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLParagraphElement>(null);
@@ -22,6 +23,18 @@ export function HeroSection() {
   const tdCardRef = useRef<HTMLDivElement>(null);
   const cinCardRef = useRef<HTMLDivElement>(null);
   const phase2HeadRef = useRef<HTMLDivElement>(null);
+
+  // The hero is a pinned, scrub-driven section, so a restored mid-page scroll
+  // is measured before GSAP sets anything up — which is what glitched on
+  // refresh. Kept in its own effect because the one below bails early when the
+  // video ref is not yet populated, and this must run on every mount.
+  useEffect(() => {
+    if (!('scrollRestoration' in history)) return;
+    history.scrollRestoration = 'manual';
+    // The flag only prevents a future restore; this load may already have been
+    // moved, so put it back at the top.
+    if (window.scrollY > 0) window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -37,6 +50,8 @@ export function HeroSection() {
       const ctx = gsap.context(() => {
 
         // ── Entrance sequence ──
+        // Safe to always play: the effect above guarantees we start at the top,
+        // so the intro never animates over values the scrub already owns.
         const tl = gsap.timeline({ delay: 0.3 });
         tl.from(lineRef.current, {
           scaleX: 0,
@@ -155,18 +170,33 @@ export function HeroSection() {
 
       }, sectionRef);
 
-      return () => ctx.revert();
+      // Hold the context so the effect's cleanup can revert it. Returning it
+      // from this callback went nowhere, so every re-init leaked a context.
+      ctxRef.current = ctx;
+
+      // The browser restores scroll position on refresh, and does so before this
+      // runs — so ScrollTrigger measures a page that has already moved, the pin
+      // never engages, and the hero scrolls away. Re-measure after layout has
+      // settled, then push the scrubbed values to the restored position.
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+        ScrollTrigger.update();
+      });
     };
 
     if (video.readyState >= 1) {
       onReady();
     } else {
       video.addEventListener('loadedmetadata', onReady, { once: true });
+      // Safari can settle at readyState 1 without firing loadedmetadata again.
+      video.addEventListener('canplay', onReady, { once: true });
     }
 
     return () => {
       video.removeEventListener('loadedmetadata', onReady);
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      video.removeEventListener('canplay', onReady);
+      ctxRef.current?.revert();
+      ctxRef.current = null;
     };
   }, []);
 
