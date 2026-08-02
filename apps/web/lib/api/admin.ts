@@ -104,3 +104,61 @@ export const pricingApi = {
   updateSetting: (key: string, value: string) =>
     apiClient.patch<PlatformSetting>(`/admin/pricing/settings/${key}`, { value }),
 };
+
+/* ── People ──────────────────────────────────────────────────────── */
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  phone?: string | null;
+  emailVerified: boolean;
+  isActive: boolean;
+  suspendedAt?: string | null;
+  suspendedReason?: string | null;
+  lastLoginAt?: string | null;
+  createdAt: string;
+  developerProfile?: { id: string; companyName?: string | null; kybStatus?: string } | null;
+}
+
+export interface AdminDeveloper {
+  id: string;
+  companyName: string;
+  kybStatus: string;
+  createdAt: string;
+  user?: { id: string; email: string; firstName?: string; lastName?: string; isActive: boolean } | null;
+  _count?: { properties: number; rentListings: number };
+}
+
+interface Paged<T> {
+  data: T[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export const peopleApi = {
+  users: (params: { q?: string; role?: string; status?: string; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') qs.set(k, String(v));
+    });
+    return apiClient.get<Paged<AdminUser>>(`/admin/users${qs.toString() ? `?${qs}` : ''}`);
+  },
+  user: (id: string) => apiClient.get<AdminUser>(`/admin/users/${id}`),
+  suspend: (id: string, suspended: boolean, reason?: string) =>
+    apiClient.patch<AdminUser>(`/admin/users/${id}/suspend`, { suspended, reason }),
+  setRole: (id: string, role: string) =>
+    apiClient.patch<AdminUser>(`/admin/users/${id}/role`, { role }),
+  verify: (id: string) => apiClient.patch<AdminUser>(`/admin/users/${id}/verify`),
+
+  developers: (params: { kybStatus?: string; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') qs.set(k, String(v));
+    });
+    return apiClient.get<Paged<AdminDeveloper>>(`/admin/developers${qs.toString() ? `?${qs}` : ''}`);
+  },
+  reviewKyb: (profileId: string, status: string, notes?: string) =>
+    apiClient.patch<AdminDeveloper>(`/admin/developers/${profileId}/kyb`, { status, notes }),
+};
