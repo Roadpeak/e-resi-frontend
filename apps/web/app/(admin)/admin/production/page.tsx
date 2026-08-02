@@ -25,6 +25,7 @@ const NEXT_STAGE: Record<string, string | undefined> = {
 export default function AdminProduction() {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
+  const [toast, setToast] = useState('');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-production-orders'],
@@ -41,16 +42,46 @@ export default function AdminProduction() {
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not update the order'),
   });
 
-  const all = (orders ?? []).filter((o) => o.orderStatus !== 'CANCELLED');
+  const backfill = useMutation({
+    mutationFn: () => adminBillingApi.backfillOrders(),
+    onSuccess: (r) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-production-orders'] });
+      setError('');
+      setToast(
+        r.created > 0
+          ? `${r.created} order${r.created === 1 ? '' : 's'} imported from ${r.properties} submission${r.properties === 1 ? '' : 's'}.`
+          : 'Nothing to import — every selected service already has an order.',
+      );
+      setTimeout(() => setToast(''), 6000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Import failed'),
+  });
+
+  const all = (orders ?? []).filter((o) => o.status !== 'CANCELLED');
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[26px] font-normal text-[#202124]">Production</h1>
-        <p className="text-[14px] text-[#5f6368]">
-          Paid production work, from order to delivery.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[26px] font-normal text-[#202124]">Production</h1>
+          <p className="text-[14px] text-[#5f6368]">
+            One card per ordered service, from order to delivery.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => backfill.mutate()}
+          disabled={backfill.isPending}
+          title="Create orders for services selected before per-service orders existed"
+          className="rounded-full border border-[#dadce0] px-4 py-2 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] disabled:opacity-60"
+        >
+          {backfill.isPending ? 'Importing…' : 'Import from submissions'}
+        </button>
       </div>
+
+      {toast && (
+        <div className="rounded-xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</div>
+      )}
 
       {error && (
         <div className="rounded-xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</div>
@@ -71,7 +102,7 @@ export default function AdminProduction() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-4">
           {STAGES.map((stage) => {
-            const items = all.filter((o) => o.orderStatus === stage.key);
+            const items = all.filter((o) => o.status === stage.key);
             return (
               <section key={stage.key} className="rounded-3xl border border-[#dadce0] bg-white p-4">
                 <div className="mb-3 flex items-center gap-2">
@@ -97,7 +128,7 @@ export default function AdminProduction() {
                         order={o}
                         busy={move.isPending}
                         onAdvance={() => {
-                          const next = NEXT_STAGE[o.orderStatus];
+                          const next = NEXT_STAGE[o.status];
                           if (next) move.mutate({ id: o.id, orderStatus: next });
                         }}
                       />
@@ -122,7 +153,7 @@ function OrderCard({
   busy: boolean;
   onAdvance: () => void;
 }) {
-  const next = NEXT_STAGE[order.orderStatus];
+  const next = NEXT_STAGE[order.status];
 
   return (
     <div className="rounded-2xl border border-[#dadce0] p-3">
@@ -132,10 +163,22 @@ function OrderCard({
       <p className="truncate text-[12px] text-[#5f6368]">
         {order.property?.developer?.companyName ?? '—'}
       </p>
-      <p className="mt-1 text-[12px] text-[#80868b]">
-        {order.tier.replace(/_/g, ' ').toLowerCase()}
-        {order.paidAmount ? ` · ${order.paidAmount.toLocaleString()}` : ''}
+      <p className="mt-1 text-[13px] text-[#202124]">{order.label}</p>
+      <p className="text-[12px] text-[#80868b]">
+        {order.amount > 0 ? `${order.currency} ${order.amount.toLocaleString()}` : 'No charge'}
       </p>
+      {(order.preferredDate || order.instructions || order.accessInfo) && (
+        <div className="mt-2 rounded-xl bg-[#f8f9fa] px-2.5 py-2 text-[12px] leading-relaxed text-[#5f6368]">
+          {order.preferredDate && <div>Wants: {order.preferredDate}</div>}
+          {order.instructions && <div>“{order.instructions}”</div>}
+          {order.accessInfo && <div>Access: {order.accessInfo}</div>}
+        </div>
+      )}
+      {order.scheduledAt && (
+        <p className="mt-1 text-[12px] text-[#1a73e8]">
+          Booked {new Date(order.scheduledAt).toLocaleDateString()}
+        </p>
+      )}
       {order.deliveredAt && (
         <p className="mt-1 text-[12px] text-[#188038]">
           Delivered {new Date(order.deliveredAt).toLocaleDateString()}

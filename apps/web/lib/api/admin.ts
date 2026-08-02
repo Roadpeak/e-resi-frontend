@@ -259,20 +259,29 @@ export interface AdminPayment {
   user?: { id: string; email: string; firstName?: string; lastName?: string } | null;
 }
 
+/** One ordered production service. The API still names the status field
+ *  `status`; `orderStatus` remains the request field name on updates. */
 export interface ProductionOrder {
   id: string;
-  tier: string;
-  orderStatus: string;
+  serviceKey: string;
+  label: string;
+  amount: number;
+  currency: string;
+  status: string;
+  /** What the developer asked for when ordering. */
+  preferredDate?: string | null;
+  instructions?: string | null;
+  accessInfo?: string | null;
   scheduledAt?: string | null;
   deliveredAt?: string | null;
   crewNotes?: string | null;
-  paidAmount?: number | null;
   createdAt: string;
   property?: {
     slug: string;
     name: string;
+    city?: string | null;
     heroImageUrl?: string | null;
-    developer?: { companyName?: string | null } | null;
+    developer?: { id?: string; companyName?: string | null } | null;
   } | null;
 }
 
@@ -296,6 +305,11 @@ export const adminBillingApi = {
     ),
   updateOrder: (id: string, body: { orderStatus?: string; scheduledAt?: string; crewNotes?: string }) =>
     apiClient.patch<ProductionOrder>(`/admin/billing/production-orders/${id}`, body),
+  /** Create order rows for services selected before per-service orders existed. */
+  backfillOrders: () =>
+    apiClient.post<{ properties: number; created: number }>(
+      '/admin/billing/production-orders/backfill',
+    ),
 };
 
 /* ── Operations ──────────────────────────────────────────────────── */
