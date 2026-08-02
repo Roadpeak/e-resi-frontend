@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ConfirmDelete } from '../../../../components/admin/ConfirmDelete';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { peopleApi, type AdminUser } from '../../../../lib/api/admin';
 import { ApiError } from '../../../../lib/api/client';
@@ -25,6 +26,7 @@ export default function AdminUsers() {
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const [confirming, setConfirming] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-users', q, role, status],
@@ -67,6 +69,17 @@ export default function AdminUsers() {
       refresh();
       setSelected(u);
       flash('Email marked verified');
+    },
+    onError,
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => peopleApi.remove(id),
+    onSuccess: (r) => {
+      refresh();
+      setConfirming(false);
+      setSelected(null);
+      flash(r.message);
     },
     onError,
   });
@@ -259,11 +272,30 @@ export default function AdminUsers() {
                     Reinstate
                   </button>
                 )}
+                <button
+                  onClick={() => { setError(''); setConfirming(true); }}
+                  className="rounded-full border border-[#f5c6c4] px-4 py-2 text-[13px] font-medium text-[#c5221f] transition-colors hover:bg-[#fce8e6]"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           )}
         </aside>
       </div>
+
+      <ConfirmDelete
+        open={confirming && selected !== null}
+        name={selected?.email ?? ''}
+        description={
+          'This permanently deletes the account. Developers with listings cannot be '
+          + 'deleted — reassign or remove those first. Suspending is reversible; this is not.'
+        }
+        busy={remove.isPending}
+        error={remove.isError ? (remove.error as Error).message : undefined}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => selected && remove.mutate(selected.id)}
+      />
     </div>
   );
 }

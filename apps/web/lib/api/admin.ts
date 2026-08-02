@@ -132,6 +132,29 @@ export interface AdminDeveloper {
   _count?: { properties: number; rentListings: number };
 }
 
+/** Full profile behind the KYB review screen. */
+export interface AdminDeveloperDetail extends AdminDeveloper {
+  logoUrl?: string | null;
+  description?: string | null;
+  website?: string | null;
+  establishedYear?: number | null;
+  completedProjects?: number;
+  kybReviewedAt?: string | null;
+  onboarding?: Record<string, unknown> | null;
+  onboardingSubmittedAt?: string | null;
+  /** Uploaded document references, keyed by document type. */
+  kybDocuments?: Record<string, string> | null;
+  reviewNotes?: string | null;
+  user?: {
+    id: string; email: string; firstName?: string; lastName?: string;
+    phone?: string | null; role: string; isActive: boolean; emailVerified: boolean;
+    avatarUrl?: string | null; createdAt: string; lastLoginAt?: string | null;
+    suspendedAt?: string | null; suspendedReason?: string | null;
+  } | null;
+  properties?: { id: string; name: string; slug: string; status: string; city?: string | null; createdAt: string }[];
+  rentListings?: { id: string; name: string; slug: string; status: string; createdAt: string }[];
+}
+
 interface Paged<T> {
   data: T[];
   meta: { total: number; page: number; limit: number; totalPages: number };
@@ -159,8 +182,11 @@ export const peopleApi = {
     });
     return apiClient.get<Paged<AdminDeveloper>>(`/admin/developers${qs.toString() ? `?${qs}` : ''}`);
   },
+  developer: (profileId: string) =>
+    apiClient.get<AdminDeveloperDetail>(`/admin/developers/${profileId}`),
   reviewKyb: (profileId: string, status: string, notes?: string) =>
     apiClient.patch<AdminDeveloper>(`/admin/developers/${profileId}/kyb`, { status, notes }),
+  remove: (id: string) => apiClient.delete<{ message: string }>(`/admin/users/${id}`),
 };
 
 /* ── Properties ──────────────────────────────────────────────────── */
@@ -201,6 +227,8 @@ export const adminPropertiesApi = {
     apiClient.patch<AdminProperty>(`/admin/properties/${slug}/status`, { status }),
   feature: (slug: string, isFeatured: boolean) =>
     apiClient.patch<AdminProperty>(`/admin/properties/${slug}/feature`, { isFeatured }),
+  remove: (slug: string) =>
+    apiClient.delete<{ message: string }>(`/admin/properties/${slug}`),
 };
 
 /* ── Billing & production ────────────────────────────────────────── */

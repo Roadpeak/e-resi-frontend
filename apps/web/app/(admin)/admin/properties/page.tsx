@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ConfirmDelete } from '../../../../components/admin/ConfirmDelete';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { adminPropertiesApi, type AdminProperty } from '../../../../lib/api/admin';
 import { ApiError } from '../../../../lib/api/client';
@@ -31,6 +32,8 @@ export default function AdminProperties() {
   const [q, setQ] = useState('');
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  /** The property awaiting delete confirmation, if any. */
+  const [deleting, setDeleting] = useState<AdminProperty | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-properties', status, q],
@@ -63,6 +66,16 @@ export default function AdminProperties() {
     onSuccess: (p) => {
       refresh();
       flash(`${p.name} ${p.isFeatured ? 'featured' : 'unfeatured'}`);
+    },
+    onError,
+  });
+
+  const remove = useMutation({
+    mutationFn: (slug: string) => adminPropertiesApi.remove(slug),
+    onSuccess: (r) => {
+      refresh();
+      setDeleting(null);
+      flash(r.message);
     },
     onError,
   });
@@ -137,10 +150,25 @@ export default function AdminProperties() {
               busy={review.isPending || feature.isPending}
               onReview={(decision, notes) => review.mutate({ slug: p.slug, decision, notes })}
               onFeature={(on) => feature.mutate({ slug: p.slug, on })}
+              onDelete={() => { setError(''); setDeleting(p); }}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDelete
+        open={deleting !== null}
+        name={deleting?.name ?? ''}
+        description={
+          'This permanently deletes the listing along with its media, units, floor '
+          + 'plans and tours. Listings with bookings, rentals or inquiries cannot be '
+          + 'deleted — archive those instead.'
+        }
+        busy={remove.isPending}
+        error={remove.isError ? (remove.error as Error).message : undefined}
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => deleting && remove.mutate(deleting.slug)}
+      />
     </div>
   );
 }
@@ -150,11 +178,13 @@ function PropertyRow({
   busy,
   onReview,
   onFeature,
+  onDelete,
 }: {
   property: AdminProperty;
   busy: boolean;
   onReview: (decision: 'APPROVE' | 'REJECT', notes?: string) => void;
   onFeature: (on: boolean) => void;
+  onDelete: () => void;
 }) {
   const isDraft = property.status === 'DRAFT';
 
@@ -237,6 +267,15 @@ function PropertyRow({
               {property.isFeatured ? 'Unfeature' : 'Feature'}
             </button>
           )}
+          <button
+            onClick={onDelete}
+            disabled={busy}
+            aria-label={`Delete ${property.name}`}
+            title="Delete permanently"
+            className="rounded-full border border-[#dadce0] p-2 text-[#5f6368] transition-colors hover:border-[#f5c6c4] hover:bg-[#fce8e6] hover:text-[#c5221f] disabled:opacity-50"
+          >
+            <MaterialIcon name="delete" size={18} />
+          </button>
         </div>
       </div>
     </div>
