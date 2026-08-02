@@ -591,8 +591,25 @@ export function RegisterForm() {
           sizes="(max-width: 1280px) 0px, 38vw"
           className="object-cover"
         />
-        {/* Softens the join with the form and keeps the caption legible. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/10 to-transparent" />
+        {/*
+          Two separate fades. The horizontal one dissolves the image into the
+          form; a single via-stop moved from solid to nearly clear too quickly
+          and read as a smear, so the stops are placed explicitly. The vertical
+          one softens the join under the header, which was a hard line.
+        */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, #fff 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0.18) 20%, rgba(255,255,255,0) 34%)',
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-24"
+          style={{
+            background: 'linear-gradient(to bottom, #fff 0%, rgba(255,255,255,0.35) 40%, rgba(255,255,255,0) 100%)',
+          }}
+        />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-8">
           <p className="text-[15px] font-medium leading-snug text-white">
             Every development gets its own branded page — with cinematic, 3D and VR tours.
