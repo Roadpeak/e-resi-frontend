@@ -7,6 +7,7 @@ import { Logo } from '../brand/Logo';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
+import { useUnreadNotificationCount } from '../../lib/api/queries';
 
 /**
  * Sections of the admin console. Later phases fill these in; anything not yet
@@ -25,6 +26,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Listing fees', href: '/admin/billing/listing-fees', icon: 'payments' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
+  { label: 'Notifications', href: '/admin/notifications', icon: 'notifications' },
   { label: 'System', href: '/admin/system', icon: 'settings' },
 ];
 
@@ -32,6 +34,8 @@ export function AdminNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { data: unread } = useUnreadNotificationCount();
+  const unreadCount = unread?.count ?? 0;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +62,19 @@ export function AdminNav() {
         </span>
 
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/admin/notifications"
+            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full text-[#e8eaed] transition-colors hover:bg-[#3c4043]"
+          >
+            <MaterialIcon name="notifications" size={20} fill={unreadCount > 0} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f28b82] px-1 text-[10px] font-semibold text-[#202124]">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+
           <Link
             href="/dashboard"
             className="hidden rounded-full border border-[#5f6368] px-4 py-1.5 text-[13px] font-medium text-[#e8eaed] transition-colors hover:bg-[#3c4043] sm:inline-flex"
