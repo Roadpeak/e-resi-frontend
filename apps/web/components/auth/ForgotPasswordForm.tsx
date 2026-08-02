@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
-import { AuthSplit } from './AuthSplit';
+import { Mail, MailCheck } from 'lucide-react';
+import { AuthCard, AuthError, authInputCls } from './AuthCard';
 import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
 import { authApi } from '../../lib/api/auth';
 import { ApiError } from '../../lib/api/client';
 
@@ -18,8 +17,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function ForgotPasswordForm() {
-  const [sent, setSent] = useState(false);
-  const [sentEmail, setSentEmail] = useState('');
+  const [sentTo, setSentTo] = useState('');
   const [serverError, setServerError] = useState('');
 
   const {
@@ -32,94 +30,89 @@ export function ForgotPasswordForm() {
     setServerError('');
     try {
       await authApi.forgotPassword(values.email);
-      setSentEmail(values.email);
-      setSent(true);
+      setSentTo(values.email);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setServerError(err.message);
-      } else {
-        setServerError('Something went wrong. Please try again.');
-      }
+      setServerError(
+        err instanceof ApiError ? err.message : 'Something went wrong. Please try again.',
+      );
     }
   }
 
+  // ── Sent ──
+  if (sentTo) {
+    return (
+      <AuthCard
+        title="Check your email"
+        subtitle={<>We sent a reset link to <span className="font-medium">{sentTo}</span></>}
+      >
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f0fe]">
+          <MailCheck size={24} className="text-[#1a73e8]" />
+        </div>
+
+        <p className="mt-6 text-[15px] leading-relaxed text-[#5f6368]">
+          The link expires in an hour. If it doesn&apos;t arrive within a few minutes,
+          check your spam folder.
+        </p>
+
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setSentTo('')}
+            className="-ml-3 rounded-full px-3 py-2 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f0f4f9]"
+          >
+            Use a different email
+          </button>
+          <Link
+            href="/login"
+            className="rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-[#1765cc]"
+          >
+            Back to sign in
+          </Link>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  // ── Request ──
   return (
-    <AuthSplit
-      image="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&q=90"
-      quote="Secure access to your e-resi account — we'll have you back in moments."
-      quoteAuthor="e-resi Account Security"
-    >
-      <div>
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mb-10"
-        >
-          <ArrowLeft size={12} /> Back to Sign In
-        </Link>
+    <AuthCard title="Password recovery" subtitle="to get back into your e-resi account">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-4">
+          <Input
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            className={authInputCls}
+            leftIcon={<Mail size={14} />}
+            autoComplete="email"
+            autoFocus
+            error={errors.email?.message}
+            {...register('email')}
+          />
 
-        {!sent ? (
-          <>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-1">Forgot password?</h1>
-            <p className="text-sm text-gray-500 mb-8">
-              Enter your email and we&apos;ll send you a reset link.
-            </p>
+          {serverError && <AuthError>{serverError}</AuthError>}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Input
-                label="Email address"
-                type="email"
-                placeholder="you@example.com"
-                leftIcon={<Mail size={14} />}
-                autoComplete="email"
-                autoFocus
-                error={errors.email?.message}
-                {...register('email')}
-              />
+          <p className="text-sm leading-relaxed text-[#5f6368]">
+            We&apos;ll email you a link to choose a new password.
+          </p>
+        </div>
 
-              {serverError && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                  {serverError}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                loading={isSubmitting}
-                icon={<ArrowRight size={16} />}
-                iconPosition="right"
-              >
-                Send Reset Link
-              </Button>
-            </form>
-          </>
-        ) : (
-          <div className="text-center">
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-50 border border-green-200">
-              <CheckCircle size={28} className="text-green-600" />
-            </div>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Link sent</h1>
-            <p className="text-sm text-gray-500 mb-2">We sent a password reset link to</p>
-            <p className="text-sm font-medium text-gray-900 mb-8">{sentEmail}</p>
-
-            <p className="text-xs text-gray-500 mb-6">
-              Didn&apos;t receive it? Check your spam folder or{' '}
-              <button
-                type="button"
-                onClick={() => setSent(false)}
-                className="text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
-              >
-                try again
-              </button>
-            </p>
-
-            <Button href="/login" variant="secondary" className="w-full">
-              Back to Sign In
-            </Button>
-          </div>
-        )}
-      </div>
-    </AuthSplit>
+        <div className="mt-8 flex items-center justify-between">
+          <Link
+            href="/login"
+            className="-ml-3 rounded-full px-3 py-2 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f0f4f9]"
+          >
+            Back to sign in
+          </Link>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-60"
+          >
+            {isSubmitting ? 'Sending…' : 'Send link'}
+          </button>
+        </div>
+      </form>
+    </AuthCard>
   );
 }

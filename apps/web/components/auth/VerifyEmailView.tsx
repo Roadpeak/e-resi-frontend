@@ -1,21 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { AuthSplit } from './AuthSplit';
-import { Button } from '../ui/Button';
+import { BadgeCheck, Loader2, MailWarning } from 'lucide-react';
+import { AuthCard } from './AuthCard';
 import { authApi } from '../../lib/api/auth';
 
 type State = 'verifying' | 'success' | 'error';
 
+const primaryBtn =
+  'rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-[#1765cc]';
+const quietBtn =
+  '-ml-3 rounded-full px-3 py-2 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f0f4f9]';
+
 export function VerifyEmailView() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useSearchParams().get('token');
   const [state, setState] = useState<State>('verifying');
+  // Verification tokens are single-use, and StrictMode runs effects twice in
+  // development — without this the second call consumes an already-spent token
+  // and reports failure for a verification that actually succeeded.
+  const attempted = useRef(false);
 
   useEffect(() => {
+    if (attempted.current) return;
+    attempted.current = true;
+
     if (!token) {
       setState('error');
       return;
@@ -26,66 +36,57 @@ export function VerifyEmailView() {
       .catch(() => setState('error'));
   }, [token]);
 
+  if (state === 'verifying') {
+    return (
+      <AuthCard title="Verifying" subtitle="Confirming your email address">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f0fe]">
+          <Loader2 size={24} className="animate-spin text-[#1a73e8]" />
+        </div>
+        <p className="mt-6 text-[15px] leading-relaxed text-[#5f6368]">
+          This only takes a moment.
+        </p>
+      </AuthCard>
+    );
+  }
+
+  if (state === 'success') {
+    return (
+      <AuthCard title="Email verified" subtitle="Your e-resi account is ready">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e6f4ea]">
+          <BadgeCheck size={24} className="text-[#188038]" />
+        </div>
+        <p className="mt-6 text-[15px] leading-relaxed text-[#5f6368]">
+          You can start touring developments, or head to your dashboard.
+        </p>
+        <div className="mt-8 flex items-center justify-between">
+          <Link href="/properties" className={quietBtn}>
+            Browse properties
+          </Link>
+          <Link href="/dashboard" className={primaryBtn}>
+            Go to dashboard
+          </Link>
+        </div>
+      </AuthCard>
+    );
+  }
+
   return (
-    <AuthSplit
-      image="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400&q=90"
-      quote="One step away from your immersive real estate experience."
-      quoteAuthor="e-resi Platform"
-    >
-      <div className="text-center">
-        {state === 'verifying' && (
-          <>
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-brand-600/15 border border-brand-500/20">
-              <Loader2 size={28} className="text-brand-600 animate-spin" />
-            </div>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Verifying…</h1>
-            <p className="text-sm text-gray-500">Confirming your email address, please wait.</p>
-          </>
-        )}
-
-        {state === 'success' && (
-          <>
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-green-50 border border-green-200">
-              <CheckCircle size={28} className="text-green-600" />
-            </div>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Email verified</h1>
-            <p className="text-sm text-gray-500 mb-8">
-              Your account is now active. Welcome to e-resi.
-            </p>
-
-            <div className="space-y-3">
-              <Button href="/dashboard" className="w-full" size="lg">
-                Go to Dashboard
-              </Button>
-              <Button href="/properties" variant="secondary" className="w-full" size="lg">
-                Browse Properties
-              </Button>
-            </div>
-          </>
-        )}
-
-        {state === 'error' && (
-          <>
-            <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-red-50 border border-red-200">
-              <XCircle size={28} className="text-red-600" />
-            </div>
-            <h1 className="font-display font-light text-gray-900 text-3xl mb-2">Link expired</h1>
-            <p className="text-sm text-gray-500 mb-8">
-              This verification link has expired or is invalid. Request a new one below.
-            </p>
-
-            <Button href="/register" variant="secondary" className="w-full mb-3">
-              Back to Sign Up
-            </Button>
-            <p className="text-xs text-gray-400">
-              Already verified?{' '}
-              <Link href="/login" className="text-brand-600 hover:text-brand-700 transition-colors">
-                Sign in
-              </Link>
-            </p>
-          </>
-        )}
+    <AuthCard title="This link has expired" subtitle="to verify your email address">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fef7e0]">
+        <MailWarning size={24} className="text-[#b06000]" />
       </div>
-    </AuthSplit>
+      <p className="mt-6 text-[15px] leading-relaxed text-[#5f6368]">
+        Verification links are single-use and expire after a short time. Sign in and
+        we&apos;ll send you a fresh one.
+      </p>
+      <div className="mt-8 flex items-center justify-between">
+        <Link href="/register" className={quietBtn}>
+          Create an account
+        </Link>
+        <Link href="/login" className={primaryBtn}>
+          Sign in
+        </Link>
+      </div>
+    </AuthCard>
   );
 }
