@@ -4,24 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Check, CreditCard, Loader2, Lock, Plus, ShieldCheck, Smartphone, Trash2,
+  ArrowRight, CreditCard, Loader2, Lock, Plus, ShieldCheck, Smartphone, Trash2,
 } from 'lucide-react';
 import {
-  billingApi, detectBrand, formatCardNumber, type LinkedMethod,
+  billingApi, type LinkedMethod,
 } from '../../lib/api/billing';
 import { ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
 
-const COUNTRIES = [
-  { code: 'KE', name: 'Kenya' }, { code: 'UG', name: 'Uganda' }, { code: 'TZ', name: 'Tanzania' },
-  { code: 'RW', name: 'Rwanda' }, { code: 'ET', name: 'Ethiopia' }, { code: 'NG', name: 'Nigeria' },
-  { code: 'ZA', name: 'South Africa' }, { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' }, { code: 'AE', name: 'United Arab Emirates' },
-];
 
-const inputCls =
-  'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
-const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
 
 export function PaymentMethodsCard() {
   const router = useRouter();
@@ -40,6 +31,29 @@ export function PaymentMethodsCard() {
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['billing'] });
   };
+
+  // ── Paystack return leg: /dashboard/billing?paystack=callback&reference=... ──
+  useEffect(() => {
+    const state = searchParams.get('paystack');
+    const reference = searchParams.get('reference') ?? searchParams.get('trxref');
+    if (!state || !reference) return;
+
+    setBusy(true);
+    billingApi
+      .paystackConfirm(reference)
+      .then((m) => {
+        setNotice(`Card ending ${m.last4 ?? '••••'} linked. The verification charge has been refunded.`);
+        refresh();
+      })
+      .catch((err) =>
+        setError(err instanceof ApiError ? err.message : 'That card could not be verified.'),
+      )
+      .finally(() => {
+        setBusy(false);
+        router.replace('/dashboard/billing');
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── PayPal return leg: /dashboard/billing?paypal=confirm&token=... ──
   useEffect(() => {
@@ -166,143 +180,60 @@ function CardForm({
   onError: (msg: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({
-    cardholderName: '', number: '', expiry: '', cvc: '',
-    addressLine1: '', addressLine2: '', city: '', postalCode: '', country: 'KE',
-  });
-  const brand = detectBrand(form.number);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  /**
+   * Card details are collected by Paystack, not by us. We send the developer to
+   * their hosted checkout and they come back with a reusable authorization —
+   * so no card number or CVC ever reaches e-resi.
+   */
+  async function startLink() {
     onError('');
-    const digits = form.number.replace(/\D/g, '');
-    const [mmRaw, yyRaw] = form.expiry.split('/');
-    const mm = Number.parseInt(mmRaw?.trim(), 10);
-    const yy = Number.parseInt(yyRaw?.trim(), 10);
-    if (digits.length < 12) return onError('Enter a valid card number.');
-    if (!mm || mm < 1 || mm > 12 || !yy) return onError('Expiry must be MM/YY.');
-    if (!/^\d{3,4}$/.test(form.cvc)) return onError('CVC must be 3 or 4 digits.');
-
     setBusy(true);
     try {
-      const res = await billingApi.linkCard({
-        cardNumber: digits,
-        expMonth: mm,
-        expYear: 2000 + yy,
-        cvc: form.cvc,
-        cardholderName: form.cardholderName.trim(),
-        addressLine1: form.addressLine1.trim(),
-        addressLine2: form.addressLine2.trim() || undefined,
-        city: form.city.trim(),
-        postalCode: form.postalCode.trim(),
-        country: form.country,
-      });
-      onDone(Boolean(res.sandbox));
+      const { authorizationUrl } = await billingApi.paystackStart();
+      window.location.href = authorizationUrl;
     } catch (err) {
-      onError(err instanceof ApiError ? err.message : 'Could not verify the card.');
-    } finally {
+      onError(err instanceof ApiError ? err.message : 'Could not start card linking.');
       setBusy(false);
     }
   }
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
   return (
-    <form onSubmit={submit} className="mt-4 rounded-2xl bg-[#f8f9fa] p-5">
-      <div className="grid gap-4">
-        <div>
-          <label className={labelCls}>Cardholder name</label>
-          <input value={form.cardholderName} onChange={set('cardholderName')} required placeholder="Name on card" className={inputCls} autoComplete="cc-name" />
-        </div>
-
-        <div>
-          <label className={labelCls}>Card number</label>
-          <div className="relative">
-            <input
-              value={form.number}
-              onChange={(e) => setForm((f) => ({ ...f, number: formatCardNumber(e.target.value) }))}
-              required
-              inputMode="numeric"
-              placeholder="1234 5678 9012 3456"
-              className={cn(inputCls, 'pr-24')}
-              autoComplete="cc-number"
-            />
-            {brand && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-[#202124] px-2 py-1 text-[11px] font-bold text-white">
-                {brand}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>Expiry</label>
-            <input value={form.expiry} onChange={set('expiry')} required placeholder="MM/YY" className={inputCls} autoComplete="cc-exp" />
-          </div>
-          <div>
-            <label className={labelCls}>CVC</label>
-            <input
-              value={form.cvc}
-              onChange={(e) => setForm((f) => ({ ...f, cvc: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-              required
-              inputMode="numeric"
-              placeholder="123"
-              className={inputCls}
-              autoComplete="cc-csc"
-            />
-          </div>
-        </div>
-
-        <p className="text-[13px] font-medium uppercase tracking-[0.08em] text-[#5f6368]">Billing address</p>
-
-        <div>
-          <label className={labelCls}>Country</label>
-          <select value={form.country} onChange={set('country')} className={inputCls}>
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelCls}>Address line 1</label>
-          <input value={form.addressLine1} onChange={set('addressLine1')} required placeholder="Street address" className={inputCls} autoComplete="address-line1" />
-        </div>
-        <div>
-          <label className={labelCls}>Address line 2 (optional)</label>
-          <input value={form.addressLine2} onChange={set('addressLine2')} placeholder="Apartment, suite, floor" className={inputCls} autoComplete="address-line2" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>City</label>
-            <input value={form.city} onChange={set('city')} required placeholder="Nairobi" className={inputCls} autoComplete="address-level2" />
-          </div>
-          <div>
-            <label className={labelCls}>Postal code</label>
-            <input value={form.postalCode} onChange={set('postalCode')} required placeholder="00100" className={inputCls} autoComplete="postal-code" />
-          </div>
-        </div>
-
-        <div className="flex items-start gap-2.5 rounded-xl bg-[#e8f0fe] p-3.5">
-          <Lock size={14} className="mt-0.5 shrink-0 text-[#1a73e8]" />
-          <p className="text-[13px] leading-relaxed text-[#3c4043]">
-            To confirm this card we place a <span className="font-medium">$1.00 verification hold</span> which
-            is reversed automatically. Card details are sent securely for verification only — we store just
-            the brand, last 4 digits and expiry.
+    <div className="mt-4 rounded-2xl bg-[#f8f9fa] p-5">
+      <div className="flex items-start gap-3">
+        <Lock size={18} className="mt-0.5 shrink-0 text-[#188038]" />
+        <div className="min-w-0">
+          <p className="text-[15px] font-medium text-[#202124]">
+            You&apos;ll add your card on Paystack
+          </p>
+          <p className="mt-1 text-[14px] leading-relaxed text-[#5f6368]">
+            We never see or store your card number. Paystack verifies the card with a
+            small charge that is refunded straight away, and sends us back only the
+            card type and last four digits.
           </p>
         </div>
+      </div>
 
+      <div className="mt-5 flex flex-wrap gap-3">
         <button
-          type="submit"
+          type="button"
+          onClick={startLink}
           disabled={busy}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer disabled:opacity-50"
         >
-          {busy ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
-          {busy ? 'Verifying card…' : 'Verify & save card'}
+          {busy ? 'Opening Paystack…' : 'Continue to Paystack'}
+          {!busy && <ArrowRight size={15} />}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDone(false)}
+          disabled={busy}
+          className="rounded-full px-5 py-2.5 text-[14px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4] cursor-pointer"
+        >
+          Cancel
         </button>
       </div>
-    </form>
+    </div>
   );
 }
 

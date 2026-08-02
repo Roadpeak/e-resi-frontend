@@ -55,6 +55,18 @@ export const billingApi = {
   listMethods: () => apiClient.get<LinkedMethod[]>('/billing/methods'),
   /** Full card details go to the API for the $1 verification only — never persisted. */
   linkCard: (card: CardDetails) => apiClient.post<LinkedMethod>('/billing/methods/card', card),
+
+  /**
+   * Begin card linking on Paystack's hosted checkout. Card details are entered
+   * there, never here — which is what keeps this app out of PCI scope.
+   */
+  paystackStart: () =>
+    apiClient.post<{ authorizationUrl: string; reference: string; testMode: boolean }>(
+      '/billing/methods/paystack/start',
+    ),
+
+  paystackConfirm: (reference: string) =>
+    apiClient.post<LinkedMethod>('/billing/methods/paystack/confirm', { reference }),
   paypalStart: () =>
     apiClient.post<{ approvalUrl: string; token: string; sandbox: boolean }>('/billing/methods/paypal/start'),
   paypalConfirm: (token: string) =>
