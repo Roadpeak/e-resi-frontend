@@ -63,6 +63,22 @@ export const billingApi = {
   setDefault: (id: string) => apiClient.patch<{ message: string }>(`/billing/methods/${id}/default`),
   remove: (id: string) => apiClient.delete<{ message: string }>(`/billing/methods/${id}`),
 
+  /** Invoices and receipts for the signed-in account. */
+  invoices: () => apiClient.get<Invoice[]>('/billing/invoices'),
+  invoice: (id: string) => apiClient.get<Invoice>(`/billing/invoices/${id}`),
+
+  /** Admin: every invoice, filterable. */
+  allInvoices: (params: { status?: string; kind?: string; q?: string } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+    return apiClient.get<Invoice[]>(`/billing/invoices/all${qs.toString() ? `?${qs}` : ''}`);
+  },
+  /** Admin: chase an unpaid invoice with a termination warning. */
+  remindInvoice: (id: string) => apiClient.post<Invoice>(`/billing/invoices/${id}/remind`),
+  /** Admin: force the daily issue/overdue sweep. */
+  dispatchInvoices: () =>
+    apiClient.post<{ issued: number; markedOverdue: number }>('/billing/invoices/dispatch'),
+
   /** Admin: what a billing period collected. Period is YYYY-MM. */
   listingFeeReport: (period: string) =>
     apiClient.get<ListingFeeReport>(`/billing/listing-fees/${period}`),
@@ -71,6 +87,42 @@ export const billingApi = {
   runListingFees: (period: string) =>
     apiClient.post<ListingFeeRunSummary>(`/billing/listing-fees/${period}/run`),
 };
+
+export interface InvoiceLine {
+  description: string;
+  quantity?: number;
+  unitAmount?: number;
+  amount: number;
+}
+
+export interface Invoice {
+  id: string;
+  number: string;
+  kind: 'SUBSCRIPTION' | 'PRODUCTION';
+  status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
+  billedToName: string;
+  billedToEmail: string;
+  lineItems: InvoiceLine[];
+  subtotal: number;
+  taxPercent: number;
+  taxAmount: number;
+  total: number;
+  currency: string;
+  issuedAt?: string | null;
+  dueAt: string;
+  paidAt?: string | null;
+  terminatesAt?: string | null;
+  remindersSent: number;
+  lastReminderAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  receipt?: {
+    id: string; number: string; amount: number; currency: string;
+    method: string; reference?: string | null; paidAt: string;
+  } | null;
+  user?: { id: string; email: string } | null;
+  property?: { name: string; slug: string } | null;
+}
 
 export interface ListingFeeRunSummary {
   period: string;
