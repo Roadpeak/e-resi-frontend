@@ -582,6 +582,15 @@ export function RegisterForm() {
       <aside
         aria-hidden="true"
         className="relative hidden w-[38%] max-w-[560px] shrink-0 overflow-hidden xl:block"
+        style={{
+          // Fade the panel's own alpha. Painting white over it could only cover
+          // the panel, leaving the point where it starts as a visible vertical
+          // edge; masking removes that edge entirely.
+          maskImage:
+            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 10%, rgba(0,0,0,0.85) 24%, #000 40%)',
+          WebkitMaskImage:
+            'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 10%, rgba(0,0,0,0.85) 24%, #000 40%)',
+        }}
       >
         <Image
           src="/images/prop1.jpg"
@@ -597,13 +606,6 @@ export function RegisterForm() {
           and read as a smear, so the stops are placed explicitly. The vertical
           one softens the join under the header, which was a hard line.
         */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to right, #fff 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0.18) 20%, rgba(255,255,255,0) 34%)',
-          }}
-        />
         <div
           className="absolute inset-x-0 top-0 h-24"
           style={{
