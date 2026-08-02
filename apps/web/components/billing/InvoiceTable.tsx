@@ -28,12 +28,17 @@ export function InvoiceTable({
   showCustomer = false,
   onRemind,
   remindingId,
+  onPay,
+  payingId,
 }: {
   invoices: Invoice[];
   showCustomer?: boolean;
   /** Omitted for developers — only admins chase invoices. */
   onRemind?: (invoice: Invoice) => void;
   remindingId?: string | null;
+  /** Omitted for admins — only the account holder pays. */
+  onPay?: (invoice: Invoice) => void;
+  payingId?: string | null;
 }) {
   if (!invoices.length) {
     return (
@@ -55,7 +60,7 @@ export function InvoiceTable({
             <th className="py-2 pr-4 font-medium">Due</th>
             <th className="py-2 pr-4 font-medium">Amount</th>
             <th className="py-2 pr-4 font-medium">Status</th>
-            <th className="py-2 font-medium">{onRemind ? 'Action' : 'Receipt'}</th>
+            <th className="py-2 font-medium">{onRemind ? 'Action' : 'Receipt / pay'}</th>
           </tr>
         </thead>
         <tbody>
@@ -111,6 +116,15 @@ export function InvoiceTable({
                   )
                 ) : inv.receipt ? (
                   <span className="text-[#188038]">{inv.receipt.number}</span>
+                ) : onPay && (inv.status === 'ISSUED' || inv.status === 'OVERDUE') ? (
+                  <button
+                    type="button"
+                    onClick={() => onPay(inv)}
+                    disabled={payingId === inv.id}
+                    className="rounded-full bg-[#1a73e8] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
+                  >
+                    {payingId === inv.id ? 'Opening…' : `Pay ${money(inv.total, inv.currency)}`}
+                  </button>
                 ) : (
                   <span className="text-[#5f6368]">—</span>
                 )}

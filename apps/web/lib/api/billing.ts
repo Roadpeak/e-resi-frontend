@@ -73,6 +73,18 @@ export const billingApi = {
     Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
     return apiClient.get<Invoice[]>(`/billing/invoices/all${qs.toString() ? `?${qs}` : ''}`);
   },
+  /** Start payment for an unpaid invoice — returns a Paystack checkout URL. */
+  payInvoice: (id: string) =>
+    apiClient.post<{ authorizationUrl: string; reference: string; testMode: boolean }>(
+      `/billing/invoices/${id}/pay`,
+    ),
+  /** Confirm on return from Paystack. Idempotent — the webhook also settles it. */
+  confirmInvoice: (id: string, reference: string) =>
+    apiClient.post<{ number: string; amount: number; currency: string }>(
+      `/billing/invoices/${id}/confirm`,
+      { reference },
+    ),
+
   /** Admin: chase an unpaid invoice with a termination warning. */
   remindInvoice: (id: string) => apiClient.post<Invoice>(`/billing/invoices/${id}/remind`),
   /** Admin: force the daily issue/overdue sweep. */

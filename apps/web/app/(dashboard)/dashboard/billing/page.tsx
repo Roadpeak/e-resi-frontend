@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight, CalendarClock, CreditCard, Loader2, Receipt, Smartphone, Wallet,
 } from 'lucide-react';
 import { propertiesApi } from '../../../../lib/api/properties';
-import { billingApi } from '../../../../lib/api/billing';
+import { ApiError } from '../../../../lib/api/client';
+import { billingApi, type Invoice } from '../../../../lib/api/billing';
 import { PaymentMethodsCard } from '../../../../components/dashboard/PaymentMethods';
 import { InvoiceTable } from '../../../../components/billing/InvoiceTable';
 import { LISTING_FEE_MONTHLY, fmtUsd, serviceById } from '../../../../lib/onboarding/catalog';
@@ -387,10 +388,50 @@ function PayWithMpesaCard() {
  * are admin actions, so no controls appear here.
  */
 function InvoicesCard() {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState('');
+  const [toast, setToast] = useState('');
+
   const { data, isLoading } = useQuery({
     queryKey: ['my-invoices'],
     queryFn: () => billingApi.invoices(),
   });
+
+  const pay = useMutation({
+    mutationFn: (invoice: Invoice) => billingApi.payInvoice(invoice.id),
+    onSuccess: (r, invoice) => {
+      // Remember which invoice this was: Paystack returns with a reference but
+      // no invoice id, and sessionStorage survives the redirect.
+      sessionStorage.setItem('eresi:payingInvoice', invoice.id);
+      window.location.href = r.authorizationUrl;
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not start the payment'),
+  });
+
+  /**
+   * Return leg from Paystack. The webhook settles this too, so this only
+   * shortens the wait — both paths are idempotent.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('paystack') !== 'invoice') return;
+    const reference = params.get('reference') ?? params.get('trxref');
+    const invoiceId = sessionStorage.getItem('eresi:payingInvoice');
+    sessionStorage.removeItem('eresi:payingInvoice');
+    window.history.replaceState({}, '', window.location.pathname);
+    if (!reference || !invoiceId) return;
+
+    billingApi.confirmInvoice(invoiceId, reference)
+      .then((r) => {
+        setToast(`Payment received — receipt ${r.number} is on its way to your inbox.`);
+        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
+      })
+      .catch(() => {
+        // The webhook will still settle it; do not alarm the customer.
+        setToast('Payment received. Your receipt will arrive shortly.');
+        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
+      });
+  }, [queryClient]);
 
   return (
     <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
@@ -399,10 +440,23 @@ function InvoicesCard() {
         Listing fees are invoiced three days before they are charged. Receipts are
         issued automatically once payment clears.
       </p>
+      {toast && (
+        <p className="mt-3 rounded-2xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>
+      )}
+
       <div className="mt-4">
         {isLoading
           ? <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
-          : <InvoiceTable invoices={data ?? []} />}
+          : (
+            <InvoiceTable
+              invoices={data ?? []}
+              onPay={(inv) => { setError(''); pay.mutate(inv); }}
+              payingId={pay.isPending ? pay.variables?.id : null}
+            />
+          )}
       </div>
     </div>
   );
