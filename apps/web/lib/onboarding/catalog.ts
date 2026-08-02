@@ -91,8 +91,32 @@ export function computeBilling(selectedIds: string[]): BillingBreakdown {
   };
 }
 
-export const fmtUsd = (n: number) =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+/**
+ * The platform's billing currency, replaced at runtime by applyCatalogOverrides.
+ * Defaults to KES rather than USD: this is a Kenyan platform, and a USD default
+ * meant every price rendered as dollars until — and often after — the catalog
+ * loaded.
+ */
+export let PLATFORM_CURRENCY = 'KES';
+
+/**
+ * Format an amount in the platform's billing currency.
+ *
+ * Named fmtUsd historically, when everything was priced in dollars. Kept under
+ * that name because ~36 call sites use it; it has not formatted dollars
+ * unconditionally since the platform currency became configurable.
+ */
+export const fmtUsd = (n: number) => {
+  try {
+    return n.toLocaleString('en-KE', {
+      style: 'currency',
+      currency: PLATFORM_CURRENCY,
+      maximumFractionDigits: 0,
+    });
+  } catch {
+    return `${PLATFORM_CURRENCY} ${Math.round(n).toLocaleString()}`;
+  }
+};
 
 /**
  * Patch the fallback constants with admin-managed values.
@@ -101,9 +125,14 @@ export const fmtUsd = (n: number) =>
  * LISTING_FEE_MONTHLY synchronously, and this lets them all reflect admin
  * pricing without each becoming async. Called only by useCatalog().
  */
-export function applyCatalogOverrides(services: ServiceDefinition[], listingFee: number): void {
+export function applyCatalogOverrides(
+  services: ServiceDefinition[],
+  listingFee: number,
+  currency?: string,
+): void {
   if (services.length > 0) SERVICES = services;
   if (Number.isFinite(listingFee)) LISTING_FEE_MONTHLY = listingFee;
+  if (currency) PLATFORM_CURRENCY = currency;
 }
 
 /**
@@ -120,3 +149,10 @@ export const LISTING_CURRENCIES = [
   { code: 'EUR', label: 'Euro' },
   { code: 'GBP', label: 'Pound sterling' },
 ] as const;
+
+/**
+ * Used when the catalog has not loaded yet. Deliberately KES: this is a Kenyan
+ * platform, and defaulting to USD meant every screen rendered dollars for the
+ * first paint — and permanently, wherever the fallback was the only value used.
+ */
+export const PLATFORM_FALLBACK_CURRENCY = 'KES';

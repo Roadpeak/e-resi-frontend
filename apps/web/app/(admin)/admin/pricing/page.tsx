@@ -360,7 +360,7 @@ function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: stri
   const save = useMutation({
     mutationFn: () => pricingApi.setCurrency(
       currency,
-      mode === 'relabel' ? 1 : numericRate,
+      mode === 'relabel' ? 1 : mode === 'manual' ? numericRate : undefined,
       mode === 'live',
     ),
     onSuccess: (r) => {

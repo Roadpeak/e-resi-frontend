@@ -2,12 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
+import { formatMoney } from '../utils';
 import {
   LISTING_FEE_MONTHLY,
   SERVICES,
   applyCatalogOverrides,
   type ServiceCategory,
   type ServiceDefinition,
+  PLATFORM_FALLBACK_CURRENCY,
 } from './catalog';
 
 interface CatalogResponse {
@@ -58,16 +60,23 @@ export function useCatalog() {
           description: s.description ?? '',
         }));
 
-      applyCatalogOverrides(services, res.listingFee.monthly);
+      applyCatalogOverrides(services, res.listingFee.monthly, res.listingFee.currency);
       return res;
     },
     staleTime: 5 * 60 * 1000,
   });
 
+  const currency = query.data?.listingFee.currency ?? PLATFORM_FALLBACK_CURRENCY;
+
   return {
+    /** Formats in the platform's actual billing currency. */
+    fmt: (n: number) => formatMoney(n, currency),
     services: SERVICES,
     listingFeeMonthly: query.data?.listingFee.monthly ?? LISTING_FEE_MONTHLY,
-    currency: query.data?.listingFee.currency ?? 'USD',
+    // Falls back to the platform default rather than USD: defaulting to a
+    // currency the platform does not bill in is how every screen ended up
+    // showing dollars after the admin switched to KES.
+    currency: query.data?.listingFee.currency ?? PLATFORM_FALLBACK_CURRENCY,
     freeMonths: query.data?.listingFee.freeMonths ?? 0,
     taxRatePercent: query.data?.taxRatePercent ?? 0,
     isLoading: query.isLoading,

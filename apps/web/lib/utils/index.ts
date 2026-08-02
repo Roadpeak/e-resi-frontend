@@ -5,6 +5,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Format an amount in whatever currency it is actually in.
+ *
+ * Intl throws on an unknown code rather than degrading, so an unrecognised
+ * currency falls back to "CODE 1,234" — wrong-looking, but not a crash, and
+ * never silently relabelled as a different currency.
+ */
+export function formatMoney(amount: number, currency = 'KES'): string {
+  try {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${currency} ${Math.round(amount).toLocaleString()}`;
+  }
+}
+
 export function formatPrice(amount: number, currency = 'KES'): string {
   if (amount >= 1_000_000) {
     return `${currency} ${(amount / 1_000_000).toFixed(1)}M`;
@@ -12,11 +31,7 @@ export function formatPrice(amount: number, currency = 'KES'): string {
   if (amount >= 1_000) {
     return `${currency} ${(amount / 1_000).toFixed(0)}K`;
   }
-  return new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: currency === 'KES' ? 'KES' : 'USD',
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatMoney(amount, currency);
 }
 
 export function formatPriceRange(min: number, max: number, currency = 'KES'): string {
