@@ -31,6 +31,8 @@ export interface DevelopmentInfo {
   securityFeatures: string[];
   utilities: string[];
   startingPrice: string;
+  /** ISO code the listing is priced in. Buyers see this, not the platform currency. */
+  currency: string;
   priceRange: string;
   paymentPlans: string[];
   mortgageOptions: string;
@@ -73,7 +75,7 @@ const emptyDevelopment: DevelopmentInfo = {
   country: 'Kenya', county: '', city: '', area: '', mapsPin: '', gpsCoordinates: '',
   numberOfUnits: '', unitTypes: [], bedrooms: '', bathrooms: '', parking: '',
   amenities: [], securityFeatures: [], utilities: [],
-  startingPrice: '', priceRange: '', paymentPlans: [], mortgageOptions: '',
+  startingPrice: '', currency: 'KES', priceRange: '', paymentPlans: [], mortgageOptions: '',
   shortDescription: '', fullDescription: '',
 };
 

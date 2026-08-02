@@ -78,6 +78,7 @@ export default function NewDevelopmentPage() {
         // be plotted on the marketplace map.
         ...parseCoordinates(development.gpsCoordinates),
         priceFrom: parsePrice(development.startingPrice),
+        currency: development.currency || 'KES',
         tags: development.unitTypes,
         completionDate: development.expectedCompletion
           ? `${development.expectedCompletion}-01T00:00:00.000Z`
@@ -278,6 +279,7 @@ function ReviewAndCosts() {
           ['Location', [dev.area, dev.city, dev.county].filter(Boolean).join(', ')],
           ['Units', dev.numberOfUnits],
           ['Unit types', dev.unitTypes.join(', ')],
+          ['Currency', dev.currency],
           ['Starting price', dev.startingPrice],
           ['Payment plans', dev.paymentPlans.join(', ')],
         ]}

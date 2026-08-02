@@ -105,3 +105,18 @@ export function applyCatalogOverrides(services: ServiceDefinition[], listingFee:
   if (services.length > 0) SERVICES = services;
   if (Number.isFinite(listingFee)) LISTING_FEE_MONTHLY = listingFee;
 }
+
+/**
+ * Currencies a developer may price a listing in. Deliberately short — these are
+ * the ones buyers in this market actually quote in, and every extra option is
+ * another way for a listing to be mispriced.
+ *
+ * Unrelated to the platform billing currency: a development priced in USD is
+ * still invoiced to its developer in whatever the platform bills in.
+ */
+export const LISTING_CURRENCIES = [
+  { code: 'KES', label: 'Kenyan shilling' },
+  { code: 'USD', label: 'US dollar' },
+  { code: 'EUR', label: 'Euro' },
+  { code: 'GBP', label: 'Pound sterling' },
+] as const;

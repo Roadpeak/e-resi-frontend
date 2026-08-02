@@ -99,6 +99,16 @@ export const pricingApi = {
     apiClient.patch<ServiceItem>(`/admin/pricing/services/${id}`, body),
   retireService: (id: string) => apiClient.delete<ServiceItem>(`/admin/pricing/services/${id}`),
 
+  /**
+   * Change the platform billing currency. `rate` multiplies catalog prices;
+   * 1 relabels without converting. Existing invoices are never touched.
+   */
+  setCurrency: (currency: string, rate?: number) =>
+    apiClient.post<{
+      currency: string; rate: number; tiersUpdated: number;
+      servicesUpdated: number; pricesConverted: number; listingFee: number;
+    }>('/admin/pricing/currency', { currency, rate }),
+
   settings: (group?: string) =>
     apiClient.get<PlatformSetting[]>(`/admin/pricing/settings${group ? `?group=${group}` : ''}`),
   updateSetting: (key: string, value: string) =>
@@ -417,6 +427,16 @@ export interface DeliveredNotification {
 
 export const adminSystemApi = {
   health: () => apiClient.get<SystemHealth>('/admin/system/health'),
+  /**
+   * Change the platform billing currency. `rate` multiplies catalog prices;
+   * 1 relabels without converting. Existing invoices are never touched.
+   */
+  setCurrency: (currency: string, rate?: number) =>
+    apiClient.post<{
+      currency: string; rate: number; tiersUpdated: number;
+      servicesUpdated: number; pricesConverted: number; listingFee: number;
+    }>('/admin/pricing/currency', { currency, rate }),
+
   settings: (group?: string) =>
     apiClient.get<PlatformSetting[]>(`/admin/system/settings${group ? `?group=${group}` : ''}`),
   updateSetting: (key: string, value: string) =>

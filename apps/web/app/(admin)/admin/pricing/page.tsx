@@ -304,7 +304,18 @@ function ListingFeeTab({ onSaved }: { onSaved: (m: string) => void }) {
 
   return (
     <div className="space-y-3">
-      {settings.map((s) => (
+      <CurrencyCard
+        current={settings.find((s) => s.key === 'platform_currency')?.value ?? 'KES'}
+        onSaved={(m) => {
+          queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+          queryClient.invalidateQueries({ queryKey: ['admin-tiers'] });
+          queryClient.invalidateQueries({ queryKey: ['admin-services'] });
+          onSaved(m);
+        }}
+      />
+      {/* platform_currency has its own card — editing it as free text would
+          relabel prices without converting them. */}
+      {settings.filter((s) => s.key !== 'platform_currency').map((s) => (
         <SettingRow
           key={s.key}
           setting={s}
@@ -314,6 +325,115 @@ function ListingFeeTab({ onSaved }: { onSaved: (m: string) => void }) {
           }}
         />
       ))}
+    </div>
+  );
+}
+
+const CURRENCIES = ['KES', 'USD', 'NGN', 'GHS', 'ZAR', 'EUR', 'GBP'];
+
+/**
+ * Changing the billing currency is two decisions, not one: which currency, and
+ * whether the existing numbers are converted or merely relabelled. Relabelling
+ * $850 as KES 850 is a 99% price cut, so the choice is made explicit.
+ */
+function CurrencyCard({ current, onSaved }: { current: string; onSaved: (m: string) => void }) {
+  const [currency, setCurrency] = useState(current);
+  const [mode, setMode] = useState<'convert' | 'relabel'>('convert');
+  const [rate, setRate] = useState('129');
+  const [error, setError] = useState('');
+
+  const changed = currency !== current;
+  const numericRate = Number(rate);
+  const rateValid = mode === 'relabel' || (Number.isFinite(numericRate) && numericRate > 0);
+
+  const save = useMutation({
+    mutationFn: () => pricingApi.setCurrency(currency, mode === 'relabel' ? 1 : numericRate),
+    onSuccess: (r) => {
+      setError('');
+      onSaved(
+        `Platform currency is now ${r.currency}`
+        + (r.pricesConverted > 0
+          ? ` — ${r.pricesConverted} price${r.pricesConverted === 1 ? '' : 's'} converted`
+          : ' — prices relabelled, figures unchanged'),
+      );
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not change the currency'),
+  });
+
+  return (
+    <div className={cn(cardCls, 'p-5')}>
+      <p className="text-[15px] font-medium text-[#202124]">Platform currency</p>
+      <p className="mt-1 text-[13px] leading-relaxed text-[#5f6368]">
+        What the platform bills in — listing fees, production, invoices and receipts.
+        It must be a currency your payment gateway settles. Developers price their own
+        listings separately.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[12px] text-[#5f6368]">Currency</span>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] text-[#202124]"
+          >
+            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
+
+        {changed && (
+          <>
+            <label className="flex flex-col gap-1">
+              <span className="text-[12px] text-[#5f6368]">Existing prices</span>
+              <select
+                value={mode}
+                onChange={(e) => setMode(e.target.value as 'convert' | 'relabel')}
+                className="rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] text-[#202124]"
+              >
+                <option value="convert">Convert at a rate</option>
+                <option value="relabel">Relabel — keep the numbers</option>
+              </select>
+            </label>
+
+            {mode === 'convert' && (
+              <label className="flex flex-col gap-1">
+                <span className="text-[12px] text-[#5f6368]">1 {current} =</span>
+                <input
+                  value={rate}
+                  onChange={(e) => setRate(e.target.value)}
+                  inputMode="decimal"
+                  className="w-28 rounded-xl border border-[#dadce0] px-3 py-2 text-[14px] text-[#202124]"
+                />
+              </label>
+            )}
+
+            <button
+              type="button"
+              onClick={() => save.mutate()}
+              disabled={save.isPending || !rateValid}
+              className="rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
+            >
+              {save.isPending ? 'Applying…' : `Switch to ${currency}`}
+            </button>
+          </>
+        )}
+      </div>
+
+      {changed && mode === 'relabel' && (
+        <p className="mt-3 rounded-xl bg-[#fef7e0] px-3 py-2 text-[13px] text-[#b06000]">
+          Relabelling keeps every figure as-is, so a price of 850 becomes 850 {currency}.
+          Only do this if the current numbers were placeholders.
+        </p>
+      )}
+      {changed && (
+        <p className="mt-3 text-[12px] text-[#5f6368]">
+          Prices already in {currency} are left alone. Invoices and orders already
+          raised keep the amount that was agreed.
+        </p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-xl bg-[#fce8e6] px-3 py-2 text-[13px] text-[#c5221f]">{error}</p>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd,
+  SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd, LISTING_CURRENCIES,
 } from '../../lib/onboarding/catalog';
 import { useDevelopmentStore } from '../../lib/stores/development.store';
 import {
@@ -119,11 +119,30 @@ export function StepDevelopment() {
 
       <SectionCard title="Pricing">
         <FieldGrid>
+          <Field
+            label="Currency"
+            required
+            hint="What buyers see on your listing. Your own billing is unaffected."
+          >
+            <Select
+              value={dev.currency}
+              onChange={(e) => patch({ currency: e.target.value })}
+              options={LISTING_CURRENCIES.map((c) => c.code)}
+            />
+          </Field>
           <Field label="Starting price" required hint="Lowest unit price">
-            <TextInput value={dev.startingPrice} onChange={(e) => patch({ startingPrice: e.target.value })} placeholder="KES 8,500,000" />
+            <TextInput
+              value={dev.startingPrice}
+              onChange={(e) => patch({ startingPrice: e.target.value })}
+              placeholder={dev.currency === 'USD' ? '65,000' : '8,500,000'}
+            />
           </Field>
           <Field label="Price range">
-            <TextInput value={dev.priceRange} onChange={(e) => patch({ priceRange: e.target.value })} placeholder="KES 8.5M – 24M" />
+            <TextInput
+              value={dev.priceRange}
+              onChange={(e) => patch({ priceRange: e.target.value })}
+              placeholder={dev.currency === 'USD' ? '65K – 190K' : '8.5M – 24M'}
+            />
           </Field>
         </FieldGrid>
         <Field label="Payment plans">
