@@ -1,8 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import type { Invoice } from '../../lib/api/billing';
 import { cn } from '../../lib/utils';
+
+/** Mirrors the API's own limit (InvoicesService.MPESA_MAX_KES) so the button
+ *  never offers a channel the server will just reject. */
+const MPESA_MAX_KES = 250_000;
+
+const isMpesaEligible = (inv: Invoice) =>
+  inv.currency === 'KES' && inv.total <= MPESA_MAX_KES;
 
 export const INVOICE_STATUS_STYLES: Record<Invoice['status'], string> = {
   PAID: 'bg-[#e6f4ea] text-[#188038]',
@@ -30,6 +38,8 @@ export function InvoiceTable({
   remindingId,
   onPay,
   payingId,
+  onPayMpesa,
+  mpesaPayingId,
 }: {
   invoices: Invoice[];
   showCustomer?: boolean;
@@ -39,7 +49,31 @@ export function InvoiceTable({
   /** Omitted for admins — only the account holder pays. */
   onPay?: (invoice: Invoice) => void;
   payingId?: string | null;
+  /**
+   * Omitted for admins, and for any invoice the API would reject anyway —
+   * KES only, under Safaricom's per-transaction limit. Takes the phone
+   * number the developer typed in the row's own inline prompt.
+   */
+  onPayMpesa?: (invoice: Invoice, phone: string) => void;
+  mpesaPayingId?: string | null;
 }) {
+  const [mpesaRowId, setMpesaRowId] = useState<string | null>(null);
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const submitMpesa = (inv: Invoice) => {
+    const normalized = phone.replace(/\D/g, '').replace(/^0/, '254');
+    if (!/^254(7|1)\d{8}$/.test(normalized)) {
+      setPhoneError('Enter a valid Safaricom number, e.g. 0712 345 678.');
+      return;
+    }
+    setPhoneError('');
+    onPayMpesa?.(inv, normalized);
+    // Close the prompt immediately — the STK push is already on its way to
+    // the phone, and there's nothing more to do in this row while it waits.
+    setMpesaRowId(null);
+  };
+
   if (!invoices.length) {
     return (
       <div className="py-12 text-center">
@@ -117,20 +151,76 @@ export function InvoiceTable({
                 ) : inv.receipt ? (
                   <span className="text-[#188038]">{inv.receipt.number}</span>
                 ) : onPay && (inv.status === 'ISSUED' || inv.status === 'OVERDUE') ? (
-                  <button
-                    type="button"
-                    onClick={() => onPay(inv)}
-                    disabled={payingId === inv.id}
-                    className="rounded-full bg-[#1a73e8] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
-                  >
-                    {payingId === inv.id ? 'Opening…' : `Pay ${money(inv.total, inv.currency)}`}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onPay(inv)}
+                      disabled={payingId === inv.id}
+                      className="rounded-full bg-[#1a73e8] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
+                    >
+                      {payingId === inv.id ? 'Opening…' : `Pay ${money(inv.total, inv.currency)}`}
+                    </button>
+                    {onPayMpesa && isMpesaEligible(inv) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhoneError('');
+                          setPhone('');
+                          setMpesaRowId(mpesaRowId === inv.id ? null : inv.id);
+                        }}
+                        disabled={mpesaPayingId === inv.id}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#188038] px-3 py-1.5 text-[13px] font-medium text-[#188038] transition-colors hover:bg-[#e6f4ea] disabled:opacity-50"
+                      >
+                        <MaterialIcon name="smartphone" className="text-[15px]" />
+                        {mpesaPayingId === inv.id ? 'Sending…' : 'M-Pesa'}
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-[#5f6368]">—</span>
                 )}
               </td>
             </tr>
           ))}
+          {mpesaRowId && (() => {
+            const inv = invoices.find((i) => i.id === mpesaRowId);
+            if (!inv) return null;
+            return (
+              <tr key={`${inv.id}-mpesa`} className="border-b border-[#f8f9fa] bg-[#f8f9fa]">
+                <td colSpan={showCustomer ? 7 : 6} className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] text-[#5f6368]">
+                      Send an STK push for {money(inv.total, inv.currency)} to
+                    </span>
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="0712 345 678"
+                      inputMode="tel"
+                      className="w-44 rounded-full border border-[#dadce0] bg-white px-3.5 py-1.5 text-[13px] text-[#202124] placeholder-[#80868b] focus:border-[#188038] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => submitMpesa(inv)}
+                      className="rounded-full bg-[#188038] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#0d652d]"
+                    >
+                      Send prompt
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMpesaRowId(null)}
+                      className="text-[13px] text-[#5f6368] hover:text-[#202124]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {phoneError && (
+                    <p className="mt-1.5 text-[12px] text-[#c5221f]">{phoneError}</p>
+                  )}
+                </td>
+              </tr>
+            );
+          })()}
         </tbody>
       </table>
     </div>

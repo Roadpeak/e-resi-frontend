@@ -409,6 +409,31 @@ function InvoicesCard() {
   });
 
   /**
+   * M-Pesa has no redirect to return through — Safaricom pushes the result
+   * straight to the API once the PIN is entered. So instead of a return leg,
+   * this polls the invoice list for a few seconds after sending the prompt,
+   * which is enough for the row to flip to Paid without the developer having
+   * to refresh manually.
+   */
+  const payMpesa = useMutation({
+    mutationFn: ({ invoice, phone }: { invoice: Invoice; phone: string }) =>
+      billingApi.payInvoiceMpesa(invoice.id, phone),
+    onSuccess: (r) => {
+      setError('');
+      setToast(
+        `Sent to your phone for ${r.invoiceNumber} — enter your M-Pesa PIN to complete. `
+        + 'This page will update once it clears.',
+      );
+      const poll = setInterval(
+        () => queryClient.invalidateQueries({ queryKey: ['my-invoices'] }),
+        4000,
+      );
+      setTimeout(() => clearInterval(poll), 60_000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not start the M-Pesa payment'),
+  });
+
+  /**
    * Return leg from Paystack. The webhook settles this too, so this only
    * shortens the wait — both paths are idempotent.
    */
@@ -455,6 +480,8 @@ function InvoicesCard() {
               invoices={data ?? []}
               onPay={(inv) => { setError(''); pay.mutate(inv); }}
               payingId={pay.isPending ? pay.variables?.id : null}
+              onPayMpesa={(inv, phone) => { setError(''); payMpesa.mutate({ invoice: inv, phone }); }}
+              mpesaPayingId={payMpesa.isPending ? payMpesa.variables?.invoice.id : null}
             />
           )}
       </div>

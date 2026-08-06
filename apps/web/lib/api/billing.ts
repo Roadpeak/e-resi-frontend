@@ -84,6 +84,16 @@ export const billingApi = {
       `/billing/invoices/${id}/confirm`,
       { reference },
     ),
+  /**
+   * Send an M-Pesa STK push for exactly this invoice's total. KES only, and
+   * under Safaricom's 250,000 transaction limit — the API rejects anything
+   * else with a message naming the alternative. There is no confirm step:
+   * Safaricom pushes the result to the API directly once the PIN is entered.
+   */
+  payInvoiceMpesa: (id: string, phone: string) =>
+    apiClient.post<{
+      checkoutRequestId: string; sandbox: boolean; invoiceNumber: string; amount: number;
+    }>(`/billing/invoices/${id}/pay-mpesa`, { phone }),
 
   /** Admin: chase an unpaid invoice with a termination warning. */
   remindInvoice: (id: string) => apiClient.post<Invoice>(`/billing/invoices/${id}/remind`),
