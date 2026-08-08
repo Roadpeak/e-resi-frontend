@@ -1,21 +1,29 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
-import { MaterialIcon } from '../../../components/dashboard/MaterialIcon';
+import {
+  Camera, CheckCircle2, AlertCircle, Pencil, Loader2, Heart, CalendarDays,
+  MessageCircle, KeyRound, ArrowRight, Building2, Home, Trash2,
+} from 'lucide-react';
 import { useAuthStore } from '../../../lib/stores/auth.store';
 import { authApi } from '../../../lib/api/auth';
 import { uploadAvatar } from '../../../lib/api/media';
 import { ApiError } from '../../../lib/api/client';
 import { useMyBookings, useMyInquiries, useSavedProperties } from '../../../lib/api/queries';
+import { DirectoryCard, PillButton } from '../../../components/directory/DirectoryPrimitives';
 import { cn } from '../../../lib/utils';
 
 const inputCls =
-  'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] transition-colors focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20 disabled:bg-[#f8f9fa] disabled:text-[#5f6368]';
-const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
+  'w-full rounded-2xl border border-black/10 bg-[#f7f7f8] px-4 py-2.5 text-[15px] text-[#111112] placeholder-[#9a9aa0] transition-colors focus:border-[#111112] focus:bg-white focus:outline-none disabled:text-[#6b6b70]';
+const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#6b6b70]';
 
+/**
+ * Restyled into the directory reference look (gray canvas, floating white
+ * panels, black pill actions) while keeping every handler, validation rule
+ * and API call from the previous version untouched — only presentation moved.
+ */
 export default function AccountOverview() {
   const user = useAuthStore((s) => s.user);
   const patchUser = useAuthStore((s) => s.patchUser);
@@ -38,8 +46,8 @@ export default function AccountOverview() {
   if (!isAuthenticated || !user) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
-        <MaterialIcon name="progress_activity" size={30} className="animate-spin text-[#80868b]" />
-        <p className="mt-3 text-[15px] text-[#5f6368]">Loading your profile…</p>
+        <Loader2 size={28} className="animate-spin text-[#9a9aa0]" />
+        <p className="mt-3 text-[15px] text-[#6b6b70]">Loading your profile…</p>
       </div>
     );
   }
@@ -64,7 +72,6 @@ export default function AccountOverview() {
       setError('First and last name must each be at least 2 characters.');
       return;
     }
-    // The API validates phone as +?digits — catch it here rather than round-tripping.
     if (form.phone && !/^\+?[0-9]{7,15}$/.test(form.phone.trim())) {
       setError('Enter a valid phone number, e.g. +254712345678.');
       return;
@@ -106,28 +113,33 @@ export default function AccountOverview() {
   }
 
   const stats = [
-    { label: 'Saved', value: savedData?.length ?? 0, icon: 'favorite', href: '/account/saved', tone: 'text-[#d93025]' },
-    { label: 'Viewings', value: bookingsData?.total ?? 0, icon: 'event', href: '/account/viewings', tone: 'text-[#1a73e8]' },
-    { label: 'Inquiries', value: inquiriesData?.total ?? 0, icon: 'chat_bubble', href: '/account/inquiries', tone: 'text-[#188038]' },
-    { label: 'Reservations', value: 0, icon: 'vpn_key', href: '/account/reservations', tone: 'text-[#b06000]' },
+    { label: 'Saved', value: savedData?.length ?? 0, icon: Heart, href: '/account/saved', tone: 'text-[#c5395f]', bg: 'bg-[#fbe6ec]' },
+    { label: 'Viewings', value: bookingsData?.total ?? 0, icon: CalendarDays, href: '/account/viewings', tone: 'text-[#1a5fa8]', bg: 'bg-[#e4eefb]' },
+    { label: 'Inquiries', value: inquiriesData?.total ?? 0, icon: MessageCircle, href: '/account/inquiries', tone: 'text-[#1a7d43]', bg: 'bg-[#e3f5e9]' },
+    { label: 'Reservations', value: 0, icon: KeyRound, href: '/account/reservations', tone: 'text-[#b56417]', bg: 'bg-[#fdecd9]' },
   ];
 
+  // The shared layout wraps every /account page in a white <main>, which the
+  // other account pages (saved, viewings…) keep. This negative-margin bleed
+  // is the simplest way to paint the gray directory canvas behind only this
+  // page's content, without touching that shared layout or resorting to
+  // fixed positioning (whose offset would depend on AccountNav's height).
   return (
-    <div className="space-y-6">
+    <div className="-mx-4 -my-8 bg-[#f0f0f2] px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div className="space-y-5">
       {toast && (
-        <div className="flex items-center gap-2 rounded-xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">
-          <MaterialIcon name="check_circle" size={18} fill /> {toast}
+        <div className="flex items-center gap-2 rounded-2xl bg-[#e3f5e9] px-4 py-3 text-[14px] text-[#1a7d43]">
+          <CheckCircle2 size={18} /> {toast}
         </div>
       )}
 
       {/* ── Identity banner ── */}
-      <section className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
-        <div className="h-24 bg-gradient-to-r from-[#1a73e8] via-[#4285f4] to-[#8ab4f8]" />
+      <DirectoryCard className="overflow-hidden border border-black/5">
+        <div className="h-20 bg-gradient-to-r from-[#111112] via-[#2a2a2c] to-[#4a4a4e]" />
         <div className="px-6 pb-6 sm:px-8">
-          <div className="-mt-12 flex flex-wrap items-end gap-5">
-            {/* Avatar with upload */}
+          <div className="-mt-11 flex flex-wrap items-end gap-5">
             <div className="relative">
-              <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#1a73e8] text-[28px] font-medium text-white shadow-sm">
+              <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#111112] text-[28px] font-medium text-white">
                 {user.avatarUrl ? (
                   <Image src={user.avatarUrl} alt="" fill className="object-cover" sizes="96px" />
                 ) : (
@@ -139,80 +151,69 @@ export default function AccountOverview() {
                 onClick={() => avatarInput.current?.click()}
                 disabled={uploading}
                 aria-label="Change profile photo"
-                className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-[#dadce0] bg-white text-[#5f6368] shadow-sm transition-colors hover:bg-[#f1f3f4] hover:text-[#202124] cursor-pointer disabled:opacity-60"
+                className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-white text-[#6b6b70] shadow-sm transition-colors hover:bg-[#f5f5f6] hover:text-[#111112] cursor-pointer disabled:opacity-60"
               >
-                <MaterialIcon name={uploading ? 'progress_activity' : 'photo_camera'} size={16} className={uploading ? 'animate-spin' : ''} />
+                {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
               </button>
             </div>
 
             <div className="min-w-0 flex-1 pb-1">
-              <h1 className="truncate text-[26px] font-normal text-[#202124]">
+              <h1 className="truncate text-[24px] font-semibold text-[#111112]">
                 {user.firstName} {user.lastName}
               </h1>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-[#5f6368]">
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-[#6b6b70]">
                 <span>{user.email}</span>
                 {user.emailVerified ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[12px] font-medium text-[#188038]">
-                    <MaterialIcon name="verified" size={13} fill /> Verified
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#e3f5e9] px-2 py-0.5 text-[12px] font-medium text-[#1a7d43]">
+                    <CheckCircle2 size={12} /> Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fef7e0] px-2 py-0.5 text-[12px] font-medium text-[#b06000]">
-                    <MaterialIcon name="error" size={13} /> Unverified
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fdecd9] px-2 py-0.5 text-[12px] font-medium text-[#b56417]">
+                    <AlertCircle size={12} /> Unverified
                   </span>
                 )}
               </p>
             </div>
 
             <div className="flex items-center gap-2 pb-1">
-              <span className="rounded-full bg-[#f1f3f4] px-3 py-1.5 text-[13px] font-medium text-[#5f6368]">
+              <span className="rounded-full bg-[#f1f1f3] px-3 py-1.5 text-[13px] font-medium text-[#5c5c63]">
                 {roleLabel}
               </span>
               {!editing && (
-                <button
-                  onClick={startEditing}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer"
-                >
-                  <MaterialIcon name="edit" size={16} /> Edit profile
-                </button>
+                <PillButton onClick={startEditing}>
+                  <Pencil size={14} /> Edit profile
+                </PillButton>
               )}
             </div>
           </div>
         </div>
-      </section>
+      </DirectoryCard>
 
       {error && (
-        <p className="rounded-xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>
+        <p className="rounded-2xl bg-[#fbe4e4] px-4 py-3 text-[14px] text-[#b0282e]">{error}</p>
       )}
 
       {/* ── Activity ── */}
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <Link
-            key={s.label}
-            href={s.href}
-            className="group rounded-3xl border border-[#dadce0] bg-white p-5 transition-shadow hover:shadow-md"
-          >
-            <MaterialIcon name={s.icon} size={22} className={s.tone} fill />
-            <p className="mt-3 text-[32px] font-normal leading-none text-[#202124]">{s.value}</p>
-            <p className="mt-1.5 flex items-center gap-1 text-[14px] text-[#5f6368]">
+          <DirectoryCard key={s.label} href={s.href} className="group border border-black/5 p-5">
+            <span className={cn('flex h-9 w-9 items-center justify-center rounded-full', s.bg)}>
+              <s.icon size={17} className={s.tone} />
+            </span>
+            <p className="mt-3 text-[30px] font-semibold leading-none text-[#111112]">{s.value}</p>
+            <p className="mt-1.5 flex items-center gap-1 text-[14px] text-[#6b6b70]">
               {s.label}
-              <MaterialIcon
-                name="arrow_forward"
-                size={15}
-                className="opacity-0 transition-opacity group-hover:opacity-100"
-              />
+              <ArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
             </p>
-          </Link>
+          </DirectoryCard>
         ))}
       </section>
 
       {/* ── Personal information ── */}
-      <section className="rounded-3xl border border-[#dadce0] bg-white p-6 sm:p-8">
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-[18px] font-normal text-[#202124]">Personal information</h2>
-            <p className="text-[14px] text-[#5f6368]">Your details across e-resi.</p>
-          </div>
+      <DirectoryCard className="border border-black/5 p-6 sm:p-8">
+        <div className="mb-6">
+          <h2 className="text-[17px] font-semibold text-[#111112]">Personal information</h2>
+          <p className="text-[14px] text-[#6b6b70]">Your details across e-resi.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -250,68 +251,58 @@ export default function AccountOverview() {
           <div>
             <label className={labelCls} htmlFor="email">Email address</label>
             <input id="email" className={inputCls} value={user.email} disabled readOnly />
-            <p className="mt-1.5 text-[12px] text-[#80868b]">Email can&apos;t be changed here.</p>
+            <p className="mt-1.5 text-[12px] text-[#9a9aa0]">Email can&apos;t be changed here.</p>
           </div>
         </div>
 
         {editing && (
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={save}
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer disabled:opacity-60"
-            >
-              {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin" />}
+            <PillButton onClick={save} disabled={saving}>
+              {saving && <Loader2 size={15} className="animate-spin" />}
               {saving ? 'Saving…' : 'Save changes'}
-            </button>
+            </PillButton>
             <button
               onClick={() => { setEditing(false); setError(''); }}
               disabled={saving}
-              className="rounded-full px-6 py-2.5 text-[14px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f1f3f4] cursor-pointer"
+              className="rounded-full px-6 py-2.5 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#f1f1f3] cursor-pointer"
             >
               Cancel
             </button>
           </div>
         )}
-      </section>
+      </DirectoryCard>
 
       {/* ── Shortcuts ── */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { title: 'Browse properties', body: 'Explore developments for sale.', href: '/properties', icon: 'apartment' },
-          { title: 'Find a rental', body: 'Units available to rent now.', href: '/rent', icon: 'key' },
-          { title: 'Your messages', body: 'Chats with developers.', href: '/account/messages', icon: 'forum' },
+          { title: 'Browse properties', body: 'Explore developments for sale.', href: '/properties', icon: Building2 },
+          { title: 'Find a rental', body: 'Units available to rent now.', href: '/rent', icon: Home },
+          { title: 'Your messages', body: 'Chats with developers.', href: '/account/messages', icon: MessageCircle },
         ].map((c) => (
-          <Link
-            key={c.title}
-            href={c.href}
-            className="group rounded-3xl border border-[#dadce0] bg-white p-5 transition-shadow hover:shadow-md"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]">
-              <MaterialIcon name={c.icon} size={20} />
+          <DirectoryCard key={c.title} href={c.href} className="group border border-black/5 p-5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e4eefb] text-[#1a5fa8]">
+              <c.icon size={18} />
             </span>
-            <p className="mt-3 text-[16px] font-medium text-[#202124]">{c.title}</p>
-            <p className="mt-0.5 text-[14px] text-[#5f6368]">{c.body}</p>
-          </Link>
+            <p className="mt-3 text-[15px] font-medium text-[#111112]">{c.title}</p>
+            <p className="mt-0.5 text-[13px] text-[#6b6b70]">{c.body}</p>
+          </DirectoryCard>
         ))}
       </section>
 
       {/* ── Account management ── */}
-      <section className="rounded-3xl border border-[#dadce0] bg-white p-6 sm:p-8">
-        <h2 className="text-[18px] font-normal text-[#202124]">Account management</h2>
-        <p className="mt-1 text-[14px] text-[#5f6368]">
+      <DirectoryCard className="border border-black/5 p-6 sm:p-8">
+        <h2 className="text-[17px] font-semibold text-[#111112]">Account management</h2>
+        <p className="mt-1 text-[14px] text-[#6b6b70]">
           Deleting your account removes your saved properties, viewings and inquiries. This can&apos;t be undone.
         </p>
         <a
           href="mailto:support@e-resi.com?subject=Delete%20my%20account"
-          className={cn(
-            'mt-5 inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5',
-            'text-[14px] font-medium text-[#d93025] transition-colors hover:bg-[#fce8e6]',
-          )}
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-[14px] font-medium text-[#b0282e] transition-colors hover:bg-[#fbe4e4]"
         >
-          <MaterialIcon name="delete" size={16} /> Request account deletion
+          <Trash2 size={15} /> Request account deletion
         </a>
-      </section>
+      </DirectoryCard>
+    </div>
     </div>
   );
 }

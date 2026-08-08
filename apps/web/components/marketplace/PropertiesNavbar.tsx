@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { LogOut, Search, User, X } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
@@ -13,14 +13,36 @@ const links = [
   { href: '/properties', label: 'Buy' },
   { href: '/rent', label: 'Rent' },
   { href: '/properties?status=off_plan', label: 'Off-Plan' },
+  { href: '/developers', label: 'Developers' },
+  { href: '/map/locations', label: 'Map' },
 ];
 
 /**
  * Dedicated, fully separated navbar for the properties marketplace — a solid
  * bar with its own borders (not the floating pill nav), including search.
+ *
+ * useSearchParams() (used below to detect the active "Buy" link precisely)
+ * opts the whole subtree into client-side rendering during static export
+ * unless it sits under a Suspense boundary — without this wrapper, any route
+ * using this navbar with no other Suspense above it fails to prerender.
  */
 export function PropertiesNavbar() {
+  return (
+    <Suspense fallback={<PropertiesNavbarFallback />}>
+      <PropertiesNavbarInner />
+    </Suspense>
+  );
+}
+
+/** Static shell shown for the instant before search params resolve client-side. */
+function PropertiesNavbarFallback() {
+  return <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.08] bg-white" />;
+}
+
+function PropertiesNavbarInner() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { filters, setFilter } = useFiltersStore();
 
@@ -56,29 +78,38 @@ export function PropertiesNavbar() {
 
         {/* Section links */}
         <nav className="hidden lg:flex items-center gap-1 shrink-0">
-          {links.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className={cn(
-                'rounded-full px-4 py-2 text-[15px] font-medium transition-colors',
-                l.label === 'Buy'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            // "Buy" matches its own bare path only — otherwise it would stay
+            // highlighted while browsing Rent, Off-Plan, or anything else.
+            const linkPath = l.href.split('?')[0];
+            const active = l.href === '/properties'
+              ? pathname === '/properties' && !searchParams.get('status')
+              : pathname === linkPath || pathname.startsWith(`${linkPath}/`);
+            return (
+              <Link
+                key={l.label}
+                href={l.href}
+                className={cn(
+                  'rounded-full px-4 py-2 text-[15px] font-medium transition-colors',
+                  active
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                )}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Search — the heart of the properties nav */}
-        <div className="relative flex min-w-0 flex-1 items-center">
+        {/* Search — kept intentionally narrower than the available space so it
+            reads as one tool among several, not the dominant element of the bar */}
+        <div className="relative ml-auto flex min-w-0 max-w-xs flex-1 items-center lg:max-w-sm">
           <Search size={18} className="pointer-events-none absolute left-4 text-gray-500" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by area, development or developer…"
+            placeholder="Search by area, development…"
             aria-label="Search properties"
             className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 pl-11 pr-10 text-[15px] font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-500 outline-none transition-colors focus:border-gray-900 focus:bg-white focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
           />
