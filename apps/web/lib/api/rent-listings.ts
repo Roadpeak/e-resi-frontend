@@ -27,6 +27,7 @@ export interface BackendRentListingItem {
   createdAt: string;
   /** Present on the single-listing endpoint — the development this belongs to. */
   property?: { id: string; slug: string; name: string; heroImageUrl?: string | null } | null;
+  media?: Array<{ url: string; title?: string | null }>;
   rentUnits: Array<{
     id?: string;
     label: string;
@@ -75,7 +76,9 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
       coordinates: { lat: 0, lng: 0 },
     },
     heroImageUrl: b.heroImageUrl ?? '',
-    galleryImages: [],
+    galleryImages: (b.media ?? [])
+      .filter((m) => m?.title !== '__logo__' && m?.url)
+      .map((m) => m.url),
     units: b.rentUnits.map((u, i) => ({
       id: u.id ?? String(i),
       label: u.label,
