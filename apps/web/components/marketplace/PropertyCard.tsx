@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useRouter, usePathname } from 'next/navigation';
 import { MapPin, BedDouble, Bath, Maximize2, Box, Headset, Heart, Film, MapPinned } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { Property } from '../../lib/types';
 import { formatPrice, getStatusLabel, getStatusColor, cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
@@ -51,25 +52,24 @@ const isNew = (property: Property) => {
 };
 
 export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }: PropertyCardProps) {
-  const [localSaved, setLocalSaved] = useState(false);
   const bed = property.floorPlans[0] ?? property.units[0];
   const galleryPreview = useMemo(() => pickGalleryPreview(property), [property]);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { data: savedList } = useSavedProperties();
   const saveMutation = useSaveProperty();
   const removeMutation = useRemoveSavedProperty();
 
-  const saved = isAuthenticated
-    ? (savedList?.some((s) => s.property.id === property.id) ?? false)
-    : localSaved;
+  const saved = savedList?.some((s) => s.property.id === property.id) ?? false;
   const saving = saveMutation.isPending || removeMutation.isPending;
 
   function toggleSaved(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      setLocalSaved((v) => !v);
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
     if (saved) {

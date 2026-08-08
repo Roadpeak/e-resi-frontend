@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Headset, Box, Heart, Share2, Menu, X, ChevronRight, Film,
@@ -10,6 +11,8 @@ import {
 import { cn } from '../../lib/utils';
 import type { Property } from '../../lib/types';
 import { Button } from '../ui/Button';
+import { useAuthStore } from '../../lib/stores/auth.store';
+import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
 
 const sections = [
   { id: 'overview', label: 'Overview' },
@@ -32,8 +35,28 @@ export function PropertyTopbar({ property }: Props) {
   const logoUrl = property.logoUrl;
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('');
-  const [saved, setSaved] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { data: savedList } = useSavedProperties();
+  const saveMutation = useSaveProperty();
+  const removeMutation = useRemoveSavedProperty();
+  const saved = savedList?.some((s) => s.property.id === property.id) ?? false;
+  const savingToggle = saveMutation.isPending || removeMutation.isPending;
+
+  function toggleSaved() {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+    if (saved) {
+      removeMutation.mutate(property.slug);
+    } else {
+      saveMutation.mutate(property.slug);
+    }
+  }
 
   const visible = sections.filter((s) => {
     if (s.id === 'cinematic' && !property.hasCinematicTour) return false;
@@ -190,9 +213,11 @@ export function PropertyTopbar({ property }: Props) {
 
             {/* Save */}
             <button
-              onClick={() => setSaved((v) => !v)}
+              onClick={toggleSaved}
+              disabled={savingToggle}
+              aria-label={saved ? 'Remove from saved' : 'Save property'}
               className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-full border transition-all cursor-pointer',
+                'flex h-9 w-9 items-center justify-center rounded-full border transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60',
                 saved
                   ? 'border-red-500/30 bg-red-500/10 text-red-500'
                   : 'border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100',
