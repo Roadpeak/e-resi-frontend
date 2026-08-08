@@ -12,6 +12,8 @@ import 'leaflet/dist/leaflet.css';
 
 interface Props {
   properties: Property[];
+  /** Property id to fly to and open the popup for — set by "View on map" on a card. */
+  focusPropertyId?: string | null;
 }
 
 /** Nairobi — the fallback view when nothing has coordinates yet. */
@@ -30,10 +32,11 @@ function priceLabel(p: Property) {
   return m >= 1 ? `${Number.isInteger(m) ? m : m.toFixed(1)}M` : `${Math.round(p.priceFrom / 1000)}K`;
 }
 
-export function PropertiesMapView({ properties }: Props) {
+export function PropertiesMapView({ properties, focusPropertyId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const [selected, setSelected] = useState<Property | null>(null);
 
   // Only properties with real coordinates can be plotted.
@@ -90,6 +93,7 @@ export function PropertiesMapView({ properties }: Props) {
     if (!map || !layer) return;
 
     layer.clearLayers();
+    markersRef.current.clear();
 
     located.forEach((property) => {
       const color = statusColors[property.status] ?? '#1a73e8';
@@ -104,12 +108,14 @@ export function PropertiesMapView({ properties }: Props) {
         iconAnchor: [0, 0],
       });
 
-      L.marker([property.address.coordinates.lat, property.address.coordinates.lng], {
+      const marker = L.marker([property.address.coordinates.lat, property.address.coordinates.lng], {
         icon,
         title: property.name,
       })
         .on('click', () => setSelected(property))
         .addTo(layer);
+
+      markersRef.current.set(property.id, marker);
     });
 
     // Frame the results: fit to all pins, or centre on a lone one.
@@ -129,6 +135,18 @@ export function PropertiesMapView({ properties }: Props) {
   useEffect(() => {
     if (selected && !located.some((p) => p.id === selected.id)) setSelected(null);
   }, [located, selected]);
+
+  // "View on map" — scroll this exact pin into view and open its popup.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusPropertyId) return;
+    const property = located.find((p) => p.id === focusPropertyId);
+    if (!property) return;
+
+    map.flyTo([property.address.coordinates.lat, property.address.coordinates.lng], 15, { duration: 0.8 });
+    setSelected(property);
+    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [focusPropertyId, located]);
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#e8eaed]">

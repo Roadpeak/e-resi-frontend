@@ -51,6 +51,7 @@ export function PropertiesPage() {
   const [showFullMap, setShowFullMap] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
   // Build API query from filter store state
   const query = {
@@ -175,7 +176,16 @@ export function PropertiesPage() {
               <>
                 <div className="flex flex-col gap-4">
                   {results.map((p, i) => (
-                    <PropertyCard key={p.id} property={p} index={i} view="list" />
+                    <PropertyCard
+                      key={p.id}
+                      property={p}
+                      index={i}
+                      view="list"
+                      onViewOnMap={() => {
+                        setFocusPropertyId(p.id);
+                        if (window.matchMedia('(max-width: 1023px)').matches) setShowFullMap(true);
+                      }}
+                    />
                   ))}
                 </div>
                 <Pagination
@@ -193,7 +203,7 @@ export function PropertiesPage() {
           {/* Map panel — always visible on lg+ */}
           <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-[40%] max-w-[560px] shrink-0 overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm lg:block">
             <div className="relative h-full w-full">
-              <PropertiesMapView properties={mapResults} />
+              <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
             </div>
             <div className="absolute inset-x-5 bottom-4 z-30">
               <button
@@ -225,7 +235,7 @@ export function PropertiesPage() {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[60] bg-white"
           >
-            <PropertiesMapView properties={mapResults} />
+            <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
             <div className="absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-md">
               {results.length} properties
             </div>
