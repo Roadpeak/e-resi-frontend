@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { MapPin, Phone, Building2, ArrowUpRight } from 'lucide-react';
-import { DirectoryCard, IconPillLink, PillLink, Tag } from './DirectoryPrimitives';
+import { DirectoryCard, IconPillLink } from './DirectoryPrimitives';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { DeveloperCard as DeveloperCardData } from '../../lib/api/developers';
 
@@ -19,34 +20,39 @@ export function DeveloperCard({ developer }: { developer: DeveloperCardData }) {
 
   return (
     <DirectoryCard className="flex flex-col p-5">
-      <div className="flex items-start gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f0f0f2]">
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f0f0f2]">
           {developer.logoUrl ? (
             <Image
               src={developer.logoUrl}
               alt=""
-              width={56}
-              height={56}
+              width={80}
+              height={80}
               className="h-full w-full object-cover"
             />
           ) : (
-            <Building2 size={22} className="text-[#8a8a90]" />
+            <Building2 size={28} className="text-[#8a8a90]" />
           )}
         </div>
 
-        <div className="min-w-0 flex-1 pt-0.5">
+        <div className="min-w-0 flex-1">
           <h3 className="truncate text-[16px] font-semibold text-[#111112]">
             {developer.companyName}
           </h3>
           {developer.location && (
-            <p className="mt-0.5 flex items-center gap-1 truncate text-[13px] text-[#6b6b70]">
+            <p className="mt-1 flex items-center gap-1 truncate text-[13px] text-[#6b6b70]">
               <MapPin size={12} className="shrink-0" />
               {developer.location}
             </p>
           )}
+          <p className="mt-1 truncate text-[13px] text-[#6b6b70]">
+            {propertyCount} listing{propertyCount === 1 ? '' : 's'}
+            {developer.establishedYear && ` · Since ${developer.establishedYear}`}
+            {developer.completedProjects > 0 && ` · ${developer.completedProjects} completed`}
+          </p>
         </div>
 
-        {/* Contact shortcuts — sit at the top so they never depend on card height */}
+        {/* Contact shortcuts */}
         <div className="flex shrink-0 items-center gap-1.5">
           {developer.phone && (
             <IconPillLink href={telLink(developer.phone)} label={`Call ${developer.companyName}`}>
@@ -65,23 +71,13 @@ export function DeveloperCard({ developer }: { developer: DeveloperCardData }) {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Tag tone="blue">
-          {propertyCount} listing{propertyCount === 1 ? '' : 's'}
-        </Tag>
-        {developer.establishedYear && <Tag tone="gray">Since {developer.establishedYear}</Tag>}
-        {developer.completedProjects > 0 && (
-          <Tag tone="green">{developer.completedProjects} completed</Tag>
-        )}
-      </div>
-
-      <PillLink
+      <Link
         href={`/developers/${developer.id}`}
-        className="mt-5 w-full justify-between px-5"
+        className="mt-4 inline-flex items-center gap-1.5 self-start text-[14px] font-medium text-[#4A80F5] transition-colors hover:text-[#3457E0]"
       >
         Explore
         <ArrowUpRight size={16} />
-      </PillLink>
+      </Link>
     </DirectoryCard>
   );
 }

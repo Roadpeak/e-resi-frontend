@@ -30,6 +30,10 @@ function priceLabel(p: MappablePlace) {
   return m >= 1 ? `${Number.isInteger(m) ? m : m.toFixed(1)}M` : `${Math.round(p.priceFrom / 1000)}K`;
 }
 
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+}
+
 /**
  * A minimal-contract Leaflet map for the directory pages (developer profile,
  * /map/locations). Deliberately independent of PropertiesMapView, which is
@@ -89,10 +93,11 @@ export function DirectoryMap({ places, className }: { places: MappablePlace[]; c
       const icon = L.divIcon({
         className: '',
         html: `<span style="
-          display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;
+          display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
           border:2px solid #fff;background:#111112;color:#fff;
           font:600 12px/1 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.28);
-          white-space:nowrap;cursor:pointer;transform:translate(-50%,-50%);">${priceLabel(place)}</span>`,
+          white-space:nowrap;cursor:pointer;transform:translate(-50%,-50%);"
+          >${priceLabel(place)}<span style="opacity:.75;font-weight:500;">${escapeHtml(place.name)}</span></span>`,
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       });

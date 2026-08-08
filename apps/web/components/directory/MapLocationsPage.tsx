@@ -2,10 +2,9 @@
 
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { Loader2, MapPin } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useProperties } from '../../lib/api/queries';
 import { DirectoryCard, DirectoryShell } from './DirectoryPrimitives';
-import { DirectoryPropertyCard } from './DirectoryPropertyCard';
 import type { MappablePlace } from './DirectoryMap';
 
 const DirectoryMap = dynamic(
@@ -55,29 +54,9 @@ export function MapLocationsPage() {
             <Loader2 size={24} className="animate-spin text-[#8a8a90]" />
           </DirectoryCard>
         ) : (
-          <DirectoryCard className="h-[420px] overflow-hidden sm:h-[520px]">
+          <DirectoryCard className="h-[70vh] min-h-[520px] overflow-hidden">
             <DirectoryMap places={mapped} className="rounded-[28px]" />
           </DirectoryCard>
-        )}
-
-        {!isLoading && (
-          <div className="mt-8">
-            <h2 className="mb-4 text-[18px] font-semibold text-[#111112]">
-              Developments shown on this map
-            </h2>
-            {places.length === 0 ? (
-              <DirectoryCard className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                <MapPin size={28} className="text-[#c4c4c8]" />
-                <p className="text-[14px] text-[#6b6b70]">No live developments right now.</p>
-              </DirectoryCard>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {places.map((place) => (
-                  <DirectoryPropertyCard key={place.id} property={place} />
-                ))}
-              </div>
-            )}
-          </div>
         )}
       </div>
     </DirectoryShell>
