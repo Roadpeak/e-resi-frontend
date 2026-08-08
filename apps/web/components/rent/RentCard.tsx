@@ -76,18 +76,6 @@ export function RentCard({ listing }: Props) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
-        {/* Status badge */}
-        <div className="absolute top-3 left-3">
-          <span
-            className={cn(
-              'text-xs font-semibold uppercase tracking-wide',
-              listing.status === 'available' ? '' : 'px-2.5 py-1 rounded-full',
-              STATUS_STYLES[listing.status],
-            )}
-          >
-            {STATUS_LABELS[listing.status]}
-          </span>
-        </div>
         {/* Tour badges */}
         <div className="absolute top-3 right-3 flex gap-1.5">
           {listing.showCinematicTour && (
@@ -122,10 +110,21 @@ export function RentCard({ listing }: Props) {
 
       {/* Content */}
       <div className="p-4">
-        {/* Location */}
-        <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
-          <MapPin size={14} />
-          <span>{listing.address.neighborhood}, {listing.address.city}</span>
+        {/* Location + status */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-1.5 text-gray-400 text-sm min-w-0">
+            <MapPin size={14} className="shrink-0" />
+            <span className="truncate">{listing.address.neighborhood}, {listing.address.city}</span>
+          </div>
+          <span
+            className={cn(
+              'shrink-0 text-xs font-semibold uppercase tracking-wide',
+              listing.status === 'available' ? '' : 'px-2.5 py-1 rounded-full',
+              STATUS_STYLES[listing.status],
+            )}
+          >
+            {STATUS_LABELS[listing.status]}
+          </span>
         </div>
 
         <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-1 truncate">{listing.name}</h3>
