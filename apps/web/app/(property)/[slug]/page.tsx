@@ -39,11 +39,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const property = await fetchProperty(slug);
   if (!property) return { title: 'Property Not Found' };
+  const city = property.address?.city;
+  const description = property.tagline
+    ? `${property.tagline} — tour ${property.name} in cinematic, 3D and VR${city ? ` in ${city}, Kenya` : ' in Kenya'}.`
+    : `Tour ${property.name} in cinematic, 3D and VR${city ? ` in ${city}, Kenya` : ' in Kenya'}. Verified property developer listing on E-resi.`;
   return {
-    title: property.name,
-    description: property.tagline,
+    title: `${property.name}${city ? ` — ${city}` : ''}`,
+    description,
+    alternates: { canonical: `/${slug}` },
     openGraph: {
-      images: [{ url: property.heroImageUrl }],
+      siteName: 'E-resi',
+      title: property.name,
+      description,
+      url: `/${slug}`,
+      type: 'website',
+      images: property.heroImageUrl ? [{ url: property.heroImageUrl }] : undefined,
     },
   };
 }

@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { PageShell, Section } from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
-  title: 'For developers',
+  title: 'Property Developer Listing in Kenya',
   description:
-    'List your development on e-resi. We produce the photography, cinematic film, 3D walkthrough and VR tour, then give you one dashboard for units, rentals, leads, viewings, reservations and billing.',
+    'List your development on E-resi, the property developer listing platform for Kenya. We produce the photography, cinematic film, 3D walkthrough and VR tour, then give you one dashboard for units, rentals, leads, viewings, reservations and billing.',
   alternates: { canonical: '/for-developers' },
   openGraph: {
-    title: 'List your development on e-resi',
+    siteName: 'E-resi',
+    title: 'Property Developer Listing in Kenya — E-resi',
     description:
       'Professional production, immersive tours and a single dashboard for units, leads and reservations.',
     url: '/for-developers',
@@ -51,9 +52,9 @@ const CAPABILITIES = [
 export default function ForDevelopersPage() {
   return (
     <PageShell
-      eyebrow="For developers"
+      eyebrow="Property Developer Listing"
       title="Show buyers the building before it's built."
-      lede="Most of your buyers can't visit the site. Some are in another country; some are buying off-plan from a floor plan. e-resi produces the media that closes that gap, and gives you one place to run the sale."
+      lede="Most of your buyers can't visit the site. Some are in another country; some are buying off-plan from a floor plan. e-resi produces the media that closes that gap, and gives you one place to run the sale — a property developer listing built for how Kenyan buyers actually decide."
     >
       <Section title="How it works">
         <ol className="space-y-6">

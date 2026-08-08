@@ -3,8 +3,9 @@ import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavb
 import { DevelopersDirectory } from '../../../components/directory/DevelopersDirectory';
 
 export const metadata: Metadata = {
-  title: 'Top Developers in Kenya',
-  description: 'Browse verified property developers across Kenya, their live developments, and how to reach them directly.',
+  title: 'Top Property Developers in Kenya',
+  description: 'Browse property developer listings across Kenya — verified, KYB-approved developers with live developments you can tour in cinematic, 3D and VR, and how to reach them directly.',
+  alternates: { canonical: '/developers' },
 };
 
 export default function DevelopersPage() {

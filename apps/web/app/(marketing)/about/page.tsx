@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     'e-resi is an immersive property platform for Kenya. Developers list once and we produce the photography, cinematic film, 3D walkthrough and VR tour — so buyers and tenants can walk a home before it exists.',
   alternates: { canonical: '/about' },
   openGraph: {
+    siteName: 'E-resi',
     title: 'About e-resi',
     description:
       'An immersive property platform for Kenya — cinematic, 3D and VR tours of developments, built for buyers who are far away and homes that are not built yet.',

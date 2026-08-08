@@ -3,14 +3,15 @@ import Link from 'next/link';
 import { PageShell, Section } from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
-  title: 'For buyers & investors',
+  title: "Property Investment for Investors — Invest in Kenya's Properties Digitally",
   description:
-    'Tour Kenyan developments in cinematic film, interactive 3D and VR before you buy. See unit-level availability, floor plans and pricing, book viewings and reserve units — from anywhere.',
+    "Invest in Kenya's properties digitally. Tour your apartment virtually in cinematic, 3D and VR modes before you buy. See unit-level availability, floor plans and pricing, book viewings and reserve units — then buy Kenya's top properties from anywhere.",
   alternates: { canonical: '/for-investors' },
   openGraph: {
-    title: 'Buy property you can actually see — e-resi',
+    siteName: 'E-resi',
+    title: "Property Investment for Investors — E-resi",
     description:
-      'Cinematic, 3D and VR tours of Kenyan developments, with unit-level availability and pricing. Built for buyers who are not in the room.',
+      "Invest in Kenya's properties digitally. Cinematic, 3D and VR tours of Kenyan developments, with unit-level availability and pricing.",
     url: '/for-investors',
     type: 'website',
   },
@@ -28,9 +29,9 @@ const ANSWERS = [
 export default function ForInvestorsPage() {
   return (
     <PageShell
-      eyebrow="For buyers & investors"
-      title="Buy property you can actually see."
-      lede="Off-plan purchases and cross-border buying have the same weakness — you commit before you can walk the space. e-resi is built to remove that."
+      eyebrow="Property Investment for Investors"
+      title="Invest in Kenya's properties digitally — buy property you can actually see."
+      lede="Off-plan purchases and cross-border buying have the same weakness — you commit before you can walk the space. e-resi is built to remove that: tour your apartment virtually in cinematic, 3D and VR modes, then buy Kenya's top properties from anywhere."
     >
       <Section title="The questions a listing should answer">
         <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     'What it costs to list a development on e-resi — production packages priced once per development, plus a flat monthly listing fee. No commission on sales.',
   alternates: { canonical: '/pricing' },
   openGraph: {
+    siteName: 'E-resi',
     title: 'e-resi pricing',
     description:
       'Production priced once per development, a flat monthly listing fee, and no commission on any sale.',
