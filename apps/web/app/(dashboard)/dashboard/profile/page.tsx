@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  BadgeCheck, Building2, Check, Clock3, Globe2, Loader2, ShieldAlert, ShieldCheck,
+  BadgeCheck, Building2, Check, Clock3, Globe2, Loader2, ShieldAlert, ShieldCheck, Pencil,
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../../../lib/api/client';
+import { uploadFile } from '../../../../lib/api/media';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
 import { Input } from '../../../../components/ui/Input';
 import { cn } from '../../../../lib/utils';
@@ -34,6 +35,9 @@ const KYB_BADGES: Record<DeveloperProfile['kybStatus'], { label: string; classNa
 export default function CompanyProfilePage() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState('');
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['developer-profile'],
@@ -44,6 +48,23 @@ export default function CompanyProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  async function handleLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoError('');
+    setLogoUploading(true);
+    try {
+      const uploaded = await uploadFile(file, 'logos');
+      await apiClient.patch('/users/developers/me', { logoUrl: uploaded.url });
+      await queryClient.invalidateQueries({ queryKey: ['developer-profile'] });
+    } catch (err) {
+      setLogoError(err instanceof ApiError ? err.message : 'Failed to upload logo. Please try again.');
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  }
 
   useEffect(() => {
     if (profile) {
@@ -94,20 +115,32 @@ export default function CompanyProfilePage() {
       <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[#e8f0fe] text-[#1a73e8]">
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={logoUploading}
+              aria-label="Change company logo"
+              title="Change company logo"
+              className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#e8f0fe] text-[#1a73e8] cursor-pointer disabled:cursor-wait"
+            >
               {profile?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.logoUrl} alt={profile.companyName} className="h-full w-full object-contain" />
               ) : (
                 <Building2 size={24} />
               )}
-            </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                {logoUploading ? <Loader2 size={16} className="animate-spin text-white" /> : <Pencil size={14} className="text-white" />}
+              </div>
+            </button>
             <div>
               <h2 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">{profile?.companyName}</h2>
               <p className="text-base text-[#5f6368]">
                 {user?.firstName} {user?.lastName} · member since{' '}
                 {profile ? new Date(profile.createdAt).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' }) : '—'}
               </p>
+              {logoError && <p className="mt-1 text-[13px] text-[#c5221f]">{logoError}</p>}
             </div>
           </div>
           <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium', kyb.className)}>
