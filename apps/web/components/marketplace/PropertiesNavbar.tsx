@@ -93,7 +93,7 @@ function PropertiesNavbarInner() {
                   'rounded-full px-4 py-2 text-[15px] font-medium transition-colors',
                   active
                     ? 'bg-gray-900 text-white'
-                    : 'text-[#6E9AF8] hover:bg-gray-100 hover:text-[#4A80F5]',
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
                 )}
               >
                 {l.label}
