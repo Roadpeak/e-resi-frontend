@@ -32,6 +32,13 @@ const nextConfig = {
     // Next 16 blocks optimizing images from localhost by default (SSRF guard).
     // Needed only while sandbox uploads are served from the local API.
     dangerouslyAllowLocalIP: process.env.NODE_ENV !== 'production',
+    // placehold.co (used for placeholder logos/avatars) serves SVG by default,
+    // which the optimizer blocks unless explicitly allowed. Scoped to the small
+    // remotePatterns allowlist above, with a strict CSP so any served SVG can't
+    // execute script even if a source were ever compromised.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 
