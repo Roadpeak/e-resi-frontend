@@ -26,6 +26,7 @@ const COMMERCIAL_LINKS = [
 
 const TRAILING_LINKS = [
   { href: '/developers', label: 'Developers' },
+  { href: '/agents', label: 'Agents' },
   { href: '/map/locations', label: 'Map' },
 ];
 
