@@ -3,7 +3,20 @@
 // ─────────────────────────────────────────────
 
 export type PropertyStatus = 'off_plan' | 'under_construction' | 'ready' | 'sold_out';
-export type PropertyCategory = 'residential' | 'commercial' | 'mixed_use' | 'land';
+/**
+ * Mirrors the backend PropertyCategory enum exactly — the API validates against
+ * these values and 400s on anything else. (The previous vocabulary here —
+ * residential/mixed_use — matched nothing on the backend, so every Type filter
+ * selection silently 400'd and the accent maps keyed off it never hit.)
+ */
+export type PropertyCategory =
+  | 'APARTMENT'
+  | 'VILLA'
+  | 'TOWNHOUSE'
+  | 'PENTHOUSE'
+  | 'OFFICE'
+  | 'COMMERCIAL'
+  | 'LAND';
 export type UnitStatus = 'available' | 'reserved' | 'sold';
 export type UserRole = 'BUYER' | 'INVESTOR' | 'TENANT' | 'DEVELOPER' | 'ADMIN';
 export type MediaType = 'photo' | 'video' | 'drone' | 'three_d' | 'vr' | 'floor_plan';

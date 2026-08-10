@@ -26,10 +26,13 @@ import { cn } from '../../lib/utils';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
-  { value: 'residential', label: 'Residential' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'mixed_use', label: 'Mixed Use' },
-  { value: 'land', label: 'Land' },
+  { value: 'APARTMENT', label: 'Apartments' },
+  { value: 'VILLA', label: 'Villas' },
+  { value: 'TOWNHOUSE', label: 'Townhouses' },
+  { value: 'PENTHOUSE', label: 'Penthouses' },
+  { value: 'OFFICE', label: 'Offices' },
+  { value: 'COMMERCIAL', label: 'Commercial' },
+  { value: 'LAND', label: 'Land' },
 ];
 
 const STATUSES: { value: PropertyStatus; label: string }[] = [
@@ -46,17 +49,34 @@ function formatShortPrice(v: number) {
   return `${v / 1_000_000}M`;
 }
 
-export function PropertiesPage() {
+/**
+ * `lockedCategory` powers the dedicated type routes (/apartments, /villas,
+ * /commercial): the category is fixed by the route rather than chosen in the
+ * filter bar, so the Type control is hidden and the heading names the type.
+ */
+export function PropertiesPage({
+  lockedCategory,
+  heading,
+}: {
+  lockedCategory?: PropertyCategory;
+  heading?: string;
+} = {}) {
   const { filters, setFilter, resetFilters } = useFiltersStore();
   const [showFullMap, setShowFullMap] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
+  // The filter store is global and survives navigation, so a stale category
+  // from a previous page would otherwise leak into a locked-category route.
+  useEffect(() => {
+    if (lockedCategory) setFilter('category', lockedCategory);
+  }, [lockedCategory, setFilter]);
+
   // Build API query from filter store state
   const query = {
     search: filters.query,
-    category: filters.category,
+    category: lockedCategory ?? filters.category,
     status: filters.status,
     city: filters.city,
     neighborhood: filters.neighborhood,
@@ -102,9 +122,20 @@ export function PropertiesPage() {
     return Array.from(set).sort();
   }, [allItems, filters.city]);
 
+  // On a locked-category route the category isn't a user-applied filter, so it
+  // must not light up "Clear filters" — nor be cleared by it.
   const hasActiveFilters = Object.entries(filters).some(
-    ([k, v]) => k !== 'sortBy' && v !== undefined && v !== '',
+    ([k, v]) =>
+      k !== 'sortBy' &&
+      !(lockedCategory && k === 'category') &&
+      v !== undefined &&
+      v !== '',
   );
+
+  function clearFilters() {
+    resetFilters();
+    if (lockedCategory) setFilter('category', lockedCategory);
+  }
 
   // Lock page scroll only while the fullscreen map is open
   useEffect(() => {
@@ -137,6 +168,7 @@ export function PropertiesPage() {
             moreOpen={moreOpen}
             onToggleMore={() => setMoreOpen((v) => !v)}
             neighborhoods={neighborhoods}
+            hideTypeSelect={!!lockedCategory}
           />
         </div>
 
@@ -146,7 +178,7 @@ export function PropertiesPage() {
           <section className="min-w-0 flex-1">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Best options</h2>
+                <h2 className="text-xl font-bold text-gray-900">{heading ?? 'Best options'}</h2>
                 <p className="mt-0.5 text-sm text-gray-500">
                   {isLoading ? 'Searching…' : `${total} properties found`}
                 </p>
@@ -154,7 +186,7 @@ export function PropertiesPage() {
               <div className="flex items-center gap-2">
                 {hasActiveFilters && (
                   <button
-                    onClick={resetFilters}
+                    onClick={clearFilters}
                     className="cursor-pointer rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-800"
                   >
                     Clear filters
@@ -169,9 +201,9 @@ export function PropertiesPage() {
                 <Loader2 size={32} className="animate-spin text-brand-400" />
               </div>
             ) : isError ? (
-              <ErrorState onRetry={resetFilters} />
+              <ErrorState onRetry={clearFilters} />
             ) : results.length === 0 ? (
-              <EmptyState onReset={resetFilters} />
+              <EmptyState onReset={clearFilters} />
             ) : (
               <>
                 <div className="flex flex-col gap-4">
@@ -321,10 +353,12 @@ function FilterBar({
   moreOpen,
   onToggleMore,
   neighborhoods,
+  hideTypeSelect = false,
 }: {
   moreOpen: boolean;
   onToggleMore: () => void;
   neighborhoods: string[];
+  hideTypeSelect?: boolean;
 }) {
   const { filters, setFilter, resetFilters } = useFiltersStore();
   const bedroomOptions = [1, 2, 3, 4];
@@ -351,16 +385,20 @@ function FilterBar({
 
         <Divider />
 
-        {/* Category — “Type” slot */}
-        <BarSelect
-          label={`Type: ${filters.category ? CATEGORIES.find((c) => c.value === filters.category)?.label : 'Any'}`}
-          value={filters.category ?? ''}
-          onChange={(v) => setFilter('category', (v || undefined) as PropertyCategory | undefined)}
-          options={[{ value: '', label: 'Any type' }, ...CATEGORIES]}
-          ariaLabel="Property type"
-        />
-
-        <Divider />
+        {/* Category — “Type” slot. Hidden on the dedicated type routes, where
+            the route itself already fixes the category. */}
+        {!hideTypeSelect && (
+          <>
+            <BarSelect
+              label={`Type: ${filters.category ? CATEGORIES.find((c) => c.value === filters.category)?.label : 'Any'}`}
+              value={filters.category ?? ''}
+              onChange={(v) => setFilter('category', (v || undefined) as PropertyCategory | undefined)}
+              options={[{ value: '', label: 'Any type' }, ...CATEGORIES]}
+              ariaLabel="Property type"
+            />
+            <Divider />
+          </>
+        )}
 
         {/* Bedroom chips */}
         <div className="flex items-center gap-1.5 px-2">

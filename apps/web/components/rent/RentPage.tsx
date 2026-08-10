@@ -36,16 +36,28 @@ function applyClientFilters(listings: RentListing[], filters: RentFilters): Rent
   return result;
 }
 
-export function RentPage() {
+/**
+ * `lockedCategory` powers the dedicated rent-type routes (/rent/apartments,
+ * /rent/villas, /rent/commercial). Rent listings have no category of their own
+ * — the API filters on the parent development's category.
+ */
+export function RentPage({
+  lockedCategory,
+  heading,
+}: {
+  lockedCategory?: string;
+  heading?: string;
+} = {}) {
   const { filters, setFilter, resetFilters } = useRentFiltersStore();
   const [moreOpen, setMoreOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  // Search query and city go to the server; everything else filters client-side
+  // Search query, city and category go to the server; the rest filters client-side
   const { data, isLoading } = useRentListings({
     limit: 100,
     city: filters.city,
     q: filters.query,
+    category: lockedCategory,
   });
 
   const all = data?.items ?? [];
@@ -109,7 +121,7 @@ export function RentPage() {
         <section className="mt-8 lg:mt-10">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Available rentals</h2>
+              <h2 className="text-xl font-bold text-gray-900">{heading ?? 'Available rentals'}</h2>
               <p className="mt-0.5 text-sm text-gray-600">
                 {isLoading ? 'Searching…' : `${results.length} listings available`}
               </p>

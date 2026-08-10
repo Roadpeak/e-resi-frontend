@@ -5,15 +5,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Search, User, X } from 'lucide-react';
 import { Logo } from '../brand/Logo';
-import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
-
-const links = [
-  { href: '/properties', label: 'Buy' },
-  { href: '/rent', label: 'Rent' },
-  { href: '/properties?status=off_plan', label: 'Off-Plan' },
-];
+import { MarketplaceNavLinks } from '../marketplace/MarketplaceNavLinks';
 
 /**
  * Dedicated, fully separated navbar for the rent marketplace — a solid bar
@@ -67,22 +61,7 @@ export function RentNavbar() {
         <span className="hidden lg:block h-6 w-px shrink-0 bg-gray-200" />
 
         {/* Section links */}
-        <nav className="hidden lg:flex items-center gap-1 shrink-0">
-          {links.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className={cn(
-                'rounded-full px-4 py-2 text-[15px] font-medium transition-colors',
-                l.href === '/rent'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <MarketplaceNavLinks />
 
         {/* Search — the heart of the rent nav */}
         <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center">

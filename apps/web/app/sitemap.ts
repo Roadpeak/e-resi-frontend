@@ -8,6 +8,15 @@ const STATIC: { path: string; priority: number; changeFrequency: MetadataRoute.S
   { path: '', priority: 1, changeFrequency: 'daily' },
   { path: '/properties', priority: 0.9, changeFrequency: 'hourly' },
   { path: '/rent', priority: 0.9, changeFrequency: 'hourly' },
+  // Property-type landing pages — each targets its own search intent
+  // ("buy villas in Kenya", "rent commercial property in Kenya").
+  { path: '/apartments', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/villas', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/commercial', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/rent/apartments', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/rent/villas', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/rent/commercial', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/developers', priority: 0.8, changeFrequency: 'daily' },
   { path: '/about', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/for-developers', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/for-investors', priority: 0.8, changeFrequency: 'monthly' },

@@ -95,12 +95,15 @@ export function PropertyTopbar({ property }: Props) {
   // Derive a subtle accent from the property — in production you'd store a brand color per property
   // For now we use different hues based on category
   const accentMap: Record<string, string> = {
-    residential: 'from-brand-600 to-brand-800',
-    commercial: 'from-emerald-700 to-emerald-900',
-    mixed_use: 'from-violet-700 to-violet-900',
-    land: 'from-amber-700 to-amber-900',
+    APARTMENT: 'from-brand-600 to-brand-800',
+    VILLA: 'from-emerald-700 to-emerald-900',
+    TOWNHOUSE: 'from-teal-700 to-teal-900',
+    PENTHOUSE: 'from-violet-700 to-violet-900',
+    OFFICE: 'from-slate-700 to-slate-900',
+    COMMERCIAL: 'from-emerald-700 to-emerald-900',
+    LAND: 'from-amber-700 to-amber-900',
   };
-  const accent = accentMap[property.category] ?? accentMap.residential;
+  const accent = accentMap[property.category] ?? accentMap.APARTMENT;
 
   return (
     <>

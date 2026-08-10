@@ -11,10 +11,13 @@ interface Props {
 }
 
 const categories: { value: PropertyCategory; label: string }[] = [
-  { value: 'residential', label: 'Residential' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'mixed_use', label: 'Mixed Use' },
-  { value: 'land', label: 'Land' },
+  { value: 'APARTMENT', label: 'Apartments' },
+  { value: 'VILLA', label: 'Villas' },
+  { value: 'TOWNHOUSE', label: 'Townhouses' },
+  { value: 'PENTHOUSE', label: 'Penthouses' },
+  { value: 'OFFICE', label: 'Offices' },
+  { value: 'COMMERCIAL', label: 'Commercial' },
+  { value: 'LAND', label: 'Land' },
 ];
 
 const statuses: { value: PropertyStatus; label: string }[] = [

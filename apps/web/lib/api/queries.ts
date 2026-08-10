@@ -277,7 +277,7 @@ export function useCancelReservation() {
 
 // ── Rent Listings ──────────────────────────────────────────────
 
-export function useRentListings(params: { page?: number; limit?: number; city?: string; q?: string } = {}) {
+export function useRentListings(params: { page?: number; limit?: number; city?: string; q?: string; category?: string } = {}) {
   return useQuery({
     queryKey: ['rent-listings', params],
     queryFn: async () => {

@@ -8,31 +8,42 @@ interface Props {
   property: Property;
 }
 
+// Keys are the backend PropertyCategory enum values, which is what
+// property.category actually holds (it is not lowercased on the read path).
 const accentMap: Record<string, string> = {
-  residential: 'from-brand-600 to-brand-800',
-  commercial: 'from-emerald-700 to-emerald-900',
-  mixed_use: 'from-violet-700 to-violet-900',
-  land: 'from-amber-700 to-amber-900',
+  APARTMENT: 'from-brand-600 to-brand-800',
+  VILLA: 'from-emerald-700 to-emerald-900',
+  TOWNHOUSE: 'from-teal-700 to-teal-900',
+  PENTHOUSE: 'from-violet-700 to-violet-900',
+  OFFICE: 'from-slate-700 to-slate-900',
+  COMMERCIAL: 'from-emerald-700 to-emerald-900',
+  LAND: 'from-amber-700 to-amber-900',
 };
 
 const accentHoverTextMap: Record<string, string> = {
-  residential: 'hover:text-brand-400',
-  commercial: 'hover:text-emerald-400',
-  mixed_use: 'hover:text-violet-400',
-  land: 'hover:text-amber-400',
+  APARTMENT: 'hover:text-brand-400',
+  VILLA: 'hover:text-emerald-400',
+  TOWNHOUSE: 'hover:text-teal-400',
+  PENTHOUSE: 'hover:text-violet-400',
+  OFFICE: 'hover:text-slate-400',
+  COMMERCIAL: 'hover:text-emerald-400',
+  LAND: 'hover:text-amber-400',
 };
 
 const accentBorderMap: Record<string, string> = {
-  residential: 'border-brand-500/20',
-  commercial: 'border-emerald-500/20',
-  mixed_use: 'border-violet-500/20',
-  land: 'border-amber-500/20',
+  APARTMENT: 'border-brand-500/20',
+  VILLA: 'border-emerald-500/20',
+  TOWNHOUSE: 'border-teal-500/20',
+  PENTHOUSE: 'border-violet-500/20',
+  OFFICE: 'border-slate-500/20',
+  COMMERCIAL: 'border-emerald-500/20',
+  LAND: 'border-amber-500/20',
 };
 
 export function PropertyFooter({ property }: Props) {
-  const accent = accentMap[property.category] ?? accentMap.residential;
-  const accentHoverText = accentHoverTextMap[property.category] ?? accentHoverTextMap.residential;
-  const accentBorder = accentBorderMap[property.category] ?? accentBorderMap.residential;
+  const accent = accentMap[property.category] ?? accentMap.APARTMENT;
+  const accentHoverText = accentHoverTextMap[property.category] ?? accentHoverTextMap.APARTMENT;
+  const accentBorder = accentBorderMap[property.category] ?? accentBorderMap.APARTMENT;
   const initials = (property.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   return (

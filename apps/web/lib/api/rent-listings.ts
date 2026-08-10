@@ -117,12 +117,13 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
 }
 
 export const rentListingsApi = {
-  list: (params: { page?: number; limit?: number; city?: string; q?: string } = {}) => {
+  list: (params: { page?: number; limit?: number; city?: string; q?: string; category?: string } = {}) => {
     const qs = new URLSearchParams();
     if (params.page) qs.set('page', String(params.page));
     if (params.limit) qs.set('limit', String(params.limit));
     if (params.city) qs.set('city', params.city);
     if (params.q) qs.set('q', params.q);
+    if (params.category) qs.set('category', params.category);
     const q = qs.toString();
     return apiClient.get<BackendRentListingsResponse>(`/rent-listings${q ? `?${q}` : ''}`);
   },
