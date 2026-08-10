@@ -251,7 +251,7 @@ export function StepDevelopment() {
                 type="button"
                 onClick={() => {
                   // Unit types are per-type lists; keep only ones still offered.
-                  const stillValid = dev.unitTypes.filter((u) => t.unitTypes.includes(u));
+                  const stillValid = (dev.unitTypes ?? []).filter((u) => t.unitTypes.includes(u));
                   patch({ type: t.label, unitTypes: stillValid });
                 }}
                 className={`rounded-2xl border p-3.5 text-left transition-colors cursor-pointer ${
@@ -332,7 +332,7 @@ export function StepDevelopment() {
         </FieldGrid>
 
         <NearbyPlacesField
-          places={dev.nearbyPlaces}
+          places={dev.nearbyPlaces ?? []}
           onChange={(nearbyPlaces) => patch({ nearbyPlaces })}
           coordinates={dev.gpsCoordinates}
         />

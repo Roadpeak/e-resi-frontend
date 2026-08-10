@@ -123,6 +123,27 @@ export const useDevelopmentStore = create<DevelopmentState>()(
       },
       reset: () => set({ step: 0, development: emptyDevelopment, media: emptyMedia }),
     }),
-    { name: 'e-resi-development-draft' },
+    {
+      name: 'e-resi-development-draft',
+      /**
+       * Drafts live in localStorage indefinitely, so a saved draft can predate
+       * any field added since. zustand's default merge is shallow: the stored
+       * `development` object replaces the defaults wholesale rather than
+       * filling in gaps, so a draft saved before `nearbyPlaces` existed left
+       * it undefined and the wizard crashed on `nearbyPlaces.map`.
+       *
+       * Merging one level deeper makes every future field addition safe by
+       * default, instead of relying on a version bump being remembered.
+       */
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<DevelopmentState>;
+        return {
+          ...current,
+          ...saved,
+          development: { ...emptyDevelopment, ...(saved.development ?? {}) },
+          media: { ...emptyMedia, ...(saved.media ?? {}) },
+        };
+      },
+    },
   ),
 );

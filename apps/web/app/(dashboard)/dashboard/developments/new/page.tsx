@@ -75,15 +75,15 @@ export default function NewDevelopmentPage() {
         ...parseCoordinates(development.gpsCoordinates),
         priceFrom: parsePrice(development.startingPrice),
         currency: development.currency || 'KES',
-        tags: development.unitTypes,
+        tags: development.unitTypes ?? [],
         // What the development itself has. These were collected by the wizard
         // but never sent, so they only ever survived inside submissionData and
         // never reached the property page. Nearby landmarks are separate —
         // they go to the amenities endpoint below, with their distances.
         features: [
-          ...development.amenities,
-          ...development.securityFeatures,
-          ...development.utilities,
+          ...(development.amenities ?? []),
+          ...(development.securityFeatures ?? []),
+          ...(development.utilities ?? []),
         ],
         completionDate: development.expectedCompletion
           ? `${development.expectedCompletion}-01T00:00:00.000Z`
@@ -102,7 +102,7 @@ export default function NewDevelopmentPage() {
       // once it exists. A failure here must not lose the development the
       // developer just submitted — the listing is saved either way, and the
       // nearby list can be added later from the property's own page.
-      const nearby = development.nearbyPlaces
+      const nearby = (development.nearbyPlaces ?? [])
         .filter((p) => p.name.trim())
         .map((p) => ({
           name: p.name.trim(),
@@ -314,20 +314,24 @@ function ReviewAndCosts() {
           ['Location', [dev.area, dev.city, dev.county].filter(Boolean).join(', ')],
           [
             'Nearby (not part of the property)',
-            dev.nearbyPlaces
+            (dev.nearbyPlaces ?? [])
               .filter((p) => p.name.trim())
               .map((p) => [p.name, p.distance].filter(Boolean).join(' · '))
               .join(', '),
           ],
           [
             'On-site amenities',
-            [...dev.amenities, ...dev.securityFeatures, ...dev.utilities].join(', '),
+            [
+              ...(dev.amenities ?? []),
+              ...(dev.securityFeatures ?? []),
+              ...(dev.utilities ?? []),
+            ].join(', '),
           ],
           ['Units', dev.numberOfUnits],
-          ['Unit types', dev.unitTypes.join(', ')],
+          ['Unit types', (dev.unitTypes ?? []).join(', ')],
           ['Currency', dev.currency],
           ['Starting price', dev.startingPrice],
-          ['Payment plans', dev.paymentPlans.join(', ')],
+          ['Payment plans', (dev.paymentPlans ?? []).join(', ')],
         ]}
       />
       <Block
