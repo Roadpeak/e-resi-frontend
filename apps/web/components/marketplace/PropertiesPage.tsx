@@ -23,6 +23,7 @@ const PropertiesMapView = dynamic(
   { ssr: false, loading: () => <div className="h-full w-full bg-[#e8eaed]" /> },
 );
 import { cn } from '../../lib/utils';
+import { NeedAgentHelp } from '../agents/NeedAgentHelp';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
@@ -182,6 +183,11 @@ export function PropertiesPage({
                 <p className="mt-0.5 text-sm text-gray-500">
                   {isLoading ? 'Searching…' : `${total} properties found`}
                 </p>
+                {/* Scoped to whatever the visitor is actually browsing, so the
+                    picker only offers agents who handle this kind of sale. */}
+                <div className="mt-3">
+                  <NeedAgentHelp category={lockedCategory ?? filters.category} deal="BUY" />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {hasActiveFilters && (

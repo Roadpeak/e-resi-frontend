@@ -11,6 +11,7 @@ import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimiti
 import {
   FacebookIcon, InstagramIcon, LinkedinIcon, TwitterIcon,
 } from './SocialIcons';
+import { AgentReviews } from './AgentReviews';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
 
@@ -118,6 +119,10 @@ export function AgentProfile({ agentId }: { agentId: string }) {
 
           <div className="space-y-4">
             <ContactCard agent={agent} />
+          </div>
+
+          <div className="lg:col-span-3">
+            <AgentReviews agentId={agent.id} />
           </div>
         </div>
       </div>

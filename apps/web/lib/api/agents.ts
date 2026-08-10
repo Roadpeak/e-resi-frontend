@@ -61,6 +61,15 @@ export interface Agent {
   createdAt: string;
 }
 
+export interface AgentReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  /** First name only — a review is public, the reviewer's full identity is not. */
+  author: { firstName: string; avatarUrl: string | null };
+}
+
 interface Paged<T> {
   data: T[];
   meta: {
@@ -92,4 +101,28 @@ export const agentsApi = {
 
   /** One agent's public profile. 404s for unverified or delisted agents. */
   get: (id: string) => apiClient.get<Agent>(`/agents/${id}`),
+
+  reviews: (id: string, params: { page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set('page', String(params.page));
+    if (params.limit) qs.set('limit', String(params.limit));
+    return apiClient.get<Paged<AgentReview>>(
+      `/agents/${id}/reviews${qs.toString() ? `?${qs}` : ''}`,
+    );
+  },
+
+  /**
+   * Whether the signed-in user may review, and why not if they may not — the
+   * UI explains the requirement rather than silently hiding the form.
+   */
+  reviewEligibility: (id: string) =>
+    apiClient.get<{ allowed: boolean; reason?: string }>(`/agents/${id}/reviews/eligibility`),
+
+  submitReview: (id: string, rating: number, comment?: string) =>
+    apiClient.post<{ id: string; ratingAverage: number; ratingCount: number }>(
+      `/agents/${id}/reviews`,
+      { rating, comment },
+    ),
+
+  deleteOwnReview: (id: string) => apiClient.delete<unknown>(`/agents/${id}/reviews/mine`),
 };

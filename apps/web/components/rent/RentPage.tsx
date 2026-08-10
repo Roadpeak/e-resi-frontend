@@ -9,6 +9,7 @@ import { useRentListings } from '../../lib/api/queries';
 import { RentCard } from './RentCard';
 import { Pagination } from '../ui/Pagination';
 import { cn } from '../../lib/utils';
+import { NeedAgentHelp } from '../agents/NeedAgentHelp';
 import type { RentListing, RentFilters, FurnishingType } from '../../lib/types';
 
 const FURNISHINGS: { value: FurnishingType; label: string }[] = [
@@ -125,6 +126,11 @@ export function RentPage({
               <p className="mt-0.5 text-sm text-gray-600">
                 {isLoading ? 'Searching…' : `${results.length} listings available`}
               </p>
+              {/* Rental-side picker — same component, "RENT" so it offers
+                  letting agents rather than sales agents. */}
+              <div className="mt-3">
+                <NeedAgentHelp category={lockedCategory} deal="RENT" />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {hasActiveFilters && (
