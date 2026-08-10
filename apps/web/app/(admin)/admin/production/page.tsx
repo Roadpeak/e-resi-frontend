@@ -42,6 +42,27 @@ export default function AdminProduction() {
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not update the order'),
   });
 
+  /**
+   * Booking or moving a crew date. Sending SCHEDULED alongside the date is what
+   * makes the developer's notification fire — the API only announces a booking
+   * once the order is actually in SCHEDULED.
+   */
+  const schedule = useMutation({
+    mutationFn: ({ id, scheduledAt }: { id: string; scheduledAt: string; wasScheduled: boolean }) =>
+      adminBillingApi.updateOrder(id, { orderStatus: 'SCHEDULED', scheduledAt }),
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-production-orders'] });
+      setError('');
+      setToast(
+        vars.wasScheduled
+          ? 'Date moved — the developer has been notified.'
+          : 'Crew booked — the developer has been notified.',
+      );
+      setTimeout(() => setToast(''), 6000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not set the date'),
+  });
+
   const backfill = useMutation({
     mutationFn: () => adminBillingApi.backfillOrders(),
     onSuccess: (r) => {
@@ -126,11 +147,18 @@ export default function AdminProduction() {
                       <OrderCard
                         key={o.id}
                         order={o}
-                        busy={move.isPending}
+                        busy={move.isPending || schedule.isPending}
                         onAdvance={() => {
                           const next = NEXT_STAGE[o.status];
                           if (next) move.mutate({ id: o.id, orderStatus: next });
                         }}
+                        onSchedule={(scheduledAt) =>
+                          schedule.mutate({
+                            id: o.id,
+                            scheduledAt,
+                            wasScheduled: !!o.scheduledAt,
+                          })
+                        }
                       />
                     ))}
                   </div>
@@ -144,45 +172,167 @@ export default function AdminProduction() {
   );
 }
 
+/** "2026-09-01T00:00:00.000Z" | "2026-09-01" → "2026-09-01" for a date input. */
+function toDateInput(value?: string | null): string {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
+
 function OrderCard({
   order,
   busy,
   onAdvance,
+  onSchedule,
 }: {
   order: ProductionOrder;
   busy: boolean;
   onAdvance: () => void;
+  onSchedule: (scheduledAt: string) => void;
 }) {
   const next = NEXT_STAGE[order.status];
+  const dev = order.property?.developer;
+  const isScheduled = !!order.scheduledAt;
+
+  // Seed the picker with the booked date, else what the developer asked for —
+  // ops usually confirm the requested date rather than invent a new one.
+  const [date, setDate] = useState(
+    toDateInput(order.scheduledAt) || toDateInput(order.preferredDate),
+  );
+  const [open, setOpen] = useState(false);
+
+  const requested = toDateInput(order.preferredDate);
+  const booked = toDateInput(order.scheduledAt);
+  const differs = isScheduled && requested && booked && requested !== booked;
+  const changed = date && date !== booked;
+
+  // Business line first, account owner's number as fallback.
+  const callNumber = dev?.phone || dev?.user?.phone || null;
+  const ownerName = [dev?.user?.firstName, dev?.user?.lastName].filter(Boolean).join(' ');
 
   return (
     <div className="rounded-2xl border border-[#dadce0] p-3">
       <p className="truncate text-[14px] font-medium text-[#202124]">
         {order.property?.name ?? 'Unknown property'}
       </p>
-      <p className="truncate text-[12px] text-[#5f6368]">
-        {order.property?.developer?.companyName ?? '—'}
-      </p>
+      <p className="truncate text-[12px] text-[#5f6368]">{dev?.companyName ?? '—'}</p>
       <p className="mt-1 text-[13px] text-[#202124]">{order.label}</p>
       <p className="text-[12px] text-[#80868b]">
         {order.amount > 0 ? `${order.currency} ${order.amount.toLocaleString()}` : 'No charge'}
       </p>
+
       {(order.preferredDate || order.instructions || order.accessInfo) && (
         <div className="mt-2 rounded-xl bg-[#f8f9fa] px-2.5 py-2 text-[12px] leading-relaxed text-[#5f6368]">
-          {order.preferredDate && <div>Wants: {order.preferredDate}</div>}
+          {order.preferredDate && (
+            <div>
+              Requested: <span className="font-medium text-[#202124]">{order.preferredDate}</span>
+            </div>
+          )}
           {order.instructions && <div>“{order.instructions}”</div>}
           {order.accessInfo && <div>Access: {order.accessInfo}</div>}
         </div>
       )}
+
       {order.scheduledAt && (
         <p className="mt-1 text-[12px] text-[#1a73e8]">
           Booked {new Date(order.scheduledAt).toLocaleDateString()}
+          {differs && (
+            <span className="ml-1 text-[#b06000]">· differs from requested</span>
+          )}
         </p>
       )}
       {order.deliveredAt && (
         <p className="mt-1 text-[12px] text-[#188038]">
           Delivered {new Date(order.deliveredAt).toLocaleDateString()}
         </p>
+      )}
+
+      {/* Scheduling — only meaningful before the job is delivered. */}
+      {order.status !== 'DELIVERED' && (
+        <div className="mt-2.5">
+          {!open ? (
+            <button
+              onClick={() => setOpen(true)}
+              className="rounded-full border border-[#dadce0] px-2.5 py-1 text-[12px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] cursor-pointer"
+            >
+              {isScheduled ? 'Adjust date' : 'Schedule date'}
+            </button>
+          ) : (
+            <div className="rounded-xl border border-[#dadce0] bg-[#f8f9fa] p-2.5">
+              <label className="block text-[12px] font-medium text-[#5f6368]">
+                {isScheduled ? 'Move booking to' : 'Book crew for'}
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[#dadce0] bg-white px-2.5 py-1.5 text-[13px] text-[#202124] focus:border-[#1a73e8] focus:outline-none"
+              />
+              {requested && date && date !== requested && (
+                <p className="mt-1.5 text-[12px] text-[#b06000]">
+                  Not the requested date ({requested}) — confirm by phone before saving.
+                </p>
+              )}
+
+              {/* Ops ring the developer to agree any change before it lands. */}
+              {(callNumber || dev?.user?.email) && (
+                <div className="mt-2 border-t border-[#dadce0] pt-2 text-[12px] leading-relaxed text-[#5f6368]">
+                  <p className="font-medium text-[#202124]">
+                    {ownerName || dev?.companyName || 'Developer'}
+                  </p>
+                  {callNumber && (
+                    <a href={`tel:${callNumber.replace(/[^\d+]/g, '')}`} className="text-[#1a73e8] hover:underline">
+                      {callNumber}
+                    </a>
+                  )}
+                  {dev?.whatsapp && (
+                    <>
+                      {' · '}
+                      <a
+                        href={`https://wa.me/${dev.whatsapp.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-[#1a73e8] hover:underline"
+                      >
+                        WhatsApp
+                      </a>
+                    </>
+                  )}
+                  {!callNumber && dev?.user?.email && (
+                    <a href={`mailto:${dev.user.email}`} className="text-[#1a73e8] hover:underline">
+                      {dev.user.email}
+                    </a>
+                  )}
+                  {!callNumber && (
+                    <p className="text-[#b06000]">No phone number on file.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-2 flex gap-1.5">
+                <button
+                  onClick={() => {
+                    onSchedule(date);
+                    setOpen(false);
+                  }}
+                  disabled={busy || !date || (isScheduled && !changed)}
+                  className="rounded-full bg-[#1a73e8] px-2.5 py-1 text-[12px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer disabled:opacity-40"
+                >
+                  {isScheduled ? 'Save new date' : 'Book & notify'}
+                </button>
+                <button
+                  onClick={() => {
+                    setDate(toDateInput(order.scheduledAt) || toDateInput(order.preferredDate));
+                    setOpen(false);
+                  }}
+                  className="rounded-full border border-[#dadce0] bg-white px-2.5 py-1 text-[12px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4] cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="mt-2.5 flex flex-wrap gap-1.5">

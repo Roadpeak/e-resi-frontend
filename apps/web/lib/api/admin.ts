@@ -329,7 +329,20 @@ export interface ProductionOrder {
     name: string;
     city?: string | null;
     heroImageUrl?: string | null;
-    developer?: { id?: string; companyName?: string | null } | null;
+    developer?: {
+      id?: string;
+      companyName?: string | null;
+      /** Public business line, shown to ops for date-change confirmation calls. */
+      phone?: string | null;
+      whatsapp?: string | null;
+      /** Account owner — the fallback when no business line is set. */
+      user?: {
+        firstName?: string | null;
+        lastName?: string | null;
+        phone?: string | null;
+        email?: string | null;
+      } | null;
+    } | null;
   } | null;
 }
 
