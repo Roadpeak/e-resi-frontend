@@ -1,7 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin, ShoppingBag, Building2, Train, Plane, TreePine, Landmark } from 'lucide-react';
+import {
+  MapPin, ShoppingBag, Building2, Train, Plane, TreePine, Landmark,
+  GraduationCap, UtensilsCrossed, Dumbbell, ShoppingCart, BedDouble,
+} from 'lucide-react';
 import type { Address, Amenity } from '../../lib/types';
 
 interface Props {
@@ -9,15 +12,21 @@ interface Props {
   amenities: Amenity[];
 }
 
+// Keyed by the backend AmenityType enum — amenities are not lowercased on the
+// read path, so the previous lowercase keys never matched and every entry fell
+// back to a generic pin.
 const amenityIcons: Record<string, React.FC<{ size?: number; className?: string }>> = {
-  mall: ShoppingBag,
-  hospital: Building2,
-  transport: Train,
-  airport: Plane,
-  park: TreePine,
-  bank: Landmark,
-  school: Landmark,
-  restaurant: Landmark,
+  MALL: ShoppingBag,
+  HOSPITAL: Building2,
+  TRANSPORT: Train,
+  AIRPORT: Plane,
+  PARK: TreePine,
+  BANK: Landmark,
+  SCHOOL: GraduationCap,
+  RESTAURANT: UtensilsCrossed,
+  GYM: Dumbbell,
+  SUPERMARKET: ShoppingCart,
+  HOTEL: BedDouble,
 };
 
 export function PropertyLocation({ address, amenities }: Props) {
@@ -65,7 +74,9 @@ export function PropertyLocation({ address, amenities }: Props) {
             </div>
           </div>
 
-          {/* Nearby */}
+          {/* Nearby — omitted entirely when the developer listed nothing,
+              rather than showing an empty panel. */}
+          {amenities.length > 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <p className="mb-4 text-sm font-medium text-gray-500 uppercase tracking-wider text-xs">Nearby</p>
             <div className="flex flex-col gap-3">
@@ -87,6 +98,7 @@ export function PropertyLocation({ address, amenities }: Props) {
               })}
             </div>
           </div>
+          )}
         </motion.div>
       </div>
     </section>

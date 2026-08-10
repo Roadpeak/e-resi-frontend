@@ -110,12 +110,30 @@ export interface Address {
   coordinates: Coordinates;
 }
 
+/**
+ * A landmark near the development — what the property page lists under
+ * "Nearby". `type` mirrors the backend AmenityType enum exactly; it is not
+ * lowercased on the read path, so anything keyed off it must use these values.
+ */
+export type AmenityType =
+  | 'SCHOOL'
+  | 'HOSPITAL'
+  | 'MALL'
+  | 'TRANSPORT'
+  | 'RESTAURANT'
+  | 'PARK'
+  | 'BANK'
+  | 'AIRPORT'
+  | 'GYM'
+  | 'SUPERMARKET'
+  | 'HOTEL';
+
 export interface Amenity {
   id: string;
   name: string;
-  icon: string;
+  icon?: string;
   distance?: string;
-  type: 'school' | 'hospital' | 'mall' | 'transport' | 'restaurant' | 'park' | 'bank' | 'airport';
+  type: AmenityType;
 }
 
 export interface MediaAsset {

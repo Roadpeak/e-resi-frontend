@@ -11,6 +11,7 @@ import { StepDevelopment, StepServices } from '../../../../../components/develop
 import { LISTING_FEE_MONTHLY, computeBilling, fmtUsd } from '../../../../../lib/onboarding/catalog';
 import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
 import { toCategory } from '../../../../../lib/onboarding/development-types';
+import { propertiesApi } from '../../../../../lib/api/properties';
 
 const STEPS = ['Development details', 'Media & services', 'Review & costs'];
 
@@ -86,7 +87,29 @@ export default function NewDevelopmentPage() {
           servicesOneTimeTotal: billing.oneTimeTotal,
         },
       });
-      setCreatedSlug(res.data?.slug ?? '');
+      const slug = res.data?.slug ?? '';
+
+      // Amenities are rows against the property, so they can only be written
+      // once it exists. A failure here must not lose the development the
+      // developer just submitted — the listing is saved either way, and the
+      // nearby list can be added later from the property's own page.
+      const nearby = development.nearbyPlaces
+        .filter((p) => p.name.trim())
+        .map((p) => ({
+          name: p.name.trim(),
+          type: p.type,
+          distance: p.distance.trim() || undefined,
+        }));
+      if (slug && nearby.length) {
+        try {
+          await propertiesApi.setAmenities(slug, nearby);
+        } catch {
+          // Non-fatal: reported below the success message rather than thrown.
+          setError('The development was saved, but the nearby places could not be added. You can add them from the development page.');
+        }
+      }
+
+      setCreatedSlug(slug);
       reset();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Submission failed. Please try again.');
@@ -107,6 +130,14 @@ export default function NewDevelopmentPage() {
           It&apos;s saved as a draft while our team reviews the details{billing.oneTimeTotal > 0 ? ' and schedules your production services' : ''}.
           The {fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee starts only when it goes live.
         </p>
+        {/* Set when the development saved but a follow-up write (the nearby
+            list) did not — the submission succeeded, so this is a warning
+            rather than the error state. */}
+        {error && (
+          <p className="mx-auto mt-4 max-w-md rounded-2xl bg-[#fef7e0] px-4 py-3 text-[14px] leading-relaxed text-[#b06000]">
+            {error}
+          </p>
+        )}
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/dashboard/properties"
@@ -272,6 +303,13 @@ function ReviewAndCosts() {
           ['Type', [dev.type, dev.category].filter(Boolean).join(' · ')],
           ['Status', dev.status],
           ['Location', [dev.area, dev.city, dev.county].filter(Boolean).join(', ')],
+          [
+            'Nearby',
+            dev.nearbyPlaces
+              .filter((p) => p.name.trim())
+              .map((p) => [p.name, p.distance].filter(Boolean).join(' · '))
+              .join(', '),
+          ],
           ['Units', dev.numberOfUnits],
           ['Unit types', dev.unitTypes.join(', ')],
           ['Currency', dev.currency],

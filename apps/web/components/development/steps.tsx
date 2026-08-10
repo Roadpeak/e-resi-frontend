@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd, LISTING_CURRENCIES,
 } from '../../lib/onboarding/catalog';
-import { useDevelopmentStore } from '../../lib/stores/development.store';
+import { useDevelopmentStore, type NearbyPlace } from '../../lib/stores/development.store';
 import { DEVELOPMENT_TYPES, findDevelopmentType } from '../../lib/onboarding/development-types';
 import {
   Checkbox, ChipGroup, Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
@@ -21,6 +21,91 @@ const LAND_FEATURES = ['Title deed ready', 'Perimeter wall', 'Graded access road
 const SECURITY = ['24/7 guards', 'CCTV', 'Electric fence', 'Access control', 'Intercom', 'Gated compound'];
 const UTILITIES = ['Mains water', 'Borehole water', 'Solar hot water', 'Fibre internet', 'Underground power', 'Sewer connection'];
 const PAYMENT_PLANS = ['Cash', 'Installments during construction', 'Mortgage', 'Rent-to-own', 'Off-plan deposit + completion'];
+
+/** Backend AmenityType values, with the labels developers actually use. */
+const NEARBY_TYPES: { value: string; label: string }[] = [
+  { value: 'SCHOOL', label: 'School' },
+  { value: 'HOSPITAL', label: 'Hospital / clinic' },
+  { value: 'MALL', label: 'Mall / shopping' },
+  { value: 'SUPERMARKET', label: 'Supermarket' },
+  { value: 'TRANSPORT', label: 'Transport / bus stop' },
+  { value: 'RESTAURANT', label: 'Restaurant' },
+  { value: 'PARK', label: 'Park / green space' },
+  { value: 'BANK', label: 'Bank / ATM' },
+  { value: 'GYM', label: 'Gym' },
+  { value: 'HOTEL', label: 'Hotel' },
+  { value: 'AIRPORT', label: 'Airport' },
+];
+
+/**
+ * The "Nearby" list on the property page — schools, hospitals, malls and
+ * transport links with their distances. Free-text distance rather than a
+ * number, because developers quote these as "0.5 km", "5 min drive" or
+ * "walking distance" and the listing shows the string verbatim.
+ */
+function NearbyPlacesField({
+  places,
+  onChange,
+}: {
+  places: NearbyPlace[];
+  onChange: (places: NearbyPlace[]) => void;
+}) {
+  function update(i: number, patch: Partial<NearbyPlace>) {
+    onChange(places.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  }
+
+  return (
+    <Field
+      label="Nearby places"
+      hint="Schools, hospitals, malls and transport links shown under “Nearby” on your listing"
+    >
+      <div className="grid gap-2">
+        {places.map((place, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2">
+            <input
+              value={place.name}
+              onChange={(e) => update(i, { name: e.target.value })}
+              placeholder="Kileleshwa Primary School"
+              className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[15px] text-gray-900 placeholder-gray-400 focus:border-[#4A80F5] focus:outline-none"
+            />
+            <select
+              value={place.type}
+              onChange={(e) => update(i, { type: e.target.value })}
+              className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[15px] text-gray-900 focus:border-[#4A80F5] focus:outline-none"
+              aria-label="Place type"
+            >
+              {NEARBY_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+            <input
+              value={place.distance}
+              onChange={(e) => update(i, { distance: e.target.value })}
+              placeholder="0.5 km"
+              className="w-28 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[15px] text-gray-900 placeholder-gray-400 focus:border-[#4A80F5] focus:outline-none"
+              aria-label="Distance"
+            />
+            <button
+              type="button"
+              onClick={() => onChange(places.filter((_, idx) => idx !== i))}
+              className="rounded-lg px-2 py-2 text-[13px] font-medium text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+              aria-label={`Remove ${place.name || 'place'}`}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange([...places, { name: '', type: 'SCHOOL', distance: '' }])}
+          className="w-fit rounded-full border border-gray-200 px-3.5 py-1.5 text-[14px] font-medium text-[#4A80F5] hover:bg-[#F6F9FF] transition-colors cursor-pointer"
+        >
+          + Add nearby place
+        </button>
+      </div>
+    </Field>
+  );
+}
 
 export function StepDevelopment() {
   const { development: dev, patchDevelopment: patch } = useDevelopmentStore();
@@ -122,6 +207,11 @@ export function StepDevelopment() {
             <TextInput value={dev.gpsCoordinates} onChange={(e) => patch({ gpsCoordinates: e.target.value })} placeholder="-1.2673, 36.8065" />
           </Field>
         </FieldGrid>
+
+        <NearbyPlacesField
+          places={dev.nearbyPlaces}
+          onChange={(nearbyPlaces) => patch({ nearbyPlaces })}
+        />
       </SectionCard>
 
       <SectionCard title={devType?.built === false ? 'Plot information' : 'Property information'}>

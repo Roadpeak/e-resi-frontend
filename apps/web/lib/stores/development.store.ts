@@ -9,6 +9,15 @@ import { persist } from 'zustand/middleware';
 // (dashboard → Add development): details → media & production services →
 // review & costs. Each submitted development incurs the fixed listing fee.
 
+/** One "Nearby" landmark — school, hospital, mall, transport link. */
+export interface NearbyPlace {
+  name: string;
+  /** Backend AmenityType value, e.g. "SCHOOL". */
+  type: string;
+  /** Free text as shown on the listing, e.g. "0.5 km". */
+  distance: string;
+}
+
 export interface DevelopmentInfo {
   name: string;
   heroImageUrl: string;
@@ -22,6 +31,8 @@ export interface DevelopmentInfo {
   area: string;
   mapsPin: string;
   gpsCoordinates: string;
+  /** Landmarks listed under "Nearby" on the property page. */
+  nearbyPlaces: NearbyPlace[];
   numberOfUnits: string;
   unitTypes: string[];
   bedrooms: string;
@@ -73,6 +84,7 @@ export const DEV_TOTAL_STEPS = 3;
 const emptyDevelopment: DevelopmentInfo = {
   name: '', heroImageUrl: '', type: '', category: '', status: '', expectedCompletion: '',
   country: 'Kenya', county: '', city: '', area: '', mapsPin: '', gpsCoordinates: '',
+  nearbyPlaces: [],
   numberOfUnits: '', unitTypes: [], bedrooms: '', bathrooms: '', parking: '',
   amenities: [], securityFeatures: [], utilities: [],
   startingPrice: '', currency: 'KES', priceRange: '', paymentPlans: [], mortgageOptions: '',

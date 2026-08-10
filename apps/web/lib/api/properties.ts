@@ -74,4 +74,22 @@ export const propertiesApi = {
       unitId?: string;
     },
   ) => apiClient.post<unknown>(`/properties/${slug}/bookings`, payload),
+
+  /**
+   * Replace the "Nearby" landmarks on a development. Developer/admin only.
+   * Sent after the property exists, since amenities are rows against a
+   * property id rather than fields on the property itself.
+   *
+   * The bulk endpoint appends, so the existing rows are cleared first —
+   * otherwise saving the list twice leaves every entry duplicated. The
+   * endpoint takes a bare array, not a wrapper object.
+   */
+  setAmenities: async (
+    slug: string,
+    amenities: { name: string; type: string; distance?: string }[],
+  ) => {
+    await apiClient.delete<unknown>(`/properties/${slug}/amenities/all`).catch(() => undefined);
+    if (!amenities.length) return;
+    return apiClient.post<unknown>(`/properties/${slug}/amenities/bulk`, amenities);
+  },
 };
