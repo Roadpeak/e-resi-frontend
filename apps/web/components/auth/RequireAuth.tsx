@@ -37,7 +37,13 @@ export function RequireAuth({ roles, children }: RequireAuthProps) {
     if (!isAuthenticated) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     } else if (!allowed) {
-      router.replace(user?.role === 'DEVELOPER' ? '/dashboard' : '/account');
+      // Send people to their own area rather than a generic one — an agent
+      // bounced to /account would land somewhere with none of their work.
+      const home =
+        user?.role === 'DEVELOPER' || user?.role === 'ADMIN' ? '/dashboard'
+        : user?.role === 'AGENT' ? '/agent'
+        : '/account';
+      router.replace(home);
     }
   }, [hydrated, pendingHydration, isAuthenticated, allowed, pathname, router, user?.role]);
 

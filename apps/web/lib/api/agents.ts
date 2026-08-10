@@ -61,6 +61,44 @@ export interface Agent {
   createdAt: string;
 }
 
+export type KybStatus = 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface AgentDocument {
+  type: string;
+  url: string;
+  label?: string;
+}
+
+/**
+ * The agent's own record. Carries verification state and submitted documents,
+ * which the public projection deliberately omits.
+ */
+export interface AgentSelf extends Agent {
+  userId: string;
+  registrationNumber: string | null;
+  kybStatus: KybStatus;
+  kybDocuments: AgentDocument[] | null;
+  kybRejectionReason: string | null;
+  isListed: boolean;
+  suspendedAt: string | null;
+}
+
+/** Document kinds the review queue understands, split by agent kind. */
+export const COMPANY_DOCUMENT_TYPES = [
+  { value: 'COMPANY_REGISTRATION', label: 'Certificate of incorporation', required: true },
+  { value: 'TAX_CERTIFICATE', label: 'Tax compliance certificate' },
+  { value: 'ADDRESS_PROOF', label: 'Proof of physical address' },
+  { value: 'AGENT_LICENCE', label: 'Estate agent licence' },
+  { value: 'OTHER', label: 'Other supporting document' },
+] as const;
+
+export const INDIVIDUAL_DOCUMENT_TYPES = [
+  { value: 'NATIONAL_ID', label: 'National ID', required: true },
+  { value: 'AGENT_LICENCE', label: 'Estate agent licence' },
+  { value: 'ADDRESS_PROOF', label: 'Proof of address' },
+  { value: 'OTHER', label: 'Other supporting document' },
+] as const;
+
 export interface AgentReview {
   id: string;
   rating: number;
@@ -125,4 +163,41 @@ export const agentsApi = {
     ),
 
   deleteOwnReview: (id: string) => apiClient.delete<unknown>(`/agents/${id}/reviews/mine`),
+
+  /** Developers actively partnered with this agent — shown on their profile. */
+  partners: (id: string) =>
+    apiClient.get<{
+      id: string;
+      developer: { id: string; companyName: string; logoUrl: string | null };
+      agent: { id: string; displayName: string };
+    }[]>(`/agents/${id}/partners`),
+
+  // ─── Signed-in agent ────────────────────────────────────────────────────
+
+  /** My own profile, including KYC status — not the public projection. */
+  me: () => apiClient.get<AgentSelf>('/agents/me'),
+
+  updateMe: (body: Partial<{
+    displayName: string;
+    bio: string;
+    yearsExperience: number;
+    website: string;
+    logoUrl: string;
+    photoUrl: string;
+    specialties: AgentSpecialty[];
+    serviceAreas: string[];
+    phone: string;
+    whatsapp: string;
+    email: string;
+    officeAddress: string;
+    location: string;
+    socials: AgentSocials;
+  }>) => apiClient.patch<AgentSelf>('/agents/me', body),
+
+  submitKyc: (body: {
+    documents: { type: string; url: string; label?: string }[];
+    registrationNumber?: string;
+    officeAddress?: string;
+    photoUrl?: string;
+  }) => apiClient.post<AgentSelf>('/agents/me/kyc', body),
 };
