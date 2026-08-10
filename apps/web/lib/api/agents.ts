@@ -99,6 +99,30 @@ export const INDIVIDUAL_DOCUMENT_TYPES = [
   { value: 'OTHER', label: 'Other supporting document' },
 ] as const;
 
+export interface AgentFeeRun {
+  id: string;
+  /** YYYY-MM. */
+  period: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'SKIPPED';
+  failureText: string | null;
+  chargedAt: string | null;
+  /** When an unpaid fee stops being tolerated and the profile is hidden. */
+  graceEndsAt: string | null;
+}
+
+export interface AgentBilling {
+  agent: { kind: AgentKind; isListed: boolean; suspendedAt: string | null } | null;
+  runs: AgentFeeRun[];
+  nextCharge: {
+    amount: number;
+    currency: string;
+    freeMonths: number;
+    inFreeWindow: boolean;
+  } | null;
+}
+
 export interface AgentReview {
   id: string;
   rating: number;
@@ -193,6 +217,9 @@ export const agentsApi = {
     location: string;
     socials: AgentSocials;
   }>) => apiClient.patch<AgentSelf>('/agents/me', body),
+
+  /** My listing-fee history and what the next charge will be. */
+  billing: () => apiClient.get<AgentBilling>('/billing/agent-fees/mine'),
 
   submitKyc: (body: {
     documents: { type: string; url: string; label?: string }[];
