@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, ArrowLeft,
-  Building2, TrendingUp, Home, Check, Upload, X, Camera, Loader2,
+  Building2, TrendingUp, Home, Check, Upload, X, Camera, Loader2, Handshake,
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -15,8 +15,9 @@ import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
 import { authApi } from '../../lib/api/auth';
 import { ApiError } from '../../lib/api/client';
+import { ALL_SPECIALTIES, SPECIALTY_LABELS, type AgentSpecialty } from '../../lib/api/agents';
 
-type Role = 'developer' | 'investor' | 'tenant';
+type Role = 'developer' | 'agent' | 'investor' | 'tenant';
 
 const ROLES: {
   id: Role;
@@ -30,6 +31,12 @@ const ROLES: {
     label: 'Developer',
     sublabel: 'List & sell properties',
     icon: <Building2 size={22} />,
+  },
+  {
+    id: 'agent',
+    label: 'Agent',
+    sublabel: 'Sell & let for developers',
+    icon: <Handshake size={22} />,
   },
   {
     id: 'investor',
@@ -47,8 +54,9 @@ const ROLES: {
 ];
 
 // Map frontend role labels to backend Role enum
-function toBackendRole(role: Role): 'DEVELOPER' | 'INVESTOR' | 'TENANT' {
+function toBackendRole(role: Role): 'DEVELOPER' | 'AGENT' | 'INVESTOR' | 'TENANT' {
   if (role === 'developer') return 'DEVELOPER';
+  if (role === 'agent') return 'AGENT';
   if (role === 'investor') return 'INVESTOR';
   return 'TENANT';
 }
@@ -77,6 +85,10 @@ export function RegisterForm() {
     company: '',
     agreeTerms: false,
   });
+  // Agent-only. The API requires a kind and at least one specialty, since an
+  // agent with neither matches no search and would appear nowhere.
+  const [agentKind, setAgentKind] = useState<'COMPANY' | 'INDIVIDUAL'>('INDIVIDUAL');
+  const [specialties, setSpecialties] = useState<AgentSpecialty[]>([]);
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -96,6 +108,22 @@ export function RegisterForm() {
     e.preventDefault();
     if (step !== 1) return;
     setServerError('');
+
+    // Caught here rather than at the API so the message points at the field
+    // the agent can actually fix.
+    if (role === 'agent' && specialties.length === 0) {
+      setServerError('Choose at least one thing you handle.');
+      return;
+    }
+    if (role === 'agent' && !form.company.trim()) {
+      setServerError(
+        agentKind === 'COMPANY'
+          ? 'Enter your company name.'
+          : 'Enter the name you trade under.',
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       await authApi.register({
@@ -106,6 +134,13 @@ export function RegisterForm() {
         phone: form.phone || undefined,
         role: toBackendRole(role!),
         companyName: role === 'developer' ? form.company || undefined : undefined,
+        // The agent's trading name doubles as `company` in this form, so the
+        // same input serves both roles.
+        ...(role === 'agent' && {
+          agentKind,
+          displayName: form.company.trim(),
+          specialties,
+        }),
       });
       setStep(2);
     } catch (err) {
@@ -424,6 +459,79 @@ export function RegisterForm() {
                     />
                   )}
 
+                  {role === 'agent' && (
+                    <>
+                      {/* Kind decides which verification documents are asked
+                          for later, and which listing fee applies. */}
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                          Are you an agency or an individual agent?
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {([
+                            { value: 'INDIVIDUAL', label: 'Individual agent' },
+                            { value: 'COMPANY', label: 'Agency / company' },
+                          ] as const).map((k) => (
+                            <button
+                              key={k.value}
+                              type="button"
+                              onClick={() => setAgentKind(k.value)}
+                              className={cn(
+                                'rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer',
+                                agentKind === k.value
+                                  ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                  : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                              )}
+                            >
+                              {k.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Input
+                        label={agentKind === 'COMPANY' ? 'Agency name' : 'Your professional name'}
+                        placeholder={agentKind === 'COMPANY' ? 'Bora Property Agents' : 'Asha Mwangi Properties'}
+                        value={form.company}
+                        onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
+                        leftIcon={agentKind === 'COMPANY' ? <Building2 size={14} /> : <User size={14} />}
+                        required
+                      />
+
+                      {/* Without a specialty an agent matches no search, so
+                          this is required rather than optional. */}
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                          What do you handle?
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {ALL_SPECIALTIES.map((s) => {
+                            const on = specialties.includes(s);
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setSpecialties((prev) =>
+                                  on ? prev.filter((x) => x !== s) : [...prev, s])}
+                                className={cn(
+                                  'rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors cursor-pointer',
+                                  on
+                                    ? 'border-brand-500 bg-brand-500 text-white'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                                )}
+                              >
+                                {SPECIALTY_LABELS[s]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="mt-1.5 text-xs text-gray-400">
+                          Buyers and tenants find you by these — pick every one that applies.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
                   <Input
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
@@ -496,8 +604,19 @@ export function RegisterForm() {
                   <div className="space-y-2.5">
                     {[
                       'Click the link in your email to verify your account',
-                      role === 'developer' ? 'Submit your KYB documents for developer verification' : 'Complete your profile to unlock all features',
-                      `Access your ${role === 'developer' ? 'developer dashboard' : role === 'investor' ? 'investment portfolio' : 'rental dashboard'}`,
+                      role === 'developer'
+                        ? 'Submit your KYB documents for developer verification'
+                        : role === 'agent'
+                          // Agents are only listed once verified, so this is
+                          // the step that actually gets them found.
+                          ? 'Upload your verification documents to be listed in the agent directory'
+                          : 'Complete your profile to unlock all features',
+                      `Access your ${
+                        role === 'developer' ? 'developer dashboard'
+                        : role === 'agent' ? 'agent dashboard'
+                        : role === 'investor' ? 'investment portfolio'
+                        : 'rental dashboard'
+                      }`,
                     ].map((text, i) => (
                       <div key={i} className="flex items-start gap-2.5">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[10px] font-bold text-[#1967d2] mt-0.5">

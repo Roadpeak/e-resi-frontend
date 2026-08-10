@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { User } from '../types';
+import type { AgentSpecialty } from './agents';
 
 export interface LoginPayload {
   email: string;
@@ -12,8 +13,12 @@ export interface RegisterPayload {
   email: string;
   password: string;
   phone?: string;
-  role: 'BUYER' | 'DEVELOPER' | 'INVESTOR' | 'TENANT';
+  role: 'BUYER' | 'DEVELOPER' | 'AGENT' | 'INVESTOR' | 'TENANT';
   companyName?: string;
+  /** Agent accounts only — all three are required when role is AGENT. */
+  agentKind?: 'COMPANY' | 'INDIVIDUAL';
+  displayName?: string;
+  specialties?: AgentSpecialty[];
 }
 
 export interface AuthResponse {
