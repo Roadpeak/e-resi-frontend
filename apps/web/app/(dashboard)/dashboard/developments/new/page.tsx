@@ -6,26 +6,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Pencil } from 'lucide-react';
 import { cn } from '../../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
-import { DEV_TOTAL_STEPS, useDevelopmentStore } from '../../../../../lib/stores/development.store';
+import { useDevelopmentStore } from '../../../../../lib/stores/development.store';
 import { StepDevelopment, StepServices } from '../../../../../components/development/steps';
 import { LISTING_FEE_MONTHLY, computeBilling, fmtUsd } from '../../../../../lib/onboarding/catalog';
 import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
+import { toCategory } from '../../../../../lib/onboarding/development-types';
 
 const STEPS = ['Development details', 'Media & services', 'Review & costs'];
-
-// Wizard type → backend PropertyCategory enum
-function toCategory(type: string): string {
-  const map: Record<string, string> = {
-    Apartments: 'APARTMENT',
-    Townhouses: 'TOWNHOUSE',
-    Villas: 'VILLA',
-    'Mixed-use': 'COMMERCIAL',
-    'Gated community': 'VILLA',
-    Commercial: 'COMMERCIAL',
-    Land: 'LAND',
-  };
-  return map[type] ?? 'APARTMENT';
-}
 
 function parsePrice(v: string): number | undefined {
   const digits = v.replace(/[^0-9.]/g, '');
@@ -43,9 +30,11 @@ function parseCoordinates(raw?: string): { latitude?: number; longitude?: number
 }
 
 export default function NewDevelopmentPage() {
-  // Hydrates the catalogue with admin-managed pricing.
-  useCatalog();
   const { step, setStep, next, back, development, media, reset } = useDevelopmentStore();
+  // Hydrates the catalogue with admin-managed pricing for this development's
+  // type — production is priced per type, so quoting the default prices here
+  // would not match what the order is actually billed.
+  useCatalog(development.type ? toCategory(development.type) : undefined);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
@@ -57,6 +46,12 @@ export default function NewDevelopmentPage() {
     setError('');
     if (step === 0 && !development.name.trim()) {
       setError('Give the development a name before continuing.');
+      return;
+    }
+    // Type drives production pricing and which marketplace pages the
+    // development appears on, so it cannot be left to the default.
+    if (step === 0 && !development.type) {
+      setError('Choose a development type before continuing.');
       return;
     }
     if (!isReview) {

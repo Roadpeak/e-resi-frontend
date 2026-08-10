@@ -43,11 +43,18 @@ const CATEGORY_MAP: Record<string, ServiceCategory> = {
  * place, which lets the six existing consumers pick up admin pricing without
  * each having to become async.
  */
-export function useCatalog() {
+/**
+ * @param propertyType Backend PropertyCategory. Production is priced per type,
+ * so the wizard must quote the type's own prices — otherwise it shows default
+ * prices and the order then bills the type price.
+ */
+export function useCatalog(propertyType?: string) {
   const query = useQuery({
-    queryKey: ['production-catalog'],
+    queryKey: ['production-catalog', propertyType ?? 'default'],
     queryFn: async () => {
-      const res = await apiClient.get<CatalogResponse>('/production-tiers/catalog');
+      const res = await apiClient.get<CatalogResponse>(
+        `/production-tiers/catalog${propertyType ? `?propertyType=${propertyType}` : ''}`,
+      );
 
       const services: ServiceDefinition[] = res.services
         .filter((s) => s.isActive)

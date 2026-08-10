@@ -5,6 +5,7 @@ import {
   SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd, LISTING_CURRENCIES,
 } from '../../lib/onboarding/catalog';
 import { useDevelopmentStore } from '../../lib/stores/development.store';
+import { DEVELOPMENT_TYPES, findDevelopmentType } from '../../lib/onboarding/development-types';
 import {
   Checkbox, ChipGroup, Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
 } from '../onboarding/ui';
@@ -13,26 +14,58 @@ import { DetectLocationButton } from '../dashboard/DetectLocationButton';
 
 // ── Development creation · Step 1: Development details ───────────────────────
 
-const DEV_TYPES = ['Apartments', 'Townhouses', 'Villas', 'Mixed-use', 'Gated community', 'Commercial', 'Land'];
 const CATEGORIES = ['Residential', 'Commercial', 'Mixed-use', 'Holiday / short-stay'];
 const STATUSES = ['Off-plan', 'Under construction', 'Nearing completion', 'Completed'];
-const UNIT_TYPES = ['Studio', '1 Bedroom', '2 Bedroom', '3 Bedroom', '4+ Bedroom', 'Penthouse', 'Duplex', 'Commercial unit'];
 const AMENITIES = ['Swimming pool', 'Gym', 'Clubhouse', 'Playground', 'Rooftop terrace', 'Co-working space', 'Backup generator', 'Borehole', 'Elevator', 'Landscaped gardens'];
+const LAND_FEATURES = ['Title deed ready', 'Perimeter wall', 'Graded access road', 'Water connection', 'Power connection', 'Subdivided plots'];
 const SECURITY = ['24/7 guards', 'CCTV', 'Electric fence', 'Access control', 'Intercom', 'Gated compound'];
 const UTILITIES = ['Mains water', 'Borehole water', 'Solar hot water', 'Fibre internet', 'Underground power', 'Sewer connection'];
 const PAYMENT_PLANS = ['Cash', 'Installments during construction', 'Mortgage', 'Rent-to-own', 'Off-plan deposit + completion'];
 
 export function StepDevelopment() {
   const { development: dev, patchDevelopment: patch } = useDevelopmentStore();
+  const devType = findDevelopmentType(dev.type);
+
   return (
     <div className="grid gap-6">
+      {/* Type first: it decides production pricing, which marketplace pages
+          this development appears on, and which fields below are relevant. */}
+      <SectionCard title="What are you listing?">
+        <p className="-mt-1 mb-3 text-[13px] text-[#5f6368]">
+          This sets how your development is priced for production and where buyers find it.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {DEVELOPMENT_TYPES.map((t) => {
+            const active = dev.type === t.label;
+            return (
+              <button
+                key={t.label}
+                type="button"
+                onClick={() => {
+                  // Unit types are per-type lists; keep only ones still offered.
+                  const stillValid = dev.unitTypes.filter((u) => t.unitTypes.includes(u));
+                  patch({ type: t.label, unitTypes: stillValid });
+                }}
+                className={`rounded-2xl border p-3.5 text-left transition-colors cursor-pointer ${
+                  active
+                    ? 'border-[#1a73e8] bg-[#e8f0fe]'
+                    : 'border-[#dadce0] bg-white hover:bg-[#f8f9fa]'
+                }`}
+              >
+                <span className={`block text-[15px] font-medium ${active ? 'text-[#1a73e8]' : 'text-[#202124]'}`}>
+                  {t.label}
+                </span>
+                <span className="mt-0.5 block text-[13px] text-[#5f6368]">{t.hint}</span>
+              </button>
+            );
+          })}
+        </div>
+      </SectionCard>
+
       <SectionCard title="General information">
         <FieldGrid>
           <Field label="Development name" required>
             <TextInput value={dev.name} onChange={(e) => patch({ name: e.target.value })} placeholder="The Pearl Residences" />
-          </Field>
-          <Field label="Development type" required>
-            <Select options={DEV_TYPES} value={dev.type} onChange={(e) => patch({ type: e.target.value })} />
           </Field>
           <Field label="Category">
             <Select options={CATEGORIES} value={dev.category} onChange={(e) => patch({ category: e.target.value })} />
@@ -40,9 +73,12 @@ export function StepDevelopment() {
           <Field label="Status" required>
             <Select options={STATUSES} value={dev.status} onChange={(e) => patch({ status: e.target.value })} />
           </Field>
-          <Field label="Expected completion date">
-            <TextInput type="month" value={dev.expectedCompletion} onChange={(e) => patch({ expectedCompletion: e.target.value })} />
-          </Field>
+          {/* Land has no build to complete. */}
+          {devType?.built !== false && (
+            <Field label="Expected completion date">
+              <TextInput type="month" value={dev.expectedCompletion} onChange={(e) => patch({ expectedCompletion: e.target.value })} />
+            </Field>
+          )}
         </FieldGrid>
         <ImageUpload
           value={dev.heroImageUrl}
@@ -88,26 +124,41 @@ export function StepDevelopment() {
         </FieldGrid>
       </SectionCard>
 
-      <SectionCard title="Property information">
+      <SectionCard title={devType?.built === false ? 'Plot information' : 'Property information'}>
         <FieldGrid cols={3}>
-          <Field label="Number of units" required>
+          <Field label={devType?.unitCountLabel ?? 'Number of units'} required>
             <TextInput type="number" min={1} value={dev.numberOfUnits} onChange={(e) => patch({ numberOfUnits: e.target.value })} />
           </Field>
-          <Field label="Bedrooms" hint="e.g. 1 – 4">
-            <TextInput value={dev.bedrooms} onChange={(e) => patch({ bedrooms: e.target.value })} />
-          </Field>
-          <Field label="Bathrooms">
-            <TextInput value={dev.bathrooms} onChange={(e) => patch({ bathrooms: e.target.value })} />
-          </Field>
+          {/* Bedroom/bathroom counts only mean something for homes. */}
+          {devType?.residential !== false && (
+            <>
+              <Field label="Bedrooms" hint="e.g. 1 – 4">
+                <TextInput value={dev.bedrooms} onChange={(e) => patch({ bedrooms: e.target.value })} />
+              </Field>
+              <Field label="Bathrooms">
+                <TextInput value={dev.bathrooms} onChange={(e) => patch({ bathrooms: e.target.value })} />
+              </Field>
+            </>
+          )}
         </FieldGrid>
-        <Field label="Unit types">
-          <ChipGroup options={UNIT_TYPES} value={dev.unitTypes} onChange={(unitTypes) => patch({ unitTypes })} />
+        <Field label={devType?.built === false ? 'Plot sizes' : 'Unit types'}>
+          <ChipGroup
+            options={devType?.unitTypes ?? []}
+            value={dev.unitTypes}
+            onChange={(unitTypes) => patch({ unitTypes })}
+          />
         </Field>
-        <Field label="Parking" hint="e.g. 2 slots per unit + visitor parking">
-          <TextInput value={dev.parking} onChange={(e) => patch({ parking: e.target.value })} />
-        </Field>
-        <Field label="Amenities">
-          <ChipGroup options={AMENITIES} value={dev.amenities} onChange={(amenities) => patch({ amenities })} />
+        {devType?.built !== false && (
+          <Field label="Parking" hint="e.g. 2 slots per unit + visitor parking">
+            <TextInput value={dev.parking} onChange={(e) => patch({ parking: e.target.value })} />
+          </Field>
+        )}
+        <Field label={devType?.built === false ? 'Site features' : 'Amenities'}>
+          <ChipGroup
+            options={devType?.built === false ? LAND_FEATURES : AMENITIES}
+            value={dev.amenities}
+            onChange={(amenities) => patch({ amenities })}
+          />
         </Field>
         <Field label="Security features">
           <ChipGroup options={SECURITY} value={dev.securityFeatures} onChange={(securityFeatures) => patch({ securityFeatures })} />
@@ -177,8 +228,9 @@ const UPLOAD_KINDS = [
 ];
 
 export function StepServices() {
-  const { media, patchMedia, toggleService, patchService } = useDevelopmentStore();
+  const { development: dev, media, patchMedia, toggleService, patchService } = useDevelopmentStore();
   const categories = Object.keys(SERVICE_CATEGORIES) as ServiceCategory[];
+  const devType = findDevelopmentType(dev.type);
 
   return (
     <div className="grid gap-6">
@@ -224,7 +276,11 @@ export function StepServices() {
 
       <SectionCard
         title="Production services"
-        subtitle="Pick exactly the services you need — pricing is calculated per service, no bundles."
+        subtitle={
+          devType
+            ? `Pick exactly the services you need — priced for ${devType.label.toLowerCase()}, per service, no bundles.`
+            : 'Pick exactly the services you need — pricing is calculated per service, no bundles.'
+        }
       >
         <div className="grid gap-8">
           {categories.map((cat) => (
