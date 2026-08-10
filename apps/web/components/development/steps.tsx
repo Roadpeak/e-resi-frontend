@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd, LISTING_CURRENCIES,
 } from '../../lib/onboarding/catalog';
+import { propertiesApi } from '../../lib/api/properties';
 import { useDevelopmentStore, type NearbyPlace } from '../../lib/stores/development.store';
 import { DEVELOPMENT_TYPES, findDevelopmentType } from '../../lib/onboarding/development-types';
 import {
@@ -21,6 +23,21 @@ const LAND_FEATURES = ['Title deed ready', 'Perimeter wall', 'Graded access road
 const SECURITY = ['24/7 guards', 'CCTV', 'Electric fence', 'Access control', 'Intercom', 'Gated compound'];
 const UTILITIES = ['Mains water', 'Borehole water', 'Solar hot water', 'Fibre internet', 'Underground power', 'Sewer connection'];
 const PAYMENT_PLANS = ['Cash', 'Installments during construction', 'Mortgage', 'Rent-to-own', 'Off-plan deposit + completion'];
+
+interface NearbySuggestion {
+  name: string;
+  type: string;
+  distance: string;
+  distanceMetres: number;
+}
+
+/** Accepts "-1.2673, 36.8065"; returns null unless both halves are valid. */
+function parseLatLng(raw: string): { lat: number; lng: number } | null {
+  const [lat, lng] = (raw ?? '').split(',').map((v) => Number.parseFloat(v.trim()));
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
+}
 
 /** Backend AmenityType values, with the labels developers actually use. */
 const NEARBY_TYPES: { value: string; label: string }[] = [
@@ -46,12 +63,54 @@ const NEARBY_TYPES: { value: string; label: string }[] = [
 function NearbyPlacesField({
   places,
   onChange,
+  coordinates,
 }: {
   places: NearbyPlace[];
   onChange: (places: NearbyPlace[]) => void;
+  /** "lat, lng" from the location fields — suggestions need a point to search from. */
+  coordinates: string;
 }) {
+  const [finding, setFinding] = useState(false);
+  const [findError, setFindError] = useState('');
+  const [suggestions, setSuggestions] = useState<NearbySuggestion[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+
   function update(i: number, patch: Partial<NearbyPlace>) {
     onChange(places.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  }
+
+  const point = parseLatLng(coordinates);
+
+  async function findNearby() {
+    if (!point) return;
+    setFindError('');
+    setFinding(true);
+    setSuggestions(null);
+    try {
+      const found = await propertiesApi.nearbySuggestions(point.lat, point.lng, 3000);
+      // Anything already in the list is not offered again.
+      const existing = new Set(places.map((p) => p.name.trim().toLowerCase()));
+      const fresh = found.filter((s) => !existing.has(s.name.toLowerCase()));
+      setSuggestions(fresh);
+      // Pre-tick the closest few — the rest are opt-in rather than opt-out,
+      // since OSM returns the occasional junk entry.
+      setPicked(new Set(fresh.slice(0, 6).map((s) => s.name)));
+      if (!fresh.length) setFindError('No new places found around this point.');
+    } catch {
+      setFindError('Could not fetch suggestions. Add places manually below.');
+    } finally {
+      setFinding(false);
+    }
+  }
+
+  function addPicked() {
+    if (!suggestions) return;
+    const chosen = suggestions
+      .filter((s) => picked.has(s.name))
+      .map((s) => ({ name: s.name, type: s.type, distance: s.distance }));
+    onChange([...places, ...chosen]);
+    setSuggestions(null);
+    setPicked(new Set());
   }
 
   return (
@@ -59,6 +118,70 @@ function NearbyPlacesField({
       label="Nearby places"
       hint="Landmarks around the development that it does not own — schools, hospitals, malls, transport. Shown under “Nearby” with their distance."
     >
+      {/* Suggestions come from OpenStreetMap around the pin. They are always
+          reviewed before being added — OSM contains unnamed and mislabelled
+          entries, and the distances are straight-line, not by road. */}
+      <div className="mb-3">
+        <button
+          type="button"
+          onClick={findNearby}
+          disabled={!point || finding}
+          title={point ? undefined : 'Set the GPS coordinates above first'}
+          className="rounded-full border border-gray-200 px-3.5 py-1.5 text-[14px] font-medium text-[#4A80F5] hover:bg-[#F6F9FF] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {finding ? 'Searching…' : 'Find nearby places'}
+        </button>
+        {!point && (
+          <span className="ml-2 text-[13px] text-gray-400">
+            Set GPS coordinates above to search
+          </span>
+        )}
+        {findError && <p className="mt-2 text-[13px] text-[#b06000]">{findError}</p>}
+      </div>
+
+      {suggestions && suggestions.length > 0 && (
+        <div className="mb-3 rounded-2xl border border-gray-200 bg-[#F8FAFF] p-3">
+          <p className="mb-2 text-[13px] text-gray-600">
+            Found {suggestions.length} nearby. Distances are straight-line — tick what you want to list.
+          </p>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {suggestions.map((s) => (
+              <label key={`${s.name}-${s.distanceMetres}`} className="flex items-center gap-2 text-[14px] text-gray-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={picked.has(s.name)}
+                  onChange={(e) => {
+                    const next = new Set(picked);
+                    if (e.target.checked) next.add(s.name);
+                    else next.delete(s.name);
+                    setPicked(next);
+                  }}
+                  className="h-4 w-4 shrink-0 rounded border-gray-300"
+                />
+                <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                <span className="shrink-0 text-[13px] text-gray-400">{s.distance}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={addPicked}
+              disabled={picked.size === 0}
+              className="rounded-full bg-[#4A80F5] px-3.5 py-1.5 text-[14px] font-medium text-white hover:bg-[#3457E0] transition-colors cursor-pointer disabled:opacity-40"
+            >
+              Add {picked.size || ''} selected
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSuggestions(null); setPicked(new Set()); }}
+              className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[14px] font-medium text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       <div className="grid gap-2">
         {places.map((place, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
@@ -211,6 +334,7 @@ export function StepDevelopment() {
         <NearbyPlacesField
           places={dev.nearbyPlaces}
           onChange={(nearbyPlaces) => patch({ nearbyPlaces })}
+          coordinates={dev.gpsCoordinates}
         />
       </SectionCard>
 

@@ -76,6 +76,23 @@ export const propertiesApi = {
   ) => apiClient.post<unknown>(`/properties/${slug}/bookings`, payload),
 
   /**
+   * Landmarks near a point, from OpenStreetMap. Suggestions only — nothing is
+   * saved until the developer confirms which to keep.
+   */
+  nearbySuggestions: (lat: number, lng: number, radiusMetres?: number) => {
+    const qs = new URLSearchParams({ lat: String(lat), lng: String(lng) });
+    if (radiusMetres) qs.set('radius', String(radiusMetres));
+    return apiClient.get<{
+      name: string;
+      type: string;
+      distance: string;
+      distanceMetres: number;
+      latitude: number;
+      longitude: number;
+    }[]>(`/properties/nearby-suggestions?${qs}`);
+  },
+
+  /**
    * Replace the "Nearby" landmarks on a development. Developer/admin only.
    * Sent after the property exists, since amenities are rows against a
    * property id rather than fields on the property itself.
