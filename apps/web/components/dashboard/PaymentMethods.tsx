@@ -279,8 +279,14 @@ function MethodRow({ method, onChanged }: { method: LinkedMethod; onChanged: () 
           Awaiting confirmation
         </span>
       ) : (
-        <span className="hidden sm:inline-flex rounded-full bg-[#fce8e6] px-3 py-1 text-[13px] font-medium text-[#c5221f]">
-          Failed
+        // Set when a stored authorization is rejected — most often a card
+        // linked before the platform moved to live keys, which can never be
+        // charged again. Says so, rather than leaving a bare "Failed".
+        <span
+          title="This card can no longer be charged. Remove it and link it again."
+          className="hidden sm:inline-flex rounded-full bg-[#fce8e6] px-3 py-1 text-[13px] font-medium text-[#c5221f]"
+        >
+          Re-link needed
         </span>
       )}
 

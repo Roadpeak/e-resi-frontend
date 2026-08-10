@@ -73,11 +73,18 @@ export const billingApi = {
     Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
     return apiClient.get<Invoice[]>(`/billing/invoices/all${qs.toString() ? `?${qs}` : ''}`);
   },
-  /** Start payment for an unpaid invoice — returns a Paystack checkout URL. */
+  /**
+   * Pay an unpaid invoice.
+   *
+   * A usable saved card is charged outright — `paid: true` and there is
+   * nothing to redirect to. Otherwise this returns a Paystack checkout URL to
+   * send the browser to.
+   */
   payInvoice: (id: string) =>
-    apiClient.post<{ authorizationUrl: string; reference: string; testMode: boolean }>(
-      `/billing/invoices/${id}/pay`,
-    ),
+    apiClient.post<
+      | { paid: true; chargedCard: { brand?: string | null; last4?: string | null } }
+      | { paid: false; authorizationUrl: string; reference: string; testMode: boolean }
+    >(`/billing/invoices/${id}/pay`),
   /** Confirm on return from Paystack. Idempotent — the webhook also settles it. */
   confirmInvoice: (id: string, reference: string) =>
     apiClient.post<{ number: string; amount: number; currency: string }>(

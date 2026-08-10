@@ -400,6 +400,17 @@ function InvoicesCard() {
   const pay = useMutation({
     mutationFn: (invoice: Invoice) => billingApi.payInvoice(invoice.id),
     onSuccess: (r, invoice) => {
+      // A saved card is charged server-side, so there is nothing to redirect
+      // to — the invoice is already settled by the time this resolves.
+      if (r.paid) {
+        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
+        queryClient.invalidateQueries({ queryKey: ['billing', 'summary'] });
+        const card = [r.chargedCard?.brand, r.chargedCard?.last4 && `•••• ${r.chargedCard.last4}`]
+          .filter(Boolean).join(' ');
+        setToast(card ? `Paid with ${card}.` : 'Payment complete.');
+        setTimeout(() => setToast(''), 6000);
+        return;
+      }
       // Remember which invoice this was: Paystack returns with a reference but
       // no invoice id, and sessionStorage survives the redirect.
       sessionStorage.setItem('eresi:payingInvoice', invoice.id);
