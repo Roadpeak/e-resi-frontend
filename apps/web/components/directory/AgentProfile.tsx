@@ -11,6 +11,7 @@ import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimiti
 import {
   FacebookIcon, InstagramIcon, LinkedinIcon, TwitterIcon,
 } from './SocialIcons';
+import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
 import { AgentReviews } from './AgentReviews';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
@@ -183,8 +184,14 @@ function ContactCard({ agent }: { agent: Agent }) {
     <DirectoryCard className="p-6">
       <h2 className="mb-3 text-[18px] font-semibold text-[#111112]">Get in touch</h2>
 
+      {/* Chat first: it keeps the conversation on-platform, and is what makes
+          the reviewer eligible to rate this agent afterwards. */}
+      <div className="mb-3">
+        <ChatWithAgentButton agentId={agent.id} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#111112] px-4 py-3 text-[15px] font-medium text-white transition-colors hover:bg-[#2a2a2c] cursor-pointer disabled:opacity-50" />
+      </div>
+
       {!hasContact && (
-        <p className="text-[14px] text-[#8a8a90]">No contact details published.</p>
+        <p className="text-[14px] text-[#8a8a90]">No other contact details published.</p>
       )}
 
       <div className="flex flex-col gap-2">

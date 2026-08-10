@@ -8,6 +8,13 @@ export interface ChatUser {
   lastName: string;
   role?: string;
   developerProfile?: { companyName?: string | null; logoUrl?: string | null } | null;
+  /** Present when this party is an agent — their trading name, not a personal one. */
+  agentProfile?: {
+    id: string;
+    displayName?: string | null;
+    logoUrl?: string | null;
+    photoUrl?: string | null;
+  } | null;
 }
 
 export interface ChatMessage {
@@ -25,15 +32,25 @@ export interface Conversation {
   subject?: string | null;
   propertyId?: string | null;
   rentListingId?: string | null;
-  customer: ChatUser;
-  developer: ChatUser;
+  /** Set when the thread is with an agent rather than about a listing. */
+  agentId?: string | null;
+  /** Whoever opened the thread. */
+  initiator: ChatUser;
+  /** Whoever was contacted. */
+  counterparty: ChatUser;
+  /**
+   * The other side, relative to the signed-in user — computed by the API.
+   * Previously each client worked this out by assuming one party was always
+   * the developer, which stopped being true once agents could chat.
+   */
+  otherParty: ChatUser;
   lastMessage?: ChatMessage | null;
   unreadCount?: number;
   lastMessageAt: string;
 }
 
 export const chatApi = {
-  start: (opts: { propertySlug?: string; rentListingSlug?: string }) =>
+  start: (opts: { propertySlug?: string; rentListingSlug?: string; agentId?: string }) =>
     apiClient.post<Conversation>('/chat/conversations', opts),
   list: () => apiClient.get<Conversation[]>('/chat/conversations'),
   messages: (conversationId: string) =>

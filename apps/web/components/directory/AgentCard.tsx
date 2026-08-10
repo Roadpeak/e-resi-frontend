@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, Building2, MapPin, Phone, User } from 'lucide-react';
+import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
 import { DirectoryCard, IconPillLink } from './DirectoryPrimitives';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
@@ -91,13 +92,21 @@ export function AgentCard({ agent, compact = false }: { agent: Agent; compact?: 
         </p>
       )}
 
-      <Link
-        href={`/agents/${agent.id}`}
-        className="mt-4 inline-flex items-center gap-1.5 self-start text-[14px] font-medium text-[#4A80F5] transition-colors hover:text-[#3457E0]"
-      >
-        Visit agent
-        <ArrowUpRight size={16} />
-      </Link>
+      {/* Both routes the picker offers: look them over, or start talking. */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Link
+          href={`/agents/${agent.id}`}
+          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#4A80F5] transition-colors hover:text-[#3457E0]"
+        >
+          Visit agent
+          <ArrowUpRight size={16} />
+        </Link>
+        <ChatWithAgentButton
+          agentId={agent.id}
+          label="Chat"
+          className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#f5f5f6] px-3.5 py-1.5 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#eaeaec] cursor-pointer disabled:opacity-50"
+        />
+      </div>
     </DirectoryCard>
   );
 }

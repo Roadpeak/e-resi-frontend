@@ -6,7 +6,6 @@ import { Building2, Loader2, MessagesSquare } from 'lucide-react';
 import {
   chatApi, getChatSocket, type ChatMessage, type Conversation,
 } from '../../lib/api/chat';
-import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn } from '../../lib/utils';
 import { ChatThread } from './ChatThread';
 
@@ -30,7 +29,8 @@ export function ChatInbox({
   perspective: 'developer' | 'customer';
   initialConversationId?: string | null;
 }) {
-  const me = useAuthStore((s) => s.user);
+  // The viewer's own identity is no longer needed here: the API resolves
+  // which party is "the other one" and returns it as otherParty.
   const queryClient = useQueryClient();
   const { data: conversations, isLoading } = useQuery({
     queryKey: ['chat', 'conversations'],
@@ -63,17 +63,23 @@ export function ChatInbox({
     };
   }, [queryClient]);
 
+  /**
+   * Who the thread is with, from the signed-in user's side.
+   *
+   * The API resolves which party that is, so this no longer infers it from
+   * the viewer's role — with agents in the mix, "the other one is the
+   * developer" stopped being true. A company or trading name wins over a
+   * personal one where there is one.
+   */
   function labelFor(c: Conversation): { name: string; sub: string } {
-    if (perspective === 'developer') {
-      return {
-        name: `${c.customer.firstName} ${c.customer.lastName}`,
-        sub: [c.customer.role?.toLowerCase(), c.subject].filter(Boolean).join(' · '),
-      };
-    }
+    const other = c.otherParty;
+    const name =
+      other.agentProfile?.displayName
+      ?? other.developerProfile?.companyName
+      ?? `${other.firstName} ${other.lastName}`;
     return {
-      name: c.developer.developerProfile?.companyName
-        ?? `${c.developer.firstName} ${c.developer.lastName}`,
-      sub: c.subject ?? 'Developer',
+      name,
+      sub: [other.role?.toLowerCase(), c.subject].filter(Boolean).join(' · '),
     };
   }
 

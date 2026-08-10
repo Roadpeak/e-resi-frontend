@@ -18,7 +18,7 @@ export type PropertyCategory =
   | 'COMMERCIAL'
   | 'LAND';
 export type UnitStatus = 'available' | 'reserved' | 'sold';
-export type UserRole = 'BUYER' | 'INVESTOR' | 'TENANT' | 'DEVELOPER' | 'ADMIN';
+export type UserRole = 'BUYER' | 'INVESTOR' | 'TENANT' | 'DEVELOPER' | 'AGENT' | 'ADMIN';
 export type MediaType = 'photo' | 'video' | 'drone' | 'three_d' | 'vr' | 'floor_plan';
 
 // ── Production & Billing Tiers ─────────────────
