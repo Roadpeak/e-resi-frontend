@@ -11,7 +11,9 @@ import { Logo } from '../brand/Logo';
 const links = [
   { href: '/properties', label: 'Properties' },
   { href: '/properties?status=off_plan', label: 'Off-Plan' },
-  { href: '/dashboard', label: 'Developers' },
+  // The public directory, not /dashboard — that is the signed-in developer's
+  // own workspace, so visitors clicking this were sent to a login wall.
+  { href: '/developers', label: 'Developers' },
 ];
 
 export function Navbar() {
