@@ -57,7 +57,7 @@ function NearbyPlacesField({
   return (
     <Field
       label="Nearby places"
-      hint="Schools, hospitals, malls and transport links shown under “Nearby” on your listing"
+      hint="Landmarks around the development that it does not own — schools, hospitals, malls, transport. Shown under “Nearby” with their distance."
     >
       <div className="grid gap-2">
         {places.map((place, i) => (
@@ -243,7 +243,15 @@ export function StepDevelopment() {
             <TextInput value={dev.parking} onChange={(e) => patch({ parking: e.target.value })} />
           </Field>
         )}
-        <Field label={devType?.built === false ? 'Site features' : 'Amenities'}>
+        {/* On-site only. Nearby landmarks are a separate field in Location. */}
+        <Field
+          label={devType?.built === false ? 'Site features' : 'On-site amenities'}
+          hint={
+            devType?.built === false
+              ? 'What the site itself has'
+              : 'Facilities inside the development. Nearby schools, malls and transport go under Location.'
+          }
+        >
           <ChipGroup
             options={devType?.built === false ? LAND_FEATURES : AMENITIES}
             value={dev.amenities}

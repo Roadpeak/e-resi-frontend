@@ -35,7 +35,9 @@ export function PropertyLocation({ address, amenities }: Props) {
   return (
     <section id="location" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Location</p>
-      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Neighbourhood & Amenities</h2>
+      {/* "Amenities" here means the neighbourhood's, not the development's —
+          on-site facilities are listed in the overview instead. */}
+      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Neighbourhood</h2>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Map */}

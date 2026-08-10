@@ -76,6 +76,15 @@ export default function NewDevelopmentPage() {
         priceFrom: parsePrice(development.startingPrice),
         currency: development.currency || 'KES',
         tags: development.unitTypes,
+        // What the development itself has. These were collected by the wizard
+        // but never sent, so they only ever survived inside submissionData and
+        // never reached the property page. Nearby landmarks are separate —
+        // they go to the amenities endpoint below, with their distances.
+        features: [
+          ...development.amenities,
+          ...development.securityFeatures,
+          ...development.utilities,
+        ],
         completionDate: development.expectedCompletion
           ? `${development.expectedCompletion}-01T00:00:00.000Z`
           : undefined,
@@ -304,11 +313,15 @@ function ReviewAndCosts() {
           ['Status', dev.status],
           ['Location', [dev.area, dev.city, dev.county].filter(Boolean).join(', ')],
           [
-            'Nearby',
+            'Nearby (not part of the property)',
             dev.nearbyPlaces
               .filter((p) => p.name.trim())
               .map((p) => [p.name, p.distance].filter(Boolean).join(' · '))
               .join(', '),
+          ],
+          [
+            'On-site amenities',
+            [...dev.amenities, ...dev.securityFeatures, ...dev.utilities].join(', '),
           ],
           ['Units', dev.numberOfUnits],
           ['Unit types', dev.unitTypes.join(', ')],

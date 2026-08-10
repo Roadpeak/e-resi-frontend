@@ -154,13 +154,10 @@ export function PropertyOverview({ property }: Props) {
       };
     });
 
-  // ✳ feature list — property features + closest amenities
-  const featureItems = [
-    ...(property.features ?? []),
-    ...(property.amenities ?? [])
-      .slice(0, 4)
-      .map((a) => (a.distance ? `${a.name} · ${a.distance}` : a.name)),
-  ];
+  // ✳ what the development itself has. Nearby landmarks are deliberately not
+  // mixed in here — they belong to the neighbourhood, not the property, and
+  // already have their own "Nearby" panel with distances in PropertyLocation.
+  const featureItems = property.features ?? [];
 
   const fullAddress = [
     property.address.street,
