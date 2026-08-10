@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
-import { pricingApi, type PricingTier, type ServiceItem } from '../../../../lib/api/admin';
+import {
+  pricingApi,
+  PROPERTY_TYPES,
+  type PricingTier,
+  type PropertyTypeKey,
+  type ServiceItem,
+  type ServiceItemForType,
+} from '../../../../lib/api/admin';
 import { ApiError } from '../../../../lib/api/client';
 import { cn } from '../../../../lib/utils';
 
@@ -11,13 +18,24 @@ const cardCls = 'rounded-3xl border border-[#dadce0] bg-white';
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-3.5 py-2 text-[15px] text-[#202124] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
 
-type Tab = 'tiers' | 'services' | 'fee';
+type Tab = 'tiers' | 'services' | 'by-type' | 'fee';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'tiers', label: 'Production tiers', icon: 'layers' },
   { key: 'services', label: 'Service catalogue', icon: 'inventory_2' },
+  { key: 'by-type', label: 'Pricing by type', icon: 'home_work' },
   { key: 'fee', label: 'Listing fee', icon: 'receipt_long' },
 ];
+
+const PROPERTY_TYPE_LABELS: Record<PropertyTypeKey, string> = {
+  APARTMENT: 'Apartments',
+  VILLA: 'Villas',
+  TOWNHOUSE: 'Townhouses',
+  PENTHOUSE: 'Penthouses',
+  OFFICE: 'Offices',
+  COMMERCIAL: 'Commercial',
+  LAND: 'Land',
+};
 
 const CATEGORY_LABELS: Record<string, string> = {
   CAPTURE: 'Photography & Film',
@@ -93,6 +111,7 @@ export default function AdminPricing() {
 
       {tab === 'tiers' && <TiersTab onSaved={flash} />}
       {tab === 'services' && <ServicesTab onSaved={flash} />}
+      {tab === 'by-type' && <PricingByTypeTab onSaved={flash} />}
       {tab === 'fee' && <ListingFeeTab onSaved={flash} />}
     </div>
   );
@@ -286,6 +305,144 @@ function ServiceRow({ service, onSaved }: { service: ServiceItem; onSaved: (m: s
           Retire
         </button>
       )}
+    </div>
+  );
+}
+
+/* ── Pricing by property type ───────────────────────────────────── */
+
+/**
+ * Production costs differ by what is being shot — a villa is not priced like a
+ * one-bed apartment. Each service can carry a price per property type; leaving
+ * one blank falls back to the catalogue default, which is why the default is
+ * always shown as the input's placeholder.
+ */
+function PricingByTypeTab({ onSaved }: { onSaved: (m: string) => void }) {
+  const [propertyType, setPropertyType] = useState<PropertyTypeKey>('APARTMENT');
+  const queryClient = useQueryClient();
+
+  const { data: services, isLoading } = useQuery({
+    queryKey: ['admin-services-by-type', propertyType],
+    queryFn: () => pricingApi.servicesByType(propertyType),
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-1.5">
+        {PROPERTY_TYPES.map((t) => (
+          <button
+            key={t}
+            onClick={() => setPropertyType(t)}
+            className={cn(
+              'rounded-full px-4 py-2 text-[14px] font-medium transition-colors cursor-pointer',
+              propertyType === t
+                ? 'bg-[#1a73e8] text-white'
+                : 'border border-[#dadce0] bg-white text-[#5f6368] hover:bg-[#f8f9fa]',
+            )}
+          >
+            {PROPERTY_TYPE_LABELS[t]}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-[13px] text-[#5f6368]">
+        Prices for <strong className="font-medium text-[#202124]">{PROPERTY_TYPE_LABELS[propertyType]}</strong>.
+        Leave a field blank to use the catalogue default.
+      </p>
+
+      {isLoading ? (
+        <Loading />
+      ) : !services?.length ? (
+        <Empty label="No services yet — use “Seed defaults”." />
+      ) : (
+        <div className="space-y-2">
+          {services.map((s) => (
+            <TypePriceRow
+              key={s.id}
+              service={s}
+              propertyType={propertyType}
+              onSaved={(m) => {
+                queryClient.invalidateQueries({ queryKey: ['admin-services-by-type'] });
+                onSaved(m);
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TypePriceRow({
+  service,
+  propertyType,
+  onSaved,
+}: {
+  service: ServiceItemForType;
+  propertyType: PropertyTypeKey;
+  onSaved: (m: string) => void;
+}) {
+  // Empty means "no override" — deliberately distinct from 0, which is a
+  // legitimate price (a service bundled free with a type).
+  const [price, setPrice] = useState(service.isTypePriced ? String(service.price) : '');
+  const initial = service.isTypePriced ? String(service.price) : '';
+  const dirty = price !== initial;
+
+  const save = useMutation({
+    mutationFn: () =>
+      pricingApi.setServiceTypePrice(
+        service.id,
+        propertyType,
+        price.trim() === '' ? null : Number(price),
+      ),
+    onSuccess: () =>
+      onSaved(
+        price.trim() === ''
+          ? `${service.label} reset to default for ${PROPERTY_TYPE_LABELS[propertyType]}`
+          : `${service.label} priced for ${PROPERTY_TYPE_LABELS[propertyType]}`,
+      ),
+  });
+
+  return (
+    <div className={cn(cardCls, 'flex flex-wrap items-center gap-4 p-4', !service.isActive && 'opacity-60')}>
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] font-medium text-[#202124]">
+          {service.label}
+          {service.isTypePriced ? (
+            <span className="ml-2 rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11px] text-[#1a73e8]">
+              custom
+            </span>
+          ) : (
+            <span className="ml-2 rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] text-[#5f6368]">
+              default
+            </span>
+          )}
+          {!service.isActive && (
+            <span className="ml-2 rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] text-[#5f6368]">
+              retired
+            </span>
+          )}
+        </p>
+        <p className="text-[13px] text-[#5f6368]">
+          Default {service.currency} {service.defaultPrice.toLocaleString()}
+        </p>
+      </div>
+      <span className="text-[13px] text-[#80868b]">{service.currency}</span>
+      <input
+        value={price}
+        onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ''))}
+        inputMode="numeric"
+        placeholder={String(service.defaultPrice)}
+        className={cn(inputCls, 'w-36 text-right')}
+        aria-label={`${service.label} price for ${PROPERTY_TYPE_LABELS[propertyType]}`}
+      />
+      <button
+        onClick={() => save.mutate()}
+        disabled={!dirty || save.isPending}
+        className="rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer disabled:opacity-40"
+      >
+        Save
+      </button>
     </div>
   );
 }

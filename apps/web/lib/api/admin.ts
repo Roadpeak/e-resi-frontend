@@ -73,6 +73,27 @@ export interface ServiceItem {
   isActive: boolean;
 }
 
+/** Property types production can be priced against — mirrors the backend enum. */
+export const PROPERTY_TYPES = [
+  'APARTMENT',
+  'VILLA',
+  'TOWNHOUSE',
+  'PENTHOUSE',
+  'OFFICE',
+  'COMMERCIAL',
+  'LAND',
+] as const;
+export type PropertyTypeKey = (typeof PROPERTY_TYPES)[number];
+
+/** A catalog item with its price resolved for one property type. */
+export interface ServiceItemForType extends ServiceItem {
+  /** Price to use for this type — the override if set, else defaultPrice. */
+  price: number;
+  defaultPrice: number;
+  isTypePriced: boolean;
+  propertyType: PropertyTypeKey;
+}
+
 export interface PlatformSetting {
   id: string;
   key: string;
@@ -98,6 +119,15 @@ export const pricingApi = {
   updateService: (id: string, body: Partial<ServiceItem>) =>
     apiClient.patch<ServiceItem>(`/admin/pricing/services/${id}`, body),
   retireService: (id: string) => apiClient.delete<ServiceItem>(`/admin/pricing/services/${id}`),
+
+  /** The catalog priced for one property type, with defaults alongside. */
+  servicesByType: (propertyType: PropertyTypeKey) =>
+    apiClient.get<ServiceItemForType[]>(
+      `/admin/pricing/services/by-type?propertyType=${propertyType}`,
+    ),
+  /** Set a type price, or pass null to clear it and fall back to the default. */
+  setServiceTypePrice: (id: string, propertyType: PropertyTypeKey, price: number | null) =>
+    apiClient.patch(`/admin/pricing/services/${id}/type-price`, { propertyType, price }),
 
   /**
    * Change the platform billing currency. `rate` multiplies catalog prices;
