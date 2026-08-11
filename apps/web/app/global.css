@@ -104,6 +104,13 @@
   }
 }
 
+/* Indeterminate upload bar — used when the browser cannot size the request,
+   so the bar shows motion without implying a position we do not know. */
+@keyframes progress-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
 /* ── Hero button glow pulses ── */
 @keyframes glow-pulse-chalk {
   0%, 100% { box-shadow: 0 0 16px rgba(245,242,238,0.08), 0 0 0 1px rgba(245,242,238,0.12); }

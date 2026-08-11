@@ -4,10 +4,11 @@ import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, Building2, Film, Headset, ImagePlus, Loader2, Plus, Trash2, Video, X,
+  Box, Building2, Film, Headset, ImagePlus, Loader2, Trash2, Video,
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
-import { uploadFile } from '../../lib/api/media';
+import { uploadFile, type UploadProgress } from '../../lib/api/media';
+import { UploadProgressBar } from './UploadProgressBar';
 import { cn } from '../../lib/utils';
 
 /* ── Shared types ───────────────────────────────────────────────── */
@@ -106,6 +107,9 @@ function GalleryCard({ slug }: { slug: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const [currentFile, setCurrentFile] = useState('');
+  const abortRef = useRef<AbortController | null>(null);
 
   const { data: media, isLoading } = useQuery({
     queryKey: ['property-media', slug],
@@ -118,10 +122,18 @@ function GalleryCard({ slug }: { slug: string }) {
     if (!files.length) return;
     setError('');
     setBusy(true);
+    const images = files.filter((f) => f.type.startsWith('image/'));
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
-        const uploaded = await uploadFile(file, 'properties');
+      for (const [i, file] of images.entries()) {
+        // Named per file rather than as one total: a batch of thirty photos
+        // reads as "3 of 30" progress, which is what the person is watching.
+        setCurrentFile(`${file.name} (${i + 1} of ${images.length})`);
+        const uploaded = await uploadFile(file, 'properties', {
+          onProgress: setProgress,
+          signal: controller.signal,
+        });
         await apiClient.post(`/media/properties/${slug}`, {
           type: 'PHOTO',
           url: uploaded.url,
@@ -131,8 +143,17 @@ function GalleryCard({ slug }: { slug: string }) {
       queryClient.invalidateQueries({ queryKey: ['property-media', slug] });
       queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Upload failed.');
+      const message = err instanceof ApiError || err instanceof Error
+        ? err.message
+        : 'Upload failed.';
+      // Photos already uploaded before a cancel are kept — they are on the
+      // server and listed, so discarding them would lose real work.
+      setError(message === 'Upload cancelled' ? '' : message);
+      queryClient.invalidateQueries({ queryKey: ['property-media', slug] });
     } finally {
+      setProgress(null);
+      setCurrentFile('');
+      abortRef.current = null;
       setBusy(false);
       if (inputRef.current) inputRef.current.value = '';
     }
@@ -159,6 +180,17 @@ function GalleryCard({ slug }: { slug: string }) {
           {busy ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} Add photos
         </button>
       </div>
+
+      {progress && (
+        <div className="mt-3">
+          <UploadProgressBar
+            progress={progress}
+            fileName={currentFile}
+            label="Uploading"
+            onCancel={() => abortRef.current?.abort()}
+          />
+        </div>
+      )}
 
       {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
 
@@ -318,6 +350,10 @@ function SceneGroup({
   const [customLabel, setCustomLabel] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Tour videos are the largest thing anyone uploads here, so progress is
+  // tracked rather than showing an unqualified spinner.
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // ── read existing scenes for this kind
   const { data: scenes, isLoading } = useQuery({
@@ -366,8 +402,14 @@ function SceneGroup({
     }
 
     setBusy(true);
+    setProgress({ loaded: 0, total: file.size, percent: 0 });
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const uploaded = await uploadFile(file, 'tours');
+      const uploaded = await uploadFile(file, 'tours', {
+        onProgress: setProgress,
+        signal: controller.signal,
+      });
 
       if (kind === 'cinematic') {
         const category = scope === 'units'
@@ -403,9 +445,15 @@ function SceneGroup({
       queryClient.invalidateQueries({ queryKey: ['tours', slug, kind] });
       queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Upload failed.');
+      // Cancelling is a deliberate action, not a failure to report back.
+      const message = err instanceof ApiError || err instanceof Error
+        ? err.message
+        : 'Upload failed.';
+      setError(message === 'Upload cancelled' ? '' : message);
     } finally {
       setBusy(false);
+      setProgress(null);
+      abortRef.current = null;
       if (fileRef.current) fileRef.current.value = '';
     }
   }
@@ -433,6 +481,16 @@ function SceneGroup({
           {busy ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />} Upload video
         </button>
       </div>
+
+      {progress && (
+        <div className="mt-3">
+          <UploadProgressBar
+            progress={progress}
+            label="Uploading video"
+            onCancel={() => abortRef.current?.abort()}
+          />
+        </div>
+      )}
 
       {/* group-specific controls */}
       {scope === 'units' && (
