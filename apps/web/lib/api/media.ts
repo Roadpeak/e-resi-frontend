@@ -108,43 +108,138 @@ async function presign(file: File, folder: UploadFolder): Promise<PresignRespons
 }
 
 /**
+ * Cloudinary refuses a single-request upload above 100MB by closing the
+ * connection, which surfaces in the browser as a CORS error rather than
+ * anything descriptive. Anything near that goes up in chunks instead.
+ */
+const CHUNK_THRESHOLD = 90 * 1024 * 1024;
+const CHUNK_SIZE = 20 * 1024 * 1024;
+
+interface CloudinaryResponse {
+  secure_url?: string;
+  public_id?: string;
+  bytes?: number;
+  error?: { message?: string };
+}
+
+/**
  * POST straight to Cloudinary with the signed fields.
  *
- * Cloudinary's own endpoint handles large files without us holding them, so
+ * Cloudinary stores the file itself, so the bytes never occupy our server —
  * this is the path that makes multi-gigabyte uploads possible at all.
  */
-function uploadDirectToCloudinary(
+async function uploadDirectToCloudinary(
   file: File,
   presigned: PresignResponse,
   options: UploadOptions,
 ): Promise<UploadedFile> {
-  return new Promise<UploadedFile>((resolve, reject) => {
-    const form = new FormData();
-    for (const [k, v] of Object.entries(presigned.fields!)) {
-      form.append(k, String(v));
-    }
-    form.append('file', file);
+  const result = file.size > CHUNK_THRESHOLD
+    ? await sendChunked(file, presigned, options)
+    : await sendWhole(file, presigned, options);
 
+  return {
+    url: result.secure_url!,
+    key: `${presigned.resourceType}:${result.public_id ?? presigned.key}`,
+    sizeBytes: result.bytes ?? file.size,
+  };
+}
+
+/** One request — the common case for photos and short clips. */
+function sendWhole(
+  file: File,
+  presigned: PresignResponse,
+  options: UploadOptions,
+): Promise<CloudinaryResponse> {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(presigned.fields!)) form.append(k, String(v));
+  form.append('file', file);
+  return sendToCloudinary(presigned.uploadUrl, form, options);
+}
+
+/**
+ * Send the file in slices.
+ *
+ * Every chunk carries the same X-Unique-Upload-Id so Cloudinary reassembles
+ * them into one asset, and a Content-Range naming its byte span. Only the
+ * final chunk returns the stored asset — the earlier ones answer 200 with a
+ * "pending" body, so treating any 200 as success would hand back a URL for a
+ * file that is not finished.
+ *
+ * Chunks go sequentially rather than in parallel: Cloudinary assembles by
+ * range, and a failed chunk mid-flight would otherwise leave a partial asset
+ * with no way to tell which piece is missing.
+ */
+async function sendChunked(
+  file: File,
+  presigned: PresignResponse,
+  options: UploadOptions,
+): Promise<CloudinaryResponse> {
+  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const total = file.size;
+  const chunks = Math.ceil(total / CHUNK_SIZE);
+  let last: CloudinaryResponse = {};
+
+  for (let i = 0; i < chunks; i++) {
+    if (options.signal?.aborted) throw new Error('Upload cancelled');
+
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, total);
+    const slice = file.slice(start, end);
+
+    const form = new FormData();
+    for (const [k, v] of Object.entries(presigned.fields!)) form.append(k, String(v));
+    // The filename matters: Cloudinary derives the asset's format from it, and
+    // a slice would otherwise arrive as "blob" with no extension.
+    form.append('file', slice, file.name);
+
+    last = await sendToCloudinary(presigned.uploadUrl, form, {
+      ...options,
+      // Progress is reported against the whole file, not the current chunk,
+      // so the bar advances once from 0 to 100 rather than resetting per slice.
+      onProgress: options.onProgress
+        ? (p) => options.onProgress!({
+            loaded: start + p.loaded,
+            total,
+            percent: Math.round(((start + p.loaded) / total) * 100),
+          })
+        : undefined,
+    }, {
+      'X-Unique-Upload-Id': uploadId,
+      'Content-Range': `bytes ${start}-${end - 1}/${total}`,
+    });
+  }
+
+  if (!last.secure_url) {
+    throw new Error('Upload finished but Cloudinary returned no file URL');
+  }
+  return last;
+}
+
+/** One request to Cloudinary, with progress, cancellation and error handling. */
+function sendToCloudinary(
+  url: string,
+  form: FormData,
+  options: UploadOptions,
+  headers: Record<string, string> = {},
+): Promise<CloudinaryResponse> {
+  return new Promise<CloudinaryResponse>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', presigned.uploadUrl);
+    xhr.open('POST', url);
     // Deliberately no Authorization header: this request goes to Cloudinary,
     // and sending our bearer token to a third party would leak it.
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
 
     attachProgress(xhr, options);
 
     xhr.addEventListener('load', () => {
-      let json: { secure_url?: string; public_id?: string; bytes?: number; error?: { message?: string } } | null = null;
+      let json: CloudinaryResponse | null = null;
       try {
         json = JSON.parse(xhr.responseText);
       } catch {
         json = null;
       }
-      if (xhr.status >= 200 && xhr.status < 300 && json?.secure_url) {
-        resolve({
-          url: json.secure_url,
-          key: `${presigned.resourceType}:${json.public_id ?? presigned.key}`,
-          sizeBytes: json.bytes ?? file.size,
-        });
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(json ?? {});
       } else {
         reject(new Error(json?.error?.message ?? `Upload failed (${xhr.status})`));
       }
