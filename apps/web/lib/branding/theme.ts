@@ -76,9 +76,21 @@ export const THEME_PRESETS = [
 ] as const;
 
 export const HERO_STYLES = [
-  { key: 'CINEMATIC', label: 'Cinematic', note: 'Full-bleed image or video with overlaid title.' },
-  { key: 'SPLIT', label: 'Split', note: 'Image on one side, details on the other.' },
-  { key: 'MINIMAL', label: 'Minimal', note: 'Compact header, content starts immediately.' },
+  {
+    key: 'CINEMATIC',
+    label: 'Cinematic',
+    note: 'Full-bleed image or video that fades into the page. Best when the photography sells it.',
+  },
+  {
+    key: 'SPLIT',
+    label: 'Split',
+    note: 'Image beside location, completion date and your call to action. Suits off-plan, where buyers want the facts first.',
+  },
+  {
+    key: 'MINIMAL',
+    label: 'Minimal',
+    note: 'A short banner, so the tour and units start higher up the page.',
+  },
 ] as const;
 
 export const DEFAULT_HERO_STYLE = 'CINEMATIC';

@@ -387,13 +387,15 @@ export default function CustomiseMiniSite() {
               </button>
             </div>
 
-            {/* Unsaved edits are applied over the live page via query params so
-                the preview updates without writing to the database first. */}
+            {/* A dedicated /preview route, not the public page with a query
+                param: reading searchParams on /[slug] opted it out of static
+                generation, making every buyer's page slower to serve this
+                editor. The preview renders the same components. */}
             <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
               <iframe
                 ref={previewRef}
                 title="Mini-site preview"
-                src={`/${slug}?preview=1&brandColor=${encodeURIComponent(draft.brandColor)}&brandFont=${draft.brandFont}&heroStyle=${draft.heroStyle}&ctaLabel=${encodeURIComponent(draft.ctaLabel)}&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}&order=${encodeURIComponent(draft.sectionOrder.join(','))}`}
+                src={`/${slug}/preview?brandColor=${encodeURIComponent(draft.brandColor)}&brandFont=${draft.brandFont}&heroStyle=${draft.heroStyle}&ctaLabel=${encodeURIComponent(draft.ctaLabel)}&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}&order=${encodeURIComponent(draft.sectionOrder.join(','))}`}
                 className="h-[76vh] w-full"
               />
             </div>

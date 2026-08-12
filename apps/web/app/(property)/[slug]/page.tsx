@@ -34,7 +34,6 @@ async function fetchRentListings(propertyId: string) {
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 /**
@@ -45,14 +44,6 @@ interface Props {
 const SELF_ANCHORED = new Set([
   'gallery', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
 ]);
-
-/** First value of a possibly-repeated query param, or undefined. */
-const str = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v) || undefined;
-
-/** Comma-separated query param to a string array. */
-const list = (v: string | string[] | undefined) =>
-  (str(v) ?? '').split(',').map((x) => x.trim()).filter(Boolean);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -99,7 +90,7 @@ export async function generateStaticParams() {
   return liveSlugs.map((slug) => ({ slug }));
 }
 
-export default async function PropertyPage({ params, searchParams }: Props) {
+export default async function PropertyPage({ params }: Props) {
   const { slug } = await params;
 
   const property: Property | null = await fetchProperty(slug);
@@ -111,23 +102,12 @@ export default async function PropertyPage({ params, searchParams }: Props) {
   // defaults, then ours. Resolved server-side so the page paints already
   // branded — no flash of e-resi blue before the developer's colour loads.
   //
-  // The customise screen renders this same page in an iframe and passes
-  // unsaved edits as query params, so a developer sees the real page rather
-  // than a mock. These only ever affect presentation, so an arbitrary visitor
-  // appending them can change nothing but their own view.
-  const sp = await searchParams;
-  const preview = sp?.preview === '1';
-  const branding = resolveBranding({
-    ...(property as BrandingSource),
-    ...(preview && {
-      brandColor: str(sp.brandColor) ?? (property as BrandingSource).brandColor,
-      brandFont: str(sp.brandFont) ?? (property as BrandingSource).brandFont,
-      heroStyle: str(sp.heroStyle) ?? (property as BrandingSource).heroStyle,
-      ctaLabel: str(sp.ctaLabel) ?? (property as BrandingSource).ctaLabel,
-      hiddenSections: list(sp.hidden),
-      sectionOrder: list(sp.order),
-    }),
-  });
+  // Deliberately does NOT read searchParams: doing so opts this route out of
+  // static generation entirely (DYNAMIC_SERVER_USAGE against
+  // generateStaticParams), which would make every buyer's page slower to
+  // serve a dashboard preview feature. The customise screen previews via
+  // /[slug]/preview instead.
+  const branding = resolveBranding(property as BrandingSource);
 
   // Sections are keyed by the same anchor ids the topbar links to, so
   // reordering and hiding need no changes in the section components.
