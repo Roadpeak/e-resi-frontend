@@ -1,0 +1,106 @@
+/**
+ * Client-side analytics emitter.
+ *
+ * The schema has defined TOUR_START, TOUR_COMPLETE, UNIT_VIEWED, SHARE and
+ * INQUIRY_SUBMITTED since the beginning, but only PAGE_VIEW was ever fired —
+ * so a developer could be told how many people opened the page and nothing
+ * about whether anyone actually watched the tour they paid for. That
+ * engagement data is the thing that makes the mini-site defensible, so these
+ * events matter more than the page view does.
+ *
+ * Everything here is fire-and-forget: analytics must never block a tour from
+ * starting, and a failed beacon is not worth surfacing to a visitor.
+ */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+
+export type AnalyticsEventType =
+  | 'PAGE_VIEW'
+  | 'TOUR_START'
+  | 'TOUR_COMPLETE'
+  | 'INQUIRY_SUBMITTED'
+  | 'BOOKING_SUBMITTED'
+  | 'UNIT_VIEWED'
+  | 'PROPERTY_SAVED'
+  | 'SHARE';
+
+/**
+ * A per-tab id, so repeat events from one visitor collapse into one session
+ * rather than inflating the numbers a developer is shown.
+ */
+export function sessionId(): string {
+  try {
+    let id = sessionStorage.getItem('e-resi-session');
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem('e-resi-session', id);
+    }
+    return id;
+  } catch {
+    // Private browsing can throw on sessionStorage access.
+    return 'anonymous';
+  }
+}
+
+/**
+ * Coarse traffic source. Deliberately bucketed rather than storing the raw
+ * referrer: what a developer needs to know is whether their own shared links
+ * or our marketplace drove the visit, not which exact URL.
+ */
+export function sourceFromReferrer(): string {
+  try {
+    if (!document.referrer) return 'Direct';
+    const host = new URL(document.referrer).hostname;
+    if (host === window.location.hostname) return 'Marketplace';
+    if (/google\.|bing\.|duckduckgo\.|yahoo\./.test(host)) return 'Search';
+    if (/wa\.me|whatsapp\./.test(host)) return 'WhatsApp';
+    if (/facebook\.|instagram\.|twitter\.|x\.com|tiktok\.|linkedin\.|youtube\./.test(host)) {
+      return 'Social';
+    }
+    return 'Referral';
+  } catch {
+    return 'Direct';
+  }
+}
+
+export interface TrackInput {
+  type: AnalyticsEventType;
+  propertyId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Emit one event. Uses sendBeacon when available so an event fired as the
+ * visitor leaves — TOUR_COMPLETE especially — still arrives after the page
+ * has been torn down.
+ */
+export function track({ type, propertyId, metadata }: TrackInput): void {
+  if (typeof window === 'undefined' || !propertyId) return;
+
+  const body = JSON.stringify({
+    type,
+    propertyId,
+    sessionId: sessionId(),
+    source: sourceFromReferrer(),
+    ...(metadata && { metadata }),
+  });
+
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(
+        `${API_BASE}/analytics/track`,
+        new Blob([body], { type: 'application/json' }),
+      );
+      return;
+    }
+  } catch {
+    // Fall through to fetch.
+  }
+
+  fetch(`${API_BASE}/analytics/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
+    body,
+  }).catch(() => {});
+}

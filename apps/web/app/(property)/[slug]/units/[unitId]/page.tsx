@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { NavbarLight } from '../../../../../components/layout/NavbarLight';
 import { ChatWithDeveloper } from '../../../../../components/chat/ChatWithDeveloper';
 import { apiClient } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
+import { track } from '../../../../../lib/analytics/track';
 
 interface CinematicScene {
   id: string;
@@ -58,6 +59,18 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
     queryKey: ['unit', slug, unitId],
     queryFn: () => apiClient.get<UnitDetail>(`/properties/${slug}/units/${unitId}`),
   });
+
+  // Which units draw attention is the most actionable thing a developer gets
+  // from this page — it tells their sales team what to lead with. Declared
+  // before the early returns below so hook order stays stable across renders.
+  useEffect(() => {
+    if (!unit?.property?.id) return;
+    track({
+      type: 'UNIT_VIEWED',
+      propertyId: unit.property.id,
+      metadata: { unitId: unit.id, unitName: unit.name },
+    });
+  }, [unit?.property?.id, unit?.id, unit?.name]);
 
   if (isLoading) {
     return (

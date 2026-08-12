@@ -19,4 +19,29 @@ export const analyticsApi = {
 
   propertyViews: (propertyId: string) =>
     apiClient.get<{ totalViews: number; uniqueVisitors: number }>(`/analytics/property/${propertyId}`),
+
+  /** Full engagement report for one development's mini-site. */
+  miniSiteReport: (slug: string, days = 30) =>
+    apiClient.get<MiniSiteReport>(`/analytics/properties/${slug}?days=${days}`),
 };
+
+export interface MiniSiteReport {
+  property: { id: string; slug: string; name: string };
+  period: { days: number; since: string };
+  headline: {
+    views: number;
+    uniqueVisitors: number;
+    tourStarts: number;
+    tourCompletes: number;
+    shares: number;
+    inquiries: number;
+    bookings: number;
+    saved: number;
+    tourOpenRate: number;
+    tourEngagementRate: number;
+    averageTourSeconds: number;
+  };
+  tours: { tour: string; starts: number; completes: number; averageSeconds: number }[];
+  sources: { source: string; visits: number }[];
+  topUnits: { unitId: string; name: string; views: number; uniqueViewers: number }[];
+}

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { fetchProperty, fetchPropertySlugs } from '../../../../../lib/api/fetch-property';
 import { TourCinematicClient } from '../../../../../components/property/tour/TourCinematicClient';
 import type { Metadata } from 'next';
+import { TrackTour } from '../../../../../components/property/TrackTour';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,5 +27,10 @@ export default async function TourCinematicPage({ params }: Props) {
   const { slug } = await params;
   const property = await fetchProperty(slug);
   if (!property || !(property.cinematicScenes ?? []).length) notFound();
-  return <TourCinematicClient property={property} />;
+  return (
+    <>
+      <TrackTour propertyId={property.id} tour="CINEMATIC" />
+      <TourCinematicClient property={property} />
+    </>
+  );
 }

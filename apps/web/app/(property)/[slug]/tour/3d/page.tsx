@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { fetchProperty, fetchPropertySlugs, buildTour } from '../../../../../lib/api/fetch-property';
 import { Tour3DClient } from '../../../../../components/property/tour/Tour3DClient';
 import type { Metadata } from 'next';
+import { TrackTour } from '../../../../../components/property/TrackTour';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -30,5 +31,10 @@ export default async function Tour3DPage({ params }: Props) {
   const tour = buildTour(property as Parameters<typeof buildTour>[0]);
   if (!tour || !tour.sections.some((s) => s.scenes.length > 0)) notFound();
 
-  return <Tour3DClient property={property} tour={tour} />;
+  return (
+    <>
+      <TrackTour propertyId={property.id} tour="3D" />
+      <Tour3DClient property={property} tour={tour} />
+    </>
+  );
 }

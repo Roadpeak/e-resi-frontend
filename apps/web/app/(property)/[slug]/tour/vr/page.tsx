@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { fetchProperty, fetchPropertySlugs, buildTour } from '../../../../../lib/api/fetch-property';
 import { TourVRClient } from '../../../../../components/property/tour/TourVRClient';
 import type { Metadata } from 'next';
+import { TrackTour } from '../../../../../components/property/TrackTour';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -31,5 +32,10 @@ export default async function TourVRPage({ params }: Props) {
   // Gate on real scenes, not the flag — it can drift when scenes are removed.
   if (!tour || !tour.sections.some((s) => s.scenes.length > 0)) notFound();
 
-  return <TourVRClient property={property} tour={tour} />;
+  return (
+    <>
+      <TrackTour propertyId={property.id} tour="VR" />
+      <TourVRClient property={property} tour={tour} />
+    </>
+  );
 }

@@ -13,6 +13,7 @@ import type { Property } from '../../lib/types';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
+import { track } from '../../lib/analytics/track';
 
 const sections = [
   { id: 'overview', label: 'Overview' },
@@ -42,6 +43,8 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
    * the topbar comment on why we do not offer the latter an exit.
    */
   const [cameFromMarketplace, setCameFromMarketplace] = useState(false);
+  /** Transient 'Link copied' confirmation for the clipboard fallback. */
+  const [shareNote, setShareNote] = useState('');
   const [active, setActive] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
@@ -138,6 +141,29 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
   // Where the branded wordmark links: the development's own top, not our
   // marketplace home.
   const homeHref = `/${property.slug}`;
+
+  /**
+   * Native share sheet where available (which is where this matters — a phone
+   * handing straight off to WhatsApp), clipboard everywhere else.
+   */
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const title = property.name;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: property.tagline ?? title, url });
+        track({ type: 'SHARE', propertyId: property.id, metadata: { method: 'native' } });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareNote('Link copied');
+      setTimeout(() => setShareNote(''), 2000);
+      track({ type: 'SHARE', propertyId: property.id, metadata: { method: 'clipboard' } });
+    } catch {
+      // A dismissed share sheet throws AbortError — not worth reporting, and
+      // deliberately not tracked, since nothing was actually shared.
+    }
+  }
 
   return (
     <>
@@ -276,9 +302,19 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
               <Heart size={15} className={saved ? 'fill-red-500' : ''} />
             </button>
 
-            {/* Share */}
-            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer">
+            {/* Share — the mini-site's entire distribution mechanism, so it
+                both has to work and has to be measured. */}
+            <button
+              onClick={handleShare}
+              aria-label="Share this development"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer"
+            >
               <Share2 size={15} />
+              {shareNote && (
+                <span className="absolute -bottom-9 right-0 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1 text-[11px] font-medium text-white">
+                  {shareNote}
+                </span>
+              )}
             </button>
 
             {/* Book CTA */}
