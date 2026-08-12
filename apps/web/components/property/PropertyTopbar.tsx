@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
 import { track } from '../../lib/analytics/track';
+import { navbarPalette, type NavbarPalette } from '../../lib/branding/theme';
 
 const sections = [
   { id: 'overview', label: 'Overview' },
@@ -31,9 +32,18 @@ interface Props {
   property: Property;
   /** Primary call to action wording, chosen by the developer. */
   ctaLabel?: string;
+  /** SOLID (pinned, full width) or FLOATING (rounded, inset). */
+  navbarStyle?: string;
+  /** Resolved bar surface — background, foreground, border, muted text. */
+  navbar?: NavbarPalette;
 }
 
-export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props) {
+export function PropertyTopbar({
+  property,
+  ctaLabel = 'Book a Viewing',
+  navbarStyle = 'SOLID',
+  navbar = navbarPalette('LIGHT', '#1a73e8'),
+}: Props) {
   // The developer's uploaded logo, stored as a media row with a sentinel title.
   const logoUrl = property.logoUrl;
   const [scrolled, setScrolled] = useState(false);
@@ -165,15 +175,36 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
     }
   }
 
+  const floating = navbarStyle === 'FLOATING';
+
   return (
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/85 backdrop-blur-xl',
-          scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-gray-100',
+          'fixed z-50 transition-all duration-300 backdrop-blur-xl',
+          floating
+            // Floats clear of the edges and rounds off, so the page shows
+            // through around it rather than being capped by a full-width bar.
+            ? 'left-3 right-3 top-3 rounded-2xl sm:left-6 sm:right-6 sm:top-4'
+            : 'left-0 right-0 top-0',
+          scrolled && !floating && 'shadow-sm',
+          floating && 'shadow-lg',
         )}
+        style={{
+          backgroundColor: navbar.background,
+          color: navbar.foreground,
+          // A floating bar reads as a card, so it is fully bordered; a pinned
+          // one only needs the bottom edge that separates it from the page.
+          border: floating ? `1px solid ${navbar.border}` : 'none',
+          borderBottom: floating ? `1px solid ${navbar.border}` : `1px solid ${navbar.border}`,
+        }}
       >
-        <div className="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <div
+          className={cn(
+            'flex h-16 items-center gap-4',
+            floating ? 'px-4 sm:px-5' : 'px-4 sm:px-6 lg:px-8',
+          )}
+        >
 
           {/* ── Left: the developer's identity, always ──
               This corner is the highest-status position on the page, so it
@@ -201,8 +232,8 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
                 </div>
               )}
               <span
-                className="text-[15px] font-semibold text-gray-900 truncate max-w-[10rem] sm:max-w-xs"
-                style={{ fontFamily: 'var(--brand-font-heading)' }}
+                className="text-[15px] font-semibold truncate max-w-[10rem] sm:max-w-xs"
+                style={{ fontFamily: 'var(--brand-font-heading)', color: navbar.foreground }}
               >
                 {property.name}
               </span>
@@ -224,7 +255,8 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
                   <ChevronRight size={13} className="text-gray-300" />
                   <Link
                     href="/properties"
-                    className="group flex items-center gap-1 text-[13px] text-gray-400 transition-colors hover:text-gray-700"
+                    className="group flex items-center gap-1 text-[13px] transition-colors hover:opacity-100"
+                    style={{ color: navbar.muted }}
                   >
                     <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
                     All properties
@@ -242,15 +274,16 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
                 onClick={() => scrollTo(section.id)}
                 className={cn(
                   'relative rounded-full px-3.5 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
-                  active === section.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900',
                 )}
+                style={{ color: active === section.id ? navbar.foreground : navbar.muted }}
               >
                 {/* Pill sits behind the label — it's absolute and later in DOM order,
                     so without explicit layering it paints over the text. */}
                 {active === section.id && (
                   <motion.span
                     layoutId="property-nav-indicator"
-                    className="absolute inset-0 -z-10 rounded-full bg-gray-100"
+                    className="absolute inset-0 -z-10 rounded-full"
+                    style={{ backgroundColor: navbar.onDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.06)' }}
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                   />
                 )}
@@ -296,8 +329,13 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
                 'flex h-9 w-9 items-center justify-center rounded-full border transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60',
                 saved
                   ? 'border-red-500/30 bg-red-500/10 text-red-500'
-                  : 'border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100',
+                  : 'hover:opacity-80',
               )}
+              style={saved ? undefined : {
+                borderColor: navbar.border,
+                backgroundColor: navbar.onDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)',
+                color: navbar.muted,
+              }}
             >
               <Heart size={15} className={saved ? 'fill-red-500' : ''} />
             </button>
@@ -307,7 +345,12 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
             <button
               onClick={handleShare}
               aria-label="Share this development"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border transition-all hover:opacity-80 cursor-pointer"
+              style={{
+                borderColor: navbar.border,
+                backgroundColor: navbar.onDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)',
+                color: navbar.muted,
+              }}
             >
               <Share2 size={15} />
               {shareNote && (
@@ -329,7 +372,12 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:opacity-80 cursor-pointer"
+              style={{
+                borderColor: navbar.border,
+                backgroundColor: navbar.onDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)',
+                color: navbar.muted,
+              }}
             >
               {mobileOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
@@ -345,7 +393,12 @@ export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props)
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 top-16 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-xl pb-5 pt-3 px-4 lg:hidden"
+            className={cn(
+              'fixed z-40 border border-gray-200 bg-white/95 backdrop-blur-xl pb-5 pt-3 px-4 lg:hidden',
+              floating
+                ? 'left-3 right-3 top-[4.75rem] rounded-2xl shadow-lg sm:left-6 sm:right-6 sm:top-[5.25rem]'
+                : 'inset-x-0 top-16 border-x-0 border-t-0',
+            )}
           >
             {/* Property identity on mobile */}
             <div className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-4">

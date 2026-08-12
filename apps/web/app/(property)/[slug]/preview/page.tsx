@@ -69,6 +69,13 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
     brandFont: str(sp.brandFont) ?? (property as BrandingSource).brandFont,
     heroStyle: str(sp.heroStyle) ?? (property as BrandingSource).heroStyle,
     ctaLabel: str(sp.ctaLabel) ?? (property as BrandingSource).ctaLabel,
+    navbarStyle: str(sp.navbarStyle) ?? (property as BrandingSource).navbarStyle,
+    navbarTheme: str(sp.navbarTheme) ?? (property as BrandingSource).navbarTheme,
+    // Explicit '0'/'1' rather than presence: the editor must be able to
+    // preview turning the overlay OFF, which an absent param cannot express.
+    heroOverlay: sp.heroOverlay === undefined
+      ? (property as BrandingSource).heroOverlay
+      : str(sp.heroOverlay) === '1',
     hiddenSections: list(sp.hidden),
     sectionOrder: list(sp.order),
   });
@@ -97,8 +104,18 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
       className="min-h-screen bg-white"
       style={{ ...themeVars(branding.theme), fontFamily: 'var(--brand-font-body)' }}
     >
-      <PropertyTopbar property={property} ctaLabel={branding.ctaLabel} />
-      <PropertyHero property={property} heroStyle={branding.heroStyle} ctaLabel={branding.ctaLabel} />
+      <PropertyTopbar
+        property={property}
+        ctaLabel={branding.ctaLabel}
+        navbarStyle={branding.navbarStyle}
+        navbar={branding.navbar}
+      />
+      <PropertyHero
+        property={property}
+        heroStyle={branding.heroStyle}
+        ctaLabel={branding.ctaLabel}
+        overlay={branding.heroOverlay}
+      />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
         {branding.sections.map((id) =>
           blocks[id] ? (

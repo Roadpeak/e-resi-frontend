@@ -1,5 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Cormorant_Garamond, Roboto } from 'next/font/google';
+import {
+  Geist,
+  Geist_Mono,
+  Cormorant_Garamond,
+  Roboto,
+  Plus_Jakarta_Sans,
+  Playfair_Display,
+  Inter,
+  Archivo,
+} from 'next/font/google';
 import './global.css';
 import { Providers } from './providers';
 
@@ -28,6 +37,34 @@ const roboto = Roboto({
   subsets: ['latin'],
   variable: '--font-roboto',
   weight: ['400', '500', '700'],
+  display: 'swap',
+});
+
+// ── Mini-site brand fonts ──
+// The customise editor offers these as curated pairings. They must be loaded
+// here or the CSS variables resolve to nothing and every "choice" silently
+// renders as the system default — which is what was happening.
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const archivo = Archivo({
+  subsets: ['latin'],
+  variable: '--font-archivo',
   display: 'swap',
 });
 
@@ -109,7 +146,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
         <link

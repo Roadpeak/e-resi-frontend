@@ -34,29 +34,29 @@ export const BRAND_FONTS: BrandFont[] = [
   {
     key: 'MODERN',
     label: 'Modern',
-    heading: '"Plus Jakarta Sans", system-ui, sans-serif',
-    body: '"Plus Jakarta Sans", system-ui, sans-serif',
+    heading: 'var(--font-jakarta), system-ui, sans-serif',
+    body: 'var(--font-jakarta), system-ui, sans-serif',
     note: 'Clean and neutral. Safe for any development.',
   },
   {
     key: 'LUXURY',
     label: 'Luxury',
-    heading: '"Playfair Display", Georgia, serif',
-    body: '"Inter", system-ui, sans-serif',
+    heading: 'var(--font-playfair), Georgia, serif',
+    body: 'var(--font-inter), system-ui, sans-serif',
     note: 'Serif headings over clean text. Suits villas and premium builds.',
   },
   {
     key: 'MINIMAL',
     label: 'Minimal',
-    heading: '"Inter", system-ui, sans-serif',
-    body: '"Inter", system-ui, sans-serif',
+    heading: 'var(--font-inter), system-ui, sans-serif',
+    body: 'var(--font-inter), system-ui, sans-serif',
     note: 'Understated and quiet. Lets the photography lead.',
   },
   {
     key: 'BOLD',
     label: 'Bold',
-    heading: '"Archivo", system-ui, sans-serif',
-    body: '"Inter", system-ui, sans-serif',
+    heading: 'var(--font-archivo), system-ui, sans-serif',
+    body: 'var(--font-inter), system-ui, sans-serif',
     note: 'Heavy, confident headings. Good for large mixed-use schemes.',
   },
 ];
@@ -113,6 +113,79 @@ export const SECTIONS = [
 ] as const;
 
 export const DEFAULT_CTA_LABEL = 'Book a viewing';
+
+// ─── Navbar ─────────────────────────────────────────────────────────────────
+
+export const NAVBAR_STYLES = [
+  {
+    key: 'SOLID',
+    label: 'Solid bar',
+    note: 'Full-width bar pinned to the top edge.',
+  },
+  {
+    key: 'FLOATING',
+    label: 'Floating',
+    note: 'Rounded bar that floats clear of the page edges.',
+  },
+] as const;
+
+export const DEFAULT_NAVBAR_STYLE = 'SOLID';
+
+/**
+ * Navbar background. LIGHT and DARK are fixed neutrals; BRAND uses the
+ * development's own colour. Foreground text is derived per option rather than
+ * chosen, so a dark bar can never end up with dark text on it.
+ */
+export const NAVBAR_THEMES = [
+  { key: 'LIGHT', label: 'Light', note: 'White bar, dark text.' },
+  { key: 'DARK', label: 'Dark', note: 'Near-black bar, light text.' },
+  { key: 'BRAND', label: 'Brand colour', note: 'Your accent colour as the bar.' },
+] as const;
+
+export const DEFAULT_NAVBAR_THEME = 'LIGHT';
+
+/** Resolved navbar surface: background, foreground and a matching border. */
+export interface NavbarPalette {
+  background: string;
+  foreground: string;
+  /** Text at reduced emphasis — nav links, secondary labels. */
+  muted: string;
+  border: string;
+  /** True when the bar is dark, so children can flip their own treatments. */
+  onDark: boolean;
+}
+
+export function navbarPalette(themeKey: string | null | undefined, brand: string): NavbarPalette {
+  if (themeKey === 'DARK') {
+    return {
+      background: 'rgba(24,25,26,0.88)',
+      foreground: '#ffffff',
+      muted: 'rgba(255,255,255,0.72)',
+      border: 'rgba(255,255,255,0.12)',
+      onDark: true,
+    };
+  }
+  if (themeKey === 'BRAND') {
+    // readableOn decides the text colour, so an accent of any lightness stays
+    // legible — a developer picking pale yellow gets dark text automatically.
+    const fg = readableOn(brand);
+    const dark = fg === '#ffffff';
+    return {
+      background: brand,
+      foreground: fg,
+      muted: dark ? 'rgba(255,255,255,0.78)' : 'rgba(32,33,36,0.72)',
+      border: dark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)',
+      onDark: dark,
+    };
+  }
+  return {
+    background: 'rgba(255,255,255,0.85)',
+    foreground: '#202124',
+    muted: 'rgba(32,33,36,0.62)',
+    border: 'rgba(0,0,0,0.08)',
+    onDark: false,
+  };
+}
 
 // ─── Colour maths ───────────────────────────────────────────────────────────
 
@@ -242,6 +315,13 @@ export interface BrandingSource {
   hiddenSections?: string[] | null;
   ctaLabel?: string | null;
   whiteLabel?: boolean | null;
+  navbarStyle?: string | null;
+  navbarTheme?: string | null;
+  /**
+   * Whether the hero keeps its gradient overlay. Nullable and defaulting to
+   * true so existing developments are untouched — a developer opts out.
+   */
+  heroOverlay?: boolean | null;
   developer?: {
     brandColor?: string | null;
     brandFont?: string | null;
@@ -268,6 +348,13 @@ export function resolveBranding(src: BrandingSource) {
     heroStyle: src.heroStyle || DEFAULT_HERO_STYLE,
     ctaLabel: src.ctaLabel || DEFAULT_CTA_LABEL,
     whiteLabel: !!src.whiteLabel,
+    navbarStyle: src.navbarStyle || DEFAULT_NAVBAR_STYLE,
+    navbarTheme: src.navbarTheme || DEFAULT_NAVBAR_THEME,
+    navbar: navbarPalette(src.navbarTheme || DEFAULT_NAVBAR_THEME, theme.color),
+    // Defaults on: the overlay is what keeps overlaid chips legible, so it
+    // stays unless a developer deliberately turns it off for a render that
+    // does not need it.
+    heroOverlay: src.heroOverlay !== false,
     /** Section ids to render, in order, with hidden ones removed. */
     sections: ordered.filter((id) => {
       const meta = SECTIONS.find((s) => s.id === id);

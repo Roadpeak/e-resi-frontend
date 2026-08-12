@@ -134,8 +134,18 @@ export default async function PropertyPage({ params }: Props) {
       style={{ ...themeVars(branding.theme), fontFamily: 'var(--brand-font-body)' }}
     >
       <TrackPageView propertyId={property.id} />
-      <PropertyTopbar property={property} ctaLabel={branding.ctaLabel} />
-      <PropertyHero property={property} heroStyle={branding.heroStyle} ctaLabel={branding.ctaLabel} />
+      <PropertyTopbar
+        property={property}
+        ctaLabel={branding.ctaLabel}
+        navbarStyle={branding.navbarStyle}
+        navbar={branding.navbar}
+      />
+      <PropertyHero
+        property={property}
+        heroStyle={branding.heroStyle}
+        ctaLabel={branding.ctaLabel}
+        overlay={branding.heroOverlay}
+      />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
         {/* Only wrap with an id when the component does not already provide
             its own <section id="…">. Wrapping unconditionally put the same id

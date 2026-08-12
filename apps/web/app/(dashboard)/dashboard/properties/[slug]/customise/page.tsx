@@ -12,10 +12,15 @@ import {
   DEFAULT_BRAND_COLOR,
   DEFAULT_CTA_LABEL,
   DEFAULT_HERO_STYLE,
+  DEFAULT_NAVBAR_STYLE,
+  DEFAULT_NAVBAR_THEME,
   HERO_STYLES,
+  NAVBAR_STYLES,
+  NAVBAR_THEMES,
   SECTIONS,
   THEME_PRESETS,
   buildTheme,
+  navbarPalette,
   contrastRatio,
   parseHex,
 } from '../../../../../../lib/branding/theme';
@@ -28,6 +33,9 @@ interface Draft {
   brandFont: string;
   heroStyle: string;
   ctaLabel: string;
+  navbarStyle: string;
+  navbarTheme: string;
+  heroOverlay: boolean;
   sectionOrder: string[];
   hiddenSections: string[];
 }
@@ -68,6 +76,9 @@ export default function CustomiseMiniSite() {
       sectionOrder: (p.sectionOrder as string[])?.length
         ? (p.sectionOrder as string[])
         : SECTIONS.map((s) => s.id),
+      navbarStyle: (p.navbarStyle as string) || DEFAULT_NAVBAR_STYLE,
+      navbarTheme: (p.navbarTheme as string) || DEFAULT_NAVBAR_THEME,
+      heroOverlay: p.heroOverlay !== false,
       hiddenSections: (p.hiddenSections as string[]) ?? [],
     });
   }, [property, draft]);
@@ -128,6 +139,9 @@ export default function CustomiseMiniSite() {
     + `&ctaLabel=${encodeURIComponent(draft.ctaLabel)}`
     + `&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}`
     + `&order=${encodeURIComponent(draft.sectionOrder.join(','))}`
+    + `&navbarStyle=${draft.navbarStyle}`
+    + `&navbarTheme=${draft.navbarTheme}`
+    + `&heroOverlay=${draft.heroOverlay ? '1' : '0'}`
     + `&v=${previewNonce}`;
 
   // A developer can still type a pale colour; we warn rather than block, and
@@ -288,6 +302,70 @@ export default function CustomiseMiniSite() {
             </div>
           </section>
 
+          {/* Navbar */}
+          <section className={cardCls}>
+            <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Navigation bar</h2>
+            <p className="mb-4 text-[13px] text-[#5f6368]">
+              How the bar at the top of your page looks.
+            </p>
+
+            <div className="space-y-2">
+              {NAVBAR_STYLES.map((n) => (
+                <button
+                  key={n.key}
+                  type="button"
+                  onClick={() => set({ navbarStyle: n.key })}
+                  className={cn(
+                    'w-full rounded-2xl border p-3 text-left transition-colors cursor-pointer',
+                    draft.navbarStyle === n.key
+                      ? 'border-[#1a73e8] bg-[#e8f0fe]'
+                      : 'border-[#dadce0] hover:bg-[#f8f9fa]',
+                  )}
+                >
+                  <p className="text-[14px] font-medium text-[#202124]">{n.label}</p>
+                  <p className="text-[12px] text-[#5f6368]">{n.note}</p>
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-4 mb-2 text-[12px] uppercase tracking-wide text-[#5f6368]">
+              Bar colour
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {NAVBAR_THEMES.map((t) => {
+                // Show the actual resulting bar, not a label — a swatch is a
+                // faster read than the word "Dark".
+                const pal = navbarPalette(t.key, draft.brandColor);
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => set({ navbarTheme: t.key })}
+                    title={t.note}
+                    className={cn(
+                      'rounded-2xl border p-2 text-left transition-colors cursor-pointer',
+                      draft.navbarTheme === t.key
+                        ? 'border-[#1a73e8] bg-[#e8f0fe]'
+                        : 'border-[#dadce0] hover:bg-[#f8f9fa]',
+                    )}
+                  >
+                    <span
+                      className="mb-1.5 flex h-7 items-center justify-center rounded-lg text-[10px] font-semibold"
+                      style={{
+                        backgroundColor: pal.background,
+                        color: pal.foreground,
+                        border: `1px solid ${pal.border}`,
+                      }}
+                    >
+                      Aa
+                    </span>
+                    <span className="block text-[12px] font-medium text-[#202124]">{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           {/* Hero + CTA */}
           <section className={cardCls}>
             <h2 className="mb-4 text-[16px] font-medium text-[#202124]">Opening &amp; call to action</h2>
@@ -309,6 +387,29 @@ export default function CustomiseMiniSite() {
                 </button>
               ))}
             </div>
+
+            {/* The overlay is what keeps the status chips legible over a
+                photograph, so turning it off is offered next to the hero
+                choice rather than buried — a developer should see the two
+                decisions together. */}
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#dadce0] p-3">
+              <input
+                type="checkbox"
+                checked={draft.heroOverlay}
+                onChange={(e) => set({ heroOverlay: e.target.checked })}
+                className="mt-0.5 h-4 w-4 cursor-pointer accent-[#1a73e8]"
+              />
+              <span>
+                <span className="block text-[14px] font-medium text-[#202124]">
+                  Fade the hero image into the page
+                </span>
+                <span className="block text-[12px] text-[#5f6368]">
+                  Softens the top and bottom of the image. Turn it off to show the
+                  render exactly as shot — the status chips then sit directly on the
+                  photograph.
+                </span>
+              </span>
+            </label>
 
             <label className="mt-4 block text-[12px] uppercase tracking-wide text-[#5f6368]">
               Button wording

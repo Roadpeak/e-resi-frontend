@@ -70,6 +70,9 @@ export const propertiesApi = {
       sectionOrder: string[];
       hiddenSections: string[];
       ctaLabel: string;
+      navbarStyle: string;
+      navbarTheme: string;
+      heroOverlay: boolean;
       customDomain: string;
       whiteLabel: boolean;
     }>,

@@ -16,6 +16,13 @@ interface Props {
   heroStyle?: string;
   /** Primary call to action wording, developer-configurable. */
   ctaLabel?: string;
+  /**
+   * Whether to keep the gradient overlay over the hero image. Defaults on:
+   * the scrims are what keep the overlaid status chips legible, so a
+   * developer turning them off is opting into a cleaner render and accepting
+   * that the chips sit on bare photography.
+   */
+  overlay?: boolean;
 }
 
 /**
@@ -29,10 +36,17 @@ interface Props {
  * The name, price and tagline deliberately live in PropertyOverview below —
  * repeating them here would give every visitor the same headline twice.
  */
-export function PropertyHero({ property, heroStyle = 'CINEMATIC', ctaLabel }: Props) {
+export function PropertyHero({
+  property,
+  heroStyle = 'CINEMATIC',
+  ctaLabel,
+  overlay = true,
+}: Props) {
+  // SPLIT has no overlay to begin with — its media sits in its own rounded
+  // panel with the text beside it, never on top of it.
   if (heroStyle === 'SPLIT') return <SplitHero property={property} ctaLabel={ctaLabel} />;
-  if (heroStyle === 'MINIMAL') return <MinimalHero property={property} />;
-  return <CinematicHero property={property} />;
+  if (heroStyle === 'MINIMAL') return <MinimalHero property={property} overlay={overlay} />;
+  return <CinematicHero property={property} overlay={overlay} />;
 }
 
 // ─── Shared pieces ──────────────────────────────────────────────────────────
@@ -119,7 +133,7 @@ const scrollToBooking = () =>
 
 // ─── CINEMATIC — full-bleed, fades into the page ────────────────────────────
 
-function CinematicHero({ property }: { property: Property }) {
+function CinematicHero({ property, overlay }: { property: Property; overlay: boolean }) {
   return (
     <section className="relative bg-white pt-16">
       <motion.div
@@ -130,13 +144,17 @@ function CinematicHero({ property }: { property: Property }) {
       >
         <HeroMedia property={property} />
 
-        {/* Soft scrim under the navbar so it stays legible over the photo */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
+        {overlay && (
+          <>
+            {/* Soft scrim under the navbar so it stays legible over the photo */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
 
-        {/* Signature bottom fade-to-white */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-white via-white/70 to-transparent lg:h-60" />
+            {/* Signature bottom fade-to-white */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-white via-white/70 to-transparent lg:h-60" />
+          </>
+        )}
 
-        <div className="absolute inset-x-0 top-6 z-10">
+        <div className={cn('absolute inset-x-0 z-10', overlay ? 'top-6' : 'top-20')}>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -250,7 +268,7 @@ function SplitHero({ property, ctaLabel }: { property: Property; ctaLabel?: stri
  * For developments whose real asset is the tour or the unit list: a second
  * large render above the fold only delays the thing the buyer came for.
  */
-function MinimalHero({ property }: { property: Property }) {
+function MinimalHero({ property, overlay }: { property: Property; overlay: boolean }) {
   return (
     <section className="bg-white pt-16">
       <motion.div
@@ -260,8 +278,12 @@ function MinimalHero({ property }: { property: Property }) {
         className="relative h-[26vh] min-h-[180px] w-full overflow-hidden lg:h-[32vh]"
       >
         <HeroMedia property={property} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/60 to-transparent" />
+        {overlay && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/60 to-transparent" />
+          </>
+        )}
 
         <div className="absolute inset-x-0 top-5 z-10">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2.5 px-4 sm:px-6 lg:px-8">
