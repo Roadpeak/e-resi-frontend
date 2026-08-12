@@ -12,6 +12,7 @@ import { Input } from '../ui/Input';
 import { authApi } from '../../lib/api/auth';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { ApiError } from '../../lib/api/client';
+import { VerificationCodePanel } from './VerificationCodePanel';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -26,6 +27,10 @@ export function LoginForm() {
   const setUser = useAuthStore((s) => s.setUser);
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
+  /** Set when login is refused only because the email is unverified. */
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  /** Shown after returning from verification, so the trip is acknowledged. */
+  const [verifiedNotice, setVerifiedNotice] = useState(false);
 
   const {
     register,
@@ -51,11 +56,66 @@ export function LoginForm() {
       }
     } catch (err) {
       if (err instanceof ApiError) {
+        // Accounts created while email delivery was down never received their
+        // code. Rather than a dead-end error, drop straight into verification
+        // — the API tags this case so we are not string-matching a message
+        // that could be reworded.
+        const body = err.body as { code?: string; email?: string } | null;
+        if (body?.code === 'EMAIL_NOT_VERIFIED') {
+          setUnverifiedEmail(body.email ?? values.email);
+          return;
+        }
         setServerError(err.message);
       } else {
         setServerError('Something went wrong. Please try again.');
       }
     }
+  }
+
+  // Verification takes over the card entirely: the person cannot get in until
+  // it is done, so showing the password form alongside it would only invite
+  // them to retry something that will fail again.
+  if (unverifiedEmail) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#f0f4f9] px-4 py-10 font-google text-[#202124]">
+        <div className="w-full max-w-[480px]">
+          <div className="rounded-[28px] bg-white p-8 sm:p-10">
+            <Link href="/" aria-label="e-resi home" className="inline-block">
+              <Logo markSize={32} textClassName="text-gray-900 text-[1.4rem]" />
+            </Link>
+            <h1 className="mt-6 text-[26px] font-normal text-[#202124]">
+              Verify your email
+            </h1>
+            <p className="mt-2 mb-6 text-[15px] leading-relaxed text-[#5f6368]">
+              Your account was created but never verified. We&apos;ve sent a code to{' '}
+              <span className="font-medium text-[#202124]">{unverifiedEmail}</span> — enter
+              it below to finish setting up and sign in.
+            </p>
+
+            <VerificationCodePanel
+              email={unverifiedEmail}
+              autoSend
+              title="Email verification"
+              onVerified={() => {
+                // Back to the form with the email intact, so signing in is a
+                // password away rather than a fresh start.
+                setUnverifiedEmail(null);
+                setServerError('');
+                setVerifiedNotice(true);
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setUnverifiedEmail(null)}
+              className="text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc] transition-colors cursor-pointer"
+            >
+              ← Back to sign in
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -114,6 +174,12 @@ export function LoginForm() {
                     Forgot password?
                   </Link>
                 </div>
+
+                {verifiedNotice && (
+                  <p className="rounded-xl bg-[#e6f4ea] px-3 py-2.5 text-sm text-[#188038]">
+                    Email verified — sign in to continue.
+                  </p>
+                )}
 
                 {serverError && (
                   <p className="rounded-xl bg-[#fce8e6] px-3 py-2.5 text-sm text-[#c5221f]">
