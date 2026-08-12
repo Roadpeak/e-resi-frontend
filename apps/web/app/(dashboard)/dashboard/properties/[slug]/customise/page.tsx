@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -44,7 +44,14 @@ export default function CustomiseMiniSite() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
-  const previewRef = useRef<HTMLIFrameElement>(null);
+  /** Bumped to remount the preview iframe — see the save handler. */
+  const [previewNonce, setPreviewNonce] = useState(0);
+  /**
+   * Set when the browser refuses to frame the preview. A blocked frame just
+   * renders blank, which reads as a broken editor — so say what happened and
+   * offer the same preview in a new tab instead.
+   */
+  const [previewBlocked, setPreviewBlocked] = useState(false);
 
   // Seed the draft once the development loads. Falling back to the developer's
   // own defaults means an unbranded development still opens on their colours
@@ -77,8 +84,12 @@ export default function CustomiseMiniSite() {
       setError('');
       setToast('Saved — your mini-site is updated');
       setTimeout(() => setToast(''), 4000);
-      // Reload the preview so it reflects what visitors will now see.
-      previewRef.current?.contentWindow?.location.reload();
+      // Remount the iframe rather than calling contentWindow.location
+      // .reload(): touching the frame's location throws SecurityError the
+      // moment the browser treats it as cross-origin, which is what happens
+      // whenever framing is blocked. Changing the key reloads it without ever
+      // reaching inside.
+      setPreviewNonce((n) => n + 1);
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not save'),
   });
@@ -107,6 +118,17 @@ export default function CustomiseMiniSite() {
     [order[i], order[j]] = [order[j], order[i]];
     set({ sectionOrder: order });
   };
+
+  // One definition shared by the iframe and the blocked-frame fallback, so a
+  // developer who has to open the preview in a tab sees the same unsaved edits.
+  const previewSrc =
+    `/${slug}/preview?brandColor=${encodeURIComponent(draft.brandColor)}`
+    + `&brandFont=${draft.brandFont}`
+    + `&heroStyle=${draft.heroStyle}`
+    + `&ctaLabel=${encodeURIComponent(draft.ctaLabel)}`
+    + `&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}`
+    + `&order=${encodeURIComponent(draft.sectionOrder.join(','))}`
+    + `&v=${previewNonce}`;
 
   // A developer can still type a pale colour; we warn rather than block, and
   // the rendered theme darkens link text automatically so it stays readable.
@@ -379,7 +401,7 @@ export default function CustomiseMiniSite() {
               <p className="text-[13px] font-medium text-[#5f6368]">Live preview</p>
               <button
                 type="button"
-                onClick={() => previewRef.current?.contentWindow?.location.reload()}
+                onClick={() => setPreviewNonce((n) => n + 1)}
                 className="flex items-center gap-1 text-[13px] text-[#1a73e8] hover:underline cursor-pointer"
               >
                 <MaterialIcon name="refresh" className="text-[15px]" />
@@ -391,14 +413,32 @@ export default function CustomiseMiniSite() {
                 param: reading searchParams on /[slug] opted it out of static
                 generation, making every buyer's page slower to serve this
                 editor. The preview renders the same components. */}
+            {previewBlocked ? (
+              <div className="rounded-3xl border border-[#dadce0] bg-white px-6 py-16 text-center">
+                <MaterialIcon name="visibility_off" size={26} className="text-[#80868b]" />
+                <p className="mt-2 text-[15px] text-[#5f6368]">
+                  The preview can&apos;t be shown inline here.
+                </p>
+                <a
+                  href={previewSrc}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="mt-4 inline-block rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc]"
+                >
+                  Open preview in a new tab
+                </a>
+              </div>
+            ) : (
             <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
               <iframe
-                ref={previewRef}
+                key={previewNonce}
                 title="Mini-site preview"
-                src={`/${slug}/preview?brandColor=${encodeURIComponent(draft.brandColor)}&brandFont=${draft.brandFont}&heroStyle=${draft.heroStyle}&ctaLabel=${encodeURIComponent(draft.ctaLabel)}&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}&order=${encodeURIComponent(draft.sectionOrder.join(','))}`}
+                src={previewSrc}
                 className="h-[76vh] w-full"
+                onError={() => setPreviewBlocked(true)}
               />
             </div>
+            )}
             <p className="mt-2 text-[12px] text-[#5f6368]">
               Unsaved changes appear here immediately. Buyers see them once you save.
             </p>
