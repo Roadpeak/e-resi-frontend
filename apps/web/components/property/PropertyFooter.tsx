@@ -6,44 +6,11 @@ import type { Property } from '../../lib/types';
 
 interface Props {
   property: Property;
+  /** Top tier: drop e-resi attribution entirely. */
+  whiteLabel?: boolean;
 }
 
-// Keys are the backend PropertyCategory enum values, which is what
-// property.category actually holds (it is not lowercased on the read path).
-const accentMap: Record<string, string> = {
-  APARTMENT: 'from-brand-600 to-brand-800',
-  VILLA: 'from-emerald-700 to-emerald-900',
-  TOWNHOUSE: 'from-teal-700 to-teal-900',
-  PENTHOUSE: 'from-violet-700 to-violet-900',
-  OFFICE: 'from-slate-700 to-slate-900',
-  COMMERCIAL: 'from-emerald-700 to-emerald-900',
-  LAND: 'from-amber-700 to-amber-900',
-};
-
-const accentHoverTextMap: Record<string, string> = {
-  APARTMENT: 'hover:text-brand-400',
-  VILLA: 'hover:text-emerald-400',
-  TOWNHOUSE: 'hover:text-teal-400',
-  PENTHOUSE: 'hover:text-violet-400',
-  OFFICE: 'hover:text-slate-400',
-  COMMERCIAL: 'hover:text-emerald-400',
-  LAND: 'hover:text-amber-400',
-};
-
-const accentBorderMap: Record<string, string> = {
-  APARTMENT: 'border-brand-500/20',
-  VILLA: 'border-emerald-500/20',
-  TOWNHOUSE: 'border-teal-500/20',
-  PENTHOUSE: 'border-violet-500/20',
-  OFFICE: 'border-slate-500/20',
-  COMMERCIAL: 'border-emerald-500/20',
-  LAND: 'border-amber-500/20',
-};
-
-export function PropertyFooter({ property }: Props) {
-  const accent = accentMap[property.category] ?? accentMap.APARTMENT;
-  const accentHoverText = accentHoverTextMap[property.category] ?? accentHoverTextMap.APARTMENT;
-  const accentBorder = accentBorderMap[property.category] ?? accentBorderMap.APARTMENT;
+export function PropertyFooter({ property, whiteLabel = false }: Props) {
   const initials = (property.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   return (
@@ -60,7 +27,10 @@ export function PropertyFooter({ property }: Props) {
                   <Image src={property.logoUrl} alt={`${property.name} logo`} fill className="object-contain p-1" sizes="48px" />
                 </span>
               ) : (
-                <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white text-sm font-bold shrink-0', accent)}>
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold shrink-0"
+                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+                >
                   {initials}
                 </div>
               )}
@@ -132,7 +102,7 @@ export function PropertyFooter({ property }: Props) {
                 <li key={label}>
                   <a
                     href={href}
-                    className={cn('text-sm text-gray-500 transition-colors', accentHoverText)}
+                    className="text-sm text-gray-500 transition-colors hover:[color:var(--brand-text)]"
                   >
                     {label}
                   </a>
@@ -143,21 +113,27 @@ export function PropertyFooter({ property }: Props) {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className={cn('border-t py-6', accentBorder)}>
+      {/* Bottom bar — the one place our attribution belongs. The topbar now
+          carries the developer's identity instead, so this is where e-resi
+          takes credit without competing with them for the page. */}
+      <div className="border-t py-6" style={{ borderColor: 'var(--brand-border)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link
-            href="/properties"
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors group"
-          >
-            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-            Back to e-resi
-          </Link>
-
           <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} {property.developer.name} · Listed on{' '}
-            <Link href="/" className="text-gray-500 hover:text-gray-700 transition-colors">e-resi</Link>
+            © {new Date().getFullYear()} {property.developer.name}
           </p>
+
+          {/* White-label removes this entirely — the top tier a developer pays
+              for. The free tier keeps it, which is also what stops the
+              mini-site becoming a standalone microsite they could take
+              elsewhere. */}
+          {!whiteLabel && (
+            <Link
+              href="/"
+              className="text-xs text-gray-400 transition-colors hover:text-gray-600"
+            >
+              Tours by <span className="font-semibold text-gray-500">e-resi</span>
+            </Link>
+          )}
 
           <p className="text-xs text-gray-400">
             All property details are provided by the developer.

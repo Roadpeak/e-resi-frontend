@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Archive, ArrowLeft, Building2, Check, DoorOpen, Eye,
-  Loader2, MessageSquare, Plus, RotateCcw, Bookmark, Trash2, X,
-} from 'lucide-react';
+  Loader2, MessageSquare, Plus, RotateCcw, Bookmark, Trash2, X, Palette } from 'lucide-react';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { propertiesApi } from '../../../../../lib/api/properties';
 import { fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
@@ -248,6 +247,15 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
             </div>
           </div>
           <div className="flex gap-2">
+            {/* The mini-site is what a developer actually shares with buyers,
+                so customising it belongs beside the live-page link rather than
+                buried in settings. */}
+            <Link
+              href={`/dashboard/properties/${property.slug}/customise`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
+            >
+              <Palette size={15} /> Customise mini-site
+            </Link>
             {property.status === 'ACTIVE' && (
               <Link
                 href={`/${property.slug}`}

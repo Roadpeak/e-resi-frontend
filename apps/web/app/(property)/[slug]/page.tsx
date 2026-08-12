@@ -14,6 +14,7 @@ import { PropertyLocation } from '../../../components/property/PropertyLocation'
 import { PropertyConstruction } from '../../../components/property/PropertyConstruction';
 import { PropertyBooking } from '../../../components/property/PropertyBooking';
 import { PropertyRentListings } from '../../../components/property/PropertyRentListings';
+import { resolveBranding, themeVars, type BrandingSource } from '../../../lib/branding/theme';
 import type { Metadata } from 'next';
 import type { Property } from '../../../lib/types';
 
@@ -33,7 +34,25 @@ async function fetchRentListings(propertyId: string) {
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
+
+/**
+ * Sections whose component already renders its own `<section id="…">`. The
+ * page must not add a second element with the same id — duplicate ids break
+ * `getElementById` scroll targets and the IntersectionObserver scroll-spy.
+ */
+const SELF_ANCHORED = new Set([
+  'gallery', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
+]);
+
+/** First value of a possibly-repeated query param, or undefined. */
+const str = (v: string | string[] | undefined) =>
+  (Array.isArray(v) ? v[0] : v) || undefined;
+
+/** Comma-separated query param to a string array. */
+const list = (v: string | string[] | undefined) =>
+  (str(v) ?? '').split(',').map((x) => x.trim()).filter(Boolean);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -43,17 +62,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = property.tagline
     ? `${property.tagline} — tour ${property.name} in cinematic, 3D and VR${city ? ` in ${city}, Kenya` : ' in Kenya'}.`
     : `Tour ${property.name} in cinematic, 3D and VR${city ? ` in ${city}, Kenya` : ' in Kenya'}. Verified property developer listing on E-resi.`;
+  // The mini-site is the developer's own sales site, so it identifies as the
+  // development — `absolute` bypasses the "… | E-resi" template that would
+  // otherwise put our name in the tab of a link they shared.
+  // siteName carries the developer instead, since that is what a WhatsApp
+  // preview renders above the title.
+  const developerName = property.developer?.name;
+
+  // `images` is deliberately not set here. The generated card lives in
+  // opengraph-image.tsx, and Next serves it from a content-hashed path
+  // (…/opengraph-image-1t04xb) that it injects automatically. Hardcoding
+  // "/<slug>/opengraph-image" produced a 404 — and a broken share preview is
+  // invisible until someone actually pastes the link into WhatsApp.
   return {
-    title: `${property.name}${city ? ` — ${city}` : ''}`,
+    title: { absolute: `${property.name}${city ? ` — ${city}` : ''}` },
     description,
     alternates: { canonical: `/${slug}` },
     openGraph: {
-      siteName: 'E-resi',
+      siteName: developerName || 'E-resi',
       title: property.name,
       description,
       url: `/${slug}`,
       type: 'website',
-      images: property.heroImageUrl ? [{ url: property.heroImageUrl }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: property.name,
+      description,
     },
   };
 }
@@ -64,7 +99,7 @@ export async function generateStaticParams() {
   return liveSlugs.map((slug) => ({ slug }));
 }
 
-export default async function PropertyPage({ params }: Props) {
+export default async function PropertyPage({ params, searchParams }: Props) {
   const { slug } = await params;
 
   const property: Property | null = await fetchProperty(slug);
@@ -72,32 +107,69 @@ export default async function PropertyPage({ params }: Props) {
 
   const rentListings = await fetchRentListings(property.id);
 
+  // Effective branding: the development's own values, then the developer's
+  // defaults, then ours. Resolved server-side so the page paints already
+  // branded — no flash of e-resi blue before the developer's colour loads.
+  //
+  // The customise screen renders this same page in an iframe and passes
+  // unsaved edits as query params, so a developer sees the real page rather
+  // than a mock. These only ever affect presentation, so an arbitrary visitor
+  // appending them can change nothing but their own view.
+  const sp = await searchParams;
+  const preview = sp?.preview === '1';
+  const branding = resolveBranding({
+    ...(property as BrandingSource),
+    ...(preview && {
+      brandColor: str(sp.brandColor) ?? (property as BrandingSource).brandColor,
+      brandFont: str(sp.brandFont) ?? (property as BrandingSource).brandFont,
+      heroStyle: str(sp.heroStyle) ?? (property as BrandingSource).heroStyle,
+      ctaLabel: str(sp.ctaLabel) ?? (property as BrandingSource).ctaLabel,
+      hiddenSections: list(sp.hidden),
+      sectionOrder: list(sp.order),
+    }),
+  });
+
+  // Sections are keyed by the same anchor ids the topbar links to, so
+  // reordering and hiding need no changes in the section components.
+  const blocks: Record<string, React.ReactNode> = {
+    overview: <PropertyOverview property={property} />,
+    gallery: <PropertyGallery images={property.galleryImages} name={property.name} />,
+    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
+    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
+    floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
+    units: (
+      <PropertyUnits units={property.units} currency={property.currency} propertySlug={property.slug} />
+    ),
+    rentals: rentListings.length > 0 ? <PropertyRentListings listings={rentListings} /> : null,
+    location: <PropertyLocation address={property.address} amenities={property.amenities} />,
+    construction: property.constructionUpdates?.length
+      ? <PropertyConstruction updates={property.constructionUpdates} />
+      : null,
+    booking: <PropertyBooking property={property} />,
+  };
+
   return (
-    <main className="min-h-screen bg-white">
+    <main
+      className="min-h-screen bg-white"
+      style={{ ...themeVars(branding.theme), fontFamily: 'var(--brand-font-body)' }}
+    >
       <TrackPageView propertyId={property.id} />
-      <PropertyTopbar property={property} />
-      <PropertyHero property={property} />
+      <PropertyTopbar property={property} ctaLabel={branding.ctaLabel} />
+      <PropertyHero property={property} heroStyle={branding.heroStyle} ctaLabel={branding.ctaLabel} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
-        <section id="overview"><PropertyOverview property={property} /></section>
-        <section id="gallery"><PropertyGallery images={property.galleryImages} name={property.name} /></section>
-        {property.hasCinematicTour && (
-          <section id="cinematic"><PropertyCinematicPreview property={property} /></section>
+        {/* Only wrap with an id when the component does not already provide
+            its own <section id="…">. Wrapping unconditionally put the same id
+            in the DOM twice, which silently breaks the topbar's anchor
+            navigation and scroll-spy. */}
+        {branding.sections.map((id) =>
+          blocks[id] ? (
+            <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
+              {blocks[id]}
+            </div>
+          ) : null,
         )}
-        {property.has3DTour && (
-          <section id="viewer3d"><PropertyViewer3D property={property} /></section>
-        )}
-        <section id="floorplans"><PropertyFloorPlans floorPlans={property.floorPlans} /></section>
-        <section id="units"><PropertyUnits units={property.units} currency={property.currency} propertySlug={property.slug} /></section>
-        {rentListings.length > 0 && (
-          <section id="rentals"><PropertyRentListings listings={rentListings} /></section>
-        )}
-        <section id="location"><PropertyLocation address={property.address} amenities={property.amenities} /></section>
-        {property.constructionUpdates?.length > 0 && (
-          <section id="construction"><PropertyConstruction updates={property.constructionUpdates} /></section>
-        )}
-        <section id="booking"><PropertyBooking property={property} /></section>
       </div>
-      <PropertyFooter property={property} />
+      <PropertyFooter property={property} whiteLabel={branding.whiteLabel} />
     </main>
   );
 }

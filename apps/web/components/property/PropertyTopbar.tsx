@@ -23,17 +23,25 @@ const sections = [
   { id: 'units', label: 'Units' },
   { id: 'location', label: 'Location' },
   { id: 'construction', label: 'Progress' },
-  { id: 'booking', label: 'Book a Viewing' },
+  { id: 'booking', label: 'Book a Viewing' }, // overridden by ctaLabel at render
 ];
 
 interface Props {
   property: Property;
+  /** Primary call to action wording, chosen by the developer. */
+  ctaLabel?: string;
 }
 
-export function PropertyTopbar({ property }: Props) {
+export function PropertyTopbar({ property, ctaLabel = 'Book a Viewing' }: Props) {
   // The developer's uploaded logo, stored as a media row with a sentinel title.
   const logoUrl = property.logoUrl;
   const [scrolled, setScrolled] = useState(false);
+  /**
+   * Whether this visitor reached the page from our marketplace, rather than
+   * from a link the developer shared. Only the former gets a way back: see
+   * the topbar comment on why we do not offer the latter an exit.
+   */
+  const [cameFromMarketplace, setCameFromMarketplace] = useState(false);
   const [active, setActive] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
@@ -58,7 +66,11 @@ export function PropertyTopbar({ property }: Props) {
     }
   }
 
-  const visible = sections.filter((s) => {
+  const visible = sections
+    // The booking section's label follows whatever the developer called their
+    // call to action, so nav and button never disagree.
+    .map((s) => (s.id === 'booking' ? { ...s, label: ctaLabel } : s))
+    .filter((s) => {
     if (s.id === 'cinematic' && !property.hasCinematicTour) return false;
     if (s.id === 'viewer3d' && !property.has3DTour) return false;
     if (s.id === 'construction' && property.constructionUpdates.length === 0) return false;
@@ -92,18 +104,40 @@ export function PropertyTopbar({ property }: Props) {
     setMobileOpen(false);
   };
 
-  // Derive a subtle accent from the property — in production you'd store a brand color per property
-  // For now we use different hues based on category
-  const accentMap: Record<string, string> = {
-    APARTMENT: 'from-brand-600 to-brand-800',
-    VILLA: 'from-emerald-700 to-emerald-900',
-    TOWNHOUSE: 'from-teal-700 to-teal-900',
-    PENTHOUSE: 'from-violet-700 to-violet-900',
-    OFFICE: 'from-slate-700 to-slate-900',
-    COMMERCIAL: 'from-emerald-700 to-emerald-900',
-    LAND: 'from-amber-700 to-amber-900',
-  };
-  const accent = accentMap[property.category] ?? accentMap.APARTMENT;
+  // The brand accent comes from the theme wrapper as CSS custom properties,
+  // so the topbar inherits whatever the developer chose without prop-drilling.
+  // (This replaced a per-category hue map, which gave every apartment
+  // development in the country the identical gradient.)
+
+  // Own the browser tab too — a shared link that says "e-resi" in the tab
+  // reads as someone else's site no matter how the page itself is branded.
+  useEffect(() => {
+    const previous = document.title;
+    document.title = property.tagline
+      ? `${property.name} — ${property.tagline}`
+      : property.name;
+    return () => { document.title = previous; };
+  }, [property.name, property.tagline]);
+
+  useEffect(() => {
+    // Same-origin referrer means they were browsing us already. document
+    // .referrer is empty for a WhatsApp/direct open, which is exactly the
+    // cold-arrival case we want to treat as the developer's own traffic.
+    try {
+      const ref = document.referrer;
+      if (!ref) return;
+      const url = new URL(ref);
+      if (url.origin === window.location.origin && !url.pathname.startsWith(`/${property.slug}`)) {
+        setCameFromMarketplace(true);
+      }
+    } catch {
+      // A malformed referrer simply means we show no back link.
+    }
+  }, [property.slug]);
+
+  // Where the branded wordmark links: the development's own top, not our
+  // marketplace home.
+  const homeHref = `/${property.slug}`;
 
   return (
     <>
@@ -115,47 +149,60 @@ export function PropertyTopbar({ property }: Props) {
       >
         <div className="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
 
-          {/* ── Left: back + property identity ── */}
+          {/* ── Left: the developer's identity, always ──
+              This corner is the highest-status position on the page, so it
+              belongs to the development — not to us. Someone arriving from a
+              shared WhatsApp link should read this as the developer's own
+              site; our attribution lives in the footer instead. */}
           <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href="/properties"
-              className="group flex items-center gap-1.5 transition-colors text-sm text-gray-400 hover:text-gray-900"
-            >
-              <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-              <span className="hidden sm:inline font-semibold text-gray-900">e-resi</span>
+            <Link href={homeHref} className="flex items-center gap-2.5 min-w-0" aria-label={property.name}>
+              {logoUrl ? (
+                <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-black/5">
+                  <Image
+                    src={logoUrl}
+                    alt={`${property.name} logo`}
+                    fill
+                    className="object-contain p-0.5"
+                    sizes="36px"
+                  />
+                </span>
+              ) : (
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
+                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+                >
+                  {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span
+                className="text-[15px] font-semibold text-gray-900 truncate max-w-[10rem] sm:max-w-xs"
+                style={{ fontFamily: 'var(--brand-font-heading)' }}
+              >
+                {property.name}
+              </span>
             </Link>
 
-            <ChevronRight size={13} className="hidden sm:block text-gray-300" />
-
-            {/* Property wordmark */}
+            {/* Back to the marketplace only for visitors who came from it. A
+                cold arrival from a shared link is the developer's own traffic;
+                offering them an exit to a marketplace of rival developments
+                would be actively against the developer's interest. */}
             <AnimatePresence>
-              {scrolled && (
+              {cameFromMarketplace && (
                 <motion.div
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2"
+                  className="hidden sm:flex items-center gap-1"
                 >
-                  {/* Mini logo badge — the developer's uploaded logo, else initials */}
-                  {logoUrl ? (
-                    <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-black/5">
-                      <Image
-                        src={logoUrl}
-                        alt={`${property.name} logo`}
-                        fill
-                        className="object-contain p-0.5"
-                        sizes="28px"
-                      />
-                    </span>
-                  ) : (
-                    <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white text-[10px] font-bold shrink-0', accent)}>
-                      {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-sm font-semibold text-gray-900 hidden md:block truncate max-w-48">
-                    {property.name}
-                  </span>
+                  <ChevronRight size={13} className="text-gray-300" />
+                  <Link
+                    href="/properties"
+                    className="group flex items-center gap-1 text-[13px] text-gray-400 transition-colors hover:text-gray-700"
+                  >
+                    <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+                    All properties
+                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -237,9 +284,10 @@ export function PropertyTopbar({ property }: Props) {
             {/* Book CTA */}
             <button
               onClick={() => scrollTo('booking')}
-              className="hidden sm:inline-flex items-center rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer"
+              className="hidden sm:inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold transition-opacity hover:opacity-90 cursor-pointer"
+              style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
             >
-              Book a Viewing
+              {ctaLabel}
             </button>
 
             {/* Mobile hamburger */}
@@ -265,9 +313,18 @@ export function PropertyTopbar({ property }: Props) {
           >
             {/* Property identity on mobile */}
             <div className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-4">
-              <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white text-xs font-bold', accent)}>
-                {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-              </div>
+              {logoUrl ? (
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-black/5">
+                  <Image src={logoUrl} alt="" fill className="object-contain p-0.5" sizes="40px" />
+                </span>
+              ) : (
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold"
+                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+                >
+                  {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-gray-900 text-sm">{property.name}</p>
                 <p className="text-xs text-gray-500">{property.address.neighborhood}, {property.address.city}</p>
@@ -294,7 +351,7 @@ export function PropertyTopbar({ property }: Props) {
 
             <div className="mt-4 border-t border-gray-200 pt-4 flex gap-2">
               <Button size="md" className="flex-1" onClick={() => scrollTo('booking')}>
-                Book a Viewing
+                {ctaLabel}
               </Button>
               {property.hasVRTour && (
                 <Button href={`/${property.slug}/tour/vr`} variant="secondary" size="md" icon={<Headset size={15} />} className="flex-1">

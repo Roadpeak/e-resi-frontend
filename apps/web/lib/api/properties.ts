@@ -56,6 +56,25 @@ export const propertiesApi = {
 
   get: (slug: string) => apiClient.get<Property>(`/properties/${slug}`),
 
+  /**
+   * Mini-site branding. Separate from the listing update because these are
+   * presentation settings; whiteLabel and customDomain are admin-only and
+   * will 403 for a developer.
+   */
+  updateBranding: (
+    slug: string,
+    body: Partial<{
+      brandColor: string;
+      brandFont: string;
+      heroStyle: string;
+      sectionOrder: string[];
+      hiddenSections: string[];
+      ctaLabel: string;
+      customDomain: string;
+      whiteLabel: boolean;
+    }>,
+  ) => apiClient.patch<Property>(`/properties/${slug}/branding`, body),
+
   submitInquiry: (
     slug: string,
     payload: { name: string; email: string; phone?: string; message: string; interestedInUnit?: string },

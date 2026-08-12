@@ -6,9 +6,15 @@ import { Box, Headset, Sparkles } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { getStatusLabel, getStatusColor, cn } from '../../lib/utils';
 
-interface Props { property: Property }
+interface Props {
+  property: Property;
+  /** Opening treatment chosen by the developer — see HERO_STYLES. */
+  heroStyle?: string;
+  /** Primary call to action wording, developer-configurable. */
+  ctaLabel?: string;
+}
 
-export function PropertyHero({ property }: Props) {
+export function PropertyHero({ property, heroStyle = 'CINEMATIC', ctaLabel }: Props) {
   return (
     <section className="relative bg-white pt-16">
       <motion.div
