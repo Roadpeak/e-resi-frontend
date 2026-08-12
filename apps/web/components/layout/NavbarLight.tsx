@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { Logo } from '../brand/Logo';
+import { homePathFor } from '../../lib/auth/role-home';
 
 const links = [
   { href: '/properties', label: 'Properties' },
@@ -74,7 +75,7 @@ export function NavbarLight() {
             {isAuthenticated && user ? (
               <>
                 <Link
-                  href={user.role === 'DEVELOPER' || user.role === 'ADMIN' ? '/dashboard' : '/account'}
+                  href={homePathFor(user.role)}
                   className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
                 >
                   {user.firstName}

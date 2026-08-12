@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import type { UserRole } from '../../lib/types';
+import { homePathFor } from '../../lib/auth/role-home';
 
 interface RequireAuthProps {
   /** Roles allowed to view the wrapped content. Omit to allow any logged-in user. */
@@ -39,11 +40,7 @@ export function RequireAuth({ roles, children }: RequireAuthProps) {
     } else if (!allowed) {
       // Send people to their own area rather than a generic one — an agent
       // bounced to /account would land somewhere with none of their work.
-      const home =
-        user?.role === 'DEVELOPER' || user?.role === 'ADMIN' ? '/dashboard'
-        : user?.role === 'AGENT' ? '/agent'
-        : '/account';
-      router.replace(home);
+      router.replace(homePathFor(user?.role));
     }
   }, [hydrated, pendingHydration, isAuthenticated, allowed, pathname, router, user?.role]);
 

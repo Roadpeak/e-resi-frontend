@@ -13,6 +13,7 @@ import { authApi } from '../../lib/api/auth';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { ApiError } from '../../lib/api/client';
 import { VerificationCodePanel } from './VerificationCodePanel';
+import { homePathFor } from '../../lib/auth/role-home';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -49,10 +50,8 @@ export function LoginForm() {
       const redirect = searchParams.get('redirect');
       if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
         router.push(redirect);
-      } else if (user.role === 'DEVELOPER' || user.role === 'ADMIN') {
-        router.push('/dashboard');
       } else {
-        router.push('/account');
+        router.push(homePathFor(user.role));
       }
     } catch (err) {
       if (err instanceof ApiError) {

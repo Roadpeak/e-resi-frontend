@@ -8,6 +8,7 @@ import { Logo } from '../brand/Logo';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
 import { MarketplaceNavLinks } from '../marketplace/MarketplaceNavLinks';
+import { homePathFor, homeLabelFor } from '../../lib/auth/role-home';
 
 /**
  * Dedicated, fully separated navbar for the rent marketplace — a solid bar
@@ -103,11 +104,11 @@ export function RentNavbar() {
                     <p className="truncate text-xs text-gray-500">{user.email}</p>
                   </div>
                   <Link
-                    href={user.role === 'DEVELOPER' || user.role === 'ADMIN' ? '/dashboard' : '/account'}
+                    href={homePathFor(user.role)}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                   >
-                    <User size={15} /> {user.role === 'DEVELOPER' || user.role === 'ADMIN' ? 'Dashboard' : 'My account'}
+                    <User size={15} /> {homeLabelFor(user.role)}
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.push('/'); }}
