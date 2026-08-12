@@ -3,15 +3,18 @@ import Link from 'next/link';
 import { PageShell, Section } from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
-  title: 'About e-resi',
+  title: 'About E-resi — Built for Kenyan Property Developers',
   description:
-    'e-resi is an immersive property platform for Kenya. Developers list once and we produce the photography, cinematic film, 3D walkthrough and VR tour — so buyers and tenants can walk a home before it exists.',
+    'E-resi is built for Kenyan developers selling off-plan — cinematic, 3D and VR tours and a '
+    + 'branded page, so buyers walk a home before it exists.',
   alternates: { canonical: '/about' },
   openGraph: {
     siteName: 'E-resi',
-    title: 'About e-resi',
+    title: 'About E-resi — Immersive Marketing for Kenyan Property Developers',
     description:
-      'An immersive property platform for Kenya — cinematic, 3D and VR tours of developments, built for buyers who are far away and homes that are not built yet.',
+      'Production, a branded development mini-site and a sales dashboard for developers '
+      + 'selling off-plan in Kenya — with cinematic, 3D and VR tours buyers can walk from '
+      + 'anywhere.',
     url: '/about',
     type: 'website',
   },
@@ -27,22 +30,24 @@ export default function AboutPage() {
   return (
     <PageShell
       eyebrow="About"
-      title="Property decisions shouldn't depend on being in the room."
-      lede="e-resi is an immersive property platform built for Kenya — where a great deal of property is bought off-plan, and a great many buyers are somewhere else entirely."
+      title="Selling a building that doesn't exist yet shouldn't be this hard."
+      lede="e-resi is an immersive property platform built for Kenyan developers — in a market where much of what sells is sold off-plan, to buyers who are somewhere else entirely."
     >
       <Section title="The problem we set out to solve">
         <p>
-          Two things make Kenyan property hard to buy with confidence. The first is
-          that much of it is sold before it exists — off-plan, from a floor plan and
-          an artist&apos;s render. The second is that a significant share of buyers are
-          in the diaspora, making decisions from Dubai, London or Atlanta on the
-          strength of a WhatsApp video and a phone call.
+          A Kenyan developer is usually selling something nobody can stand inside yet.
+          The sales material is a floor plan, an artist&apos;s render and a site visit to
+          a construction site — and that has to carry a decision worth millions of
+          shillings. Meanwhile a serious share of the buyers are in the diaspora,
+          deciding from Dubai, London or Atlanta on the strength of a WhatsApp video
+          and a phone call.
         </p>
         <p>
-          Both problems have the same shape: the buyer cannot walk the space. So they
-          either fly in, send a relative, or take a risk. Developers feel the other
-          side of it — long sales cycles, repeated site visits, and serious interest
-          that goes cold because someone couldn&apos;t see what they were buying.
+          The cost of that lands on the developer: long sales cycles, the same site
+          visit repeated for every prospect, and genuinely interested buyers who go
+          quiet because they could not picture what they were buying. The buyer&apos;s
+          problem and the developer&apos;s problem are the same problem — nobody can walk
+          the space — and it is the developer who pays for it in unsold units.
         </p>
       </Section>
 
@@ -86,21 +91,42 @@ export default function AboutPage() {
         </p>
       </Section>
 
+      <Section title="Your page, not ours">
+        <p>
+          Every development gets a mini-site of its own — your logo, your colours, your
+          typeface, and on the top tier your own domain. It is built to be shared
+          directly: a developer sends the link to their WhatsApp list, their sales team
+          and their diaspora buyers, and it works whether or not anyone ever visits
+          e-resi itself.
+        </p>
+        <p>
+          That page reports back. You see how many people opened it, how many started
+          the tour, how long they stayed inside it and which units drew the most
+          attention — the kind of thing a brochure has never been able to tell anyone.
+        </p>
+      </Section>
+
       <Section title="Who it's for">
         <p>
-          <strong className="font-medium text-gray-900">Developers</strong> list a development
-          once and manage everything from a single dashboard: units, rentals, media,
-          inquiries, viewings, reservations and billing.
+          <strong className="font-medium text-gray-900">Developers</strong> are who we build
+          for. List a development once and run everything from a single dashboard: units,
+          rentals, media, inquiries, viewings, reservations, billing and the engagement
+          data behind every tour.
         </p>
         <p>
           <strong className="font-medium text-gray-900">Buyers and investors</strong> browse
           completed and off-plan developments, tour them properly, save shortlists, book
-          viewings and reserve units.
+          viewings and reserve units — from anywhere in the world.
         </p>
         <p>
           <strong className="font-medium text-gray-900">Tenants</strong> browse rentals by unit
           type, see which floor a unit sits on and how many are left, and reserve one
           without a site visit.
+        </p>
+        <p>
+          <strong className="font-medium text-gray-900">Agents</strong> — verified companies and
+          individuals — partner with developers, bring their own clients to a tour and get
+          credited for the leads they introduce.
         </p>
       </Section>
 

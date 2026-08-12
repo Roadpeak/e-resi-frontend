@@ -3,15 +3,17 @@ import Link from 'next/link';
 import { PageShell, Section } from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
-  title: 'Property Developer Listing in Kenya',
+  title: 'Sell Off-Plan — Property Developer Marketing, Kenya',
   description:
-    'List your development on E-resi, the property developer listing platform for Kenya. We produce the photography, cinematic film, 3D walkthrough and VR tour, then give you one dashboard for units, rentals, leads, viewings, reservations and billing.',
+    'Sell off-plan with confidence. We produce your cinematic, 3D and VR tours and hand you a '
+    + 'branded page, plus one dashboard for leads. No commission on sales.',
   alternates: { canonical: '/for-developers' },
   openGraph: {
     siteName: 'E-resi',
-    title: 'Property Developer Listing in Kenya — E-resi',
+    title: 'Sell Your Development Off-Plan — E-resi for Property Developers',
     description:
-      'Professional production, immersive tours and a single dashboard for units, leads and reservations.',
+      'Cinematic, 3D and VR production, a branded mini-site you can share on WhatsApp, and '
+      + 'one dashboard for units, leads and reservations. No commission on your sales.',
     url: '/for-developers',
     type: 'website',
   },
@@ -31,12 +33,17 @@ const STEPS = [
   {
     n: '03',
     title: 'We shoot and publish',
-    body: 'Our production team captures the development and publishes it to your branded page: gallery, cinematic film, 3D walkthrough and VR tour.',
+    body: 'Our production team captures the development and publishes it to a mini-site of your own — your logo, your colours, your typeface — carrying the gallery, cinematic film, 3D walkthrough and VR tour.',
   },
   {
     n: '04',
+    title: 'Share it with your buyers',
+    body: 'Send the link straight to your WhatsApp list, your sales team and your diaspora buyers. It works whether or not they ever visit e-resi, and the share preview carries your development, not ours.',
+  },
+  {
+    n: '05',
     title: 'Sell and let from one place',
-    body: 'Manage units and rentals, answer inquiries, confirm viewings, take reservations and track what is converting.',
+    body: 'Manage units and rentals, answer inquiries, confirm viewings and take reservations — then see who opened the tour, how long they stayed and which units they kept coming back to.',
   },
 ];
 
@@ -54,7 +61,7 @@ export default function ForDevelopersPage() {
     <PageShell
       eyebrow="Property Developer Listing"
       title="Show buyers the building before it's built."
-      lede="Most of your buyers can't visit the site. Some are in another country; some are buying off-plan from a floor plan. e-resi produces the media that closes that gap, and gives you one place to run the sale — a property developer listing built for how Kenyan buyers actually decide."
+      lede="Most of your buyers cannot visit the site. Some are in another country; some are buying off-plan from a floor plan and a render. e-resi produces the media that closes that gap, hands you a branded page to share with them directly, and gives you one place to run the sale — built for how Kenyan buyers actually decide."
     >
       <Section title="How it works">
         <ol className="space-y-6">

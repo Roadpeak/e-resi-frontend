@@ -3,15 +3,17 @@ import Link from 'next/link';
 import { PageShell, Section } from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
-  title: "Property Investment for Investors — Invest in Kenya's Properties Digitally",
+  title: 'Property Investment Kenya — Tour in 3D & VR Before You Buy',
   description:
-    "Invest in Kenya's properties digitally. Tour your apartment virtually in cinematic, 3D and VR modes before you buy. See unit-level availability, floor plans and pricing, book viewings and reserve units — then buy Kenya's top properties from anywhere.",
+    "Invest in Kenya's properties digitally. Tour apartments and villas in cinematic, 3D and "
+    + 'VR before you commit — availability, plans and pricing.',
   alternates: { canonical: '/for-investors' },
   openGraph: {
     siteName: 'E-resi',
-    title: "Property Investment for Investors — E-resi",
+    title: 'Property Investment in Kenya — Tour Before You Buy | E-resi',
     description:
-      "Invest in Kenya's properties digitally. Cinematic, 3D and VR tours of Kenyan developments, with unit-level availability and pricing.",
+      "Cinematic, 3D and VR tours of Kenyan developments, with unit-level availability and "
+      + 'pricing. Every developer KYB-verified.',
     url: '/for-investors',
     type: 'website',
   },
