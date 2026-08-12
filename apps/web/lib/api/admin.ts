@@ -8,6 +8,8 @@ export interface AdminOverview {
   revenue: { collected: number };
   queues: {
     kybPending: number;
+    /** Agent KYC submissions waiting on a decision. */
+    agentKycPending: number;
     pendingReview: number;
     failedPayments: number;
     openInquiries: number;

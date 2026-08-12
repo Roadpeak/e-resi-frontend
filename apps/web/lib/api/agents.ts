@@ -83,6 +83,21 @@ export interface AgentSelf extends Agent {
   suspendedAt: string | null;
 }
 
+/**
+ * An agent as an admin sees them: the full record plus the owning user, so a
+ * reviewer can check who is behind the application without a second lookup.
+ */
+export interface AdminAgent extends AgentSelf {
+  kybReviewedAt: string | null;
+  kybReviewedBy: string | null;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    phone: string | null;
+  } | null;
+}
+
 /** Document kinds the review queue understands, split by agent kind. */
 export const COMPANY_DOCUMENT_TYPES = [
   { value: 'COMPANY_REGISTRATION', label: 'Certificate of incorporation', required: true },
@@ -227,4 +242,34 @@ export const agentsApi = {
     officeAddress?: string;
     photoUrl?: string;
   }) => apiClient.post<AgentSelf>('/agents/me/kyc', body),
+
+  // ─── Admin: verification queue ──────────────────────────────────────────
+  //
+  // These sit behind @Roles(ADMIN). Unlike the public list they return every
+  // agent regardless of kybStatus or isListed — the queue exists precisely to
+  // see the ones the directory hides.
+
+  adminQueue: (params: {
+    kybStatus?: KybStatus | '';
+    kind?: AgentKind | '';
+    page?: number;
+    limit?: number;
+  } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.kybStatus) qs.set('kybStatus', params.kybStatus);
+    if (params.kind) qs.set('kind', params.kind);
+    if (params.page) qs.set('page', String(params.page));
+    if (params.limit) qs.set('limit', String(params.limit));
+    return apiClient.get<Paged<AdminAgent>>(`/agents/admin/queue${qs.toString() ? `?${qs}` : ''}`);
+  },
+
+  adminGet: (id: string) => apiClient.get<AdminAgent>(`/agents/admin/${id}`),
+
+  /** Approve or reject. The API requires a reason on rejection. */
+  adminReview: (id: string, status: 'APPROVED' | 'REJECTED', rejectionReason?: string) =>
+    apiClient.patch<AdminAgent>(`/agents/admin/${id}/review`, { status, rejectionReason }),
+
+  /** Show or hide in the public directory, independent of verification. */
+  adminSetListed: (id: string, isListed: boolean) =>
+    apiClient.patch<AdminAgent>(`/agents/admin/${id}/listing`, { isListed }),
 };

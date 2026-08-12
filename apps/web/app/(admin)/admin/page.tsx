@@ -43,6 +43,7 @@ export default function AdminOverview() {
 
   const queues = [
     { label: 'KYB awaiting review', value: overview.queues.kybPending, href: '/admin/developers', icon: 'verified_user' },
+    { label: 'Agent KYC awaiting review', value: overview.queues.agentKycPending, href: '/admin/agents', icon: 'support_agent' },
     { label: 'Properties to approve', value: overview.queues.pendingReview, href: '/admin/properties', icon: 'fact_check' },
     { label: 'Failed payments', value: overview.queues.failedPayments, href: '/admin/billing', icon: 'credit_card_off' },
     { label: 'Open inquiries', value: overview.queues.openInquiries, href: '/admin/inquiries', icon: 'forum' },
