@@ -8,11 +8,12 @@ import { useRouter } from 'next/navigation';
 import {
   Building2,
   MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
-  ArrowLeft, CheckCircle2, Loader2,
+  ArrowLeft, CheckCircle2, Loader2, X
 } from 'lucide-react';
 import { RentNavbar } from '../../../../components/rent/RentNavbar';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
+import { RentEnquiryModal } from '../../../../components/rent/RentEnquiryModal';
 import { formatPrice } from '../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
@@ -72,6 +73,39 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   });
 
   const listing = raw ? toRentListing(raw as any) : null;
+
+  /** Full-size image opened from the gallery. */
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [modal, setModal] = useState<'VIEWING' | 'ENQUIRY' | null>(null);
+
+  /**
+   * Gallery images. A rental is units inside a building, so when the listing
+   * has no photography of its own the development's is the right imagery to
+   * fall back to rather than showing a lone hero.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const propertyMedia: string[] = (((raw as any)?.property?.media ?? []) as any[])
+    .filter((m) => m?.url && m?.title !== '__logo__')
+    .map((m) => m.url as string);
+  const gallery = [...(listing?.galleryImages ?? []), ...propertyMedia]
+    .filter((u, i, arr) => u && u !== listing?.heroImageUrl && arr.indexOf(u) === i);
+
+  // Aggregates for the key-facts strip.
+  const units = listing?.units ?? [];
+  const totalAvailable = units.reduce((a, u) => a + (u.available ?? 0), 0);
+  const totalUnits = units.reduce((a, u) => a + (u.total ?? 0), 0);
+  const bedroomCounts = units.map((u) => u.bedrooms).sort((a, b) => a - b);
+  const bedroomRange = bedroomCounts.length === 0
+    ? '—'
+    : bedroomCounts[0] === bedroomCounts[bedroomCounts.length - 1]
+      ? (bedroomCounts[0] === 0 ? 'Studio' : `${bedroomCounts[0]} bed`)
+      : `${bedroomCounts[0] === 0 ? 'Studio' : bedroomCounts[0]}–${bedroomCounts[bedroomCounts.length - 1]} bed`;
+
+  /** Nearby landmarks come from the development, not the rent listing. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const amenities: { id?: string; name: string; distance?: string }[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((raw as any)?.property?.amenities ?? []) as any[];
 
   return (
     <div
@@ -137,6 +171,34 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 </div>
               </div>
 
+              {/* Gallery — fetched already but never rendered, so every
+                  listing showed a single hero and nothing else. */}
+              {gallery.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {gallery.slice(0, 3).map((src, i) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => setLightbox(src)}
+                      className="relative aspect-[4/3] overflow-hidden rounded-xl shadow-sm transition-opacity hover:opacity-90 cursor-pointer"
+                    >
+                      <Image
+                        src={src}
+                        alt={`${listing.name} — photo ${i + 2}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width:1024px) 33vw, 22vw"
+                      />
+                      {i === 2 && gallery.length > 3 && (
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-semibold text-white">
+                          +{gallery.length - 3} more
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Title */}
               <div>
                 <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-1">
@@ -145,6 +207,36 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 </div>
                 <h1 className="text-2xl font-semibold text-gray-900">{listing.name}</h1>
                 {listing.tagline && <p className="mt-1 text-gray-500">{listing.tagline}</p>}
+              </div>
+
+              {/* Key facts — the things a tenant scans for before reading
+                  anything. Previously these were split between the sidebar
+                  and the unit rows, so a phone visitor had to scroll past the
+                  whole page to find the bedroom range. */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  {
+                    label: 'Bedrooms',
+                    value: bedroomRange,
+                  },
+                  {
+                    label: 'Units free',
+                    value: `${totalAvailable} of ${totalUnits}`,
+                  },
+                  {
+                    label: 'Furnishing',
+                    value: FURNISHING_LABELS[listing.furnishing] ?? listing.furnishing,
+                  },
+                  {
+                    label: 'Min. lease',
+                    value: `${listing.minLeaseTerm} months`,
+                  },
+                ].map((f) => (
+                  <div key={f.label} className="rounded-2xl bg-white/70 p-4 shadow-sm">
+                    <p className="text-[11px] uppercase tracking-wider text-gray-400">{f.label}</p>
+                    <p className="mt-1 text-[15px] font-semibold text-gray-900">{f.value}</p>
+                  </div>
+                ))}
               </div>
 
               {/* Description */}
@@ -242,11 +334,17 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     )}
                   </div>
 
-                  <button className="mt-5 w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors">
+                  <button
+                    onClick={() => setModal('VIEWING')}
+                    className="mt-5 w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
                     Book a Viewing
                   </button>
-                  <button className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                    Send Inquiry
+                  <button
+                    onClick={() => setModal('ENQUIRY')}
+                    className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    Send Enquiry
                   </button>
                   <ChatWithDeveloper rentListingSlug={listing.slug} className="mt-2 w-full" />
                   {listing.propertySlug && (
@@ -282,15 +380,19 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   </div>
                 )}
 
-                {/* Features summary */}
-                {listing.amenities.length > 0 && (
+                {/* Amenities — the listing has none of its own, so these come
+                    from the development the units sit in. */}
+                {amenities.length > 0 && (
                   <div className="rounded-2xl bg-white p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Amenities</p>
                     <ul className="space-y-1.5">
-                      {listing.amenities.map((a) => (
-                        <li key={a.id} className="flex items-center gap-2 text-sm text-gray-600">
+                      {amenities.map((a) => (
+                        <li key={a.id ?? a.name} className="flex items-center gap-2 text-sm text-gray-600">
                           <CheckCircle2 size={13} className="text-green-500 shrink-0" />
-                          {a.name}
+                          <span className="min-w-0 flex-1">{a.name}</span>
+                          {a.distance && (
+                            <span className="shrink-0 text-xs text-gray-400">{a.distance}</span>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -300,6 +402,39 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             </div>
           </div>
         </div>
+      )}
+
+      {/* Full-size image from the gallery */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            aria-label="Close image"
+            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded host */}
+          <img
+            src={lightbox}
+            alt=""
+            className="max-h-[88vh] max-w-[92vw] rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {modal && listing && (
+        <RentEnquiryModal
+          mode={modal}
+          listingId={listing.id}
+          listingName={listing.name}
+          propertySlug={listing.propertySlug || undefined}
+          onClose={() => setModal(null)}
+        />
       )}
     </div>
   );

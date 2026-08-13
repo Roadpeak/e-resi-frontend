@@ -138,4 +138,36 @@ export const rentListingsApi = {
     const q = qs.toString();
     return apiClient.get<BackendRentListingsResponse>(`/rent-listings/my/listings${q ? `?${q}` : ''}`);
   },
+
+  // ─── Developer: editing ─────────────────────────────────────────────────
+  //
+  // The API has had these since the module was built; the client never
+  // exposed them, which is why the dashboard's Edit button did nothing.
+  // Note these take the listing **id**, not the slug — the read endpoints
+  // take a slug, so mixing them up 404s.
+
+  update: (
+    id: string,
+    body: Partial<{
+      name: string;
+      tagline: string;
+      description: string;
+      furnishing: string;
+      neighborhood: string;
+      city: string;
+      priceFrom: number;
+      priceTo: number;
+      currency: string;
+      heroImageUrl: string;
+      availableFrom: string;
+      minLeaseTerm: number;
+      tags: string[];
+    }>,
+  ) => apiClient.patch<BackendRentListingItem>(`/rent-listings/${id}`, body),
+
+  setStatus: (id: string, status: string) =>
+    apiClient.patch<BackendRentListingItem>(`/rent-listings/${id}/status`, { status }),
+
+  removeUnit: (listingId: string, unitId: string) =>
+    apiClient.delete<unknown>(`/rent-listings/${listingId}/units/${unitId}`),
 };

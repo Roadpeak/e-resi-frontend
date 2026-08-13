@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -8,6 +9,8 @@ import { Plus, Eye, Pencil, Film, Box, Home, MoreHorizontal, Loader2 } from 'luc
 import { Button } from '../../../../components/ui/Button';
 import { cn } from '../../../../lib/utils';
 import { useMyRentListings } from '../../../../lib/api/queries';
+import { rentListingsApi } from '../../../../lib/api/rent-listings';
+import { ApiError } from '../../../../lib/api/client';
 
 const STATUS_STYLES: Record<string, string> = {
   AVAILABLE: 'bg-[#e6f4ea] text-[#188038]',
@@ -31,6 +34,20 @@ function formatRent(price: number) {
 
 export default function DashboardRentals() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+  const queryClient = useQueryClient();
+
+  // Archiving takes the listing off the public site without deleting it —
+  // the menu item previously did nothing at all.
+  const archive = useMutation({
+    mutationFn: (id: string) => rentListingsApi.setStatus(id, 'ARCHIVED'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rent-listings', 'mine'] });
+      setActionError('');
+    },
+    onError: (e) =>
+      setActionError(e instanceof ApiError ? e.message : 'Could not archive that listing'),
+  });
   const { data, isLoading } = useMyRentListings({ limit: 50 });
   const listings = data?.items ?? [];
 
@@ -71,7 +88,13 @@ export default function DashboardRentals() {
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
+          {actionError && (
+          <p className="mb-4 rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">
+            {actionError}
+          </p>
+        )}
+
+        <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -153,19 +176,22 @@ export default function DashboardRentals() {
                         {/* Actions */}
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-1">
-                            <Link
+                            <a
                               href={`/rent/${listing.slug}`}
+                              target="_blank"
+                              rel="noreferrer noopener"
                               className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                              title="View live"
+                              title="View live page"
                             >
                               <Eye size={14} />
-                            </Link>
-                            <button
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors cursor-pointer"
+                            </a>
+                            <Link
+                              href={`/dashboard/rentals/${listing.slug}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
                               title="Edit"
                             >
                               <Pencil size={14} />
-                            </button>
+                            </Link>
                             <div className="relative">
                               <button
                                 onClick={() => setMenuOpen(menuOpen === listing.id ? null : listing.id)}
@@ -175,15 +201,32 @@ export default function DashboardRentals() {
                               </button>
                               {menuOpen === listing.id && (
                                 <div className="absolute right-0 top-9 z-20 w-48 overflow-hidden rounded-2xl border border-[#dadce0] bg-white py-1 shadow-lg">
-                                  {['Edit Units', 'View Analytics', 'Update Availability', 'Duplicate', 'Archive'].map((action) => (
-                                    <button
-                                      key={action}
-                                      onClick={() => setMenuOpen(null)}
-                                      className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors cursor-pointer"
-                                    >
-                                      {action}
-                                    </button>
-                                  ))}
+                                  <Link
+                                    href={`/dashboard/rentals/${listing.slug}`}
+                                    onClick={() => setMenuOpen(null)}
+                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors"
+                                  >
+                                    Edit listing &amp; units
+                                  </Link>
+                                  <a
+                                    href={`/rent/${listing.slug}`}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                    onClick={() => setMenuOpen(null)}
+                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors"
+                                  >
+                                    View live page
+                                  </a>
+                                  <button
+                                    onClick={() => {
+                                      setMenuOpen(null);
+                                      archive.mutate(listing.id);
+                                    }}
+                                    disabled={archive.isPending}
+                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#c5221f] hover:bg-[#fce8e6] transition-colors cursor-pointer disabled:opacity-40"
+                                  >
+                                    Archive listing
+                                  </button>
                                 </div>
                               )}
                             </div>
