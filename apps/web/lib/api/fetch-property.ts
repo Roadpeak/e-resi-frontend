@@ -45,7 +45,10 @@ function normaliseProperty(raw: any): Property {
     },
     availableUnits: raw.availableUnits ?? raw._count?.units ?? 0,
     currency: raw.currency ?? 'KES',
-    status: raw.status?.toLowerCase() ?? raw.status,
+    // Kept as the API sends it (UPPER_SNAKE). It used to be lowercased here,
+    // which is why the frontend grew a parallel status vocabulary that no
+    // longer matched anything the API would accept.
+    status: raw.status,
     // Backend returns MediaAsset objects; the UI expects plain URLs.
     // The logo is stored as a media row with a sentinel title — keep it out of galleries.
     galleryImages: normaliseGallery(raw),

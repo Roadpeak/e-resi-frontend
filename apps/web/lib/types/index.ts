@@ -2,7 +2,13 @@
 // Core domain types for e-resi
 // ─────────────────────────────────────────────
 
-export type PropertyStatus = 'off_plan' | 'under_construction' | 'ready' | 'sold_out';
+/**
+ * Matches the backend PropertyStatus enum exactly. The previous values
+ * ('off_plan' | 'under_construction' | 'ready' | 'sold_out') were invented
+ * client-side — two of them did not exist in the API at all, and the casing
+ * was wrong for the ones that did, so every status filter 400'd.
+ */
+export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'OFF_PLAN' | 'SOLD_OUT' | 'ARCHIVED';
 /**
  * Mirrors the backend PropertyCategory enum exactly — the API validates against
  * these values and 400s on anything else. (The previous vocabulary here —

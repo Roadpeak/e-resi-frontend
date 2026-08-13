@@ -145,7 +145,7 @@ export default function DashboardProperties() {
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1">
                           <Link
-                            href={p.status === 'ready' || p.status === 'off_plan' || p.status === 'under_construction' ? `/${p.slug}` : `/dashboard/properties/${p.slug}`}
+                            href={p.status === 'ACTIVE' || p.status === 'OFF_PLAN' ? `/${p.slug}` : `/dashboard/properties/${p.slug}`}
                             className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
                             title="View"
                           >

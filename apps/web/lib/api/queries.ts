@@ -38,7 +38,10 @@ function toProperty(raw: any) {
     availableUnits: raw.availableUnits ?? raw._count?.units ?? 0,
     currency: raw.currency ?? 'KES',
     // Normalise status to lowercase for frontend enums
-    status: raw.status?.toLowerCase() ?? raw.status,
+    // Kept as the API sends it (UPPER_SNAKE). It used to be lowercased here,
+    // which is why the frontend grew a parallel status vocabulary that no
+    // longer matched anything the API would accept.
+    status: raw.status,
     // Ensure arrays are always defined
     galleryImages: (raw.galleryImages ?? raw.media ?? [])
       .filter((m: any) => typeof m === 'string' || (m?.title !== '__logo__' && m?.url))

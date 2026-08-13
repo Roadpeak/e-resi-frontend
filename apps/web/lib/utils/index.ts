@@ -57,22 +57,33 @@ export function pluralize(count: number, singular: string, plural = `${singular}
 
 export function getStatusLabel(status: string): string {
   const map: Record<string, string> = {
+    OFF_PLAN: 'Off Plan',
+    ACTIVE: 'Ready to Move',
+    SOLD_OUT: 'Sold Out',
+    DRAFT: 'In Review',
+    ARCHIVED: 'Archived',
+    // The read path used to lowercase status before it reached here; tolerate
+    // both so an older cached payload still renders a label rather than a raw
+    // enum value.
     off_plan: 'Off Plan',
-    under_construction: 'Under Construction',
-    ready: 'Ready to Move',
+    active: 'Ready to Move',
     sold_out: 'Sold Out',
   };
-  return map[status] ?? status;
+  return map[status] ?? map[String(status).toUpperCase()] ?? status;
 }
 
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
+    OFF_PLAN: 'text-brand-700 bg-brand-100',
+    ACTIVE: 'text-emerald-700 bg-emerald-100',
+    SOLD_OUT: 'text-red-700 bg-red-100',
+    DRAFT: 'text-gold-700 bg-gold-100',
+    ARCHIVED: 'text-slate-700 bg-slate-100',
     off_plan: 'text-brand-700 bg-brand-100',
-    under_construction: 'text-gold-700 bg-gold-100',
-    ready: 'text-emerald-700 bg-emerald-100',
+    active: 'text-emerald-700 bg-emerald-100',
     sold_out: 'text-red-700 bg-red-100',
   };
-  return map[status] ?? 'text-slate-700 bg-slate-100';
+  return map[status] ?? map[String(status).toUpperCase()] ?? 'text-slate-700 bg-slate-100';
 }
 
 export function formatDate(dateString: string): string {

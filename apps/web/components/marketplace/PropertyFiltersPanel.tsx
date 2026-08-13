@@ -21,9 +21,11 @@ const categories: { value: PropertyCategory; label: string }[] = [
 ];
 
 const statuses: { value: PropertyStatus; label: string }[] = [
-  { value: 'off_plan', label: 'Off Plan' },
-  { value: 'under_construction', label: 'Under Construction' },
-  { value: 'ready', label: 'Ready to Move' },
+  // Must match the backend PropertyStatus enum — see STATUSES in
+  // PropertiesPage. Lowercase values and "Under Construction" 400'd.
+  { value: 'OFF_PLAN', label: 'Off Plan' },
+  { value: 'ACTIVE', label: 'Ready to Move' },
+  { value: 'SOLD_OUT', label: 'Sold Out' },
 ];
 
 const priceRanges = [

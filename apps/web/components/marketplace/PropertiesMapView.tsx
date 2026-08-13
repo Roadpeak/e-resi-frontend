@@ -20,11 +20,31 @@ interface Props {
 const DEFAULT_CENTER: [number, number] = [-1.2864, 36.8172];
 const DEFAULT_ZOOM = 11;
 
+// Keyed to the backend PropertyStatus enum. These were lowercase before,
+// so every marker fell through to the default blue.
 const statusColors: Record<string, string> = {
-  ready: '#188038',
-  off_plan: '#e8710a',
-  under_construction: '#f9ab00',
+  ACTIVE: '#188038',
+  OFF_PLAN: '#e8710a',
+  SOLD_OUT: '#c5221f',
+  DRAFT: '#f9ab00',
 };
+
+/**
+ * The marker is built as an HTML string, so a development name containing
+ * `<` or `&` would otherwise break the pin — or inject markup.
+ */
+function escapeHtml(v: string) {
+  return v
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Long names would make a pin wider than a phone screen. */
+function shortName(name: string, max = 22) {
+  return name.length <= max ? name : `${name.slice(0, max - 1).trimEnd()}…`;
+}
 
 function priceLabel(p: Property) {
   if (!p.priceFrom) return 'Ask';
@@ -100,10 +120,13 @@ export function PropertiesMapView({ properties, focusPropertyId }: Props) {
       const icon = L.divIcon({
         className: '',
         html: `<span style="
-          display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;
+          display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
           border:2px solid #fff;background:${color};color:#fff;
           font:600 12px/1 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.28);
-          white-space:nowrap;cursor:pointer;transform:translate(-50%,-50%);">${priceLabel(property)}</span>`,
+          white-space:nowrap;cursor:pointer;transform:translate(-50%,-50%);"
+          ><span style="font-weight:600">${escapeHtml(shortName(property.name))}</span
+          ><span style="opacity:.55">|</span
+          ><span style="font-weight:700">${priceLabel(property)}</span></span>`,
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       });

@@ -36,10 +36,16 @@ const CATEGORIES: { value: PropertyCategory; label: string }[] = [
   { value: 'LAND', label: 'Land' },
 ];
 
+/**
+ * Only what the API can actually filter on. "Under Construction" was offered
+ * here but has never existed in the backend enum, so selecting it 400'd and
+ * the grid went empty — as did the other two, which were sent in the wrong
+ * case.
+ */
 const STATUSES: { value: PropertyStatus; label: string }[] = [
-  { value: 'off_plan', label: 'Off Plan' },
-  { value: 'under_construction', label: 'Under Construction' },
-  { value: 'ready', label: 'Ready to Move' },
+  { value: 'OFF_PLAN', label: 'Off Plan' },
+  { value: 'ACTIVE', label: 'Ready to Move' },
+  { value: 'SOLD_OUT', label: 'Sold Out' },
 ];
 
 const PAGE_SIZE = 9;
