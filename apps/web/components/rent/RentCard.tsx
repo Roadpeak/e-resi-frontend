@@ -127,11 +127,13 @@ export function RentCard({ listing }: Props) {
           </span>
         </div>
 
-        <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-1 truncate">{listing.name}</h3>
-        <p className="text-gray-500 text-sm mb-3 line-clamp-2">{listing.tagline}</p>
+        <h3 className="mb-1 line-clamp-2 text-lg font-semibold leading-tight text-gray-900 sm:truncate">
+          {listing.name}
+        </h3>
+        <p className="mb-3 line-clamp-1 text-sm text-gray-500 sm:line-clamp-2">{listing.tagline}</p>
 
         {/* Specs row */}
-        <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500">
           <span className="flex items-center gap-1.5"><BedDouble size={16} /> {bedLabel}</span>
           <span className="flex items-center gap-1.5"><Maximize2 size={16} /> {listing.units[0]?.sqm}m²+</span>
           <span className="flex items-center gap-1.5"><Users size={16} /> {totalAvailable} available</span>
@@ -149,7 +151,7 @@ export function RentCard({ listing }: Props) {
         </div>
 
         {/* Price */}
-        <div className="flex items-end justify-between">
+        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
           <div>
             <span className="text-xl font-bold text-gray-900">{formatRent(listing.priceFrom, listing.currency)}</span>
             <span className="text-sm text-gray-400 ml-1">/mo</span>

@@ -85,21 +85,21 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05, ease: [0.16, 1, 0.3, 1] }}
-        className="group relative flex gap-5 rounded-3xl bg-white p-4 shadow-sm shadow-gray-200/80 transition-all duration-300 hover:shadow-lg hover:shadow-gray-200"
+        className="group relative flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-sm shadow-gray-200/80 transition-all duration-300 hover:shadow-lg hover:shadow-gray-200 sm:flex-row sm:gap-5 sm:p-4"
       >
         {/* Whole-card link */}
         <Link href={`/${property.slug}`} aria-label={property.name} className="absolute inset-0 z-[1] rounded-3xl" />
 
         {/* Image column: hero + 3-image gallery strip */}
-        <div className="flex w-56 shrink-0 flex-col gap-1.5 sm:w-72">
-          <div className="relative h-44 w-full overflow-hidden rounded-2xl sm:h-52">
+        <div className="flex w-full shrink-0 flex-col gap-1.5 sm:w-72">
+          <div className="relative h-48 w-full overflow-hidden rounded-2xl sm:h-52">
             {property.heroImageUrl ? (
               <Image
                 src={property.heroImageUrl}
                 alt={property.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="288px"
+                sizes="(max-width: 640px) 100vw, 288px"
               />
             ) : (
               <div className="absolute inset-0 bg-gray-100" />
@@ -115,7 +115,7 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
           </div>
 
           {galleryPreview.length > 0 && (
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="hidden grid-cols-3 gap-1.5 sm:grid">
               {galleryPreview.map((url, i) => (
                 <div key={url + i} className="relative h-14 overflow-hidden rounded-lg sm:h-16">
                   <Image src={url} alt="" fill className="object-cover" sizes="96px" />
@@ -127,9 +127,11 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
 
         {/* Content */}
         <div className="flex min-w-0 flex-1 flex-col py-1 pr-1">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-semibold text-gray-900 transition-colors group-hover:text-brand-600">
+              {/* Two lines on a phone rather than one truncated one — the name
+                  is the single thing a tenant scans for. */}
+              <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-brand-600 sm:truncate sm:text-xl">
                 {property.name}
               </h3>
               <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-gray-400">
@@ -138,16 +140,17 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
                 {property.address.neighborhood}, {property.address.city}
               </p>
             </div>
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 sm:text-right">
               <p className="text-xl font-bold text-gray-900 sm:text-2xl">
                 {formatPrice(property.priceFrom, property.currency)}
+                <span className="text-sm font-normal text-gray-400 sm:hidden"> from</span>
               </p>
-              <p className="text-sm text-gray-400">from</p>
+              <p className="hidden text-sm text-gray-400 sm:block">from</p>
             </div>
           </div>
 
           {property.tagline && (
-            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-500">
+            <p className="mt-2 line-clamp-1 text-sm leading-relaxed text-gray-500 sm:line-clamp-2">
               {property.tagline}
             </p>
           )}
@@ -169,7 +172,7 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
           </div>
 
           {/* Bottom row: stat chips + actions */}
-          <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
             <div className="flex flex-wrap items-center gap-2">
               {bed && (
                 <>
@@ -185,7 +188,8 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onViewOnMap(); }}
                   className="relative z-10 flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-600 transition-colors hover:border-brand-300 hover:text-brand-600"
                 >
-                  <MapPinned size={16} /> View on map
+                  <MapPinned size={16} />
+                  <span className="hidden sm:inline">View on map</span>
                 </button>
               )}
               <button
@@ -269,16 +273,24 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
 
         {/* Name + location */}
         <Link href={`/${property.slug}`}>
-          <h3 className="font-semibold text-gray-800 text-sm leading-snug group-hover:text-orange-500 transition-colors line-clamp-1">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-800 transition-colors group-hover:text-orange-500">
             {property.name}
           </h3>
         </Link>
-        <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 mb-3">
-          <MapPin size={9} /> {property.address.neighborhood}, {property.address.city}
+        <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-gray-400">
+          <MapPin size={9} className="shrink-0" /> {property.address.neighborhood}, {property.address.city}
         </p>
+        {/* A line of the description: this compact card carried none at all,
+            so two listings in the same building were indistinguishable. */}
+        {property.tagline && (
+          <p className="mt-1 line-clamp-1 text-xs leading-relaxed text-gray-500">
+            {property.tagline}
+          </p>
+        )}
+        <div className="mb-3" />
 
         {/* Stats row */}
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
           {bed && (
             <>
               <span className="flex items-center gap-1"><BedDouble size={11} /> {bed.bedrooms === 0 ? 'Studio' : bed.bedrooms}</span>

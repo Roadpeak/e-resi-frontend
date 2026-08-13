@@ -207,6 +207,22 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 </div>
                 <h1 className="text-2xl font-semibold text-gray-900">{listing.name}</h1>
                 {listing.tagline && <p className="mt-1 text-gray-500">{listing.tagline}</p>}
+
+                {/* Rent, on mobile only. The sidebar price card is the same
+                    information, but on a phone the sidebar renders after the
+                    gallery, units and tags — so a tenant had to scroll the
+                    whole page to find out what it costs. */}
+                <div className="mt-3 flex items-baseline gap-2 lg:hidden">
+                  <span className="text-2xl font-bold text-gray-900">
+                    {formatPrice(listing.priceFrom, listing.currency)}
+                  </span>
+                  <span className="text-sm text-gray-400">/month</span>
+                  {listing.priceTo > listing.priceFrom && (
+                    <span className="text-sm text-gray-400">
+                      — {formatPrice(listing.priceTo, listing.currency)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Key facts — the things a tenant scans for before reading
