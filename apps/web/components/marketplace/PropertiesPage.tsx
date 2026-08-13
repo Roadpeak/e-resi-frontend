@@ -68,6 +68,21 @@ export function PropertiesPage({
   const [page, setPage] = useState(1);
   const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
+  /**
+   * Whether the lg: sidebar is actually on screen. Starts false so the
+   * server-rendered pass and the first client pass agree — assuming desktop
+   * would mount a map the phone never shows and reintroduce the double
+   * instance. Uses the same 1023px breakpoint as the card's click handler.
+   */
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
   // The filter store is global and survives navigation, so a stale category
   // from a previous page would otherwise leak into a locked-category route.
   useEffect(() => {
@@ -241,7 +256,13 @@ export function PropertiesPage({
           {/* Map panel — always visible on lg+ */}
           <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-[40%] max-w-[560px] shrink-0 overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm lg:block">
             <div className="relative h-full w-full">
-              <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
+              {/* Only mounted when this panel is genuinely on screen. It is
+                  `hidden` below lg, but display:none still mounts — which
+                  left a zero-size Leaflet instance alive alongside the
+                  fullscreen one on mobile. */}
+              {isDesktop && !showFullMap && (
+                <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
+              )}
             </div>
             <div className="absolute inset-x-5 bottom-4 z-30">
               <button

@@ -9,6 +9,7 @@ import { useAuthStore } from '../../lib/stores/auth.store';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { MarketplaceNavLinks } from './MarketplaceNavLinks';
 import { homePathFor, homeLabelFor } from '../../lib/auth/role-home';
+import { MarketplaceMobileMenu } from './MarketplaceMobileMenu';
 
 /**
  * Dedicated, fully separated navbar for the properties marketplace — a solid
@@ -78,6 +79,10 @@ export function PropertiesNavbar() {
           )}
         </div>
 
+        {/* Menu — below xl the section links are hidden, so this is the only
+            way to reach Rent, Villas, Developers or Agents. */}
+        <MarketplaceMobileMenu />
+
         {/* Account */}
         <div className="relative shrink-0" ref={menuRef}>
           {isAuthenticated && user ? (
@@ -115,13 +120,13 @@ export function PropertiesNavbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="hidden sm:inline-flex rounded-full px-4 py-2 text-[15px] font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="hidden rounded-full px-4 py-2 text-[15px] font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 xl:inline-flex"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="inline-flex rounded-full bg-gray-900 px-5 py-2.5 text-[15px] font-semibold text-white hover:bg-gray-700 transition-colors"
+                className="hidden rounded-full bg-gray-900 px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-gray-700 sm:inline-flex"
               >
                 Get started
               </Link>

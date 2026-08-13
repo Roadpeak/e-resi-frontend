@@ -139,13 +139,40 @@ export function PropertiesMapView({ properties, focusPropertyId }: Props) {
   // "View on map" — scroll this exact pin into view and open its popup.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !focusPropertyId) return;
+    const el = containerRef.current;
+    if (!map || !el || !focusPropertyId) return;
     const property = located.find((p) => p.id === focusPropertyId);
     if (!property) return;
 
-    map.flyTo([property.address.coordinates.lat, property.address.coordinates.lng], 15, { duration: 0.8 });
-    setSelected(property);
-    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // A container with no dimensions is either display:hidden or still
+    // laying out. flyTo animates against that pixel size, so running it here
+    // threw and took the whole page down with a client-side exception —
+    // which is what happened on mobile, where this panel is hidden and the
+    // fullscreen overlay had only just been mounted.
+    let cancelled = false;
+    const focus = () => {
+      if (cancelled || !mapRef.current || !containerRef.current) return;
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      if (width < 1 || height < 1) return false;
+      // Leaflet caches the container size at creation; without this the
+      // fly lands off-centre on a panel that has just appeared.
+      mapRef.current.invalidateSize();
+      mapRef.current.flyTo(
+        [property.address.coordinates.lat, property.address.coordinates.lng],
+        15,
+        { duration: 0.8 },
+      );
+      setSelected(property);
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return true;
+    };
+
+    if (focus() === false) {
+      // Not laid out yet — try again on the next frame rather than throwing.
+      const raf = requestAnimationFrame(() => { focus(); });
+      return () => { cancelled = true; cancelAnimationFrame(raf); };
+    }
+    return () => { cancelled = true; };
   }, [focusPropertyId, located]);
 
   return (
