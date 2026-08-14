@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
 import { useAuthStore } from '../../lib/stores/auth.store';
+import { referralPayload } from '../../lib/analytics/referral';
 
 type Mode = 'VIEWING' | 'ENQUIRY';
 
@@ -64,6 +65,7 @@ export function RentEnquiryModal({
     try {
       if (isViewing) {
         await apiClient.post('/bookings', {
+          ...referralPayload(),
           propertySlug,
           name: form.name.trim(),
           email: form.email.trim(),
@@ -77,6 +79,7 @@ export function RentEnquiryModal({
         });
       } else {
         await apiClient.post('/inquiries', {
+          ...referralPayload(),
           rentListingId: listingId,
           name: form.name.trim(),
           email: form.email.trim(),

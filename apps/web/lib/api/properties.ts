@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { Property } from '../types';
+import { referralPayload } from '../analytics/referral';
 
 export interface PropertiesQuery {
   page?: number;
@@ -78,10 +79,15 @@ export const propertiesApi = {
     }>,
   ) => apiClient.patch<Property>(`/properties/${slug}/branding`, body),
 
+  // Every lead carries the referring agent when there is one, attached here
+  // rather than at each call site so no submission path can forget it.
   submitInquiry: (
     slug: string,
     payload: { name: string; email: string; phone?: string; message: string; interestedInUnit?: string },
-  ) => apiClient.post<unknown>(`/properties/${slug}/inquiries`, payload),
+  ) => apiClient.post<unknown>(`/properties/${slug}/inquiries`, {
+    ...payload,
+    ...referralPayload(),
+  }),
 
   submitBooking: (
     slug: string,
@@ -95,7 +101,10 @@ export const propertiesApi = {
       message?: string;
       unitId?: string;
     },
-  ) => apiClient.post<unknown>(`/properties/${slug}/bookings`, payload),
+  ) => apiClient.post<unknown>(`/properties/${slug}/bookings`, {
+    ...payload,
+    ...referralPayload(),
+  }),
 
   /**
    * Landmarks near a point, from OpenStreetMap. Suggestions only — nothing is

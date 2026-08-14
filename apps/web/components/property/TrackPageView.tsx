@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { captureReferral, getReferral } from '../../lib/analytics/referral';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -32,6 +33,12 @@ function sourceFromReferrer(): string {
 
 /** Fire-and-forget PAGE_VIEW analytics event for a property page. */
 export function TrackPageView({ propertyId }: { propertyId: string }) {
+  // An agent's shared link carries ?ref=<agentId>. Captured here, before the
+  // visitor navigates anywhere and loses the query string.
+  useEffect(() => {
+    captureReferral();
+  }, []);
+
   useEffect(() => {
     if (!propertyId) return;
     fetch(`${API_BASE}/analytics/track`, {
@@ -43,6 +50,7 @@ export function TrackPageView({ propertyId }: { propertyId: string }) {
         propertyId,
         sessionId: sessionId(),
         source: sourceFromReferrer(),
+        ...(getReferral() ? { metadata: { agentId: getReferral() } } : {}),
       }),
     }).catch(() => {});
   }, [propertyId]);

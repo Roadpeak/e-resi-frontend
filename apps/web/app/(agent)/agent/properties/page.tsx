@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, Loader2 } from 'lucide-react';
 import { partnershipsApi } from '../../../../lib/api/partnerships';
+import { agentsApi } from '../../../../lib/api/agents';
+import { ShareLinkButton } from '../../../../components/agent/ShareLinkButton';
 import { formatPrice } from '../../../../lib/utils';
 
 /**
@@ -22,6 +24,12 @@ export default function AgentProperties() {
   });
 
   const items = data?.data ?? [];
+
+  // The agent's own profile id is what a shared link credits.
+  const { data: me } = useQuery({
+    queryKey: ['agent', 'me'],
+    queryFn: () => agentsApi.me(),
+  });
 
   return (
     <div className="space-y-6">
@@ -89,6 +97,16 @@ export default function AgentProperties() {
                 </div>
                 {a.notes && (
                   <p className="mt-2 line-clamp-2 text-[13px] text-[#5f6368]">{a.notes}</p>
+                )}
+
+                {/* The link that makes attribution work — anyone who enquires
+                    through it is credited to this agent. */}
+                {me?.id && (
+                  <ShareLinkButton
+                    path={`/${a.property.slug}`}
+                    agentId={me.id}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-3.5 py-2 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] cursor-pointer"
+                  />
                 )}
               </div>
             </div>
