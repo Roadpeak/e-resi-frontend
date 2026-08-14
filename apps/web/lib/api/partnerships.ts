@@ -36,6 +36,19 @@ export interface Partnership {
   _count?: { assignments: number };
 }
 
+export interface PartnershipLeads {
+  period: { days: number };
+  totals: { inquiries: number; bookings: number; reservations: number };
+  recent: {
+    kind: 'INQUIRY' | 'BOOKING';
+    id: string;
+    name: string;
+    status: string;
+    property: string;
+    createdAt: string;
+  }[];
+}
+
 export interface PartnershipDocument {
   id: string;
   name: string;
@@ -118,6 +131,14 @@ export const partnershipsApi = {
       `/partnerships/my-assignments${qs.toString() ? `?${qs}` : ''}`,
     );
   },
+
+  /**
+   * What the partnership has produced. Both sides see the same figures —
+   * the agent to show what they introduced, the developer to judge whether
+   * the relationship is worth continuing.
+   */
+  leads: (id: string, days = 90) =>
+    apiClient.get<PartnershipLeads>(`/partnerships/${id}/leads?days=${days}`),
 
   documents: (id: string) =>
     apiClient.get<PartnershipDocument[]>(`/partnerships/${id}/documents`),

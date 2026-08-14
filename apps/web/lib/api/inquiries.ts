@@ -12,6 +12,14 @@ export interface Inquiry {
   createdAt: string;
   property: { id: string; name: string; slug: string };
   unit?: { id: string; name: string } | null;
+  /**
+   * Set once a reply turned this lead into a chat thread. Absent for guest
+   * inquiries — with no account there is nobody to open a thread with, so
+   * those stay email-only.
+   */
+  conversationId?: string | null;
+  /** The agent who introduced this lead, when one did. */
+  agent?: { id: string; displayName: string } | null;
 }
 
 export interface InquiriesResponse {

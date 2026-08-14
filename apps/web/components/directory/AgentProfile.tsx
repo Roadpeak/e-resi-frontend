@@ -13,6 +13,7 @@ import {
 } from './SocialIcons';
 import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
 import { AgentReviews } from './AgentReviews';
+import { PartnersStrip } from './PartnersStrip';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
 
@@ -32,7 +33,7 @@ function telLink(phone: string) {
 
 /**
  * An agent's own page inside e-resi — their storefront rather than a row in a
- * list. Reviews, partner developers and assigned properties land here in later
+ * list, with reviews and partner developers. Assigned properties land here in later
  * stages; this establishes the shell they slot into.
  */
 export function AgentProfile({ agentId }: { agentId: string }) {
@@ -123,6 +124,8 @@ export function AgentProfile({ agentId }: { agentId: string }) {
           </div>
 
           <div className="lg:col-span-3">
+            {/* Who they actually work with — the evidence behind the profile. */}
+            <PartnersStrip side="agent" profileId={agent.id} />
             <AgentReviews agentId={agent.id} />
           </div>
         </div>

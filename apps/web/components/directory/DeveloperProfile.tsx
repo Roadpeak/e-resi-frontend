@@ -12,6 +12,7 @@ import { DirectoryCard, DirectoryShell, IconPillLink, Tag } from './DirectoryPri
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { InstagramIcon, FacebookIcon, TwitterIcon, LinkedinIcon } from './SocialIcons';
 import { DirectoryPropertyCard } from './DirectoryPropertyCard';
+import { PartnersStrip } from './PartnersStrip';
 
 // Leaflet touches `window` at import time — must not run during SSR.
 const DirectoryMap = dynamic(
@@ -174,6 +175,9 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
             <DirectoryMap places={mapPlaces} className="rounded-[28px]" />
           </DirectoryCard>
         )}
+
+        {/* ── Agents representing this developer ── */}
+        <PartnersStrip side="developer" profileId={profileId} />
 
         {/* ── Property grid ── */}
         <div className="mt-8">

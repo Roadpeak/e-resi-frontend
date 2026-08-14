@@ -7,6 +7,7 @@ import { formatDate, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useDeveloperInquiries, useReplyInquiry } from '../../../../lib/api/queries';
 import type { Inquiry } from '../../../../lib/api/inquiries';
+import Link from 'next/link';
 
 type StatusFilter = 'all' | 'new' | 'read' | 'replied';
 
@@ -21,6 +22,8 @@ export default function DashboardInquiries() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [selected, setSelected] = useState<Inquiry | null>(null);
   const [replyText, setReplyText] = useState('');
+  /** Id of the inquiry just replied to, so the row can offer the thread. */
+  const [sent, setSent] = useState<string | null>(null);
 
   const { data, isLoading } = useDeveloperInquiries({ limit: 50, status: filter === 'all' ? undefined : filter });
   const replyMutation = useReplyInquiry();
@@ -32,6 +35,10 @@ export default function DashboardInquiries() {
     if (!selected || !replyText.trim()) return;
     await replyMutation.mutateAsync({ id: selected.id, reply: replyText });
     setReplyText('');
+    // A reply to someone with an account opens a chat thread, so send the
+    // developer there rather than closing onto nothing. Guests have no
+    // account and no thread — those stay in the queue, replied by email.
+    setSent(selected.id);
     setSelected(null);
   }
 
@@ -164,6 +171,31 @@ export default function DashboardInquiries() {
                   </div>
                 )}
               </div>
+
+              {/* Once replied, the thread is where the conversation continues —
+                  a reply used to end in email with nowhere to answer. */}
+              {selected.conversationId && (
+                <div className="border-t border-[#f1f3f4] p-5">
+                  <Link
+                    href={`/dashboard/messages?c=${selected.conversationId}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc]"
+                  >
+                    <MessageSquare size={14} /> Continue in chat
+                  </Link>
+                  <p className="mt-2 text-[13px] text-[#5f6368]">
+                    {selected.name} can reply here too — they have an account.
+                  </p>
+                </div>
+              )}
+
+              {selected.status === 'REPLIED' && !selected.conversationId && (
+                <div className="border-t border-[#f1f3f4] p-5">
+                  <p className="text-[13px] text-[#5f6368]">
+                    Replied by email. {selected.name} enquired as a guest, so there is no
+                    chat thread — they will answer to your reply directly.
+                  </p>
+                </div>
+              )}
 
               {/* Reply */}
               {selected.status !== 'REPLIED' && selected.status !== 'CLOSED' && (
