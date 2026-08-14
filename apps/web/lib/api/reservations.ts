@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { referralPayload } from '../analytics/referral';
 
 export type ReservationStage =
   | 'RESERVED'
@@ -38,6 +39,22 @@ export const reservationsApi = {
     const q = qs.toString();
     return apiClient.get<ReservationsResponse>(`/reservations/mine${q ? `?${q}` : ''}`);
   },
+
+  /**
+   * Reserve a sale unit. Carries the referring agent, like every other lead
+   * path — a reservation is the closest thing to a sale, so it is the most
+   * valuable attribution of the three.
+   */
+  create: (unitId: string, expiresAt?: string) =>
+    apiClient.post<Reservation>('/reservations', {
+      unitId,
+      ...(expiresAt && { expiresAt }),
+      ...referralPayload(),
+    }),
+
+  /** Reserve one of a rent listing's unit types. */
+  reserveRentUnit: (rentUnitId: string) =>
+    apiClient.post<unknown>(`/reservations/rent-units/${rentUnitId}`, referralPayload()),
 
   cancel: (id: string) => apiClient.delete<Reservation>(`/reservations/${id}`),
 };

@@ -17,6 +17,7 @@ import { RentEnquiryModal } from '../../../../components/rent/RentEnquiryModal';
 import { formatPrice } from '../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
+import { referralPayload } from '../../../../lib/analytics/referral';
 import type { RentUnit } from '../../../../lib/types';
 
 const FURNISHING_LABELS: Record<string, string> = {
@@ -489,7 +490,9 @@ function ReserveUnitButton({
     setError('');
     setBusy(true);
     try {
-      await apiClient.post(`/reservations/rent-units/${unit.id}`);
+      // A reservation is the closest thing to a sale, so it is the most
+      // valuable thing to credit back to the agent who introduced the tenant.
+      await apiClient.post(`/reservations/rent-units/${unit.id}`, referralPayload());
       setDone(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not reserve.');
