@@ -6,6 +6,7 @@ import { Video, MapPin, CheckCircle2, Clock, XCircle, CalendarDays, Loader2 } fr
 import { cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useDeveloperBookings, useUpdateBookingStatus } from '../../../../lib/api/queries';
+import { BookingActions } from '../../../../components/dashboard/BookingActions';
 
 type StatusEntry = { label: string; icon: (props: { size: number }) => React.ReactNode; color: string; bg: string };
 const statusConfig: Record<string, StatusEntry> = {
@@ -68,8 +69,9 @@ export default function DashboardBookings() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="flex items-center gap-5 rounded-3xl border border-[#dadce0] bg-white p-5 hover:bg-[#f8f9fa] transition-colors"
+                className="rounded-3xl border border-[#dadce0] bg-white p-5 transition-colors hover:bg-[#f8f9fa]"
               >
+                <div className="flex items-center gap-5">
                 {/* Date block */}
                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#e8f0fe] leading-none">
                   <span className="text-[11px] font-medium text-[#1967d2] uppercase tracking-[0.08em]">{new Date(b.date).toLocaleDateString('en', { month: 'short' })}</span>
@@ -118,6 +120,21 @@ export default function DashboardBookings() {
                     </div>
                   )}
                 </div>
+                </div>
+
+                {/* Confirming used to be the end of the road — a status change
+                    and nothing else. These are the actions that make the
+                    viewing actually happen. */}
+                {b.status === 'CONFIRMED' && (
+                  <BookingActions
+                    booking={b as never}
+                    busy={updateStatus.isPending}
+                    onSetMeeting={(meetingUrl) =>
+                      updateStatus.mutate({ id: b.id, status: 'CONFIRMED', meetingUrl })
+                    }
+                    onComplete={() => updateStatus.mutate({ id: b.id, status: 'COMPLETED' })}
+                  />
+                )}
               </motion.div>
             );
           })}

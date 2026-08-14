@@ -18,6 +18,7 @@ const NAV = [
   { label: 'Agent Partners', href: '/dashboard/partners', icon: 'handshake' },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: 'forum' },
   { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month' },
+  { label: 'Performance', href: '/dashboard/performance', icon: 'query_stats' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring' },
   { label: 'Documents', href: '/dashboard/documents', icon: 'description' },
   { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card' },

@@ -44,4 +44,16 @@ export interface MiniSiteReport {
   tours: { tour: string; starts: number; completes: number; averageSeconds: number }[];
   sources: { source: string; visits: number }[];
   topUnits: { unitId: string; name: string; views: number; uniqueViewers: number }[];
+  /** Each step as a share of `of` — the count at the step above it. */
+  funnel: { step: string; value: number; of: number }[];
+  bookingsByType: { physical: number; virtual: number; confirmed: number };
+  /** Leads credited to partnered agents on this development. */
+  byAgent: {
+    agentId: string;
+    name: string;
+    kind: string | null;
+    inquiries: number;
+    bookings: number;
+    total: number;
+  }[];
 }
