@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { SmallScreenHint } from './SmallScreenHint';
 import type { Property } from '../../../lib/types';
 
 const TourCinematicExperience = dynamic(
@@ -11,5 +12,10 @@ const TourCinematicExperience = dynamic(
 interface Props { property: Property; }
 
 export function TourCinematicClient({ property }: Props) {
-  return <TourCinematicExperience property={property} />;
+  return (
+    <>
+      <TourCinematicExperience property={property} />
+      <SmallScreenHint tour="CINEMATIC" />
+    </>
+  );
 }

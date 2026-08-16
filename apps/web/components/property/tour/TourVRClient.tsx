@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { SmallScreenHint } from './SmallScreenHint';
 import type { Property, PropertyTour } from '../../../lib/types';
 
 const TourVRExperience = dynamic(
@@ -11,5 +12,10 @@ const TourVRExperience = dynamic(
 interface Props { property: Property; tour: PropertyTour; }
 
 export function TourVRClient({ property, tour }: Props) {
-  return <TourVRExperience property={property} tour={tour} />;
+  return (
+    <>
+      <TourVRExperience property={property} tour={tour} />
+      <SmallScreenHint tour="VR" />
+    </>
+  );
 }
