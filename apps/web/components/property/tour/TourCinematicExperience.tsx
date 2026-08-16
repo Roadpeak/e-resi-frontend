@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import type { Property, CinematicScene, CinematicSceneCategory } from '../../../lib/types';
+import { scrubbableVideoUrl, videoPosterUrl } from '../../../lib/media/video';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -46,6 +47,19 @@ export function TourCinematicExperience({ property }: Props) {
   const sceneLabelRef   = useRef<HTMLDivElement>(null);
 
   const [muted, setMuted]           = useState(true);
+  /**
+   * Phones get a smaller, width-capped encode. Seek latency — not fidelity —
+   * is what breaks scrubbing on a handset, and a 4K master is slow to seek
+   * however densely it is keyframed.
+   */
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
   const [progress, setProgress]     = useState(0);
   const [activeScene, setActiveScene] = useState<CinematicScene>(
     scenes.find((s) => s.category === 'full_tour') ?? scenes[0]
@@ -80,7 +94,7 @@ export function TourCinematicExperience({ property }: Props) {
     const video = videoRef.current;
     if (video) {
       video.pause();
-      video.src = scene.videoUrl;
+      video.src = scrubbableVideoUrl(scene.videoUrl, isMobile);
       video.load();
       video.currentTime = 0;
     }
@@ -91,7 +105,9 @@ export function TourCinematicExperience({ property }: Props) {
     });
 
     animateSceneLabel();
-  }, [animateSceneLabel]);
+    // isMobile is read here, so it belongs in the deps — without it a scene
+    // switched after a rotation would keep the previous encode.
+  }, [animateSceneLabel, isMobile]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -190,10 +206,14 @@ export function TourCinematicExperience({ property }: Props) {
       {/* ── Video ── */}
       <video
         ref={videoRef}
-        src={activeScene.videoUrl}
+        src={scrubbableVideoUrl(activeScene.videoUrl, isMobile)}
+        poster={videoPosterUrl(activeScene.videoUrl)}
         muted={muted}
         playsInline
-        preload="auto"
+        // metadata, not auto: scrubbing needs the duration and the ability to
+        // range-request, not the whole file downloaded up front — which on
+        // mobile data was buying a long wait before anything rendered.
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover"
       />
 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Box, Headset, MapPin, Sparkles } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { getStatusLabel, getStatusColor, cn } from '../../lib/utils';
+import { playbackVideoUrl } from '../../lib/media/video';
 
 interface Props {
   property: Property;
@@ -56,7 +57,7 @@ function HeroMedia({ property, priority = true }: { property: Property; priority
   if (property.heroVideoUrl) {
     return (
       <video
-        src={property.heroVideoUrl}
+        src={playbackVideoUrl(property.heroVideoUrl)}
         poster={property.heroImageUrl}
         autoPlay
         muted

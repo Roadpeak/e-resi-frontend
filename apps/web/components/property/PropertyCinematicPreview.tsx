@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Film, Play } from 'lucide-react';
 import type { Property } from '../../lib/types';
+import { playbackVideoUrl } from '../../lib/media/video';
 
 interface Props { property: Property; }
 
@@ -33,7 +34,7 @@ export function PropertyCinematicPreview({ property }: Props) {
       {/* Preview card */}
       <Link href={`/${property.slug}/tour/cinematic`} className="group block relative rounded-2xl overflow-hidden cursor-pointer">
         <video
-          src={previewVideo}
+          src={playbackVideoUrl(previewVideo)}
           muted
           playsInline
           preload="metadata"
