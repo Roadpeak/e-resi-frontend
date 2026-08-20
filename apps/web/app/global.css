@@ -2,6 +2,13 @@
    renders glyphs rather than the literal icon names. */
 @import 'material-symbols/rounded.css';
 
+/* Lenis's own stylesheet. Required, not optional: Lenis sets `height: auto` on
+   html/body so the document can grow past the viewport while it transforms the
+   page. Without it, pinned ScrollTrigger sections are measured against a height
+   that never changes, which is part of why the pinned hero and the horizontal
+   showcase tore mid-animation. */
+@import 'lenis/dist/lenis.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

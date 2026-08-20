@@ -216,18 +216,11 @@ export function HeroSection() {
       // from this callback went nowhere, so every re-init leaked a context.
       ctxRef.current = ctx;
 
-      // The pin's `end: '+=500%'` is resolved to a pixel distance the moment the
-      // trigger is created, so it is only correct if layout has settled by then.
-      // On a cold load the video is slow and this runs late, once everything has
-      // settled — which is why it looked fine. On reload the video is cached,
-      // readyState is already >= 1, and this runs synchronously during mount:
-      // before Lenis exists, before fonts swap, before the sections below are
-      // laid out. The pin then measures short, releases halfway through the
-      // video, and the remainder scrubs after section two — the reload glitch.
-      //
-      // Re-measure once the browser has actually painted. Two rAFs because the
-      // first only guarantees we are before a paint; the second runs after it,
-      // when offsetHeight reflects the settled layout.
+      // The pin's `end: '+=500%'` is resolved to a pixel distance the moment
+      // the trigger is created. When the video is cached this runs during mount,
+      // before the page below has settled, so re-measure once the browser has
+      // painted. Two rAFs because the first only guarantees we are before a
+      // paint; the second runs after it, when layout reflects reality.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => ScrollTrigger.refresh());
       });
