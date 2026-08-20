@@ -92,6 +92,72 @@ export async function fetchPropertySlugs(): Promise<string[]> {
   }
 }
 
+/** The subset of a property the landing-page showcase renders. */
+export interface ShowcaseProperty {
+  slug: string;
+  name: string;
+  location: string;
+  tag: string;
+  imageUrl: string;
+}
+
+/** Title-case an UPPER_SNAKE enum for display ("OFF_PLAN" → "Off Plan"). */
+function humaniseEnum(value: string): string {
+  return value
+    .toLowerCase()
+    .split('_')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
+ * Featured developments for the landing-page showcase.
+ *
+ * Returns [] rather than throwing when the API is unreachable — this renders on
+ * the landing page, which must not fail to build or serve because the backend
+ * is down. The caller drops the section entirely when the list is empty.
+ */
+export async function fetchFeaturedProperties(limit = 6): Promise<ShowcaseProperty[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/properties?limit=${limit}&sortBy=featured`,
+      { next: { revalidate: 300 } },
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    // The endpoint is paginated, so the list is one level deeper than `data`.
+    const items: any[] = json.data?.data ?? json.data ?? [];
+
+    return items
+      // A card is only worth showing if it can link somewhere and show an image.
+      .filter((p) => p?.slug && (p.heroImageUrl || p.galleryImages?.[0] || p.media?.[0]?.url))
+      .map((p): ShowcaseProperty => {
+        const address = p.address ?? {};
+        const location = [
+          p.neighborhood ?? address.neighborhood,
+          p.city ?? address.city,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        return {
+          slug: p.slug,
+          name: p.name ?? 'Untitled development',
+          location: location || 'Kenya',
+          // Prefer the human tagline; fall back to the category enum.
+          tag: p.tagline || (p.category ? humaniseEnum(String(p.category)) : 'Development'),
+          imageUrl:
+            p.heroImageUrl
+            || p.galleryImages?.[0]
+            || p.media?.find((m: any) => m?.title !== '__logo__' && m?.url)?.url,
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Convert the backend property's embedded tour data into the
  * PropertyTour shape expected by Tour3DClient / TourVRClient.
