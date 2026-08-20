@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { PageShell, Section } from '../../../components/marketing/PageShell';
+import {
+  PageShell,
+  Section,
+  SplitSection,
+  Card,
+  CardGrid,
+  CtaBand,
+} from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -34,51 +40,64 @@ export default function ContactPage() {
       title="Talk to us."
       lede="Mail the address closest to what you need and it reaches the right person faster."
     >
-      <Section>
-        <div className="space-y-4">
+      <Section eyebrow="Get in touch" title="Pick the right inbox." prose={false}>
+        <CardGrid cols={3}>
           {ROUTES.map((r) => (
-            <div key={r.email} className="rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-[18px] font-semibold text-gray-900">{r.who}</h2>
-              <p className="mt-1 text-[15px] leading-relaxed text-gray-600">{r.what}</p>
+            <Card key={r.email} accent className="flex flex-col">
+              <h2 className="text-[20px] font-semibold tracking-tight text-ink">{r.who}</h2>
+              <p className="mt-2 flex-1 text-[15px] leading-relaxed text-ink/60">{r.what}</p>
               <a
                 href={`mailto:${r.email}`}
-                className="mt-3 inline-block text-[16px] font-medium text-brand-600 hover:text-brand-700"
+                className="mt-6 inline-block self-start text-[16px] font-medium text-resi-600 transition-colors hover:text-resi-800"
               >
                 {r.email}
               </a>
-            </div>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
       </Section>
 
-      <Section title="Already have an account?">
+      <SplitSection
+        eyebrow="Faster than email"
+        title="Already have an account?"
+        lede="For anything about a specific listing, the platform beats an inbox."
+      >
+        <Card accent>
+          <h3 className="text-[18px] font-semibold tracking-tight text-ink">Developers</h3>
+          <p className="mt-2 text-[16px] leading-relaxed text-ink/60">
+            Message buyers directly from the dashboard, where the inquiry, the viewing
+            request and the unit it concerns are already in front of you.
+          </p>
+        </Card>
+        <Card accent>
+          <h3 className="text-[18px] font-semibold tracking-tight text-ink">Buyers & tenants</h3>
+          <p className="mt-2 text-[16px] leading-relaxed text-ink/60">
+            Chat with a developer from any property page — your question arrives attached
+            to the development you are asking about.
+          </p>
+        </Card>
+      </SplitSection>
+
+      <Section eyebrow="Where we are" title="Nairobi, Kenya.">
         <p>
-          Developers can message buyers directly from the dashboard, and buyers can chat
-          with a developer from any property page — both are faster than email for
-          anything about a specific listing.
+          We work across the country and with buyers worldwide. If you would rather speak
+          to someone about listing a development, mail{' '}
+          <a
+            href="mailto:developers@e-resi.com"
+            className="font-medium text-resi-600 transition-colors hover:text-resi-800"
+          >
+            developers@e-resi.com
+          </a>{' '}
+          and we will arrange a call.
         </p>
       </Section>
 
-      <Section title="Where we are">
-        <p>Nairobi, Kenya. We work across the country and with buyers worldwide.</p>
-      </Section>
-
-      <Section>
-        <div className="rounded-3xl bg-gray-50 p-8">
-          <h2 className="text-[22px] font-semibold text-gray-900">
-            Thinking about listing a development?
-          </h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-gray-600">
-            The onboarding walks you through it in about ten minutes.
-          </p>
-          <Link
-            href="/for-developers"
-            className="mt-6 inline-block rounded-full bg-gray-900 px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-gray-700"
-          >
-            See how it works
-          </Link>
-        </div>
-      </Section>
+      <CtaBand
+        title="Thinking about listing a development?"
+        lede="The onboarding walks you through it in about ten minutes."
+        primary={{ label: 'See how it works', href: '/for-developers' }}
+        secondary={{ label: 'View pricing', href: '/pricing' }}
+      />
     </PageShell>
   );
 }

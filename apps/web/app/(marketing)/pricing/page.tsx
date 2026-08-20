@@ -1,6 +1,15 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { PageShell, Section } from '../../../components/marketing/PageShell';
+import {
+  PageShell,
+  Section,
+  SplitSection,
+  Card,
+  CardGrid,
+  HighlightCard,
+  CtaBand,
+  TextLink,
+} from '../../../components/marketing/PageShell';
+import { AccordionItem } from '../../../components/marketing/Accordion';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -39,6 +48,36 @@ const CATEGORY_LABELS: Record<string, string> = {
   MARKETING: 'Marketing content',
   DESIGN: 'Design & branding',
 };
+
+const NEVER_CHARGED = [
+  'Commission on a sale or a let — the full price is yours.',
+  'Per-lead fees. Inquiries, viewings and chat are included.',
+  'Charges for buyers. Browsing, touring and reserving are free.',
+  'A fee for your account, however many developments you manage.',
+];
+
+const FAQS = [
+  [
+    'When does the listing fee start?',
+    'Only when a development goes live. Take it down — because it sold out or because you are not ready — and the fee stops. Your account itself is free.',
+  ],
+  [
+    'Is production a subscription?',
+    'No. Production is priced per development and paid once. You choose which services that development actually warrants.',
+  ],
+  [
+    'Do you take a cut of the sale?',
+    'Never. There is no commission on a sale or a let, however much the unit goes for.',
+  ],
+  [
+    'What if a package does not fit my development?',
+    'Order services individually instead. A completed block of flats needs less production than an off-plan tower, and you should only pay for what it needs.',
+  ],
+  [
+    'How is it invoiced?',
+    'Production is invoiced on order; listing fees are billed monthly in arrears.',
+  ],
+];
 
 /**
  * Prices are admin-managed, so this page reads them from the API rather than
@@ -98,135 +137,126 @@ export default async function PricingPage() {
       lede="No charge for your account, no fee for leads, and no commission on any sale — however much the property sells for."
     >
       {catalog && (
-        <Section title="Listing fee">
-          <div className="rounded-3xl border border-gray-200 p-8">
-            <p className="text-[40px] font-semibold leading-none text-gray-900">
-              {catalog.listingFee.currency} {catalog.listingFee.monthly}
-              <span className="ml-2 text-[17px] font-normal text-gray-500">
-                per development, per month
-              </span>
+        <Section eyebrow="Listing fee" title="One flat fee per live development." prose={false}>
+          <Card accent className="p-10">
+            <p className="text-[44px] font-semibold leading-none tracking-tight text-ink sm:text-[56px]">
+              {catalog.listingFee.currency} {catalog.listingFee.monthly.toLocaleString()}
             </p>
-            <p className="mt-4 text-[16px] leading-relaxed text-gray-600">
+            <p className="mt-3 text-[17px] text-ink/50">per development, per month</p>
+            <p className="mt-6 max-w-[62ch] text-[16px] leading-relaxed text-ink/65">
               Charged only while a development is live. Take it down and the fee stops.
               Your account itself is free, however many developments you manage.
               {catalog.listingFee.freeMonths > 0 &&
                 ` Your first ${catalog.listingFee.freeMonths} month${catalog.listingFee.freeMonths === 1 ? '' : 's'} are free.`}
             </p>
-          </div>
+          </Card>
         </Section>
       )}
 
       {tiers.length > 0 && (
-        <Section title="Production packages">
-          <p className="mb-6">
-            Priced once per development. Pick the level of production the development
-            warrants — a completed block of flats needs less than an off-plan tower.
-          </p>
-          <div className="overflow-hidden rounded-3xl border border-gray-200">
-            {tiers.map((t, i) => (
-              <div
-                key={t.tier}
-                className={`flex flex-wrap items-baseline gap-4 p-6 ${i > 0 ? 'border-t border-gray-100' : ''}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-[18px] font-semibold text-gray-900">{tierLabel(t)}</h3>
-                  {t.features?.length > 0 && (
-                    <p className="mt-1 text-[15px] leading-relaxed text-gray-600">
-                      {t.features.join(' · ')}
-                    </p>
-                  )}
-                </div>
-                <p className="whitespace-nowrap text-[19px] font-semibold text-gray-900">
+        <Section
+          eyebrow="Production packages"
+          title="Priced once, per development."
+          lede="Pick the level of production the development warrants — a completed block of flats needs less than an off-plan tower."
+          prose={false}
+        >
+          <CardGrid cols={2}>
+            {tiers.map((t) => (
+              <Card key={t.tier} accent className="flex flex-col">
+                <h3 className="text-[22px] font-semibold tracking-tight text-ink">
+                  {tierLabel(t)}
+                </h3>
+                <p className="mt-2 text-[26px] font-semibold tracking-tight text-resi-600">
                   {money(t.price, t.currency)}
                 </p>
-              </div>
+                {t.features?.length > 0 && (
+                  <ul className="mt-5 space-y-2.5">
+                    {t.features.map((f) => (
+                      <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-ink/65">
+                        <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-resi-500" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
             ))}
-          </div>
+          </CardGrid>
         </Section>
       )}
 
       {Object.keys(grouped).length > 0 && (
-        <Section title="Or buy services individually">
-          <p className="mb-6">
-            If a package doesn&apos;t fit, order exactly what you need.
-          </p>
-          <div className="space-y-8">
+        <Section
+          eyebrow="À la carte"
+          title="Or buy services individually."
+          lede="If a package doesn't fit, order exactly what you need."
+          prose={false}
+        >
+          <div className="space-y-5">
             {Object.entries(grouped).map(([category, services]) => (
-              <div key={category}>
-                <h3 className="mb-3 text-[15px] font-semibold uppercase tracking-wide text-gray-500">
+              <Card key={category}>
+                <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-resi-600">
                   {CATEGORY_LABELS[category] ?? category}
                 </h3>
-                <dl className="space-y-3">
+                <dl className="mt-5 divide-y divide-ink/[0.07]">
                   {services.map((s) => (
-                    <div key={s.key} className="flex flex-wrap items-baseline gap-3">
+                    <div
+                      key={s.key}
+                      className="flex flex-wrap items-baseline gap-3 py-4 first:pt-0 last:pb-0"
+                    >
                       <dt className="min-w-0 flex-1">
-                        <span className="text-[16px] text-gray-900">{s.label}</span>
+                        <span className="text-[16px] text-ink">{s.label}</span>
                         {s.description && (
-                          <span className="block text-[14px] leading-relaxed text-gray-500">
+                          <span className="mt-0.5 block text-[14px] leading-relaxed text-ink/50">
                             {s.description}
                           </span>
                         )}
                       </dt>
-                      <dd className="whitespace-nowrap text-[16px] font-medium text-gray-900">
+                      <dd className="whitespace-nowrap text-[16px] font-semibold text-ink">
                         {s.currency} {s.price.toLocaleString()}
                       </dd>
                     </div>
                   ))}
                 </dl>
-              </div>
+              </Card>
             ))}
           </div>
         </Section>
       )}
 
-      <Section title="What's never charged">
-        <ul className="space-y-2">
-          {[
-            'Commission on a sale or a let — the full price is yours.',
-            'Per-lead fees. Inquiries, viewings and chat are included.',
-            'Charges for buyers. Browsing, touring and reserving are free.',
-            'A fee for your account, however many developments you manage.',
-          ].map((t) => (
-            <li key={t} className="flex gap-3">
-              <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-gray-400" />
-              <span>{t}</span>
-            </li>
+      <Section eyebrow="Never charged" title="What you will never see on an invoice." prose={false}>
+        <CardGrid cols={4}>
+          {NEVER_CHARGED.map((t) => (
+            <HighlightCard key={t}>{t}</HighlightCard>
           ))}
-        </ul>
-      </Section>
-
-      {catalog && catalog.taxRatePercent > 0 && (
-        <Section>
-          <p className="text-[15px] text-gray-500">
+        </CardGrid>
+        {catalog && catalog.taxRatePercent > 0 && (
+          <p className="mt-8 text-[15px] text-ink/50">
             Prices exclude VAT at {catalog.taxRatePercent}%. Production is invoiced on
             order; listing fees monthly in arrears.
           </p>
-        </Section>
-      )}
-
-      <Section>
-        <div className="rounded-3xl bg-gray-900 p-8 text-white">
-          <h2 className="text-[24px] font-semibold">Not sure which package fits?</h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-gray-300">
-            Tell us about the development and we&apos;ll tell you what it needs — including
-            when it needs less than you think.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/contact"
-              className="rounded-full bg-white px-6 py-2.5 text-[15px] font-medium text-gray-900 transition-colors hover:bg-gray-100"
-            >
-              Talk to us
-            </Link>
-            <Link
-              href="/for-developers"
-              className="rounded-full border border-white/25 px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-white/10"
-            >
-              How it works
-            </Link>
-          </div>
-        </div>
+        )}
       </Section>
+
+      <SplitSection
+        eyebrow="FAQ"
+        title="Frequently asked questions"
+        lede="Answers to what developers ask about cost."
+        aside={<TextLink href="/contact">Ask us something else →</TextLink>}
+      >
+        {FAQS.map(([q, a], i) => (
+          <AccordionItem key={q} question={q} defaultOpen={i === 0}>
+            {a}
+          </AccordionItem>
+        ))}
+      </SplitSection>
+
+      <CtaBand
+        title="Not sure which package fits?"
+        lede="Tell us about the development and we'll tell you what it needs — including when it needs less than you think."
+        primary={{ label: 'Talk to us', href: '/contact' }}
+        secondary={{ label: 'How it works', href: '/for-developers' }}
+      />
     </PageShell>
   );
 }

@@ -116,23 +116,59 @@ export function TourCinematicExperience({ property }: Props) {
     video.pause();
     video.currentTime = 0;
 
+    // loadedmetadata and canplay can both fire; without this the timeline and
+    // ScrollTrigger get built twice and fight each other.
+    let initialised = false;
+    // Held so the effect's own cleanup can dispose them — returning a cleanup
+    // from setup() went nowhere, since setup runs as an event handler, so every
+    // scene switch leaked its context and its seek listeners.
+    let ctx: gsap.Context | null = null;
+    let cleanupSeek: (() => void) | null = null;
+
     const setup = () => {
+      if (initialised) return;
       const duration = video.duration;
       if (!duration || isNaN(duration)) return;
+      initialised = true;
 
       // Kill any previous triggers
       ScrollTrigger.getAll().forEach((t) => t.kill());
 
-      const ctx = gsap.context(() => {
+      ctx = gsap.context(() => {
         gsap.from(phase1Ref.current, {
           y: 40, opacity: 0, duration: 1, ease: 'power3.out', delay: 0.3,
         });
         gsap.set(phase2Ref.current, { autoAlpha: 0, y: 30 });
 
-        let lastTime = -1;
+        // Seeking is asynchronous, so a currentTime assignment made while the
+        // decoder is still busy is dropped. Queue the newest requested time and
+        // flush it when the decoder frees up, so the frame converges on where
+        // the scroll actually is instead of drifting behind it.
+        let pendingTime = -1;
         let seeking = false;
         const minDelta = 1 / 30;
-        video.addEventListener('seeked', () => { seeking = false; });
+
+        const flush = () => {
+          if (pendingTime < 0) {
+            seeking = false;
+            return;
+          }
+          seeking = true;
+          const t = pendingTime;
+          pendingTime = -1;
+          video.currentTime = t;
+        };
+
+        // 'error' as well as 'seeked': a seek into an unbuffered gap never
+        // fires 'seeked', which would otherwise wedge `seeking` true forever
+        // and freeze the video against further scrolling.
+        const onSeeked = () => flush();
+        video.addEventListener('seeked', onSeeked);
+        video.addEventListener('error', onSeeked);
+        cleanupSeek = () => {
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', onSeeked);
+        };
 
         ScrollTrigger.create({
           trigger: scrollerRef.current,
@@ -144,10 +180,12 @@ export function TourCinematicExperience({ property }: Props) {
             setProgress(p);
 
             const target = p * duration;
-            if (!seeking && Math.abs(target - lastTime) >= minDelta) {
-              seeking = true;
-              lastTime = target;
-              video.currentTime = target;
+            // Compare against what the video is actually showing rather than a
+            // time merely requested, so a dropped seek gets retried.
+            const shown = pendingTime >= 0 ? pendingTime : video.currentTime;
+            if (Math.abs(target - shown) >= minDelta) {
+              pendingTime = target;
+              if (!seeking) flush();
             }
 
             // Phase 1 — property identity fades out 0.25 → 0.38
@@ -170,7 +208,13 @@ export function TourCinematicExperience({ property }: Props) {
         });
       }, wrapperRef);
 
-      return () => ctx.revert();
+      // The pin/scrub distance is resolved when the trigger is created, so it
+      // is only right if layout has settled. With a cached video this runs
+      // synchronously during mount, before that is true — re-measure after the
+      // browser has painted.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      });
     };
 
     const onMeta = () => setup();
@@ -185,6 +229,10 @@ export function TourCinematicExperience({ property }: Props) {
     return () => {
       video.removeEventListener('loadedmetadata', onMeta);
       video.removeEventListener('canplay', onMeta);
+      cleanupSeek?.();
+      cleanupSeek = null;
+      ctx?.revert();
+      ctx = null;
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   // Re-run when active scene changes (video src swapped)

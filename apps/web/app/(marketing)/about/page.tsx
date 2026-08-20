@@ -1,6 +1,14 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { PageShell, Section } from '../../../components/marketing/PageShell';
+import {
+  PageShell,
+  Section,
+  SplitSection,
+  Card,
+  CardGrid,
+  FeatureCard,
+  HighlightCard,
+  CtaBand,
+} from '../../../components/marketing/PageShell';
 
 export const metadata: Metadata = {
   title: 'About E-resi — Built for Kenyan Property Developers',
@@ -20,10 +28,17 @@ export const metadata: Metadata = {
   },
 };
 
-const STATS = [
+const MODES = [
   { value: 'Cinematic', label: 'Scroll-driven films of every development' },
   { value: '3D', label: 'Interactive walkthroughs, room by room' },
   { value: 'VR', label: 'Headset-ready tours for serious buyers' },
+];
+
+const MACHINERY = [
+  ['Unit-level availability', 'Every unit with its floor number, size, price and current status.'],
+  ['Floor plans and pricing', 'Published against each layout, so a studio and a penthouse show their own.'],
+  ['Reservations and viewings', 'Buyers reserve a unit online or book a time to see it in person.'],
+  ['Direct chat', 'Buyers talk to the developer’s team without leaving the page.'],
 ];
 
 export default function AboutPage() {
@@ -33,7 +48,7 @@ export default function AboutPage() {
       title="Selling a building that doesn't exist yet shouldn't be this hard."
       lede="e-resi is an immersive property platform built for Kenyan developers — in a market where much of what sells is sold off-plan, to buyers who are somewhere else entirely."
     >
-      <Section title="The problem we set out to solve">
+      <Section eyebrow="The problem" title="Nobody can walk the space.">
         <p>
           A Kenyan developer is usually selling something nobody can stand inside yet.
           The sales material is a floor plan, an artist&apos;s render and a site visit to
@@ -51,117 +66,90 @@ export default function AboutPage() {
         </p>
       </Section>
 
-      <Section title="What we built">
-        <p>
-          e-resi gives every development its own branded page with three ways to
-          experience it. A <strong className="font-medium text-gray-900">cinematic tour</strong> that
-          plays as you scroll, so the building reveals itself at your own pace. An{' '}
-          <strong className="font-medium text-gray-900">interactive 3D walkthrough</strong> you can
-          move through room by room. And a{' '}
-          <strong className="font-medium text-gray-900">VR tour</strong> for anyone with a headset
-          who wants to stand inside a unit that hasn&apos;t been built.
-        </p>
-        <p>
-          Underneath that sits the practical machinery: unit-level availability with
-          floor numbers, floor plans, live pricing, reservations, viewing bookings,
-          and direct chat between a buyer and the developer&apos;s team.
-        </p>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {STATS.map((s) => (
-            <div key={s.value} className="rounded-2xl border border-gray-200 p-5">
-              <p className="text-[22px] font-semibold text-gray-900">{s.value}</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-gray-500">{s.label}</p>
-            </div>
+      <Section
+        eyebrow="What we built"
+        title="Three ways to experience a development."
+        lede="Every development gets its own branded page carrying all three, so a buyer can choose how closely they want to look."
+        prose={false}
+      >
+        <CardGrid cols={3}>
+          {MODES.map((m) => (
+            <Card key={m.value} accent>
+              <p className="text-[28px] font-semibold tracking-tight text-ink">{m.value}</p>
+              <p className="mt-2 text-[16px] leading-relaxed text-ink/60">{m.label}</p>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
       </Section>
 
-      <Section title="We produce the media ourselves">
-        <p>
-          This is the part most listing sites leave to the developer, and it is why
-          most listings look the way they do. e-resi has a production team. You choose
-          what you want — photography, drone, twilight stills, 3D scanning, VR capture,
-          CGI for off-plan units — and we shoot, edit and publish it to your page.
-        </p>
-        <p>
-          Developers keep control of what appears. Media is organised per unit type, so
-          a two-bedroom and a penthouse each show their own rooms, and you decide which
-          tours appear against which layout.
-        </p>
+      <Section
+        eyebrow="Underneath"
+        title="The practical machinery that runs the sale."
+        prose={false}
+      >
+        <CardGrid cols={2}>
+          {MACHINERY.map(([title, body]) => (
+            <FeatureCard key={title} title={title}>
+              {body}
+            </FeatureCard>
+          ))}
+        </CardGrid>
       </Section>
 
-      <Section title="Your page, not ours">
-        <p>
-          Every development gets a mini-site of its own — your logo, your colours, your
-          typeface, and on the top tier your own domain. It is built to be shared
-          directly: a developer sends the link to their WhatsApp list, their sales team
-          and their diaspora buyers, and it works whether or not anyone ever visits
-          e-resi itself.
-        </p>
-        <p>
-          That page reports back. You see how many people opened it, how many started
-          the tour, how long they stayed inside it and which units drew the most
-          attention — the kind of thing a brochure has never been able to tell anyone.
-        </p>
-      </Section>
-
-      <Section title="Who it's for">
-        <p>
-          <strong className="font-medium text-gray-900">Developers</strong> are who we build
-          for. List a development once and run everything from a single dashboard: units,
-          rentals, media, inquiries, viewings, reservations, billing and the engagement
-          data behind every tour.
-        </p>
-        <p>
-          <strong className="font-medium text-gray-900">Buyers and investors</strong> browse
-          completed and off-plan developments, tour them properly, save shortlists, book
-          viewings and reserve units — from anywhere in the world.
-        </p>
-        <p>
-          <strong className="font-medium text-gray-900">Tenants</strong> browse rentals by unit
-          type, see which floor a unit sits on and how many are left, and reserve one
-          without a site visit.
-        </p>
-        <p>
-          <strong className="font-medium text-gray-900">Agents</strong> — verified companies and
-          individuals — partner with developers, bring their own clients to a tour and get
-          credited for the leads they introduce.
-        </p>
-      </Section>
-
-      <Section title="Verification matters">
-        <p>
-          Every developer on e-resi goes through KYB verification — certificate of
-          incorporation, tax registration and director identification — reviewed by our
-          team before a single listing goes live. Buyers sending money across borders
-          deserve to know who is on the other end.
-        </p>
-      </Section>
-
-      <Section>
-        <div className="rounded-3xl bg-gray-50 p-8">
-          <h2 className="text-[22px] font-semibold text-gray-900">Where we&apos;re going</h2>
-          <p className="mt-3">
-            We&apos;re building toward a full digital twin of every development we
-            list — accurate, navigable, and current from groundbreaking to handover.
+      <SplitSection
+        eyebrow="Production"
+        title="We produce the media ourselves."
+        lede="The tours are not something you have to go and commission elsewhere — our team shoots them."
+      >
+        <Card>
+          <p className="text-[16px] leading-relaxed text-ink/70">
+            Photography, drone, twilight shoots, 3D scanning and VR capture are all done
+            by our production team, on site. For developments that are still holes in the
+            ground, we build CGI walkthroughs from the architectural plans instead, then
+            publish construction updates as the building actually goes up.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/for-developers"
-              className="rounded-full bg-gray-900 px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-gray-700"
-            >
-              List a development
-            </Link>
-            <Link
-              href="/properties"
-              className="rounded-full border border-gray-300 px-6 py-2.5 text-[15px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              Browse properties
-            </Link>
-          </div>
-        </div>
+        </Card>
+        <Card>
+          <p className="text-[16px] leading-relaxed text-ink/70">
+            That matters because the quality of the tour is the product. A development
+            that looks like a film gets taken seriously; the same development shot on a
+            phone does not. Keeping production in-house is how we hold that line.
+          </p>
+        </Card>
+      </SplitSection>
+
+      <Section
+        eyebrow="How we're paid"
+        title="Developers pay. Buyers never do."
+        prose={false}
+      >
+        <CardGrid cols={3}>
+          <HighlightCard>No commission on any sale</HighlightCard>
+          <HighlightCard>No per-lead fees</HighlightCard>
+          <HighlightCard>Free for buyers, always</HighlightCard>
+        </CardGrid>
+        <p className="mt-8 max-w-[70ch] text-[17px] leading-relaxed text-ink/70">
+          We charge developers for production once per development, and a flat monthly
+          fee while a development is live. That is the whole model — which means we have
+          no incentive to push a buyer toward one property over another.
+        </p>
       </Section>
+
+      <Section eyebrow="Where we are" title="Nairobi, Kenya.">
+        <p>
+          We are a small team based in Nairobi, working across the country and with
+          buyers worldwide. Every developer on the platform is KYB-verified before they
+          can list — company, registration and directors checked — so buyers know who
+          they are dealing with.
+        </p>
+      </Section>
+
+      <CtaBand
+        title="See what a development looks like on e-resi."
+        lede="Browse the developments already live, or find out what listing yours involves."
+        primary={{ label: 'Browse properties', href: '/properties' }}
+        secondary={{ label: 'List a development', href: '/for-developers' }}
+      />
     </PageShell>
   );
 }

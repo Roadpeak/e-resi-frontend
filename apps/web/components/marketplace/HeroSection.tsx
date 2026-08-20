@@ -24,18 +24,11 @@ export function HeroSection() {
   const cinCardRef = useRef<HTMLDivElement>(null);
   const phase2HeadRef = useRef<HTMLDivElement>(null);
 
-  // The hero is a pinned, scrub-driven section, so a restored mid-page scroll
-  // is measured before GSAP sets anything up — which is what glitched on
-  // refresh. Kept in its own effect because the one below bails early when the
-  // video ref is not yet populated, and this must run on every mount.
-  useEffect(() => {
-    if (!('scrollRestoration' in history)) return;
-    history.scrollRestoration = 'manual';
-    // The flag only prevents a future restore; this load may already have been
-    // moved, so put it back at the top.
-    if (window.scrollY > 0) window.scrollTo(0, 0);
-  }, []);
-
+  // Builds the pinned, scrub-driven hero once the video's duration is known.
+  //
+  // Scroll restoration is deliberately not handled here — SmoothScroll owns
+  // Lenis and so can reset the window and Lenis's own position together, where
+  // this component could only ever reset the window.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -46,6 +39,9 @@ export function HeroSection() {
     if (video.currentTime === 0) video.currentTime = 0.01;
 
     let initialised = false;
+    // Set once the scrub's seek listeners are attached, so cleanup can detach
+    // them even though they are created inside the gsap context below.
+    let cleanupSeek: (() => void) | null = null;
     const onReady = () => {
       // loadedmetadata and canplay can both fire; without this the timeline and
       // ScrollTrigger get built twice and fight each other.
@@ -98,13 +94,44 @@ export function HeroSection() {
         gsap.set(phase2HeadRef.current, { autoAlpha: 0, y: 30 });
 
         // ── Main scroll driver ──
-        let lastTime = -1;
         // A phone travels five screen-heights of finger-scrolling to clear a
         // 500% pin while seeking a video frame the whole way. Shorten the
         // travel, lighten the scrub, and ask for fewer seeks — mobile decoders
         // are far slower, and a seek queue that cannot keep up is the stutter.
         const isMobile = window.matchMedia('(max-width: 767px)').matches;
         const minDelta = isMobile ? 1 / 12 : 1 / 24;
+
+        // Seeking is asynchronous. Assigning currentTime while the decoder is
+        // still seeking is dropped on the floor, so recording the *requested*
+        // time as delivered let the video drift out of sync with the scroll —
+        // which is what desynced the hero when scrubbing back up to the top.
+        // Instead, keep the newest requested time and flush it when the decoder
+        // reports it is free, so the frame always converges on where the scroll
+        // actually is.
+        let pendingTime = -1;
+        let seeking = false;
+
+        const flush = () => {
+          if (pendingTime < 0) {
+            seeking = false;
+            return;
+          }
+          seeking = true;
+          const t = pendingTime;
+          pendingTime = -1;
+          video.currentTime = t;
+        };
+
+        const onSeeked = () => flush();
+        video.addEventListener('seeked', onSeeked);
+        // A seek that cannot be satisfied (buffer gap) fires 'error' rather than
+        // 'seeked'; without this the queue would wedge and the video would stop
+        // responding to scroll entirely.
+        video.addEventListener('error', onSeeked);
+        cleanupSeek = () => {
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', onSeeked);
+        };
 
         ScrollTrigger.create({
           trigger: sectionRef.current,
@@ -117,9 +144,12 @@ export function HeroSection() {
 
             // Video scrub — full duration across full scroll
             const target = p * duration;
-            if (Math.abs(target - lastTime) >= minDelta) {
-              video.currentTime = target;
-              lastTime = target;
+            // Compare against whatever the video is actually showing, not a
+            // time we merely asked for, so a dropped seek is retried.
+            const shown = pendingTime >= 0 ? pendingTime : video.currentTime;
+            if (Math.abs(target - shown) >= minDelta) {
+              pendingTime = target;
+              if (!seeking) flush();
             }
 
             // ── Phase 1: 0 → 0.28  (headline visible → fades out) ──
@@ -186,9 +216,21 @@ export function HeroSection() {
       // from this callback went nowhere, so every re-init leaked a context.
       ctxRef.current = ctx;
 
-      // No refresh() here on purpose. The scrollRestoration effect above already
-      // guarantees the page starts at the top, so the trigger measures a settled
-      // layout; re-measuring afterwards only risked disturbing it.
+      // The pin's `end: '+=500%'` is resolved to a pixel distance the moment the
+      // trigger is created, so it is only correct if layout has settled by then.
+      // On a cold load the video is slow and this runs late, once everything has
+      // settled — which is why it looked fine. On reload the video is cached,
+      // readyState is already >= 1, and this runs synchronously during mount:
+      // before Lenis exists, before fonts swap, before the sections below are
+      // laid out. The pin then measures short, releases halfway through the
+      // video, and the remainder scrubs after section two — the reload glitch.
+      //
+      // Re-measure once the browser has actually painted. Two rAFs because the
+      // first only guarantees we are before a paint; the second runs after it,
+      // when offsetHeight reflects the settled layout.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      });
     };
 
     if (video.readyState >= 1) {
@@ -202,6 +244,8 @@ export function HeroSection() {
     return () => {
       video.removeEventListener('loadedmetadata', onReady);
       video.removeEventListener('canplay', onReady);
+      cleanupSeek?.();
+      cleanupSeek = null;
       ctxRef.current?.revert();
       ctxRef.current = null;
     };

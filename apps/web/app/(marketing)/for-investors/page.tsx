@@ -1,6 +1,16 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { PageShell, Section } from '../../../components/marketing/PageShell';
+import {
+  PageShell,
+  Section,
+  SplitSection,
+  Card,
+  CardGrid,
+  FeatureCard,
+  HighlightCard,
+  CtaBand,
+  TextLink,
+} from '../../../components/marketing/PageShell';
+import { AccordionItem } from '../../../components/marketing/Accordion';
 
 export const metadata: Metadata = {
   title: 'Property Investment Kenya — Tour in 3D & VR Before You Buy',
@@ -19,6 +29,28 @@ export const metadata: Metadata = {
   },
 };
 
+const HIGHLIGHTS = [
+  'Free to browse, tour and reserve',
+  'Every developer KYB-verified',
+  'Live unit-level availability',
+  'Tour from anywhere, at any hour',
+];
+
+const MODES = [
+  {
+    title: 'Cinematic',
+    body: 'A scroll-driven film of the development. You control the pace — scroll forward through the building, back to look again.',
+  },
+  {
+    title: '3D walkthrough',
+    body: 'Move through the development room by room and get a genuine sense of scale and flow.',
+  },
+  {
+    title: 'VR',
+    body: 'With a headset, stand inside a unit at full scale. For off-plan purchases this is the closest thing to a site visit that exists.',
+  },
+];
+
 const ANSWERS = [
   ['What does it actually look like?', 'Cinematic film, 3D walkthrough and VR tour — not five phone photos and a render.'],
   ['Which units are left?', 'Live availability per unit type, with floor number, size and price.'],
@@ -28,55 +60,111 @@ const ANSWERS = [
   ['How do I secure one?', 'Reserve a unit online, or book a viewing if you would rather see it in person first.'],
 ];
 
+const FAQS = [
+  [
+    'Does any of this cost me anything?',
+    'No. Browsing, touring, saving shortlists, booking viewings and messaging developers are all free. We are paid by developers for production and listing, not by buyers, and we take no commission on any sale.',
+  ],
+  [
+    'Can I buy from outside Kenya?',
+    'Yes — it is much of what the platform is for. You can tour a development properly at whatever hour suits you, chat directly with the developer’s team, and reserve a unit without booking a flight.',
+  ],
+  [
+    'How do I know the developer is real?',
+    'Every developer is KYB-verified before they can list — company registration, tax registration and director identity are checked. The company and its track record appear on the development page.',
+  ],
+  [
+    'What if the building is not finished?',
+    'For developments still under construction we publish CGI walkthroughs built from the architectural plans, plus construction updates as the building goes up, so you can see progress rather than wait for it.',
+  ],
+  [
+    'Do I need a VR headset?',
+    'No. The cinematic film and 3D walkthrough run in an ordinary browser on a phone or laptop. The VR tour is there if you have a headset and want to stand inside a unit at full scale.',
+  ],
+  [
+    'What does reserving a unit mean?',
+    'It marks that specific unit as held for you and opens a direct line to the developer’s team to complete the purchase. Terms are set by the developer and shown before you commit.',
+  ],
+];
+
 export default function ForInvestorsPage() {
   return (
     <PageShell
-      eyebrow="Property Investment for Investors"
-      title="Invest in Kenya's properties digitally — buy property you can actually see."
-      lede="Off-plan purchases and cross-border buying have the same weakness — you commit before you can walk the space. e-resi is built to remove that: tour your apartment virtually in cinematic, 3D and VR modes, then buy Kenya's top properties from anywhere."
+      eyebrow="For Investors"
+      title="Buy property you can actually see."
+      lede="Off-plan purchases and cross-border buying have the same weakness — you commit before you can walk the space. e-resi is built to remove that: tour in cinematic, 3D and VR, then buy from anywhere."
     >
-      <Section title="The questions a listing should answer">
-        <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
-          {ANSWERS.map(([q, a]) => (
-            <div key={q}>
-              <dt className="text-[16px] font-semibold text-gray-900">{q}</dt>
-              <dd className="mt-1 text-[15px] leading-relaxed text-gray-600">{a}</dd>
-            </div>
+      <Section eyebrow="Why it's different" title="What you get as a buyer." prose={false}>
+        <CardGrid cols={4}>
+          {HIGHLIGHTS.map((h) => (
+            <HighlightCard key={h}>{h}</HighlightCard>
           ))}
-        </dl>
+        </CardGrid>
       </Section>
 
-      <Section title="Three ways to tour">
-        <p>
-          <strong className="font-medium text-gray-900">Cinematic.</strong> A scroll-driven film
-          of the development. You control the pace — scroll forward through the building,
-          back to look again.
-        </p>
-        <p>
-          <strong className="font-medium text-gray-900">3D walkthrough.</strong> Move through the
-          development room by room and get a genuine sense of scale and flow.
-        </p>
-        <p>
-          <strong className="font-medium text-gray-900">VR.</strong> With a headset, stand inside
-          a unit at full scale. For off-plan purchases this is the closest thing to a
-          site visit that exists.
-        </p>
+      <Section
+        eyebrow="Three ways to tour"
+        title="Look as closely as you want to."
+        prose={false}
+      >
+        <CardGrid cols={3}>
+          {MODES.map((m) => (
+            <Card key={m.title} accent>
+              <h3 className="text-[22px] font-semibold tracking-tight text-ink">{m.title}</h3>
+              <p className="mt-3 text-[16px] leading-relaxed text-ink/60">{m.body}</p>
+            </Card>
+          ))}
+        </CardGrid>
       </Section>
 
-      <Section title="Buying from abroad">
-        <p>
-          If you are in the diaspora, the usual process means flying in, sending a
-          relative, or trusting a video call. On e-resi you can tour the development
-          properly at whatever hour suits you, chat directly with the developer&apos;s
-          team, and reserve a unit without booking a flight.
-        </p>
-        <p>
-          Every developer is verified before listing, so you know who you are dealing
-          with.
-        </p>
+      <Section
+        eyebrow="What a listing tells you"
+        title="The questions a listing should answer."
+        prose={false}
+      >
+        <CardGrid cols={2}>
+          {ANSWERS.map(([q, a]) => (
+            <FeatureCard key={q} title={q}>
+              {a}
+            </FeatureCard>
+          ))}
+        </CardGrid>
       </Section>
 
-      <Section title="Off-plan, without the guesswork">
+      <SplitSection
+        eyebrow="Buying from abroad"
+        title="No flight required to see it properly."
+        lede="If you are in the diaspora, the usual process means flying in, sending a relative, or trusting a video call."
+        aside={<TextLink href="/properties">Browse developments →</TextLink>}
+      >
+        <Card accent>
+          <h3 className="text-[18px] font-semibold tracking-tight text-ink">Tour on your clock</h3>
+          <p className="mt-2 text-[16px] leading-relaxed text-ink/60">
+            Walk the development properly at whatever hour suits your timezone, as many
+            times as you want, without booking anything.
+          </p>
+        </Card>
+        <Card accent>
+          <h3 className="text-[18px] font-semibold tracking-tight text-ink">
+            Talk to the developer directly
+          </h3>
+          <p className="mt-2 text-[16px] leading-relaxed text-ink/60">
+            Chat with the developer&apos;s team from the property page — no intermediary
+            relaying questions on your behalf.
+          </p>
+        </Card>
+        <Card accent>
+          <h3 className="text-[18px] font-semibold tracking-tight text-ink">
+            Reserve without flying in
+          </h3>
+          <p className="mt-2 text-[16px] leading-relaxed text-ink/60">
+            Secure the unit online. Every developer is verified before listing, so you
+            know who you are dealing with.
+          </p>
+        </Card>
+      </SplitSection>
+
+      <Section eyebrow="Off-plan" title="Off-plan, without the guesswork.">
         <p>
           Buying off-plan usually means committing on the strength of a render. For
           developments still under construction, we produce CGI walkthroughs from the
@@ -85,36 +173,25 @@ export default function ForInvestorsPage() {
         </p>
       </Section>
 
-      <Section title="It costs you nothing">
-        <p>
-          Browsing, touring, saving shortlists, booking viewings and messaging developers
-          are all free. We are paid by developers for production and listing, not by
-          buyers, and we take no commission on any sale.
-        </p>
-      </Section>
+      <SplitSection
+        eyebrow="FAQ"
+        title="Frequently asked questions"
+        lede="Answers to what buyers and investors ask us most."
+        aside={<TextLink href="/contact">Ask us something else →</TextLink>}
+      >
+        {FAQS.map(([q, a], i) => (
+          <AccordionItem key={q} question={q} defaultOpen={i === 0}>
+            {a}
+          </AccordionItem>
+        ))}
+      </SplitSection>
 
-      <Section>
-        <div className="rounded-3xl bg-gray-50 p-8">
-          <h2 className="text-[22px] font-semibold text-gray-900">Start looking</h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-gray-600">
-            Browse developments for sale, or find somewhere to rent.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/properties"
-              className="rounded-full bg-gray-900 px-6 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-gray-700"
-            >
-              Browse properties
-            </Link>
-            <Link
-              href="/rent"
-              className="rounded-full border border-gray-300 px-6 py-2.5 text-[15px] font-medium text-gray-700 transition-colors hover:bg-white"
-            >
-              Find a rental
-            </Link>
-          </div>
-        </div>
-      </Section>
+      <CtaBand
+        title="Start looking."
+        lede="Browse developments for sale, or find somewhere to rent."
+        primary={{ label: 'Browse properties', href: '/properties' }}
+        secondary={{ label: 'Find a rental', href: '/rent' }}
+      />
     </PageShell>
   );
 }

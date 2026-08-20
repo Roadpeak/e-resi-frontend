@@ -41,6 +41,21 @@ module.exports = {
           600: '#233050',
           500: '#2e3e66',
         },
+        // Logo blue — the "e-resi" mark. 500 is the mark's base (#4A80F5),
+        // 600 its deep stop (#3457E0) and 400 its light stop (#6E9AF8).
+        resi: {
+          50:  '#eff5ff',
+          100: '#dbe8fe',
+          200: '#bfd6fe',
+          300: '#93bbfd',
+          400: '#6e9af8',
+          500: '#4a80f5',
+          600: '#3457e0',
+          700: '#2a45c4',
+          800: '#2739a0',
+          900: '#25357e',
+          950: '#1a234d',
+        },
         // HomVR luxury palette — black / white / warm brown / gold accent
         ink: '#0a0a0a',
         chalk: '#f5f2ee',
