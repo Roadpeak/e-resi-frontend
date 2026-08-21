@@ -104,6 +104,11 @@ export const DEFAULT_HERO_STYLE = 'CINEMATIC';
 export const SECTIONS = [
   { id: 'overview', label: 'Overview', alwaysOn: true },
   { id: 'gallery', label: 'Gallery' },
+  // The gateway to all three tours. Distinct from the cinematic/viewer3d
+  // sections below, which are the players themselves — this is what tells a
+  // buyer the tours exist at all, and it sits high because it is the reason
+  // most of them are on the page.
+  { id: 'tours', label: 'Immersive tours' },
   { id: 'cinematic', label: 'Cinematic tour' },
   { id: 'viewer3d', label: '3D tour' },
   { id: 'floorplans', label: 'Floor plans' },
@@ -360,8 +365,29 @@ export function resolveBranding(src: BrandingSource) {
   const theme = buildTheme(color, fontKey);
 
   const hidden = new Set(src.hiddenSections ?? []);
+  /**
+   * A saved order predates any section added since it was saved, so missing
+   * ids are merged back in rather than dropped.
+   *
+   * They are placed where SECTIONS puts them, not appended. Appending was fine
+   * while new sections were incidental, but it would file a headline section
+   * after the booking form for every development that had ever saved an order
+   * — the developments most likely to have one.
+   */
   const ordered = src.sectionOrder?.length
-    ? [...src.sectionOrder, ...SECTIONS.map((s) => s.id).filter((id) => !src.sectionOrder!.includes(id))]
+    ? (() => {
+        const saved = src.sectionOrder!.filter((id) => SECTIONS.some((s) => s.id === id));
+        const out = [...saved];
+        SECTIONS.forEach((section, i) => {
+          if (out.includes(section.id)) return;
+          // Anchor to the nearest earlier section the developer did save, so
+          // the new section lands in its canonical neighbourhood.
+          const prior = SECTIONS.slice(0, i).map((s) => s.id).filter((id) => out.includes(id)).pop();
+          const at = prior ? out.indexOf(prior) + 1 : 0;
+          out.splice(at, 0, section.id);
+        });
+        return out;
+      })()
     : SECTIONS.map((s) => s.id);
 
   const template = templateFor(src.templateKey || src.developer?.templateKey);

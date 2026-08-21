@@ -9,7 +9,6 @@ import {
 import type { Property, Unit } from '../../lib/types';
 import { formatPrice, formatCompletionDate, pluralize, cn } from '../../lib/utils';
 import { ChatWithDeveloper } from '../chat/ChatWithDeveloper';
-import { TourCards } from './TourCards';
 
 interface Props { property: Property }
 
@@ -216,16 +215,6 @@ export function PropertyOverview({ property }: Props) {
           </a>
           <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
         </div>
-
-        {/* The tours, given their own row rather than trailing the buttons as
-            chips. These are what the development is being sold on. */}
-        <TourCards
-          propertySlug={property.slug}
-          has3D={property.has3DTour}
-          hasVR={property.hasVRTour}
-          hasCinematic={property.hasCinematicTour}
-          className="mt-7"
-        />
 
         {/* Stat tiles */}
         <div className="mt-8 flex flex-wrap overflow-hidden rounded-2xl border border-gray-200 bg-white">

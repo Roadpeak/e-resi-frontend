@@ -22,6 +22,9 @@ function labelFor(id: string): string {
  * Sections that supply their own heading and spacing. Wrapping these in
  * template chrome would produce two headings for one block.
  */
+/** Sections that span the viewport rather than the centred column. */
+const FULL_BLEED = new Set(['tours']);
+
 const SELF_TITLED = new Set(['overview', 'booking']);
 
 /**
@@ -52,6 +55,11 @@ export function TemplateSection({
   const tokens = surfaceTokens(template.surface);
   const band = bandBackground(template, index);
   const showHeading = template.sectionHeadings && !SELF_TITLED.has(id);
+
+  // A full-bleed section brings its own ground and padding, and must not sit
+  // inside this centred max-width shell — that is the very constraint it
+  // exists to break out of.
+  if (FULL_BLEED.has(id)) return <>{children}</>;
 
   return (
     <section

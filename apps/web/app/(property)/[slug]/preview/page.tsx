@@ -5,6 +5,7 @@ import { PropertyFooter } from '../../../../components/property/PropertyFooter';
 import { PropertyHero } from '../../../../components/property/PropertyHero';
 import { PropertyOverview } from '../../../../components/property/PropertyOverview';
 import { PropertyGallery } from '../../../../components/property/PropertyGallery';
+import { PropertyTours } from '../../../../components/property/PropertyTours';
 import { PropertyViewer3D } from '../../../../components/property/PropertyViewer3D';
 import { PropertyCinematicPreview } from '../../../../components/property/PropertyCinematicPreview';
 import { PropertyFloorPlans } from '../../../../components/property/PropertyFloorPlans';
@@ -61,8 +62,22 @@ const list = (v: string | string[] | undefined) =>
 
 /** Mirrors the public page — components that own their anchor id. */
 const SELF_ANCHORED = new Set([
-  'gallery', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
+  'gallery', 'tours', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
 ]);
+
+/** Mirrors the public page — sections that span the viewport. */
+const FULL_BLEED = new Set(['tours']);
+
+/** Group consecutive sections by whether they are full-bleed. */
+function runs(ids: string[]): Array<{ bleed: boolean; ids: string[] }> {
+  return ids.reduce<Array<{ bleed: boolean; ids: string[] }>>((acc, id) => {
+    const bleed = FULL_BLEED.has(id);
+    const last = acc[acc.length - 1];
+    if (last && last.bleed === bleed) last.ids.push(id);
+    else acc.push({ bleed, ids: [id] });
+    return acc;
+  }, []);
+}
 
 export default async function PropertyPreviewPage({ params, searchParams }: Props) {
   const { slug } = await params;
@@ -119,6 +134,16 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
   const blocks: Record<string, React.ReactNode> = {
     overview: <PropertyOverview property={property} />,
     gallery: <PropertyGallery images={property.galleryImages} name={property.name} />,
+    tours: (
+      <PropertyTours
+        propertySlug={property.slug}
+        propertyName={property.name}
+        has3D={property.has3DTour}
+        hasVR={property.hasVRTour}
+        hasCinematic={property.hasCinematicTour}
+        backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+      />
+    ),
     cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
     viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
@@ -216,12 +241,27 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
       )}
 
       {template.key === 'CLASSIC' ? (
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
-          {visible.map((id) => (
-            <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
-              {blocks[id]}
-            </div>
-          ))}
+        <div className="pb-24 pt-2">
+          {runs(visible).map((run, i) =>
+            run.bleed ? (
+              <div key={`bleed-${i}`} className="my-24">
+                {run.ids.map((id) => (
+                  <div key={id}>{blocks[id]}</div>
+                ))}
+              </div>
+            ) : (
+              <div
+                key={`col-${i}`}
+                className="mx-auto max-w-7xl space-y-24 px-4 sm:px-6 lg:px-8"
+              >
+                {run.ids.map((id) => (
+                  <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
+                    {blocks[id]}
+                  </div>
+                ))}
+              </div>
+            ),
+          )}
         </div>
       ) : (
         <div className="pb-10">

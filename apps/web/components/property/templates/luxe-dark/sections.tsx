@@ -9,7 +9,6 @@ import type { Property, Unit, FloorPlan, Amenity, ConstructionUpdate } from '../
 import { formatPrice, formatCompletionDate } from '../../../../lib/utils';
 import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
 import type { SectionCopy } from '../../../../lib/branding/theme';
-import { TourCards } from '../../TourCards';
 import { UnitTypeList } from '../../UnitTypeList';
 import { unitCurrency } from '../../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
@@ -106,14 +105,7 @@ export function LuxeOverview({ property, copy }: { property: Property; copy?: Se
         <Reveal>
           <p className="text-[17px] leading-[1.85] text-white/65">{property.description}</p>
 
-          <div className="mt-9 space-y-4">
-            <TourCards
-              propertySlug={property.slug}
-              has3D={property.has3DTour}
-              hasVR={property.hasVRTour}
-              hasCinematic={property.hasCinematicTour}
-              onDark
-            />
+          <div className="mt-9">
             <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
           </div>
 

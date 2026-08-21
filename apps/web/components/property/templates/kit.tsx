@@ -11,7 +11,6 @@ import type {
 import { formatPrice, formatCompletionDate } from '../../../lib/utils';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { useBooking, useLightbox, useUnits, unitStatus } from './hooks';
-import { TourCards } from '../TourCards';
 import { UnitTypeList } from '../UnitTypeList';
 import { unitCurrency } from '../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
@@ -183,17 +182,9 @@ export function KitOverview({ property, style, copy }: { property: Property; sty
         <Reveal>
           <p className={`text-[17px] leading-[1.8] ${t.body}`}>{property.description}</p>
 
-          {/* The tours and a way to reach the developer — both were missing
-              from every template but Classic, so a buyer on a chosen template
-              could not open a tour from the overview or ask a question. */}
-          <div className="mt-8 space-y-4">
-            <TourCards
-              propertySlug={property.slug}
-              has3D={property.has3DTour}
-              hasVR={property.hasVRTour}
-              hasCinematic={property.hasCinematicTour}
-              onDark={style.onDark}
-            />
+          {/* The tours have their own section now — this keeps the way to
+              reach the developer, which every template still needs here. */}
+          <div className="mt-8">
             <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
           </div>
 

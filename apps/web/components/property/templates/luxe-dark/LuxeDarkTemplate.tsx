@@ -7,6 +7,7 @@ import type { Property } from '../../../../lib/types';
 import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
 import { PropertyCinematicPreview } from '../../PropertyCinematicPreview';
+import { PropertyTours } from '../../PropertyTours';
 import { PropertyViewer3D } from '../../PropertyViewer3D';
 import { PropertyRentListings } from '../../PropertyRentListings';
 import { TemplateHero } from '../TemplateHero';
@@ -34,7 +35,7 @@ import {
  * Sections whose component renders its own <section id="…">; the wrapper must
  * not repeat the id, or anchor navigation and scroll-spy break.
  */
-const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals']);
+const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals', 'tours']);
 
 /** Its own nav: hairline, uppercase, transparent until you leave the hero. */
 function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string }) {
@@ -116,7 +117,14 @@ function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string 
   );
 }
 
+/** Sections that span the viewport and bring their own padding. */
+const FULL_BLEED = new Set(['tours']);
+
 function Section({ id, children }: { id: string; children: React.ReactNode }) {
+  // A full-bleed section is returned bare: wrapping it in this padded, centred
+  // shell is exactly what it needs to escape, and no margin trick can undo a
+  // max-width it is nested inside.
+  if (FULL_BLEED.has(id)) return <>{children}</>;
   return (
     <section id={SELF_ANCHORED.has(id) ? undefined : id} className="scroll-mt-28 px-6 py-24 sm:px-10 sm:py-32">
       <div className="mx-auto max-w-[1200px]">{children}</div>
@@ -154,6 +162,16 @@ export function LuxeDarkTemplate({
     overview: <LuxeOverview property={property} copy={copy('overview')} />,
     gallery: (
       <LuxeGallery images={property.galleryImages} name={property.name} copy={copy('gallery')} />
+    ),
+    tours: (
+      <PropertyTours
+        propertySlug={property.slug}
+        propertyName={property.name}
+        has3D={property.has3DTour}
+        hasVR={property.hasVRTour}
+        hasCinematic={property.hasCinematicTour}
+        backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+      />
     ),
     units: (
       <LuxeUnits

@@ -8,6 +8,7 @@ import type { MiniSiteTemplate } from '../../../lib/branding/templates';
 import type { RentListing } from '../../../lib/types';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { PropertyCinematicPreview } from '../PropertyCinematicPreview';
+import { PropertyTours } from '../PropertyTours';
 import { PropertyViewer3D } from '../PropertyViewer3D';
 import { PropertyRentListings } from '../PropertyRentListings';
 import { TemplateHero } from './TemplateHero';
@@ -32,7 +33,10 @@ import {
  * silently break getElementById scroll targets and the nav's scroll-spy, which
  * is exactly what happened when the shared tour players were added.
  */
-const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals']);
+const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals', 'tours']);
+
+/** Sections that span the viewport rather than the centred column. */
+const FULL_BLEED = new Set(['tours']);
 
 export const KIT_STYLES: Record<string, KitStyle> = {
   EDITORIAL: {
@@ -236,6 +240,16 @@ export function KitTemplate({
         copy={copy('gallery')}
       />
     ),
+    tours: (
+      <PropertyTours
+        propertySlug={property.slug}
+        propertyName={property.name}
+        has3D={property.has3DTour}
+        hasVR={property.hasVRTour}
+        hasCinematic={property.hasCinematicTour}
+        backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+      />
+    ),
     units: (
       <KitUnits
         units={property.units}
@@ -283,6 +297,12 @@ export function KitTemplate({
 
       {sections.map((id, i) =>
         blocks[id] ? (
+          // A full-bleed section brings its own ground and padding, and must
+          // not be nested in the centred, padded shell below — that max-width
+          // is precisely what it needs to escape.
+          FULL_BLEED.has(id) ? (
+            <div key={id}>{blocks[id]}</div>
+          ) : (
           <section
             key={id}
             id={SELF_ANCHORED.has(id) ? undefined : id}
@@ -295,6 +315,7 @@ export function KitTemplate({
           >
             <div className="mx-auto max-w-[1200px]">{blocks[id]}</div>
           </section>
+          )
         ) : null,
       )}
 

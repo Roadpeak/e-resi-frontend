@@ -6,6 +6,7 @@ import { PropertyFooter } from '../../../components/property/PropertyFooter';
 import { PropertyHero } from '../../../components/property/PropertyHero';
 import { PropertyOverview } from '../../../components/property/PropertyOverview';
 import { PropertyGallery } from '../../../components/property/PropertyGallery';
+import { PropertyTours } from '../../../components/property/PropertyTours';
 import { PropertyViewer3D } from '../../../components/property/PropertyViewer3D';
 import { PropertyCinematicPreview } from '../../../components/property/PropertyCinematicPreview';
 import { PropertyFloorPlans } from '../../../components/property/PropertyFloorPlans';
@@ -47,8 +48,32 @@ interface Props {
  * `getElementById` scroll targets and the IntersectionObserver scroll-spy.
  */
 const SELF_ANCHORED = new Set([
-  'gallery', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
+  'gallery', 'tours', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
 ]);
+
+/**
+ * Sections that span the viewport rather than sitting in the centred column.
+ *
+ * They are rendered outside the max-width container instead of escaping it:
+ * negative margins and `w-screen` both resolve against the padded wrapper, not
+ * the viewport, so the section ends up inset by exactly the gutters it was
+ * meant to break out of.
+ */
+const FULL_BLEED = new Set(['tours']);
+
+/**
+ * Group consecutive sections by whether they are full-bleed, so each run can
+ * be wrapped in the layout it needs.
+ */
+function runs(ids: string[]): Array<{ bleed: boolean; ids: string[] }> {
+  return ids.reduce<Array<{ bleed: boolean; ids: string[] }>>((acc, id) => {
+    const bleed = FULL_BLEED.has(id);
+    const last = acc[acc.length - 1];
+    if (last && last.bleed === bleed) last.ids.push(id);
+    else acc.push({ bleed, ids: [id] });
+    return acc;
+  }, []);
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -119,6 +144,16 @@ export default async function PropertyPage({ params }: Props) {
   const blocks: Record<string, React.ReactNode> = {
     overview: <PropertyOverview property={property} />,
     gallery: <PropertyGallery images={property.galleryImages} name={property.name} />,
+    tours: (
+      <PropertyTours
+        propertySlug={property.slug}
+        propertyName={property.name}
+        has3D={property.has3DTour}
+        hasVR={property.hasVRTour}
+        hasCinematic={property.hasCinematicTour}
+        backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+      />
+    ),
     cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
     viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
@@ -227,17 +262,36 @@ export default async function PropertyPage({ params }: Props) {
       )}
 
       {template.key === 'CLASSIC' ? (
-        // Preserved verbatim: the original single-column layout.
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
-          {/* Only wrap with an id when the component does not already provide
-              its own <section id="…">. Wrapping unconditionally put the same id
-              in the DOM twice, which silently breaks the topbar's anchor
-              navigation and scroll-spy. */}
-          {visible.map((id) => (
-            <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
-              {blocks[id]}
-            </div>
-          ))}
+        // The original single-column layout, with one change: full-bleed
+        // sections are rendered outside the centred container rather than
+        // trying to escape it. Margin and transform tricks all measure against
+        // the padded wrapper rather than the viewport, so they leave the
+        // section inset by the gutters — the container simply has to end.
+        <div className="pb-24 pt-2">
+          {runs(visible).map((run, i) =>
+            run.bleed ? (
+              <div key={`bleed-${i}`} className="my-24">
+                {run.ids.map((id) => (
+                  <div key={id}>{blocks[id]}</div>
+                ))}
+              </div>
+            ) : (
+              <div
+                key={`col-${i}`}
+                className="mx-auto max-w-7xl space-y-24 px-4 sm:px-6 lg:px-8"
+              >
+                {/* Only wrap with an id when the component does not already
+                    provide its own <section id="…">. Wrapping unconditionally
+                    put the same id in the DOM twice, which silently breaks the
+                    topbar's anchor navigation and scroll-spy. */}
+                {run.ids.map((id) => (
+                  <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
+                    {blocks[id]}
+                  </div>
+                ))}
+              </div>
+            ),
+          )}
         </div>
       ) : (
         <div className="pb-10">
