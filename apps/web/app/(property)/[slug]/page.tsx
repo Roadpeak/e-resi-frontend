@@ -15,6 +15,9 @@ import { PropertyConstruction } from '../../../components/property/PropertyConst
 import { PropertyBooking } from '../../../components/property/PropertyBooking';
 import { PropertyRentListings } from '../../../components/property/PropertyRentListings';
 import { resolveBranding, themeVars, type BrandingSource } from '../../../lib/branding/theme';
+import { surfaceTokens, surfaceVars } from '../../../lib/branding/templates';
+import { TemplateHero } from '../../../components/property/templates/TemplateHero';
+import { TemplateSection } from '../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../lib/types';
 
@@ -128,10 +131,24 @@ export default async function PropertyPage({ params }: Props) {
     booking: <PropertyBooking property={property} />,
   };
 
+  const template = branding.template;
+  const surface = surfaceTokens(template.surface);
+
+  // Sections that will actually render, so band striping counts real blocks —
+  // numbering by position in `branding.sections` would alternate on hidden
+  // ones too and produce two identical grounds in a row.
+  const visible = branding.sections.filter((id) => blocks[id]);
+
   return (
     <main
-      className="min-h-screen bg-white"
-      style={{ ...themeVars(branding.theme), fontFamily: 'var(--brand-font-body)' }}
+      className="min-h-screen"
+      style={{
+        ...themeVars(branding.theme),
+        ...surfaceVars(template.surface),
+        background: surface.bg,
+        color: surface.text,
+        fontFamily: 'var(--brand-font-body)',
+      }}
     >
       <TrackPageView propertyId={property.id} />
       <PropertyTopbar
@@ -140,25 +157,56 @@ export default async function PropertyPage({ params }: Props) {
         navbarStyle={branding.navbarStyle}
         navbar={branding.navbar}
       />
-      <PropertyHero
-        property={property}
-        heroStyle={branding.heroStyle}
-        ctaLabel={branding.ctaLabel}
-        overlay={branding.heroOverlay}
-      />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
-        {/* Only wrap with an id when the component does not already provide
-            its own <section id="…">. Wrapping unconditionally put the same id
-            in the DOM twice, which silently breaks the topbar's anchor
-            navigation and scroll-spy. */}
-        {branding.sections.map((id) =>
-          blocks[id] ? (
+
+      {/* A template with a signature opening supplies its own hero; the rest
+          fall through to the configurable one, so CLASSIC — and any
+          development that has never picked a template — is untouched. */}
+      {template.ownsHero ? (
+        <TemplateHero
+          templateKey={template.key}
+          property={property}
+          ctaLabel={branding.ctaLabel}
+          overlay={branding.heroOverlay}
+        />
+      ) : (
+        <PropertyHero
+          property={property}
+          heroStyle={branding.heroStyle}
+          ctaLabel={branding.ctaLabel}
+          overlay={branding.heroOverlay}
+        />
+      )}
+
+      {template.key === 'CLASSIC' ? (
+        // Preserved verbatim: the original single-column layout.
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
+          {/* Only wrap with an id when the component does not already provide
+              its own <section id="…">. Wrapping unconditionally put the same id
+              in the DOM twice, which silently breaks the topbar's anchor
+              navigation and scroll-spy. */}
+          {visible.map((id) => (
             <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
               {blocks[id]}
             </div>
-          ) : null,
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pb-10">
+          {visible.map((id, i) => (
+            <TemplateSection
+              key={id}
+              // Same rule as above — a section that anchors itself must not be
+              // given the id twice.
+              id={SELF_ANCHORED.has(id) ? '' : id}
+              index={i}
+              template={template}
+            >
+              {blocks[id]}
+            </TemplateSection>
+          ))}
+        </div>
+      )}
+
       <PropertyFooter property={property} whiteLabel={branding.whiteLabel} />
     </main>
   );

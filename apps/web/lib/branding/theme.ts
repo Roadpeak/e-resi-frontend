@@ -11,6 +11,8 @@
  * to still look like a site we are willing to be associated with.
  */
 
+import { templateFor } from './templates';
+
 /** Fallback accent when nobody has chosen one — e-resi's own blue. */
 export const DEFAULT_BRAND_COLOR = '#1a73e8';
 
@@ -310,6 +312,8 @@ export function themeVars(theme: BrandTheme): React.CSSProperties {
 export interface BrandingSource {
   brandColor?: string | null;
   brandFont?: string | null;
+  /** Mini-site template key — see lib/branding/templates.ts. */
+  templateKey?: string | null;
   heroStyle?: string | null;
   sectionOrder?: string[] | null;
   hiddenSections?: string[] | null;
@@ -325,6 +329,7 @@ export interface BrandingSource {
   developer?: {
     brandColor?: string | null;
     brandFont?: string | null;
+    templateKey?: string | null;
   } | null;
 }
 
@@ -343,8 +348,16 @@ export function resolveBranding(src: BrandingSource) {
     ? [...src.sectionOrder, ...SECTIONS.map((s) => s.id).filter((id) => !src.sectionOrder!.includes(id))]
     : SECTIONS.map((s) => s.id);
 
+  const template = templateFor(src.templateKey || src.developer?.templateKey);
+
   return {
     theme,
+    template,
+    /**
+     * A template with a signature opening owns the hero outright; the plainer
+     * ones defer to whatever heroStyle the developer picked. Resolved here so
+     * neither the page nor the preview has to know the rule.
+     */
     heroStyle: src.heroStyle || DEFAULT_HERO_STYLE,
     ctaLabel: src.ctaLabel || DEFAULT_CTA_LABEL,
     whiteLabel: !!src.whiteLabel,

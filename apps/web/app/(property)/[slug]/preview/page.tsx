@@ -13,6 +13,9 @@ import { PropertyLocation } from '../../../../components/property/PropertyLocati
 import { PropertyConstruction } from '../../../../components/property/PropertyConstruction';
 import { PropertyBooking } from '../../../../components/property/PropertyBooking';
 import { resolveBranding, themeVars, type BrandingSource } from '../../../../lib/branding/theme';
+import { surfaceTokens, surfaceVars } from '../../../../lib/branding/templates';
+import { TemplateHero } from '../../../../components/property/templates/TemplateHero';
+import { TemplateSection } from '../../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../../lib/types';
 
@@ -67,6 +70,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
     ...(property as BrandingSource),
     brandColor: str(sp.brandColor) ?? (property as BrandingSource).brandColor,
     brandFont: str(sp.brandFont) ?? (property as BrandingSource).brandFont,
+    templateKey: str(sp.templateKey) ?? (property as BrandingSource).templateKey,
     heroStyle: str(sp.heroStyle) ?? (property as BrandingSource).heroStyle,
     ctaLabel: str(sp.ctaLabel) ?? (property as BrandingSource).ctaLabel,
     navbarStyle: str(sp.navbarStyle) ?? (property as BrandingSource).navbarStyle,
@@ -99,10 +103,20 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
     booking: <PropertyBooking property={property} />,
   };
 
+  const template = branding.template;
+  const surface = surfaceTokens(template.surface);
+  const visible = branding.sections.filter((id) => blocks[id]);
+
   return (
     <main
-      className="min-h-screen bg-white"
-      style={{ ...themeVars(branding.theme), fontFamily: 'var(--brand-font-body)' }}
+      className="min-h-screen"
+      style={{
+        ...themeVars(branding.theme),
+        ...surfaceVars(template.surface),
+        background: surface.bg,
+        color: surface.text,
+        fontFamily: 'var(--brand-font-body)',
+      }}
     >
       <PropertyTopbar
         property={property}
@@ -110,21 +124,48 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
         navbarStyle={branding.navbarStyle}
         navbar={branding.navbar}
       />
-      <PropertyHero
-        property={property}
-        heroStyle={branding.heroStyle}
-        ctaLabel={branding.ctaLabel}
-        overlay={branding.heroOverlay}
-      />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
-        {branding.sections.map((id) =>
-          blocks[id] ? (
+
+      {/* Mirrors the public page exactly — a preview that arranged the page
+          differently would be worse than no preview at all. */}
+      {template.ownsHero ? (
+        <TemplateHero
+          templateKey={template.key}
+          property={property}
+          ctaLabel={branding.ctaLabel}
+          overlay={branding.heroOverlay}
+        />
+      ) : (
+        <PropertyHero
+          property={property}
+          heroStyle={branding.heroStyle}
+          ctaLabel={branding.ctaLabel}
+          overlay={branding.heroOverlay}
+        />
+      )}
+
+      {template.key === 'CLASSIC' ? (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-24">
+          {visible.map((id) => (
             <div key={id} id={SELF_ANCHORED.has(id) ? undefined : id}>
               {blocks[id]}
             </div>
-          ) : null,
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pb-10">
+          {visible.map((id, i) => (
+            <TemplateSection
+              key={id}
+              id={SELF_ANCHORED.has(id) ? '' : id}
+              index={i}
+              template={template}
+            >
+              {blocks[id]}
+            </TemplateSection>
+          ))}
+        </div>
+      )}
+
       <PropertyFooter property={property} whiteLabel={branding.whiteLabel} />
     </main>
   );

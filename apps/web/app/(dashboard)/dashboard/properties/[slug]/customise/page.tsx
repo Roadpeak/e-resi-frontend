@@ -24,6 +24,11 @@ import {
   contrastRatio,
   parseHex,
 } from '../../../../../../lib/branding/theme';
+import {
+  MINI_SITE_TEMPLATES,
+  DEFAULT_TEMPLATE,
+  templateFor,
+} from '../../../../../../lib/branding/templates';
 import { cn } from '../../../../../../lib/utils';
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
@@ -31,6 +36,7 @@ const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
 interface Draft {
   brandColor: string;
   brandFont: string;
+  templateKey: string;
   heroStyle: string;
   ctaLabel: string;
   navbarStyle: string;
@@ -72,6 +78,7 @@ export default function CustomiseMiniSite() {
       brandColor: (p.brandColor as string) || (dev.brandColor as string) || DEFAULT_BRAND_COLOR,
       brandFont: (p.brandFont as string) || (dev.brandFont as string) || 'MODERN',
       heroStyle: (p.heroStyle as string) || DEFAULT_HERO_STYLE,
+      templateKey: (p.templateKey as string) || DEFAULT_TEMPLATE,
       ctaLabel: (p.ctaLabel as string) || DEFAULT_CTA_LABEL,
       sectionOrder: (p.sectionOrder as string[])?.length
         ? (p.sectionOrder as string[])
@@ -135,6 +142,7 @@ export default function CustomiseMiniSite() {
   const previewSrc =
     `/${slug}/preview?brandColor=${encodeURIComponent(draft.brandColor)}`
     + `&brandFont=${draft.brandFont}`
+    + `&templateKey=${draft.templateKey}`
     + `&heroStyle=${draft.heroStyle}`
     + `&ctaLabel=${encodeURIComponent(draft.ctaLabel)}`
     + `&hidden=${encodeURIComponent(draft.hiddenSections.join(','))}`
@@ -193,6 +201,62 @@ export default function CustomiseMiniSite() {
       <div className="grid gap-5 lg:grid-cols-5">
         {/* ── Controls ── */}
         <div className="space-y-5 lg:col-span-2">
+          {/* Template first: it decides the whole page shell, so choosing a
+              colour before a layout is choosing detail before structure. */}
+          <section className={cardCls}>
+            <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Template</h2>
+            <p className="mb-4 text-[13px] text-[#5f6368]">
+              The layout of your development&apos;s page. Everything you have set up —
+              units, tours, bookings — works the same in every one.
+            </p>
+            <div className="space-y-2">
+              {MINI_SITE_TEMPLATES.map((t) => {
+                const active = draft.templateKey === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => set({ templateKey: t.key })}
+                    aria-pressed={active}
+                    className={cn(
+                      'flex w-full items-start gap-3 rounded-2xl border p-3 text-left transition-colors cursor-pointer',
+                      active ? 'border-[#1a73e8] bg-[#e8f0fe]' : 'border-[#dadce0] hover:bg-[#f8f9fa]',
+                    )}
+                  >
+                    {/* A two-tone chip standing in for the template's ground,
+                        so dark layouts are identifiable before previewing. */}
+                    <span
+                      className="mt-0.5 flex h-9 w-9 shrink-0 flex-col overflow-hidden rounded-lg border border-black/10"
+                      aria-hidden="true"
+                    >
+                      <span
+                        className="h-1/2 w-full"
+                        style={{ background: t.surface === 'DARK' ? '#18191a' : '#c9ced6' }}
+                      />
+                      <span
+                        className="h-1/2 w-full"
+                        style={{ background: t.surface === 'DARK' ? '#0b0b0c' : '#ffffff' }}
+                      />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2">
+                        <span className="text-[14px] font-medium text-[#202124]">{t.label}</span>
+                        {t.surface === 'DARK' && (
+                          <span className="rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[10px] font-medium text-[#5f6368]">
+                            Dark
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] leading-relaxed text-[#5f6368]">
+                        {t.note}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           {/* Presets first: most developers click one and stop, which is the
               point — the default must never be embarrassing. */}
           <section className={cardCls}>
@@ -369,6 +433,18 @@ export default function CustomiseMiniSite() {
           {/* Hero + CTA */}
           <section className={cardCls}>
             <h2 className="mb-4 text-[16px] font-medium text-[#202124]">Opening &amp; call to action</h2>
+            {/*
+              Templates with a signature opening render their own hero, so
+              these three would do nothing. Saying so beats leaving a developer
+              clicking a control that silently has no effect.
+            */}
+            {templateFor(draft.templateKey).ownsHero && (
+              <p className="mb-3 rounded-xl bg-[#f1f3f4] px-3 py-2.5 text-[12px] leading-relaxed text-[#5f6368]">
+                The <span className="font-medium">{templateFor(draft.templateKey).label}</span> template
+                brings its own opening — {templateFor(draft.templateKey).heroNote.toLowerCase()} These
+                options apply if you switch to the Classic template.
+              </p>
+            )}
             <div className="space-y-2">
               {HERO_STYLES.map((h) => (
                 <button
