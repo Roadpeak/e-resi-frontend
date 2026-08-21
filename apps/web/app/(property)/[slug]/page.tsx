@@ -164,6 +164,7 @@ export default async function PropertyPage({ params }: Props) {
             overlay={branding.heroOverlay}
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
+            sectionCopy={branding.sectionCopy}
           />
         ) : (
           <KitTemplate
@@ -173,6 +174,7 @@ export default async function PropertyPage({ params }: Props) {
             overlay={branding.heroOverlay}
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
+            sectionCopy={branding.sectionCopy}
           />
         )}
       </main>

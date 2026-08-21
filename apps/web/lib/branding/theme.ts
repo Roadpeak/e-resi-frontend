@@ -309,6 +309,18 @@ export function themeVars(theme: BrandTheme): React.CSSProperties {
 }
 
 /** Property branding as it arrives from the API, with developer fallbacks. */
+/**
+ * Developer-supplied wording for one section. Every field optional — blank
+ * falls back to the template's own copy, which is what keeps a development
+ * that has customised nothing rendering exactly as before.
+ */
+export interface SectionCopy {
+  heading?: string;
+  body?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
 export interface BrandingSource {
   brandColor?: string | null;
   brandFont?: string | null;
@@ -317,6 +329,8 @@ export interface BrandingSource {
   heroStyle?: string | null;
   sectionOrder?: string[] | null;
   hiddenSections?: string[] | null;
+  /** Per-section copy overrides, keyed by section id. */
+  sectionCopy?: Record<string, SectionCopy> | null;
   ctaLabel?: string | null;
   whiteLabel?: boolean | null;
   navbarStyle?: string | null;
@@ -368,6 +382,14 @@ export function resolveBranding(src: BrandingSource) {
     // stays unless a developer deliberately turns it off for a render that
     // does not need it.
     heroOverlay: src.heroOverlay !== false,
+    /**
+     * Developer copy keyed by section id.
+     *
+     * A plain object rather than a lookup function: this crosses into client
+     * components, and React cannot serialise a function across that boundary —
+     * passing one threw at render and blanked the whole page.
+     */
+    sectionCopy: (src.sectionCopy ?? {}) as Record<string, SectionCopy>,
     /** Section ids to render, in order, with hidden ones removed. */
     sections: ordered.filter((id) => {
       const meta = SECTIONS.find((s) => s.id === id);

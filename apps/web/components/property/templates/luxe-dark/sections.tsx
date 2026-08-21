@@ -7,6 +7,7 @@ import { ArrowUpRight, Check, MapPin } from 'lucide-react';
 import type { Property, Unit, FloorPlan, Amenity, ConstructionUpdate } from '../../../../lib/types';
 import { formatPrice, formatCompletionDate } from '../../../../lib/utils';
 import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
+import type { SectionCopy } from '../../../../lib/branding/theme';
 import { Reveal } from '../shared';
 
 /**
@@ -26,11 +27,14 @@ function Heading({
   index,
   eyebrow,
   title,
+  copy,
   children,
 }: {
   index: string;
   eyebrow: string;
   title: string;
+  /** Developer overrides; blank fields keep the wording above. */
+  copy?: SectionCopy;
   children?: React.ReactNode;
 }) {
   return (
@@ -43,8 +47,23 @@ function Heading({
             {eyebrow}
           </p>
           <h2 className="text-[32px] font-light leading-[1.08] tracking-[-0.02em] text-white sm:text-[46px]">
-            {title}
+            {copy?.heading?.trim() || title}
           </h2>
+          {copy?.body && (
+            <p className="mt-4 max-w-[60ch] text-[16px] leading-relaxed text-white/60">{copy.body}</p>
+          )}
+          {copy?.ctaLabel && copy?.ctaHref && (
+            <a
+              href={copy.ctaHref}
+              {...(/^https?:/i.test(copy.ctaHref)
+                ? { target: '_blank', rel: 'noreferrer noopener' }
+                : {})}
+              className="mt-6 inline-flex px-7 py-3.5 text-[12px] uppercase tracking-[0.16em] transition-opacity hover:opacity-90"
+              style={{ background: 'var(--brand)', color: 'var(--brand-on)' }}
+            >
+              {copy.ctaLabel}
+            </a>
+          )}
         </div>
         {children}
       </div>
@@ -54,7 +73,7 @@ function Heading({
 
 // ─── Overview ───────────────────────────────────────────────────────────────
 
-export function LuxeOverview({ property }: { property: Property }) {
+export function LuxeOverview({ property, copy }: { property: Property; copy?: SectionCopy }) {
   // Derived from the units themselves: the API leaves totalUnits null on
   // developments whose counts were never denormalised.
   const unitCount = property.units?.length ?? 0;
@@ -76,7 +95,7 @@ export function LuxeOverview({ property }: { property: Property }) {
 
   return (
     <div>
-      <Heading index="01" eyebrow="The development" title={property.tagline || property.name} />
+      <Heading index="01" eyebrow="The development" title={property.tagline || property.name} copy={copy} />
 
       <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
         <Reveal>
@@ -119,13 +138,13 @@ export function LuxeOverview({ property }: { property: Property }) {
 
 // ─── Gallery ────────────────────────────────────────────────────────────────
 
-export function LuxeGallery({ images, name }: { images: string[]; name: string }) {
+export function LuxeGallery({ images, name, copy }: { images: string[]; name: string; copy?: SectionCopy }) {
   const lb = useLightbox(images);
   if (!images?.length) return null;
 
   return (
     <div>
-      <Heading index="02" eyebrow="Gallery" title="Every angle of the building." />
+      <Heading index="02" eyebrow="Gallery" title="Every angle of the building." copy={copy} />
 
       {/* Deliberately irregular: a uniform grid reads as a listing, this reads
           as a portfolio. */}
@@ -194,17 +213,19 @@ export function LuxeUnits({
   units,
   currency,
   propertySlug,
+  copy,
 }: {
   units: Unit[];
   currency: string;
   propertySlug: string;
+  copy?: SectionCopy;
 }) {
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
   if (!units?.length) return null;
 
   return (
     <div>
-      <Heading index="03" eyebrow="Availability" title="Residences.">
+      <Heading index="03" eyebrow="Availability" title="Residences." copy={copy}>
         <div className="flex gap-1 border border-white/15 p-1">
           {(['all', 'available'] as const).map((f) => (
             <button
@@ -276,12 +297,12 @@ export function LuxeUnits({
 
 // ─── Floor plans ────────────────────────────────────────────────────────────
 
-export function LuxeFloorPlans({ floorPlans }: { floorPlans: FloorPlan[] }) {
+export function LuxeFloorPlans({ floorPlans, copy }: { floorPlans: FloorPlan[]; copy?: SectionCopy }) {
   if (!floorPlans?.length) return null;
 
   return (
     <div>
-      <Heading index="04" eyebrow="Layouts" title="Floor plans." />
+      <Heading index="04" eyebrow="Layouts" title="Floor plans." copy={copy} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {floorPlans.map((plan, i) => (
           <motion.div
@@ -319,13 +340,15 @@ export function LuxeFloorPlans({ floorPlans }: { floorPlans: FloorPlan[] }) {
 export function LuxeLocation({
   address,
   amenities,
+  copy,
 }: {
   address: Property['address'];
   amenities: Amenity[];
+  copy?: SectionCopy;
 }) {
   return (
     <div>
-      <Heading index="05" eyebrow="Location" title="Where it stands." />
+      <Heading index="05" eyebrow="Location" title="Where it stands." copy={copy} />
       <div className="grid gap-14 lg:grid-cols-2">
         <Reveal>
           <p className="flex items-start gap-3 text-[17px] leading-relaxed text-white/70">
@@ -358,12 +381,12 @@ export function LuxeLocation({
 
 // ─── Construction ───────────────────────────────────────────────────────────
 
-export function LuxeConstruction({ updates }: { updates: ConstructionUpdate[] }) {
+export function LuxeConstruction({ updates, copy }: { updates: ConstructionUpdate[]; copy?: SectionCopy }) {
   if (!updates?.length) return null;
 
   return (
     <div>
-      <Heading index="06" eyebrow="Progress" title="Construction." />
+      <Heading index="06" eyebrow="Progress" title="Construction." copy={copy} />
       <div className="space-y-0 border-t border-white/12">
         {updates.map((u, i) => (
           <motion.div
@@ -395,7 +418,7 @@ export function LuxeConstruction({ updates }: { updates: ConstructionUpdate[] })
 
 // ─── Booking ────────────────────────────────────────────────────────────────
 
-export function LuxeBooking({ property }: { property: Property }) {
+export function LuxeBooking({ property, copy }: { property: Property; copy?: SectionCopy }) {
   const b = useBooking(property);
 
   const fieldCls =
@@ -415,7 +438,7 @@ export function LuxeBooking({ property }: { property: Property }) {
 
   return (
     <div>
-      <Heading index="07" eyebrow="Enquire" title="Arrange a viewing." />
+      <Heading index="07" eyebrow="Enquire" title="Arrange a viewing." copy={copy} />
 
       <form onSubmit={b.onSubmit} className="grid gap-14 lg:grid-cols-[1fr_1.1fr]">
         <div>

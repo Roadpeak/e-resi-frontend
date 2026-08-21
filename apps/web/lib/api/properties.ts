@@ -72,6 +72,10 @@ export const propertiesApi = {
       heroStyle: string;
       sectionOrder: string[];
       hiddenSections: string[];
+      /** Per-section copy overrides, keyed by section id. */
+      sectionCopy: Record<string, {
+        heading?: string; body?: string; ctaLabel?: string; ctaHref?: string;
+      }>;
       ctaLabel: string;
       navbarStyle: string;
       navbarTheme: string;

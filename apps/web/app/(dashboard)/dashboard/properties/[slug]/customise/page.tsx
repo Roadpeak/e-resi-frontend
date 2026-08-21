@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ import {
   navbarPalette,
   contrastRatio,
   parseHex,
+  type SectionCopy,
 } from '../../../../../../lib/branding/theme';
 import {
   MINI_SITE_TEMPLATES,
@@ -33,6 +34,8 @@ import { revalidateMiniSite } from '../../../../../../lib/actions/revalidate-min
 import { cn } from '../../../../../../lib/utils';
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
+const copyFieldCls =
+  'w-full rounded-lg border border-[#dadce0] bg-white px-3 py-2 text-[13px] text-[#202124] outline-none transition-colors placeholder:text-[#9aa0a6] focus:border-[#1a73e8]';
 
 interface Draft {
   brandColor: string;
@@ -45,6 +48,7 @@ interface Draft {
   heroOverlay: boolean;
   sectionOrder: string[];
   hiddenSections: string[];
+  sectionCopy: Record<string, SectionCopy>;
 }
 
 export default function CustomiseMiniSite() {
@@ -67,6 +71,8 @@ export default function CustomiseMiniSite() {
    * offer the same preview in a new tab instead.
    */
   const [previewBlocked, setPreviewBlocked] = useState(false);
+  /** Section id whose wording is being edited, or null. */
+  const [editingCopy, setEditingCopy] = useState<string | null>(null);
 
   // Seed the draft once the development loads. Falling back to the developer's
   // own defaults means an unbranded development still opens on their colours
@@ -88,6 +94,7 @@ export default function CustomiseMiniSite() {
       navbarTheme: (p.navbarTheme as string) || DEFAULT_NAVBAR_THEME,
       heroOverlay: p.heroOverlay !== false,
       hiddenSections: (p.hiddenSections as string[]) ?? [],
+      sectionCopy: (p.sectionCopy as Record<string, SectionCopy>) ?? {},
     });
   }, [property, draft]);
 
@@ -139,6 +146,21 @@ export default function CustomiseMiniSite() {
 
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
 
+  /**
+   * Patch one field of one section's copy. Blank values are kept in the draft
+   * so the input stays controlled; the API prunes them on save, since a blank
+   * and an absent field mean the same thing to the renderer.
+   */
+  const setCopy = (id: string, field: keyof SectionCopy, value: string) => {
+    setDraft({
+      ...draft!,
+      sectionCopy: {
+        ...draft!.sectionCopy,
+        [id]: { ...(draft!.sectionCopy[id] ?? {}), [field]: value },
+      },
+    });
+  };
+
   const toggleSection = (id: string) => {
     const hidden = draft.hiddenSections.includes(id)
       ? draft.hiddenSections.filter((x) => x !== id)
@@ -168,6 +190,9 @@ export default function CustomiseMiniSite() {
     + `&navbarStyle=${draft.navbarStyle}`
     + `&navbarTheme=${draft.navbarTheme}`
     + `&heroOverlay=${draft.heroOverlay ? '1' : '0'}`
+    // Copy rides as JSON: it is nested and free-text, so a flat param per
+    // field would need one name per section per field.
+    + `&copy=${encodeURIComponent(JSON.stringify(draft.sectionCopy))}`
     + `&v=${previewNonce}`;
 
   // A developer can still type a pale colour; we warn rather than block, and
@@ -532,11 +557,11 @@ export default function CustomiseMiniSite() {
                 if (!meta) return null;
                 const locked = 'alwaysOn' in meta && meta.alwaysOn;
                 const hidden = draft.hiddenSections.includes(id);
+                const copy = draft.sectionCopy[id] ?? {};
+                const customised = Object.values(copy).some((v) => (v ?? '').trim());
                 return (
-                  <li
-                    key={id}
-                    className="flex items-center gap-2 rounded-xl border border-[#dadce0] px-3 py-2"
-                  >
+                  <Fragment key={id}>
+                  <li className="flex items-center gap-2 rounded-xl border border-[#dadce0] px-3 py-2">
                     <div className="flex flex-col">
                       <button
                         type="button"
@@ -565,6 +590,23 @@ export default function CustomiseMiniSite() {
                     >
                       {meta.label}
                     </span>
+                    {/* Only offered on visible sections: editing wording for
+                        something nobody will see is a trap, not a feature. */}
+                    {!hidden && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingCopy(editingCopy === id ? null : id)}
+                        className={cn(
+                          'cursor-pointer',
+                          customised ? 'text-[#1a73e8]' : 'text-[#5f6368] hover:text-[#202124]',
+                        )}
+                        aria-label={`Edit wording for ${meta.label}`}
+                        aria-expanded={editingCopy === id}
+                        title={customised ? 'Custom wording set' : 'Edit wording'}
+                      >
+                        <MaterialIcon name="edit_note" className="text-[19px]" />
+                      </button>
+                    )}
                     {locked ? (
                       <span className="text-[11px] text-[#5f6368]">always shown</span>
                     ) : (
@@ -581,6 +623,55 @@ export default function CustomiseMiniSite() {
                       </button>
                     )}
                   </li>
+
+                  {editingCopy === id && (
+                    <li className="rounded-xl border border-[#dadce0] bg-[#f8f9fa] p-3">
+                      <p className="mb-3 text-[12px] leading-relaxed text-[#5f6368]">
+                        Leave a field blank to keep the wording your template already uses.
+                      </p>
+                      <div className="space-y-2.5">
+                        <input
+                          value={copy.heading ?? ''}
+                          onChange={(e) => setCopy(id, 'heading', e.target.value)}
+                          maxLength={80}
+                          placeholder="Heading"
+                          className={copyFieldCls}
+                        />
+                        <textarea
+                          value={copy.body ?? ''}
+                          onChange={(e) => setCopy(id, 'body', e.target.value)}
+                          maxLength={300}
+                          rows={2}
+                          placeholder="Short intro (optional)"
+                          className={cn(copyFieldCls, 'resize-none')}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            value={copy.ctaLabel ?? ''}
+                            onChange={(e) => setCopy(id, 'ctaLabel', e.target.value)}
+                            maxLength={40}
+                            placeholder="Button label"
+                            className={copyFieldCls}
+                          />
+                          <input
+                            value={copy.ctaHref ?? ''}
+                            onChange={(e) => setCopy(id, 'ctaHref', e.target.value)}
+                            maxLength={500}
+                            placeholder="https://… or #booking"
+                            className={copyFieldCls}
+                          />
+                        </div>
+                        {/* A label without a destination renders nothing, so
+                            say why rather than letting it silently vanish. */}
+                        {!!copy.ctaLabel?.trim() !== !!copy.ctaHref?.trim() && (
+                          <p className="text-[12px] text-[#b06000]">
+                            A button needs both a label and a link to appear.
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  )}
+                  </Fragment>
                 );
               })}
             </ul>

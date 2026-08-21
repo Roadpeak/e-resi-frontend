@@ -12,7 +12,12 @@ import { PropertyUnits } from '../../../../components/property/PropertyUnits';
 import { PropertyLocation } from '../../../../components/property/PropertyLocation';
 import { PropertyConstruction } from '../../../../components/property/PropertyConstruction';
 import { PropertyBooking } from '../../../../components/property/PropertyBooking';
-import { resolveBranding, themeVars, type BrandingSource } from '../../../../lib/branding/theme';
+import {
+  resolveBranding,
+  themeVars,
+  type BrandingSource,
+  type SectionCopy,
+} from '../../../../lib/branding/theme';
 import { surfaceTokens, surfaceVars, templateFontVars } from '../../../../lib/branding/templates';
 import { TemplateHero } from '../../../../components/property/templates/TemplateHero';
 import { LuxeDarkTemplate } from '../../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
@@ -83,6 +88,18 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
       ? (property as BrandingSource).heroOverlay
       : str(sp.heroOverlay) === '1',
     hiddenSections: list(sp.hidden),
+    // Unsaved copy from the editor. Malformed JSON falls back to what is
+    // stored rather than failing the preview — a broken param should not cost
+    // the developer their whole preview.
+    sectionCopy: (() => {
+      const raw = str(sp.copy);
+      if (!raw) return (property as BrandingSource).sectionCopy;
+      try {
+        return JSON.parse(raw) as Record<string, SectionCopy>;
+      } catch {
+        return (property as BrandingSource).sectionCopy;
+      }
+    })(),
     sectionOrder: list(sp.order),
   });
 
@@ -130,6 +147,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
             overlay={branding.heroOverlay}
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
+            sectionCopy={branding.sectionCopy}
           />
         ) : (
           <KitTemplate
@@ -139,6 +157,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
             overlay={branding.heroOverlay}
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
+            sectionCopy={branding.sectionCopy}
           />
         )}
       </main>

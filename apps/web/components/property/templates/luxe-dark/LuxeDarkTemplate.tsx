@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Property } from '../../../../lib/types';
+import type { SectionCopy } from '../../../../lib/branding/theme';
 import { TemplateHero } from '../TemplateHero';
 import {
   LuxeBooking,
@@ -114,6 +115,7 @@ export function LuxeDarkTemplate({
   overlay = true,
   sections,
   whiteLabel,
+  sectionCopy,
 }: {
   property: Property;
   ctaLabel?: string;
@@ -121,19 +123,31 @@ export function LuxeDarkTemplate({
   /** Section ids to render, in order — the developer's own arrangement. */
   sections: string[];
   whiteLabel?: boolean;
+  /** Developer wording keyed by section id. */
+  sectionCopy?: Record<string, SectionCopy>;
 }) {
+  const copy = (id: string) => sectionCopy?.[id] ?? {};
   // Same data, this template's markup. Anything the development does not have
   // returns null from its own component, so the section simply does not appear.
   const blocks: Record<string, React.ReactNode> = {
-    overview: <LuxeOverview property={property} />,
-    gallery: <LuxeGallery images={property.galleryImages} name={property.name} />,
-    units: (
-      <LuxeUnits units={property.units} currency={property.currency} propertySlug={property.slug} />
+    overview: <LuxeOverview property={property} copy={copy('overview')} />,
+    gallery: (
+      <LuxeGallery images={property.galleryImages} name={property.name} copy={copy('gallery')} />
     ),
-    floorplans: <LuxeFloorPlans floorPlans={property.floorPlans} />,
-    location: <LuxeLocation address={property.address} amenities={property.amenities} />,
-    construction: <LuxeConstruction updates={property.constructionUpdates} />,
-    booking: <LuxeBooking property={property} />,
+    units: (
+      <LuxeUnits
+        units={property.units}
+        currency={property.currency}
+        propertySlug={property.slug}
+        copy={copy('units')}
+      />
+    ),
+    floorplans: <LuxeFloorPlans floorPlans={property.floorPlans} copy={copy('floorplans')} />,
+    location: (
+      <LuxeLocation address={property.address} amenities={property.amenities} copy={copy('location')} />
+    ),
+    construction: <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />,
+    booking: <LuxeBooking property={property} copy={copy('booking')} />,
   };
 
   return (

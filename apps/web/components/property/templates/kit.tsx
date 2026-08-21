@@ -8,6 +8,7 @@ import type {
   Property, Unit, FloorPlan, Amenity, ConstructionUpdate,
 } from '../../../lib/types';
 import { formatPrice, formatCompletionDate } from '../../../lib/utils';
+import type { SectionCopy } from '../../../lib/branding/theme';
 import { useBooking, useLightbox, useUnits, unitStatus } from './hooks';
 import { Reveal } from './shared';
 
@@ -75,16 +76,20 @@ export function KitHeading({
   index,
   eyebrow,
   title,
+  copy,
   children,
 }: {
   style: KitStyle;
   index: string;
   eyebrow: string;
   title: string;
+  /** Developer overrides. Blank fields fall through to the wording above. */
+  copy?: SectionCopy;
   children?: React.ReactNode;
 }) {
   const t = tone(style);
   const numbered = style.headingKind === 'numbered';
+  const shownTitle = copy?.heading?.trim() || title;
 
   return (
     <div className={`mb-12 ${numbered ? `border-t ${t.border} pt-8` : ''}`}>
@@ -109,8 +114,25 @@ export function KitHeading({
               letterSpacing: 'var(--tpl-heading-tracking)',
             }}
           >
-            {title}
+            {shownTitle}
           </h2>
+          {copy?.body && (
+            <p className={`mt-4 max-w-[60ch] text-[16px] leading-relaxed ${t.body}`}>{copy.body}</p>
+          )}
+          {copy?.ctaLabel && copy?.ctaHref && (
+            <a
+              href={copy.ctaHref}
+              // Developer-supplied destinations can be off-site, so never hand
+              // the target window a reference back to this page.
+              {...(/^https?:/i.test(copy.ctaHref)
+                ? { target: '_blank', rel: 'noreferrer noopener' }
+                : {})}
+              className={`mt-6 inline-flex items-center gap-2 ${style.radius} px-6 py-3 text-[13px] font-medium uppercase tracking-[0.12em] transition-opacity hover:opacity-90`}
+              style={{ background: 'var(--brand)', color: 'var(--brand-on)' }}
+            >
+              {copy.ctaLabel}
+            </a>
+          )}
         </div>
         {children}
       </div>
@@ -120,7 +142,7 @@ export function KitHeading({
 
 // ─── Overview ───────────────────────────────────────────────────────────────
 
-export function KitOverview({ property, style }: { property: Property; style: KitStyle }) {
+export function KitOverview({ property, style, copy }: { property: Property; style: KitStyle; copy?: SectionCopy }) {
   const t = tone(style);
   // Derive from the units we actually have rather than trusting totalUnits /
   // availableUnits, which the API leaves null on developments whose counts were
@@ -149,6 +171,7 @@ export function KitOverview({ property, style }: { property: Property; style: Ki
         index="01"
         eyebrow="The development"
         title={property.tagline || property.name}
+        copy={copy}
       />
 
       <div className="grid gap-14 lg:grid-cols-[1.15fr_1fr]">
@@ -209,10 +232,12 @@ export function KitGallery({
   images,
   name,
   style,
+  copy,
 }: {
   images: string[];
   name: string;
   style: KitStyle;
+  copy?: SectionCopy;
 }) {
   const lb = useLightbox(images);
   if (!images?.length) return null;
@@ -221,7 +246,8 @@ export function KitGallery({
 
   return (
     <div>
-      <KitHeading style={style} index="02" eyebrow="Gallery" title="Inside the development." />
+      <KitHeading style={style} index="02" eyebrow="Gallery" title="Inside the development."
+        copy={copy} />
 
       <div
         className={
@@ -286,11 +312,13 @@ export function KitUnits({
   currency,
   propertySlug,
   style,
+  copy,
 }: {
   units: Unit[];
   currency: string;
   propertySlug: string;
   style: KitStyle;
+  copy?: SectionCopy;
 }) {
   const t = tone(style);
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
@@ -319,7 +347,8 @@ export function KitUnits({
 
   return (
     <div>
-      <KitHeading style={style} index="03" eyebrow="Availability" title="Units & pricing.">
+      <KitHeading style={style} index="03" eyebrow="Availability" title="Units & pricing."
+        copy={copy}>
         {Filter}
       </KitHeading>
 
@@ -421,13 +450,14 @@ export function KitUnits({
 
 // ─── Floor plans ────────────────────────────────────────────────────────────
 
-export function KitFloorPlans({ floorPlans, style }: { floorPlans: FloorPlan[]; style: KitStyle }) {
+export function KitFloorPlans({ floorPlans, style, copy }: { floorPlans: FloorPlan[]; style: KitStyle; copy?: SectionCopy }) {
   const t = tone(style);
   if (!floorPlans?.length) return null;
 
   return (
     <div>
-      <KitHeading style={style} index="04" eyebrow="Layouts" title="Floor plans." />
+      <KitHeading style={style} index="04" eyebrow="Layouts" title="Floor plans."
+        copy={copy} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {floorPlans.map((plan, i) => (
           <motion.div
@@ -460,15 +490,18 @@ export function KitLocation({
   address,
   amenities,
   style,
+  copy,
 }: {
   address: Property['address'];
   amenities: Amenity[];
   style: KitStyle;
+  copy?: SectionCopy;
 }) {
   const t = tone(style);
   return (
     <div>
-      <KitHeading style={style} index="05" eyebrow="Location" title="Where it stands." />
+      <KitHeading style={style} index="05" eyebrow="Location" title="Where it stands."
+        copy={copy} />
       <div className="grid gap-12 lg:grid-cols-2">
         <Reveal>
           <p className={`flex items-start gap-3 text-[17px] leading-relaxed ${t.body}`}>
@@ -496,13 +529,14 @@ export function KitLocation({
 
 // ─── Construction ───────────────────────────────────────────────────────────
 
-export function KitConstruction({ updates, style }: { updates: ConstructionUpdate[]; style: KitStyle }) {
+export function KitConstruction({ updates, style, copy }: { updates: ConstructionUpdate[]; style: KitStyle; copy?: SectionCopy }) {
   const t = tone(style);
   if (!updates?.length) return null;
 
   return (
     <div>
-      <KitHeading style={style} index="06" eyebrow="Progress" title="Construction updates." />
+      <KitHeading style={style} index="06" eyebrow="Progress" title="Construction updates."
+        copy={copy} />
       <div className={`border-t ${t.border}`}>
         {updates.map((u, i) => (
           <motion.div
@@ -532,7 +566,7 @@ export function KitConstruction({ updates, style }: { updates: ConstructionUpdat
 
 // ─── Booking ────────────────────────────────────────────────────────────────
 
-export function KitBooking({ property, style }: { property: Property; style: KitStyle }) {
+export function KitBooking({ property, style, copy }: { property: Property; style: KitStyle; copy?: SectionCopy }) {
   const t = tone(style);
   const b = useBooking(property);
 
@@ -554,7 +588,8 @@ export function KitBooking({ property, style }: { property: Property; style: Kit
 
   return (
     <div>
-      <KitHeading style={style} index="07" eyebrow="Enquire" title="Arrange a viewing." />
+      <KitHeading style={style} index="07" eyebrow="Enquire" title="Arrange a viewing."
+        copy={copy} />
 
       <form onSubmit={b.onSubmit} className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
         <div>

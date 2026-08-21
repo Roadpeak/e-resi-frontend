@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Property } from '../../../lib/types';
 import type { MiniSiteTemplate } from '../../../lib/branding/templates';
+import type { SectionCopy } from '../../../lib/branding/theme';
 import { TemplateHero } from './TemplateHero';
 import {
   KitBooking, KitConstruction, KitFloorPlans, KitGallery, KitLocation, KitOverview, KitUnits,
@@ -185,6 +186,7 @@ export function KitTemplate({
   overlay = true,
   sections,
   whiteLabel,
+  sectionCopy,
 }: {
   template: MiniSiteTemplate;
   property: Property;
@@ -192,25 +194,47 @@ export function KitTemplate({
   overlay?: boolean;
   sections: string[];
   whiteLabel?: boolean;
+  /** Developer wording keyed by section id. */
+  sectionCopy?: Record<string, SectionCopy>;
 }) {
+  const copy = (id: string) => sectionCopy?.[id] ?? {};
   const style = KIT_STYLES[template.key] ?? KIT_STYLES.EDITORIAL;
   const ground = GROUNDS[template.key] ?? '#ffffff';
 
   const blocks: Record<string, React.ReactNode> = {
-    overview: <KitOverview property={property} style={style} />,
-    gallery: <KitGallery images={property.galleryImages} name={property.name} style={style} />,
+    overview: <KitOverview property={property} style={style} copy={copy('overview')} />,
+    gallery: (
+      <KitGallery
+        images={property.galleryImages}
+        name={property.name}
+        style={style}
+        copy={copy('gallery')}
+      />
+    ),
     units: (
       <KitUnits
         units={property.units}
         currency={property.currency}
         propertySlug={property.slug}
         style={style}
+        copy={copy('units')}
       />
     ),
-    floorplans: <KitFloorPlans floorPlans={property.floorPlans} style={style} />,
-    location: <KitLocation address={property.address} amenities={property.amenities} style={style} />,
-    construction: <KitConstruction updates={property.constructionUpdates} style={style} />,
-    booking: <KitBooking property={property} style={style} />,
+    floorplans: (
+      <KitFloorPlans floorPlans={property.floorPlans} style={style} copy={copy('floorplans')} />
+    ),
+    location: (
+      <KitLocation
+        address={property.address}
+        amenities={property.amenities}
+        style={style}
+        copy={copy('location')}
+      />
+    ),
+    construction: (
+      <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />
+    ),
+    booking: <KitBooking property={property} style={style} copy={copy('booking')} />,
   };
 
   const pad = template.airy ? 'py-24 sm:py-32' : 'py-16 sm:py-20';
