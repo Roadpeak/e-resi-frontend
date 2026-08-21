@@ -70,7 +70,7 @@ export function TemplateSection({
           <Reveal className="mb-10">
             <p
               className="text-[11px] font-semibold uppercase tracking-[0.18em]"
-              style={{ color: 'var(--brand-color)' }}
+              style={{ color: 'var(--brand)' }}
             >
               {labelFor(id)}
             </p>

@@ -39,7 +39,7 @@ function CtaRow({
       <a
         href={BOOKING_ANCHOR}
         className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-medium transition-transform hover:scale-[1.02]"
-        style={{ background: 'var(--brand-color)', color: 'var(--brand-on-color)' }}
+        style={{ background: 'var(--brand)', color: 'var(--brand-on)' }}
       >
         {ctaLabel}
         <ArrowRight size={16} />
@@ -80,7 +80,7 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
           {[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
         </motion.p>
 
-        <h1 className="text-[42px] font-semibold leading-[1.05] tracking-tight text-white sm:text-[62px]">
+        <h1 className="text-[42px] leading-[1.08] tracking-tight text-white sm:text-[62px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
           <RisingWords text={property.name} delay={0.15} />
         </h1>
 
@@ -121,7 +121,7 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
         <div className="relative z-10 flex h-full items-center">
           <div className="mx-auto w-full max-w-7xl px-6 sm:px-10">
             <div className="max-w-2xl">
-              <h1 className="text-[40px] font-semibold leading-[1.05] tracking-tight text-white sm:text-[64px]">
+              <h1 className="text-[40px] leading-[1.08] tracking-tight text-white sm:text-[64px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
                 <RisingWords text={property.name} />
               </h1>
               {property.tagline && (
@@ -186,10 +186,21 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
           still fits one line on a phone — an overflowing wordmark is the one
           way this treatment fails badly.
         */}
-        <div className="absolute inset-x-0 top-[12%] z-10 px-4">
+        {/*
+          Sized off the name's length, and leading kept above 1: the rise-in
+          animation masks each word with overflow-hidden, and a sub-1 line
+          height makes that mask shorter than the glyphs it contains, which
+          shears the tops off. mix-blend is dropped for the same reason it
+          looked wrong — over a dark photograph it erased the word entirely.
+        */}
+        <div className="absolute inset-x-0 top-[16%] z-10 px-4">
           <h1
-            className="text-center font-semibold leading-[0.88] tracking-[-0.03em] text-white/95 mix-blend-overlay"
-            style={{ fontSize: 'clamp(2.75rem, 13vw, 11rem)' }}
+            className="text-center leading-[1.02] tracking-[-0.03em] text-white"
+            style={{
+              fontFamily: 'var(--tpl-font-heading)',
+              fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+              fontSize: `clamp(2.25rem, ${Math.max(5, 105 / Math.max(property.name.length, 9))}vw, 9rem)`,
+            }}
           >
             <RisingWords text={property.name} />
           </h1>
@@ -230,14 +241,30 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
     <section className="relative w-full bg-[#0b0b0c]">
       <div className="relative h-[92vh] min-h-[580px] w-full overflow-hidden">
         <HeroMedia property={property} />
-        {overlay && <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-[#0b0b0c]" />}
+        {/*
+          Weighted to the base rather than flat: the name sits in the upper
+          third and needs the photograph visible behind it, while the copy and
+          buttons at the bottom need a ground to read against. A flat scrim
+          dark enough for the copy erased the building entirely.
+        */}
+        {overlay && (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[#0b0b0c]" />
+        )}
 
-        <div className="absolute inset-x-0 top-[14%] z-10 px-6">
+        {/*
+          Sized off the name's own length rather than a fixed clamp: a fixed
+          one either clips a long name or leaves a short one looking timid.
+          leading-[1.05] with py gives the descenders room — at 0.9 the words
+          were being cut by the overflow-hidden that drives the rise-in.
+        */}
+        <div className="absolute inset-x-0 top-[18%] z-10 px-6">
           <h1
-            className="text-center font-semibold leading-[0.9] tracking-[-0.03em] text-white"
-            style={{ fontSize: 'clamp(2.5rem, 10vw, 8.5rem)' }}
+            className="text-center font-light leading-[1.05] tracking-[-0.03em] text-white"
+            style={{
+              fontSize: `clamp(2rem, ${Math.max(4.5, 92 / Math.max(property.name.length, 8))}vw, 7.5rem)`,
+            }}
           >
-            <RisingWords text={property.name} />
+            <RisingWords text={property.name} wordClassName="pb-[0.08em]" />
           </h1>
         </div>
 
@@ -265,8 +292,22 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
             {property.tagline && (
               <p className="max-w-md text-[16px] leading-relaxed text-white/70">{property.tagline}</p>
             )}
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <CtaRow ctaLabel={ctaLabel} onDark />
+            {/* Squared, hairline buttons rather than the shared pill row — the
+                pills read as a product UI against this template's typography. */}
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <a
+                href="#booking"
+                className="px-8 py-4 text-[12px] uppercase tracking-[0.16em] transition-opacity hover:opacity-90"
+                style={{ background: 'var(--brand, #ffffff)', color: 'var(--brand-on, #0b0b0c)' }}
+              >
+                {ctaLabel ?? 'Book a viewing'}
+              </a>
+              <a
+                href="#gallery"
+                className="border border-white/30 px-8 py-4 text-[12px] uppercase tracking-[0.16em] text-white transition-colors hover:bg-white/10"
+              >
+                View gallery
+              </a>
             </div>
             {/* Same figures, in the flow, for the phone layout the glass cards
                 are hidden on. */}
@@ -301,7 +342,7 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
 
           <div className="relative z-10 flex h-full items-center px-8 sm:px-14">
             <div className="max-w-xl">
-              <h1 className="text-[36px] font-semibold leading-[1.08] tracking-tight text-white sm:text-[54px]">
+              <h1 className="text-[36px] leading-[1.1] tracking-tight text-white sm:text-[54px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
                 <RisingWords text={property.name} />
               </h1>
               {property.tagline && (
@@ -347,7 +388,7 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
                   <p className="mt-0.5 text-[12px] text-neutral-500">
                     {getStatusLabel(property.status)}
                   </p>
-                  <p className="mt-1 text-[14px] font-semibold" style={{ color: 'var(--brand-color)' }}>
+                  <p className="mt-1 text-[14px] font-semibold" style={{ color: 'var(--brand)' }}>
                     {formatPrice(property.priceFrom, property.currency)}
                   </p>
                 </div>
@@ -379,7 +420,7 @@ function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
           >
             {[property.address?.neighborhood, property.address?.city].filter(Boolean).join(' · ')}
           </motion.p>
-          <h1 className="max-w-3xl text-[38px] font-semibold leading-[1.06] tracking-tight text-white sm:text-[58px]">
+          <h1 className="max-w-3xl text-[38px] leading-[1.1] tracking-tight text-white sm:text-[58px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
             <RisingWords text={property.name} />
           </h1>
           {property.tagline && (
@@ -443,7 +484,7 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
               {getStatusLabel(property.status)}
             </motion.span>
 
-            <h1 className="max-w-xl text-[36px] font-semibold leading-[1.06] tracking-tight text-white sm:text-[54px]">
+            <h1 className="max-w-xl text-[36px] leading-[1.1] tracking-tight text-white sm:text-[54px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
               <RisingWords text={property.name} />
             </h1>
             {property.tagline && (

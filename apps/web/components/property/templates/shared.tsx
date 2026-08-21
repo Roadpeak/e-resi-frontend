@@ -115,7 +115,10 @@ export function Reveal({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
+  // A small negative margin only: a large one delays the reveal until the
+  // block is well inside the viewport, which on a fast scroll reads as content
+  // arriving late rather than as a considered entrance.
+  const inView = useInView(ref, { once: true, margin: '-40px' });
 
   return (
     <motion.div
@@ -123,7 +126,7 @@ export function Reveal({
       className={className}
       initial={{ opacity: 0, y }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
@@ -133,9 +136,9 @@ export function Reveal({
 /**
  * Words rising into place, staggered.
  *
- * Used for template headlines. Splits on whitespace and animates per word,
- * each in its own overflow-hidden line so the words appear to rise out of the
- * page rather than fade in place.
+ * Used for template headlines. Splits on whitespace and animates each word
+ * rising a fraction of its own size while fading in, so a long name staggers
+ * into place without any box that could clip it.
  */
 export function RisingWords({
   text,
@@ -152,19 +155,29 @@ export function RisingWords({
   return (
     <span className={className}>
       {words.map((word, i) => (
-        <span key={`${word}-${i}`} className="inline-block overflow-hidden align-bottom">
-          <motion.span
-            className={`inline-block ${wordClassName ?? ''}`}
-            initial={{ y: '110%' }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.9, delay: delay + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {word}
-            {/* A trailing space inside the animated span keeps word spacing
-                intact; a gap on the parent would collapse at line breaks. */}
-            {i < words.length - 1 ? ' ' : ''}
-          </motion.span>
-        </span>
+        // No per-word clipping mask.
+        //
+        // The mask version wrapped each word in an overflow-hidden box sized to
+        // the line box, which at display sizes is shorter than the glyphs it
+        // contains — it sheared the tops off, reducing an 82px headline to
+        // slivers. Padding the mask only traded that for a clipped descender:
+        // any box tight enough to hide the word before it rises is also tight
+        // enough to cut it.
+        //
+        // Rising with a fade reads the same at a glance and cannot clip,
+        // because nothing is ever hidden by a box.
+        <motion.span
+          key={`${word}-${i}`}
+          className={`inline-block ${wordClassName ?? ''}`}
+          initial={{ y: '0.35em', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.85, delay: delay + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {word}
+          {/* A trailing space inside the animated span keeps word spacing
+              intact; a gap on the parent would collapse at line breaks. */}
+          {i < words.length - 1 ? ' ' : ''}
+        </motion.span>
       ))}
     </span>
   );
@@ -209,7 +222,7 @@ export function Eyebrow({
   return (
     <p
       className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${className ?? ''}`}
-      style={{ color: 'var(--brand-color)' }}
+      style={{ color: 'var(--brand)' }}
     >
       {children}
     </p>

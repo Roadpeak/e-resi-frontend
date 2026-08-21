@@ -13,8 +13,10 @@ import { PropertyLocation } from '../../../../components/property/PropertyLocati
 import { PropertyConstruction } from '../../../../components/property/PropertyConstruction';
 import { PropertyBooking } from '../../../../components/property/PropertyBooking';
 import { resolveBranding, themeVars, type BrandingSource } from '../../../../lib/branding/theme';
-import { surfaceTokens, surfaceVars } from '../../../../lib/branding/templates';
+import { surfaceTokens, surfaceVars, templateFontVars } from '../../../../lib/branding/templates';
 import { TemplateHero } from '../../../../components/property/templates/TemplateHero';
+import { LuxeDarkTemplate } from '../../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
+import { KitTemplate } from '../../../../components/property/templates/KitTemplate';
 import { TemplateSection } from '../../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../../lib/types';
@@ -106,6 +108,42 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
   const template = branding.template;
   const surface = surfaceTokens(template.surface);
   const visible = branding.sections.filter((id) => blocks[id]);
+
+  // Mirrors the public page — a preview that arranged the page differently
+  // would be worse than no preview.
+  if (template.key !== 'CLASSIC') {
+    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : null;
+    return (
+      <main
+        style={{
+          ...themeVars(branding.theme),
+          ...templateFontVars(template),
+          // The template's own face wins over the developer's brand pairing:
+          // its type is part of the design, not a default to be overridden.
+          fontFamily: 'var(--tpl-font-body)',
+        }}
+      >
+        {Rendered ? (
+          <Rendered
+            property={property}
+            ctaLabel={branding.ctaLabel}
+            overlay={branding.heroOverlay}
+            sections={branding.sections}
+            whiteLabel={branding.whiteLabel}
+          />
+        ) : (
+          <KitTemplate
+            template={template}
+            property={property}
+            ctaLabel={branding.ctaLabel}
+            overlay={branding.heroOverlay}
+            sections={branding.sections}
+            whiteLabel={branding.whiteLabel}
+          />
+        )}
+      </main>
+    );
+  }
 
   return (
     <main

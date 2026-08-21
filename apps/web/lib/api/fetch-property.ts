@@ -43,7 +43,18 @@ function normaliseProperty(raw: any): Property {
       country: raw.country ?? 'Kenya',
       coordinates: { lat: raw.latitude ?? 0, lng: raw.longitude ?? 0 },
     },
-    availableUnits: raw.availableUnits ?? raw._count?.units ?? 0,
+    // Counted from the units themselves when the denormalised columns are
+    // null, which they are on every development whose counts were never
+    // backfilled. Coercing straight to 0 made a page advertise "0 available"
+    // beside a unit list showing four for sale.
+    availableUnits:
+      raw.availableUnits
+      ?? (Array.isArray(raw.units)
+        ? raw.units.filter((u: any) => String(u?.status ?? '').toLowerCase() === 'available').length
+        : undefined)
+      ?? raw._count?.units
+      ?? 0,
+    totalUnits: raw.totalUnits ?? (Array.isArray(raw.units) ? raw.units.length : 0),
     currency: raw.currency ?? 'KES',
     // Kept as the API sends it (UPPER_SNAKE). It used to be lowercased here,
     // which is why the frontend grew a parallel status vocabulary that no

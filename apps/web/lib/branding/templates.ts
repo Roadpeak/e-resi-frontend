@@ -35,6 +35,26 @@ export interface MiniSiteTemplate {
   sectionHeadings: boolean;
   /** Generous vertical spacing between sections. */
   airy: boolean;
+  /**
+   * The template's own typography.
+   *
+   * A template is a designed thing, and its type is part of that design — the
+   * reference layouts are not interchangeable with each other's faces. This
+   * takes precedence over the developer's brand font, which continues to apply
+   * on CLASSIC where no template opinion exists.
+   */
+  fonts: {
+    /** Display face for headings. */
+    heading: string;
+    /** Text face for body copy. */
+    body: string;
+    /** Heading weight — light display type is central to several of these. */
+    headingWeight: number;
+    /** Tracking for large headings, in em. */
+    headingTracking: string;
+    /** Uppercase small-caps labels, as the editorial layouts use. */
+    upperLabels: boolean;
+  };
 }
 
 /**
@@ -52,6 +72,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: false,
     sectionHeadings: false,
     airy: false,
+    fonts: {
+      heading: 'var(--font-jakarta), system-ui, sans-serif',
+      body: 'var(--font-jakarta), system-ui, sans-serif',
+      headingWeight: 600,
+      headingTracking: '-0.02em',
+      upperLabels: false,
+    },
   },
   {
     key: 'EDITORIAL',
@@ -63,6 +90,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: true,
     sectionHeadings: true,
     airy: true,
+    fonts: {
+      heading: 'var(--font-playfair), Georgia, serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 400,
+      headingTracking: '-0.01em',
+      upperLabels: true,
+    },
   },
   {
     key: 'CONFIDENT',
@@ -74,6 +108,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: true,
     sectionHeadings: true,
     airy: false,
+    fonts: {
+      heading: 'var(--font-archivo), system-ui, sans-serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 700,
+      headingTracking: '-0.03em',
+      upperLabels: false,
+    },
   },
   {
     key: 'STATEMENT',
@@ -85,6 +126,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: false,
     sectionHeadings: true,
     airy: true,
+    fonts: {
+      heading: 'var(--font-archivo), system-ui, sans-serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 700,
+      headingTracking: '-0.04em',
+      upperLabels: true,
+    },
   },
   {
     key: 'LUXE_DARK',
@@ -96,6 +144,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: true,
     sectionHeadings: true,
     airy: true,
+    fonts: {
+      heading: 'var(--font-jakarta), system-ui, sans-serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 300,
+      headingTracking: '-0.02em',
+      upperLabels: true,
+    },
   },
   {
     key: 'SHOWCASE',
@@ -107,6 +162,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: true,
     sectionHeadings: true,
     airy: false,
+    fonts: {
+      heading: 'var(--font-jakarta), system-ui, sans-serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 600,
+      headingTracking: '-0.02em',
+      upperLabels: false,
+    },
   },
   {
     key: 'ARCHITECTURAL',
@@ -118,6 +180,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: false,
     sectionHeadings: true,
     airy: true,
+    fonts: {
+      heading: 'var(--font-inter), system-ui, sans-serif',
+      body: 'var(--font-inter), system-ui, sans-serif',
+      headingWeight: 400,
+      headingTracking: '-0.02em',
+      upperLabels: true,
+    },
   },
   {
     key: 'WARM_LUXE',
@@ -129,6 +198,13 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     banded: true,
     sectionHeadings: true,
     airy: true,
+    fonts: {
+      heading: 'var(--font-cormorant), Georgia, serif',
+      body: 'var(--font-jakarta), system-ui, sans-serif',
+      headingWeight: 400,
+      headingTracking: '-0.01em',
+      upperLabels: true,
+    },
   },
 ];
 
@@ -188,6 +264,15 @@ export function surfaceTokens(surface: TemplateSurface): SurfaceTokens {
  * can opt in gradually — anything that reads `--surface-text` follows the
  * template, anything that does not keeps its current appearance.
  */
+export function templateFontVars(template: MiniSiteTemplate): Record<string, string> {
+  return {
+    '--tpl-font-heading': template.fonts.heading,
+    '--tpl-font-body': template.fonts.body,
+    '--tpl-heading-weight': String(template.fonts.headingWeight),
+    '--tpl-heading-tracking': template.fonts.headingTracking,
+  };
+}
+
 export function surfaceVars(surface: TemplateSurface): Record<string, string> {
   const t = surfaceTokens(surface);
   return {

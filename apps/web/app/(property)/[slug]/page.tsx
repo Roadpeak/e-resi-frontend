@@ -15,8 +15,10 @@ import { PropertyConstruction } from '../../../components/property/PropertyConst
 import { PropertyBooking } from '../../../components/property/PropertyBooking';
 import { PropertyRentListings } from '../../../components/property/PropertyRentListings';
 import { resolveBranding, themeVars, type BrandingSource } from '../../../lib/branding/theme';
-import { surfaceTokens, surfaceVars } from '../../../lib/branding/templates';
+import { surfaceTokens, surfaceVars, templateFontVars } from '../../../lib/branding/templates';
 import { TemplateHero } from '../../../components/property/templates/TemplateHero';
+import { LuxeDarkTemplate } from '../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
+import { KitTemplate } from '../../../components/property/templates/KitTemplate';
 import { TemplateSection } from '../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../lib/types';
@@ -138,6 +140,44 @@ export default async function PropertyPage({ params }: Props) {
   // numbering by position in `branding.sections` would alternate on hidden
   // ones too and produce two identical grounds in a row.
   const visible = branding.sections.filter((id) => blocks[id]);
+
+  // Templates that own the whole page render their own nav, sections and
+  // footer — the shared sections are built for a white ground and are
+  // unreadable on this one, so they are replaced rather than re-skinned.
+  if (template.key !== 'CLASSIC') {
+    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : null;
+    return (
+      <main
+        style={{
+          ...themeVars(branding.theme),
+          ...templateFontVars(template),
+          // The template's own face wins over the developer's brand pairing:
+          // its type is part of the design, not a default to be overridden.
+          fontFamily: 'var(--tpl-font-body)',
+        }}
+      >
+        <TrackPageView propertyId={property.id} />
+        {Rendered ? (
+          <Rendered
+            property={property}
+            ctaLabel={branding.ctaLabel}
+            overlay={branding.heroOverlay}
+            sections={branding.sections}
+            whiteLabel={branding.whiteLabel}
+          />
+        ) : (
+          <KitTemplate
+            template={template}
+            property={property}
+            ctaLabel={branding.ctaLabel}
+            overlay={branding.heroOverlay}
+            sections={branding.sections}
+            whiteLabel={branding.whiteLabel}
+          />
+        )}
+      </main>
+    );
+  }
 
   return (
     <main
