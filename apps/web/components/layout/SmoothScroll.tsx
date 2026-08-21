@@ -1,28 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * The element the proxy is registered against. It must also be the default
- * scroller, because none of the pinned sections pass `scroller` themselves —
- * without the default they would keep measuring the real viewport and ignore
- * the proxy entirely.
- *
- * Set at module scope rather than inside the effect: SmoothScroll wraps the
- * pages, so React runs the pinned sections' effects BEFORE this component's.
- * A trigger built during that earlier pass would otherwise be created against
- * the unproxied viewport and never corrected.
- */
-if (typeof document !== 'undefined') {
-  ScrollTrigger.defaults({ scroller: document.body });
-}
-
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
+  const lenisRef = useRef<Lenis | null>(null);
+  const pathname = usePathname();
+
   useEffect(() => {
     // Own scroll restoration here rather than in the pinned section. A restored
     // mid-page offset is measured by every pin built during mount, and Lenis
@@ -40,40 +29,28 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       smoothWheel: true,
     });
 
+    lenisRef.current = lenis;
+
     // Start Lenis at the top too, immediately and without animating, so its
     // internal position matches the window we just reset.
     lenis.scrollTo(0, { immediate: true });
 
-    // Teach ScrollTrigger to read and write scroll position THROUGH Lenis.
+    // No scrollerProxy here, deliberately.
     //
-    // Without this, ScrollTrigger and Lenis each believe they own the scroll.
-    // Subscribing to Lenis's scroll event (as this did before) only tells
-    // ScrollTrigger *when* to update, never how to read or set the position —
-    // so as soon as a pin engages, ScrollTrigger writes a scroll value Lenis
-    // does not know about, Lenis carries on animating toward its own target,
-    // and the two disagree by however far Lenis had left to travel. That
-    // disagreement is what tore the pinned sections: the pin releases at a
-    // position the page is not actually at, so the section below slides up
-    // mid-animation.
-    ScrollTrigger.scrollerProxy(document.body, {
-      scrollTop(value) {
-        if (arguments.length && typeof value === 'number') {
-          // ScrollTrigger is setting position (snapping, or restoring around a
-          // refresh) — route it through Lenis so its internal target moves too.
-          lenis.scrollTo(value, { immediate: true });
-          return;
-        }
-        // Report the animated position, which is what is actually painted this
-        // frame. Reporting the target instead would run pins ahead of the view.
-        return lenis.animatedScroll;
-      },
-      getBoundingClientRect() {
-        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
-      },
-      // Lenis transforms the page rather than using native scrolling, so pinned
-      // elements must be positioned fixed rather than transformed.
-      pinType: 'fixed',
-    });
+    // In this configuration Lenis drives the NATIVE window scroll — it eases
+    // window.scrollY rather than transforming the page (document.body has no
+    // transform, and window.scrollY genuinely moves). ScrollTrigger's default
+    // viewport handling is therefore already correct.
+    //
+    // An earlier attempt proxied document.body and made it the default
+    // scroller. That was wrong: the page scrolls on documentElement, so
+    // document.body.scrollTop is permanently 0 while window.scrollY is not.
+    // ScrollTrigger then read position from an element that never moves, and
+    // the pinned sections froze mid-animation once the two diverged — the
+    // hero's video stopped scrubbing while its pin stayed engaged.
+    //
+    // Telling ScrollTrigger *when* to re-read is all that is needed, and that
+    // is what the scroll subscription below does.
 
     // Hook Lenis into GSAP's ticker so ScrollTrigger syncs perfectly
     const raf = (time: number) => lenis.raf(time * 1000);
@@ -119,12 +96,39 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       window.removeEventListener('load', onLoad);
       ScrollTrigger.removeEventListener('refresh', onRefresh);
       gsap.ticker.remove(raf);
-      // Drop the proxy before destroying Lenis, or ScrollTrigger keeps reading
-      // scroll position from an instance that no longer exists.
-      ScrollTrigger.scrollerProxy(document.body, undefined);
+      lenisRef.current = null;
       lenis.destroy();
     };
   }, []);
+
+  // A client-side navigation tears down the previous page's pinned sections and
+  // mounts new ones, but this component does not remount — so nothing reset the
+  // scroll position or re-measured the new page's triggers. Lenis kept the old
+  // offset while the fresh pins were measured against it, which is why leaving
+  // the page and coming back reproduced the glitch without a reload.
+  //
+  // Skips the very first run: the mount effect above already does both, and
+  // refreshing twice during mount is wasted work.
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
+    lenisRef.current?.scrollTo(0, { immediate: true });
+
+    // Wait for the incoming page's own effects to build their triggers, and for
+    // the browser to lay the new content out, before measuring. Two rAFs: the
+    // first still runs before paint, the second after it.
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        lenisRef.current?.resize();
+        ScrollTrigger.refresh();
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [pathname]);
 
   return <>{children}</>;
 }

@@ -118,7 +118,15 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
   if (properties.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="relative w-full overflow-hidden bg-ink">
+    <section
+      ref={sectionRef}
+      className="relative w-full overflow-hidden bg-ink"
+      // Own compositing layer — same reason as the hero: while pinned this is
+      // position:fixed at a sub-pixel offset, and without its own layer the
+      // browser can stop painting it after a client-side navigation, leaving a
+      // blank viewport while the DOM still measures correctly.
+      style={{ willChange: 'transform' }}
+    >
       {/* Section header — above the scroll track */}
       <div ref={titleRef} className="absolute top-12 left-8 sm:left-14 lg:left-20 z-10">
         <p className="text-stone/40 text-[10px] tracking-[0.25em] uppercase mb-3">Featured Developments</p>

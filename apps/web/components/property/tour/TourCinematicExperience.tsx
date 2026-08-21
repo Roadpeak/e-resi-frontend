@@ -119,11 +119,10 @@ export function TourCinematicExperience({ property }: Props) {
     // loadedmetadata and canplay can both fire; without this the timeline and
     // ScrollTrigger get built twice and fight each other.
     let initialised = false;
-    // Held so the effect's own cleanup can dispose them — returning a cleanup
-    // from setup() went nowhere, since setup runs as an event handler, so every
-    // scene switch leaked its context and its seek listeners.
+    // Held so the effect's own cleanup can revert it — returning a cleanup from
+    // setup() went nowhere, since setup runs as an event handler, so every
+    // scene switch leaked its context.
     let ctx: gsap.Context | null = null;
-    let cleanupSeek: (() => void) | null = null;
 
     const setup = () => {
       if (initialised) return;
@@ -140,34 +139,20 @@ export function TourCinematicExperience({ property }: Props) {
         });
         gsap.set(phase2Ref.current, { autoAlpha: 0, y: 30 });
 
-        // Seeking is asynchronous, so a currentTime assignment made while the
-        // decoder is still busy is dropped. Queue the newest requested time and
-        // flush it when the decoder frees up, so the frame converges on where
-        // the scroll actually is instead of drifting behind it.
-        let pendingTime = -1;
-        let seeking = false;
+        // Seeking is asynchronous: assigning currentTime mid-seek is dropped.
+        // Rather than track "am I mid-seek?" in a flag — which strands the
+        // scrub permanently if an event is missed, freezing the video while
+        // the decoder sits idle — read the decoder's own `seeking` property at
+        // the moment of use, so it can never go stale.
+        //
+        // Driven straight from onUpdate rather than gsap.ticker: a ticker
+        // callback registered inside gsap.context() is torn down when that
+        // context reverts, which left the video frozen with the pin running.
         const minDelta = 1 / 30;
-
-        const flush = () => {
-          if (pendingTime < 0) {
-            seeking = false;
-            return;
-          }
-          seeking = true;
-          const t = pendingTime;
-          pendingTime = -1;
-          video.currentTime = t;
-        };
-
-        // 'error' as well as 'seeked': a seek into an unbuffered gap never
-        // fires 'seeked', which would otherwise wedge `seeking` true forever
-        // and freeze the video against further scrolling.
-        const onSeeked = () => flush();
-        video.addEventListener('seeked', onSeeked);
-        video.addEventListener('error', onSeeked);
-        cleanupSeek = () => {
-          video.removeEventListener('seeked', onSeeked);
-          video.removeEventListener('error', onSeeked);
+        const seekTo = (time: number) => {
+          if (video.seeking) return;
+          if (Math.abs(time - video.currentTime) < minDelta) return;
+          video.currentTime = time;
         };
 
         ScrollTrigger.create({
@@ -179,14 +164,7 @@ export function TourCinematicExperience({ property }: Props) {
             const p = self.progress;
             setProgress(p);
 
-            const target = p * duration;
-            // Compare against what the video is actually showing rather than a
-            // time merely requested, so a dropped seek gets retried.
-            const shown = pendingTime >= 0 ? pendingTime : video.currentTime;
-            if (Math.abs(target - shown) >= minDelta) {
-              pendingTime = target;
-              if (!seeking) flush();
-            }
+            seekTo(p * duration);
 
             // Phase 1 — property identity fades out 0.25 → 0.38
             const p1out = Math.max(0, Math.min(1, (p - 0.25) / 0.13));
@@ -219,18 +197,20 @@ export function TourCinematicExperience({ property }: Props) {
 
     const onMeta = () => setup();
 
+    // NOT { once: true }: setup() bails without initialising when duration is
+    // not known yet, but a one-shot listener is removed either way — so an
+    // event arriving before metadata consumed the only chance to build the
+    // trigger and the scene was left unscrubable. `initialised` makes repeat
+    // calls harmless, and cleanup removes these.
+    video.addEventListener('loadedmetadata', onMeta);
+    video.addEventListener('canplay', onMeta);
+    video.addEventListener('durationchange', onMeta);
     if (video.readyState >= 1) setup();
-    else {
-      video.addEventListener('loadedmetadata', onMeta, { once: true });
-      // Safari occasionally settles on readyState 1 without firing metadata again
-      video.addEventListener('canplay', onMeta, { once: true });
-    }
 
     return () => {
       video.removeEventListener('loadedmetadata', onMeta);
       video.removeEventListener('canplay', onMeta);
-      cleanupSeek?.();
-      cleanupSeek = null;
+      video.removeEventListener('durationchange', onMeta);
       ctx?.revert();
       ctx = null;
       ScrollTrigger.getAll().forEach((t) => t.kill());

@@ -39,9 +39,6 @@ export function HeroSection() {
     if (video.currentTime === 0) video.currentTime = 0.01;
 
     let initialised = false;
-    // Set once the scrub's seek listeners are attached, so cleanup can detach
-    // them even though they are created inside the gsap context below.
-    let cleanupSeek: (() => void) | null = null;
     const onReady = () => {
       // loadedmetadata and canplay can both fire; without this the timeline and
       // ScrollTrigger get built twice and fight each other.
@@ -101,36 +98,21 @@ export function HeroSection() {
         const isMobile = window.matchMedia('(max-width: 767px)').matches;
         const minDelta = isMobile ? 1 / 12 : 1 / 24;
 
-        // Seeking is asynchronous. Assigning currentTime while the decoder is
-        // still seeking is dropped on the floor, so recording the *requested*
-        // time as delivered let the video drift out of sync with the scroll —
-        // which is what desynced the hero when scrubbing back up to the top.
-        // Instead, keep the newest requested time and flush it when the decoder
-        // reports it is free, so the frame always converges on where the scroll
-        // actually is.
-        let pendingTime = -1;
-        let seeking = false;
-
-        const flush = () => {
-          if (pendingTime < 0) {
-            seeking = false;
-            return;
-          }
-          seeking = true;
-          const t = pendingTime;
-          pendingTime = -1;
-          video.currentTime = t;
-        };
-
-        const onSeeked = () => flush();
-        video.addEventListener('seeked', onSeeked);
-        // A seek that cannot be satisfied (buffer gap) fires 'error' rather than
-        // 'seeked'; without this the queue would wedge and the video would stop
-        // responding to scroll entirely.
-        video.addEventListener('error', onSeeked);
-        cleanupSeek = () => {
-          video.removeEventListener('seeked', onSeeked);
-          video.removeEventListener('error', onSeeked);
+        // Seeking is asynchronous: assigning currentTime while the decoder is
+        // still seeking is dropped on the floor. So rather than track "am I
+        // mid-seek?" in a flag — which strands the scrub permanently if an
+        // event is missed, freezing the video while the decoder sits idle —
+        // read the decoder's own `seeking` property at the moment of use. It
+        // cannot go stale, so the next scroll event always re-issues.
+        //
+        // Driven straight from onUpdate rather than gsap.ticker: a ticker
+        // callback registered inside gsap.context() is torn down when that
+        // context reverts, which left the video frozen with the pin still
+        // running. onUpdate fires on every scrub frame anyway.
+        const seekTo = (time: number) => {
+          if (video.seeking) return;
+          if (Math.abs(time - video.currentTime) < minDelta) return;
+          video.currentTime = time;
         };
 
         ScrollTrigger.create({
@@ -142,15 +124,8 @@ export function HeroSection() {
           onUpdate: (self) => {
             const p = self.progress;
 
-            // Video scrub — full duration across full scroll
-            const target = p * duration;
-            // Compare against whatever the video is actually showing, not a
-            // time we merely asked for, so a dropped seek is retried.
-            const shown = pendingTime >= 0 ? pendingTime : video.currentTime;
-            if (Math.abs(target - shown) >= minDelta) {
-              pendingTime = target;
-              if (!seeking) flush();
-            }
+            // Video scrub — full duration across full scroll.
+            seekTo(p * duration);
 
             // ── Phase 1: 0 → 0.28  (headline visible → fades out) ──
             const p1out = Math.max(0, Math.min(1, (p - 0.18) / 0.12)); // fades 0.18→0.30
@@ -226,19 +201,23 @@ export function HeroSection() {
       });
     };
 
-    if (video.readyState >= 1) {
-      onReady();
-    } else {
-      video.addEventListener('loadedmetadata', onReady, { once: true });
-      // Safari can settle at readyState 1 without firing loadedmetadata again.
-      video.addEventListener('canplay', onReady, { once: true });
-    }
+    // NOT { once: true }. onReady bails without initialising when duration is
+    // not known yet, and a one-shot listener is removed whether or not that
+    // happened — so a `canplay` that arrived before metadata consumed the only
+    // chance to build the trigger, and the hero was left with no ScrollTrigger
+    // at all. That is what broke after navigating back to the page: the video
+    // element remounts and reloads, and the retry never came. `initialised`
+    // already makes repeat calls harmless, and cleanup removes these.
+    video.addEventListener('loadedmetadata', onReady);
+    video.addEventListener('canplay', onReady);
+    video.addEventListener('durationchange', onReady);
+    // Already loaded (cached, or a remount that reused the decoded resource).
+    if (video.readyState >= 1) onReady();
 
     return () => {
       video.removeEventListener('loadedmetadata', onReady);
       video.removeEventListener('canplay', onReady);
-      cleanupSeek?.();
-      cleanupSeek = null;
+      video.removeEventListener('durationchange', onReady);
       ctxRef.current?.revert();
       ctxRef.current = null;
     };
@@ -247,7 +226,21 @@ export function HeroSection() {
   const words = ['Experience', 'Living', 'Before', 'You', 'Arrive'];
 
   return (
-    <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-ink">
+    <section
+      ref={sectionRef}
+      className="relative h-screen w-full overflow-hidden bg-ink"
+      // Keep this on its own compositing layer. While pinned, ScrollTrigger
+      // makes the section position:fixed and parks it at a sub-pixel offset
+      // (top: 0.001px). Without its own layer the browser can stop painting
+      // that fixed layer entirely after a client-side navigation — the section
+      // still measures correctly and the scrub keeps running, but the viewport
+      // renders blank white until something forces a repaint.
+      //
+      // `will-change` rather than a translateZ hack: a transform here would
+      // make the section a containing block for its own position:fixed
+      // descendants, which is exactly what ScrollTrigger relies on for pinning.
+      style={{ willChange: 'transform' }}
+    >
 
       {/* ── Scrubbed video ── */}
       {/*
