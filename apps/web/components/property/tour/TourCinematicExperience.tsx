@@ -288,7 +288,7 @@ export function TourCinematicExperience({ property }: Props) {
             className={cn(
               'flex items-center gap-1.5 rounded-xl border backdrop-blur-sm px-3 py-1.5 text-xs transition-all cursor-pointer',
               pickerOpen
-                ? 'border-warm-500/40 bg-warm-500/15 text-warm-300'
+                ? 'border-brand-500/40 bg-brand-500/15 text-brand-300'
                 : 'border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10',
             )}
           >
@@ -341,7 +341,7 @@ export function TourCinematicExperience({ property }: Props) {
                 className={cn(
                   'shrink-0 rounded-full px-3 py-1 text-xs tracking-wide transition-all cursor-pointer',
                   filter === 'all'
-                    ? 'bg-warm-500 text-white'
+                    ? 'bg-brand-600 text-white'
                     : 'border border-white/10 text-white/40 hover:text-white hover:border-white/30',
                 )}
               >
@@ -354,7 +354,7 @@ export function TourCinematicExperience({ property }: Props) {
                   className={cn(
                     'shrink-0 rounded-full px-3 py-1 text-xs tracking-wide transition-all cursor-pointer',
                     filter === cat
-                      ? 'bg-warm-500 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'border border-white/10 text-white/40 hover:text-white hover:border-white/30',
                   )}
                 >
@@ -374,7 +374,7 @@ export function TourCinematicExperience({ property }: Props) {
                       onClick={() => selectScene(scene)}
                       className={cn(
                         'group relative rounded-xl overflow-hidden aspect-video text-left cursor-pointer transition-all duration-200',
-                        isActive ? 'ring-2 ring-warm-400' : 'hover:ring-1 hover:ring-white/30',
+                        isActive ? 'ring-2 ring-brand-400' : 'hover:ring-1 hover:ring-white/30',
                       )}
                     >
                       {/* Thumbnail */}
@@ -393,7 +393,7 @@ export function TourCinematicExperience({ property }: Props) {
 
                       {/* Active indicator */}
                       {isActive && (
-                        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-warm-500">
+                        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-600">
                           <Play size={8} className="fill-white text-white ml-0.5" />
                         </div>
                       )}
@@ -403,7 +403,7 @@ export function TourCinematicExperience({ property }: Props) {
                         <span className={cn(
                           'text-[9px] tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-full',
                           scene.category === 'full_tour'
-                            ? 'bg-warm-500/80 text-white'
+                            ? 'bg-brand-600/80 text-white'
                             : 'bg-black/50 text-white/60',
                         )}>
                           {CATEGORY_LABELS[scene.category]}
@@ -436,7 +436,7 @@ export function TourCinematicExperience({ property }: Props) {
           <span className={cn(
             'text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full',
             activeScene.category === 'full_tour'
-              ? 'bg-warm-500/70 text-white'
+              ? 'bg-brand-600/70 text-white'
               : 'border border-white/15 text-white/40',
           )}>
             {CATEGORY_LABELS[activeScene.category]}
@@ -455,7 +455,7 @@ export function TourCinematicExperience({ property }: Props) {
 
       {/* ── Progress bar ── */}
       <div className="absolute bottom-0 left-0 right-0 z-30 h-px bg-white/10">
-        <div ref={progressBarRef} className="h-full bg-warm-400 origin-left" style={{ transform: 'scaleX(0)' }} />
+        <div ref={progressBarRef} className="h-full bg-brand-400 origin-left" style={{ transform: 'scaleX(0)' }} />
       </div>
 
       {/* ── Scroll hint ── */}
@@ -474,7 +474,7 @@ export function TourCinematicExperience({ property }: Props) {
         ref={phase1Ref}
         className="absolute bottom-16 left-0 right-0 z-20 px-8 sm:px-14 lg:px-20"
       >
-        <div className="w-10 h-px bg-warm-500 mb-6" />
+        <div className="w-10 h-px bg-brand-500 mb-6" />
         <p className="text-white/40 text-xs tracking-[0.2em] uppercase mb-3">
           {property.address.neighborhood} · {property.address.city}
         </p>
@@ -514,7 +514,7 @@ export function TourCinematicExperience({ property }: Props) {
           </Link>
           <Link
             href={`/${property.slug}#booking`}
-            className="inline-flex items-center gap-3 bg-warm-500 hover:bg-warm-400 text-white text-xs tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
+            className="inline-flex items-center gap-3 bg-brand-600 hover:bg-brand-500 text-white text-xs tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
           >
             Book a Viewing
           </Link>
