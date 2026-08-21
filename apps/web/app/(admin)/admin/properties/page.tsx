@@ -160,9 +160,13 @@ export default function AdminProperties() {
         open={deleting !== null}
         name={deleting?.name ?? ''}
         description={
-          'This permanently deletes the listing along with its media, units, floor '
-          + 'plans and tours. Listings with bookings, rentals or inquiries cannot be '
-          + 'deleted — archive those instead.'
+          deleting?.status === 'DRAFT'
+            ? 'This permanently deletes the draft along with its media, units, floor '
+              + 'plans and tours. Anything recorded against it — test bookings or '
+              + 'enquiries — goes with it, since the listing was never visible to buyers.'
+            : 'This permanently deletes the listing along with its media, units, floor '
+              + 'plans and tours. Published listings with bookings, rentals or enquiries '
+              + 'cannot be deleted — archive those instead.'
         }
         busy={remove.isPending}
         error={remove.isError ? (remove.error as Error).message : undefined}
@@ -247,15 +251,21 @@ function PropertyRow({
               >
                 Approve
               </button>
+              {/* A submitted listing sits in DRAFT — there is no separate
+                  pending status — so rejecting one leaves the status where it
+                  is and only sends the developer the reason. Labelled for what
+                  it does, because "Reject" on a draft looked like a dead
+                  button: nothing on the row changed after pressing it. */}
               <button
                 onClick={() => {
-                  const notes = window.prompt('Why is this being rejected? (shown to the developer)');
+                  const notes = window.prompt('Why is this being sent back? (shown to the developer)');
                   if (notes !== null) onReview('REJECT', notes || undefined);
                 }}
                 disabled={busy}
+                title="Send back to the developer with a reason. The listing stays a draft."
                 className="rounded-full border border-[#dadce0] px-3.5 py-2 text-[13px] font-medium text-[#c5221f] transition-colors hover:bg-[#fce8e6] cursor-pointer disabled:opacity-50"
               >
-                Reject
+                Send back
               </button>
             </>
           ) : (

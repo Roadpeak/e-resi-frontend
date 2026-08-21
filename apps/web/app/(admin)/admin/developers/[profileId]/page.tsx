@@ -12,6 +12,10 @@ import { cn } from '../../../../../lib/utils';
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
 
+/** Documents are stored as bare URLs, so the type has to come from the name. */
+const isImage = (url: string) => /\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(url);
+const isPdf = (url: string) => /\.pdf(\?|$)/i.test(url);
+
 const KYB_STYLES: Record<string, string> = {
   APPROVED: 'bg-[#e6f4ea] text-[#188038]',
   PENDING: 'bg-[#fef7e0] text-[#b06000]',
@@ -297,15 +301,76 @@ export default function AdminDeveloperDetail() {
               <p className="text-[14px] text-[#5f6368]">No documents uploaded.</p>
             ) : (
               <ul className="space-y-2">
-                {documents.map(([key, value]) => (
-                  <li key={key} className="flex items-start gap-2">
-                    <MaterialIcon name="description" className="mt-0.5 text-[18px] text-[#5f6368]" />
-                    <div className="min-w-0">
-                      <p className="text-[13px] text-[#202124]">{DOC_LABELS[key] ?? humanise(key)}</p>
-                      <p className="truncate text-[12px] text-[#5f6368]" title={value}>{value}</p>
-                    </div>
-                  </li>
-                ))}
+                {documents.map(([key, value]) => {
+                  const label = DOC_LABELS[key] ?? humanise(key);
+                  return (
+                    <li key={key} className="rounded-2xl border border-[#dadce0] p-3">
+                      <div className="flex items-start gap-3">
+                        <MaterialIcon
+                          name={isImage(value) ? 'image' : 'description'}
+                          className="mt-0.5 text-[20px] text-[#5f6368]"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14px] font-medium text-[#202124]">{label}</p>
+                          <p className="truncate text-[12px] text-[#5f6368]" title={value}>
+                            {value}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <a
+                            href={value}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f1f3f4]"
+                          >
+                            Open
+                          </a>
+                          <a
+                            href={value}
+                            // The file lives on an upload host, so `download`
+                            // is only a hint the browser may ignore
+                            // cross-origin — it still saves rather than
+                            // navigating in the common case, and "Open"
+                            // above covers the rest.
+                            download
+                            className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4]"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Inline preview, so a certificate or an ID photo can be
+                          checked without leaving the review screen — this page
+                          exists to make exactly that judgement. */}
+                      {isImage(value) && (
+                        <a href={value} target="_blank" rel="noreferrer noopener" className="mt-3 block">
+                          {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded host */}
+                          <img
+                            src={value}
+                            alt={label}
+                            className="max-h-72 w-full rounded-xl bg-[#f8f9fa] object-contain"
+                          />
+                        </a>
+                      )}
+
+                      {/* A PDF is the usual format for a certificate, and it
+                          previews perfectly well inline. */}
+                      {isPdf(value) && (
+                        <object
+                          data={value}
+                          type="application/pdf"
+                          className="mt-3 h-72 w-full rounded-xl bg-[#f8f9fa]"
+                          aria-label={label}
+                        >
+                          <p className="p-3 text-[12px] text-[#5f6368]">
+                            Preview unavailable — use Open or Download above.
+                          </p>
+                        </object>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
             {missingDocs.length > 0 && (

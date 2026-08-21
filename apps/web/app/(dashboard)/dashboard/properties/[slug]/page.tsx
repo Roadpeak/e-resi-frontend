@@ -145,6 +145,35 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
     }
   }
 
+  /**
+   * Permanently remove a draft or archived listing.
+   *
+   * Archiving only hides a development, so a duplicate or an abandoned draft
+   * stayed in the dashboard forever with no way for the developer to clear it.
+   * Guarded behind an explicit confirmation because, unlike archiving, this
+   * cannot be undone.
+   */
+  async function deleteProperty(name: string) {
+    const ok = window.confirm(
+      `Permanently delete "${name}"?\n\n`
+      + 'This removes the listing, its media, units and floor plans for good. '
+      + 'It cannot be undone.',
+    );
+    if (!ok) return;
+
+    setStatusBusy(true);
+    setError('');
+    try {
+      await apiClient.delete(`/properties/${slug}/permanent`);
+      await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
+      router.push('/dashboard/properties');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not delete this development.');
+    } finally {
+      setStatusBusy(false);
+    }
+  }
+
   async function setStatus(status: string) {
     setStatusBusy(true);
     setError('');
@@ -195,6 +224,13 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
               className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
             >
               {statusBusy ? <Loader2 size={15} className="animate-spin" /> : <RotateCcw size={15} />} Restore to review
+            </button>
+            <button
+              onClick={() => deleteProperty(archivedRow.name)}
+              disabled={statusBusy}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#f5c6c4] bg-white px-5 py-2.5 text-[15px] font-medium text-[#c5221f] hover:bg-[#fce8e6] transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <Trash2 size={15} /> Delete permanently
             </button>
             <Link href="/dashboard/properties" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors">
               <ArrowLeft size={15} /> Back to properties
@@ -270,6 +306,15 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
               >
                 <Eye size={15} /> View live page
               </Link>
+            )}
+            {property.status === 'DRAFT' && (
+              <button
+                onClick={() => deleteProperty(property.name)}
+                disabled={statusBusy}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#f5c6c4] bg-white px-5 py-2.5 text-[15px] font-medium text-[#c5221f] hover:bg-[#fce8e6] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 size={15} /> Delete
+              </button>
             )}
             {property.status !== 'ARCHIVED' ? (
               <button
