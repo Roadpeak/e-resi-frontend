@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { MapPin, BedDouble, Maximize2, MapPinned, Heart, CalendarDays } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { formatPrice, getStatusLabel, getStatusColor, cn } from '../../lib/utils';
+import { TourMark, type TourKind } from '../property/TourMarks';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
 
@@ -28,6 +29,13 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** How long each image holds before the panel advances. */
 const SLIDE_MS = 4200;
+
+/** Each tour's own colour, matching the tours section on a property page. */
+const TOUR_ACCENTS: Record<TourKind, string> = {
+  cinematic: '#a8712f',
+  '3d': '#1a73e8',
+  vr: '#7c4dff',
+};
 
 /** Up to three gallery stills, distinct from the hero. */
 function galleryStrip(property: Property, count = 3) {
@@ -143,15 +151,23 @@ export function PropertyShowcaseCard({
       })
     : null;
 
+  /**
+   * The tagline is a developer's own one-line pitch, so it leads. The
+   * description is the fallback for developments that never set one.
+   */
+  const blurb = property.tagline?.trim() || property.description?.trim() || null;
+
   const location = [property.address?.neighborhood, property.address?.city]
     .filter(Boolean)
     .join(', ');
 
-  const tours = [
-    property.hasCinematicTour && 'Cinematic',
-    property.has3DTour && '3D',
-    property.hasVRTour && 'VR',
-  ].filter(Boolean) as string[];
+  // Ordered cinematic → 3D → VR, matching the tours section on a development's
+  // own page, so the same three features are always named in the same order.
+  const tours: { kind: TourKind; label: string }[] = [
+    ...(property.hasCinematicTour ? [{ kind: 'cinematic' as const, label: 'Cinematic' }] : []),
+    ...(property.has3DTour ? [{ kind: '3d' as const, label: '3D' }] : []),
+    ...(property.hasVRTour ? [{ kind: 'vr' as const, label: 'VR' }] : []),
+  ];
 
   return (
     <motion.article
@@ -209,9 +225,18 @@ export function PropertyShowcaseCard({
           )}
         </div>
 
+        {/* What the development actually is. Dropped when this card was
+            rebuilt, which left a buyer nothing to read between the name and a
+            table of figures. */}
+        {blurb && (
+          <p className="relative z-[2] mt-4 line-clamp-3 text-[14px] leading-relaxed text-gray-500 pointer-events-none">
+            {blurb}
+          </p>
+        )}
+
         {/* The specification, as a table a buyer reads down rather than as
             chips scattered across the card. */}
-        <dl className="relative z-[2] mt-6 pointer-events-none">
+        <dl className="relative z-[2] mt-5 pointer-events-none">
           <Row label="Price from" value={formatPrice(property.priceFrom, property.currency)} strong />
           {bedLabel && <Row label="Layouts" value={bedLabel} icon={<BedDouble size={13} />} />}
           {unitCount > 0 && (
@@ -221,7 +246,30 @@ export function PropertyShowcaseCard({
             <Row label="Completion" value={completion} icon={<CalendarDays size={13} />} />
           )}
           <Row label="Status" value={getStatusLabel(property.status)} chip={getStatusColor(property.status)} />
-          {tours.length > 0 && <Row label="Tours" value={tours.join(' · ')} />}
+          {tours.length > 0 && (
+            <div className="flex items-center justify-between gap-4 border-b border-gray-100 py-3.5 last:border-b-0">
+              <dt className="text-[14px] font-medium text-gray-500">Tours</dt>
+              <dd className="flex items-center gap-4">
+                {tours.map((t) => (
+                  <span
+                    key={t.kind}
+                    className="flex items-center gap-2 text-[13px] font-medium"
+                    style={{ color: TOUR_ACCENTS[t.kind] }}
+                  >
+                    {/* The drawn marks rather than a stock glyph — the same
+                        ones a buyer meets on the development's own page.
+                        Boxed to their own size: the marks draw slightly
+                        outside their viewBox by design, which let them run
+                        under the label beside them. */}
+                    <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
+                      <TourMark kind={t.kind} size={20} />
+                    </span>
+                    {t.label}
+                  </span>
+                ))}
+              </dd>
+            </div>
+          )}
         </dl>
 
         <div className="relative z-[2] mt-auto flex flex-wrap gap-2.5 pt-7">
