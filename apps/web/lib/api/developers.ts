@@ -47,6 +47,8 @@ export interface DeveloperProfileDetail {
   website: string | null;
   location: string | null;
   phone: string | null;
+  /** Public sales address — never the account login. */
+  email: string | null;
   whatsapp: string | null;
   socials: DeveloperSocials | null;
   properties: DeveloperPropertyPreview[];

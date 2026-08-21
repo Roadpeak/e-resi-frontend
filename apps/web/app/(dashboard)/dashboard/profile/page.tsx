@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  BadgeCheck, Building2, Check, Clock3, Globe2, Loader2, ShieldAlert, ShieldCheck, Pencil,
+  BadgeCheck, Building2, Check, Clock3, Globe2, Loader2, Mail, Phone, ShieldAlert, ShieldCheck, Pencil,
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { uploadFile } from '../../../../lib/api/media';
@@ -20,6 +20,8 @@ interface DeveloperProfile {
   establishedYear?: number | null;
   completedProjects: number;
   website?: string | null;
+  phone?: string | null;
+  email?: string | null;
   kybStatus: 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
   onboardingSubmittedAt?: string | null;
   createdAt: string;
@@ -44,7 +46,7 @@ export default function CompanyProfilePage() {
     queryFn: () => apiClient.get<DeveloperProfile>('/users/developers/me'),
   });
 
-  const [form, setForm] = useState({ companyName: '', description: '', establishedYear: '', website: '' });
+  const [form, setForm] = useState({ companyName: '', description: '', establishedYear: '', website: '', phone: '', email: '' });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -73,6 +75,8 @@ export default function CompanyProfilePage() {
         description: profile.description ?? '',
         establishedYear: profile.establishedYear ? String(profile.establishedYear) : '',
         website: profile.website ?? '',
+        phone: profile.phone ?? '',
+        email: profile.email ?? '',
       });
     }
   }, [profile]);
@@ -89,6 +93,8 @@ export default function CompanyProfilePage() {
         description: form.description.trim() || undefined,
         establishedYear: Number.isFinite(year) && year >= 1900 ? year : undefined,
         website: form.website.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        email: form.email.trim() || undefined,
       });
       await queryClient.invalidateQueries({ queryKey: ['developer-profile'] });
       setSaved(true);
@@ -207,6 +213,27 @@ export default function CompanyProfilePage() {
             value={form.website}
             onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
             leftIcon={<Globe2 size={14} />}
+            className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
+          />
+          {/* Public contact. Deliberately separate from the account email
+              below, which is the login this account is secured with and is
+              never published. */}
+          <Input
+            label="Public phone"
+            type="tel"
+            placeholder="+254712345678"
+            value={form.phone}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            leftIcon={<Phone size={14} />}
+            className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
+          />
+          <Input
+            label="Public sales email"
+            type="email"
+            placeholder="sales@yourcompany.co.ke"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            leftIcon={<Mail size={14} />}
             className="border-[#dadce0] text-[15px] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-[#1a73e8]/20"
           />
         </div>

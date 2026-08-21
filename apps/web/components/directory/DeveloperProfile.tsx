@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Building2, MapPin, Phone, Globe, ArrowLeft, ArrowRight, Loader2,
+  Building2, MapPin, Phone, Mail, Globe, ArrowLeft, ArrowRight, Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { developersApi, type DeveloperPropertyPreview } from '../../lib/api/developers';
@@ -204,6 +204,14 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
                     <Phone size={15} /> Call
                   </a>
                 )}
+                {developer.email && (
+                  <a
+                    href={`mailto:${developer.email}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                  >
+                    <Mail size={15} /> Email
+                  </a>
+                )}
                 {developer.website && (
                   <a
                     href={developer.website}
@@ -220,6 +228,36 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
             {/* The facts that were chips in the old header, as a table — the
                 same treatment the listing cards use. */}
             <dl className="lg:border-l lg:border-black/5 lg:pl-14">
+              {/* Written out rather than left behind an icon: someone deciding
+                  whether to trust a developer with a deposit wants to see a
+                  real number and a real address, not just a button that
+                  promises one. Both are selectable, so they can be copied. */}
+              {developer.phone && (
+                <Fact
+                  label="Phone"
+                  value={
+                    <a
+                      href={telLink(developer.phone)}
+                      className="transition-colors hover:text-brand-600"
+                    >
+                      {developer.phone}
+                    </a>
+                  }
+                />
+              )}
+              {developer.email && (
+                <Fact
+                  label="Email"
+                  value={
+                    <a
+                      href={`mailto:${developer.email}`}
+                      className="break-all transition-colors hover:text-brand-600"
+                    >
+                      {developer.email}
+                    </a>
+                  }
+                />
+              )}
               <Fact
                 label="Live listings"
                 value={`${properties.length} development${properties.length === 1 ? '' : 's'}`}
@@ -286,7 +324,7 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
 }
 
 /** One labelled fact on a hairline rule. */
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-black/5 py-3.5 last:border-b-0">
       <dt className="text-[14px] text-[#6b6b70]">{label}</dt>
