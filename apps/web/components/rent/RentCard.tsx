@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useMemo } from 'react';
 import { MapPin, BedDouble, Maximize2, Film, Box, Calendar, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { RentListing } from '../../lib/types';
@@ -11,24 +10,6 @@ function formatRent(price: number, currency: string) {
   if (price >= 1_000_000) return `${currency} ${(price / 1_000_000).toFixed(1)}M`;
   if (price >= 1_000) return `${currency} ${(price / 1_000).toFixed(0)}K`;
   return `${currency} ${price.toLocaleString()}`;
-}
-
-/** Deterministic pick of up to 3 gallery images, distinct from the hero. */
-function pickGalleryPreview(listing: RentListing, count = 3) {
-  const pool = listing.galleryImages.filter((url) => url && url !== listing.heroImageUrl);
-  if (pool.length <= count) return pool;
-  let seed = 0;
-  for (let i = 0; i < listing.id.length; i++) seed = (seed * 31 + listing.id.charCodeAt(i)) >>> 0;
-  const picked: string[] = [];
-  const used = new Set<number>();
-  for (let i = 0; i < count; i++) {
-    seed = (seed * 1103515245 + 12345) >>> 0;
-    let idx = seed % pool.length;
-    while (used.has(idx)) idx = (idx + 1) % pool.length;
-    used.add(idx);
-    picked.push(pool[idx]);
-  }
-  return picked;
 }
 
 /** "available" reads as plain blue text — no pill background; the other two
@@ -57,18 +38,33 @@ interface Props {
 }
 
 export function RentCard({ listing }: Props) {
-  const totalAvailable = listing.units.reduce((s, u) => s + u.available, 0);
-  const minBeds = Math.min(...listing.units.map((u) => u.bedrooms));
-  const maxBeds = Math.max(...listing.units.map((u) => u.bedrooms));
-  const bedLabel = minBeds === maxBeds
-    ? (minBeds === 0 ? 'Studio' : `${minBeds} Bed`)
-    : `${minBeds === 0 ? 'Studio' : minBeds}–${maxBeds} Bed`;
-  const galleryPreview = useMemo(() => pickGalleryPreview(listing), [listing]);
+  const units = listing.units ?? [];
+  const totalAvailable = units.reduce((s, u) => s + u.available, 0);
+
+  /**
+   * A listing can exist before its units are entered, and Math.min of nothing
+   * is Infinity — which rendered as "Infinity–-Infinity Bed" on the card.
+   * Both the bed range and the floor area are omitted when there is nothing
+   * to derive them from.
+   */
+  const beds = units.map((u) => u.bedrooms).filter((n) => Number.isFinite(n));
+  const minBeds = beds.length ? Math.min(...beds) : null;
+  const maxBeds = beds.length ? Math.max(...beds) : null;
+  const bedLabel = minBeds === null || maxBeds === null
+    ? null
+    : minBeds === maxBeds
+      ? (minBeds === 0 ? 'Studio' : `${minBeds} Bed`)
+      : `${minBeds === 0 ? 'Studio' : minBeds}–${maxBeds} Bed`;
+
+  // Smallest unit that actually states a size, rather than units[0] — which
+  // showed "0m²+" whenever the first unit happened to have none.
+  const sizes = units.map((u) => u.sqm).filter((n): n is number => typeof n === 'number' && n > 0);
+  const minSqm = sizes.length ? Math.min(...sizes) : null;
 
   return (
     <Link href={`/rent/${listing.slug}`} className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden">
         <Image
           src={listing.heroImageUrl}
           alt={listing.name}
@@ -77,49 +73,38 @@ export function RentCard({ listing }: Props) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         {/* Tour badges */}
-        <div className="absolute top-3 right-3 flex gap-1.5">
+        <div className="absolute right-2 top-2 flex gap-1">
           {listing.showCinematicTour && (
-            <span className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full">
-              <Film size={12} /> Cinematic
+            <span className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+              <Film size={10} /> Cinematic
             </span>
           )}
           {listing.show3DTour && (
-            <span className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full">
-              <Box size={12} /> 3D
+            <span className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+              <Box size={10} /> 3D
             </span>
           )}
         </div>
         {/* Featured */}
         {listing.isFeatured && (
-          <div className="absolute bottom-3 left-3">
-            <span className="bg-orange-500 text-white text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full">Featured</span>
+          <div className="absolute bottom-2 left-2">
+            <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Featured</span>
           </div>
         )}
       </div>
 
-      {/* Gallery strip — 3 more shots from this listing's gallery */}
-      {galleryPreview.length > 0 && (
-        <div className="grid grid-cols-3 gap-1 px-3 pt-3">
-          {galleryPreview.map((url, i) => (
-            <div key={url + i} className="relative h-16 overflow-hidden rounded-lg sm:h-20">
-              <Image src={url} alt="" fill className="object-cover" sizes="140px" />
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3">
         {/* Location + status */}
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-1.5 text-gray-400 text-sm min-w-0">
-            <MapPin size={14} className="shrink-0" />
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1 text-[12px] text-gray-400">
+            <MapPin size={12} className="shrink-0" />
             <span className="truncate">{listing.address.neighborhood}, {listing.address.city}</span>
           </div>
           <span
             className={cn(
-              'shrink-0 text-xs font-semibold uppercase tracking-wide',
-              listing.status === 'available' ? '' : 'px-2.5 py-1 rounded-full',
+              'shrink-0 text-[10px] font-semibold uppercase tracking-wide',
+              listing.status === 'available' ? '' : 'rounded-full px-2 py-0.5',
               STATUS_STYLES[listing.status],
             )}
           >
@@ -127,39 +112,41 @@ export function RentCard({ listing }: Props) {
           </span>
         </div>
 
-        <h3 className="mb-1 line-clamp-2 text-lg font-semibold leading-tight text-gray-900 sm:truncate">
+        <h3 className="mb-2 truncate text-[15px] font-semibold leading-tight text-gray-900">
           {listing.name}
         </h3>
-        <p className="mb-3 line-clamp-1 text-sm text-gray-500 sm:line-clamp-2">{listing.tagline}</p>
 
         {/* Specs row */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500">
-          <span className="flex items-center gap-1.5"><BedDouble size={16} /> {bedLabel}</span>
-          <span className="flex items-center gap-1.5"><Maximize2 size={16} /> {listing.units[0]?.sqm}m²+</span>
-          <span className="flex items-center gap-1.5"><Users size={16} /> {totalAvailable} available</span>
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-gray-500">
+          {bedLabel && (
+            <span className="flex items-center gap-1"><BedDouble size={13} /> {bedLabel}</span>
+          )}
+          {minSqm !== null && (
+            <span className="flex items-center gap-1"><Maximize2 size={13} /> {minSqm}m²+</span>
+          )}
+          {totalAvailable > 0 && (
+            <span className="flex items-center gap-1"><Users size={13} /> {totalAvailable}</span>
+          )}
         </div>
 
         {/* Furnishing + available from */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">
+        <div className="mb-2 flex items-center gap-1.5">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
             {FURNISHING_LABELS[listing.furnishing]}
           </span>
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <Calendar size={12} />
-            From {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
+          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+            <Calendar size={10} />
+            {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
           </span>
         </div>
 
         {/* Price */}
-        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-          <div>
-            <span className="text-xl font-bold text-gray-900">{formatRent(listing.priceFrom, listing.currency)}</span>
-            <span className="text-sm text-gray-400 ml-1">/mo</span>
-            {listing.priceTo > listing.priceFrom && (
-              <span className="text-sm text-gray-400"> – {formatRent(listing.priceTo, listing.currency)}</span>
-            )}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+          <div className="min-w-0">
+            <span className="text-[16px] font-bold text-gray-900">{formatRent(listing.priceFrom, listing.currency)}</span>
+            <span className="ml-0.5 text-[11px] text-gray-400">/mo</span>
           </div>
-          <span className="text-xs text-gray-400">{listing.minLeaseTerm}mo min</span>
+          <span className="text-[10px] text-gray-400">{listing.minLeaseTerm}mo min</span>
         </div>
       </div>
     </Link>
