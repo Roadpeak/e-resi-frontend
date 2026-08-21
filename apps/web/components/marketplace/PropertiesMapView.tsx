@@ -22,11 +22,24 @@ const DEFAULT_ZOOM = 11;
 
 // Keyed to the backend PropertyStatus enum. These were lowercase before,
 // so every marker fell through to the default blue.
+/**
+ * Marker colours.
+ *
+ * Deliberately only two: the map previously ran four (green / orange / red /
+ * amber), which read as a legend the page never explains and made a screen of
+ * pins look noisy. Blue is the default for anything on the market — it is the
+ * brand's own accent, so pins sit with the rest of the UI instead of competing
+ * with it. Sold-out is the single exception worth calling out, and it is muted
+ * rather than red: those pins are context, not warnings.
+ */
+const MARKER_DEFAULT = '#1a73e8';
+const MARKER_SOLD_OUT = '#80868b';
+
 const statusColors: Record<string, string> = {
-  ACTIVE: '#188038',
-  OFF_PLAN: '#e8710a',
-  SOLD_OUT: '#c5221f',
-  DRAFT: '#f9ab00',
+  ACTIVE: MARKER_DEFAULT,
+  OFF_PLAN: MARKER_DEFAULT,
+  DRAFT: MARKER_DEFAULT,
+  SOLD_OUT: MARKER_SOLD_OUT,
 };
 
 /**
@@ -116,7 +129,7 @@ export function PropertiesMapView({ properties, focusPropertyId }: Props) {
     markersRef.current.clear();
 
     located.forEach((property) => {
-      const color = statusColors[property.status] ?? '#1a73e8';
+      const color = statusColors[property.status] ?? MARKER_DEFAULT;
       const icon = L.divIcon({
         className: '',
         html: `<span style="

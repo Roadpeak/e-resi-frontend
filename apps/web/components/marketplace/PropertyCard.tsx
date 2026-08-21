@@ -38,12 +38,9 @@ function pickGalleryPreview(property: Property, count = 3) {
   return picked;
 }
 
-const statusColors: Record<string, string> = {
-  ready: 'bg-green-100 text-green-700',
-  off_plan: 'bg-orange-100 text-orange-600',
-  under_construction: 'bg-yellow-100 text-yellow-700',
-  sold_out: 'bg-gray-100 text-gray-500',
-};
+// The card's own status palette is gone — both layouts now use getStatusColor
+// from lib/utils, so a status looks the same here, on the property page and in
+// saved listings rather than green in one place and blue in another.
 
 const isNew = (property: Property) => {
   if (property.isFeatured) return true;
@@ -104,14 +101,13 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
             ) : (
               <div className="absolute inset-0 bg-gray-100" />
             )}
-            {isNew(property) && (
-              <span className="absolute left-2.5 top-2.5 rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                New
-              </span>
-            )}
-            <span className={cn('absolute bottom-2.5 left-2.5 rounded-full px-3 py-1 text-xs font-semibold', getStatusColor(property.status))}>
-              {getStatusLabel(property.status)}
-            </span>
+            {/*
+              "New" and the status chip used to sit on top of the photo. They
+              are now with the name and location below, where the rest of the
+              detail lives — over an unpredictable image they needed heavy
+              colour and a shadow just to stay legible, which is most of why
+              the card looked loud.
+            */}
           </div>
 
           {galleryPreview.length > 0 && (
@@ -155,8 +151,18 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
             </p>
           )}
 
-          {/* Tour badges + availability */}
+          {/* Status + tour badges + availability */}
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            {/* Moved off the photo: chips read at a glance here, and against a
+                white ground they need far less colour to register. */}
+            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', getStatusColor(property.status))}>
+              {getStatusLabel(property.status)}
+            </span>
+            {isNew(property) && (
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                New
+              </span>
+            )}
             {property.has3DTour && (
               <span className="flex items-center gap-1 text-sm font-medium text-brand-600"><Box size={14} /> 3D</span>
             )}
@@ -186,7 +192,7 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
               {onViewOnMap && (
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onViewOnMap(); }}
-                  className="relative z-10 flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-600 transition-colors hover:border-brand-300 hover:text-brand-600"
+                  className="relative z-10 flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-3.5 text-sm font-medium text-amber-800 transition-colors hover:border-amber-400 hover:bg-amber-200"
                 >
                   <MapPinned size={16} />
                   <span className="hidden sm:inline">View on map</span>
@@ -239,12 +245,7 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
           <Heart size={14} className={cn(saved && 'fill-red-500 text-red-500')} />
         </button>
 
-        {/* Status badge */}
-        <div className="absolute top-3 left-3">
-          <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-semibold', statusColors[property.status])}>
-            {getStatusLabel(property.status)}
-          </span>
-        </div>
+        {/* Status moved into the body, below the name — see the list card. */}
 
         {/* Tour badges */}
         {(property.has3DTour || property.hasVRTour) && (
@@ -287,6 +288,19 @@ export function PropertyCard({ property, index = 0, view = 'grid', onViewOnMap }
             {property.tagline}
           </p>
         )}
+
+        {/* Status + New, on the detail side rather than over the photo. */}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', getStatusColor(property.status))}>
+            {getStatusLabel(property.status)}
+          </span>
+          {isNew(property) && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              New
+            </span>
+          )}
+        </div>
+
         <div className="mb-3" />
 
         {/* Stats row */}

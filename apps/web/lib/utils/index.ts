@@ -72,16 +72,24 @@ export function getStatusLabel(status: string): string {
   return map[status] ?? map[String(status).toUpperCase()] ?? status;
 }
 
+/**
+ * Status chip colours.
+ *
+ * Kept to blue, amber and neutral. "Ready to Move" was emerald and "Sold Out"
+ * red, which put three or four unrelated hues on a single card and read as a
+ * traffic light nobody had explained. Availability is not a warning, so the
+ * live states share the brand blue and only the closed ones drop to grey.
+ */
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    OFF_PLAN: 'text-brand-700 bg-brand-100',
-    ACTIVE: 'text-emerald-700 bg-emerald-100',
-    SOLD_OUT: 'text-red-700 bg-red-100',
-    DRAFT: 'text-gold-700 bg-gold-100',
+    OFF_PLAN: 'text-amber-700 bg-amber-100',
+    ACTIVE: 'text-brand-700 bg-brand-100',
+    SOLD_OUT: 'text-slate-600 bg-slate-100',
+    DRAFT: 'text-amber-700 bg-amber-100',
     ARCHIVED: 'text-slate-700 bg-slate-100',
-    off_plan: 'text-brand-700 bg-brand-100',
-    active: 'text-emerald-700 bg-emerald-100',
-    sold_out: 'text-red-700 bg-red-100',
+    off_plan: 'text-amber-700 bg-amber-100',
+    active: 'text-brand-700 bg-brand-100',
+    sold_out: 'text-slate-600 bg-slate-100',
   };
   return map[status] ?? map[String(status).toUpperCase()] ?? 'text-slate-700 bg-slate-100';
 }
