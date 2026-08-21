@@ -115,10 +115,12 @@ export function Reveal({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  // A small negative margin only: a large one delays the reveal until the
-  // block is well inside the viewport, which on a fast scroll reads as content
-  // arriving late rather than as a considered entrance.
-  const inView = useInView(ref, { once: true, margin: '-40px' });
+  // amount: 0 — fire as soon as any part of the block is visible.
+  //
+  // A threshold plus a negative margin meant a block that was already on
+  // screen when it mounted could never satisfy the trigger, leaving it at
+  // opacity 0 permanently. Whole sections were rendering blank that way.
+  const inView = useInView(ref, { once: true, amount: 0 });
 
   return (
     <motion.div
@@ -174,9 +176,13 @@ export function RisingWords({
           transition={{ duration: 0.85, delay: delay + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
         >
           {word}
-          {/* A trailing space inside the animated span keeps word spacing
-              intact; a gap on the parent would collapse at line breaks. */}
-          {i < words.length - 1 ? ' ' : ''}
+          {/*
+            A literal trailing space is collapsed away inside an inline-block,
+            which ran the words of a two-word name together in the display
+            headlines. A non-breaking space survives, and is placed inside the
+            animated span so word spacing still wraps correctly.
+          */}
+          {i < words.length - 1 ? '\u00A0' : ''}
         </motion.span>
       ))}
     </span>

@@ -139,7 +139,7 @@ export function LuxeGallery({ images, name }: { images: string[]; name: string }
               onClick={() => lb.open(i)}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
+              viewport={{ once: true, amount: 0 }}
               transition={{ duration: 0.7, delay: (i % 4) * 0.06, ease: EASE }}
               className={`group relative cursor-pointer overflow-hidden bg-white/5 ${
                 wide ? 'col-span-2 aspect-[16/10]' : 'aspect-[4/5]'
@@ -232,7 +232,7 @@ export function LuxeUnits({
               key={unit.id}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10px' }}
+              viewport={{ once: true, amount: 0 }}
               transition={{ duration: 0.55, delay: Math.min(i, 6) * 0.025, ease: EASE }}
               className="group grid grid-cols-2 items-center gap-4 border-b border-white/12 py-7 sm:grid-cols-[1.4fr_repeat(3,0.8fr)_auto]"
             >
@@ -288,7 +288,7 @@ export function LuxeFloorPlans({ floorPlans }: { floorPlans: FloorPlan[] }) {
             key={plan.id}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, amount: 0 }}
             transition={{ duration: 0.6, delay: (i % 3) * 0.08, ease: EASE }}
             className="border border-white/12 p-5 transition-colors hover:border-white/25"
           >
@@ -370,7 +370,7 @@ export function LuxeConstruction({ updates }: { updates: ConstructionUpdate[] })
             key={u.id ?? i}
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-20px' }}
+            viewport={{ once: true, amount: 0 }}
             transition={{ duration: 0.55, delay: Math.min(i, 6) * 0.03, ease: EASE }}
             className="grid gap-6 border-b border-white/12 py-8 sm:grid-cols-[160px_1fr_auto]"
           >

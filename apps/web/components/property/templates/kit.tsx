@@ -239,7 +239,7 @@ export function KitGallery({
               onClick={() => lb.open(i)}
               initial={{ opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
+              viewport={{ once: true, amount: 0 }}
               transition={{ duration: 0.65, delay: (i % 4) * 0.06, ease: EASE }}
               className={`group relative cursor-pointer overflow-hidden ${style.radius} ${
                 style.galleryAs === 'strip'
@@ -332,7 +332,7 @@ export function KitUnits({
                 key={unit.id}
                 initial={{ opacity: 0, y: 14 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-10px' }}
+                viewport={{ once: true, amount: 0 }}
                 transition={{ duration: 0.5, delay: Math.min(i, 6) * 0.025, ease: EASE }}
                 className={`grid grid-cols-2 items-center gap-4 border-b ${t.border} py-6 sm:grid-cols-[1.4fr_repeat(3,0.8fr)_auto]`}
               >
@@ -371,7 +371,7 @@ export function KitUnits({
                 key={unit.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-20px' }}
+                viewport={{ once: true, amount: 0 }}
                 transition={{ duration: 0.6, delay: (i % 3) * 0.07, ease: EASE }}
                 className={`${style.radius} ${t.panel} border ${t.border} p-6`}
               >
@@ -434,7 +434,7 @@ export function KitFloorPlans({ floorPlans, style }: { floorPlans: FloorPlan[]; 
             key={plan.id}
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, amount: 0 }}
             transition={{ duration: 0.6, delay: (i % 3) * 0.08, ease: EASE }}
             className={`${style.radius} border ${t.border} ${t.panel} p-5`}
           >
@@ -509,7 +509,7 @@ export function KitConstruction({ updates, style }: { updates: ConstructionUpdat
             key={u.id ?? i}
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-20px' }}
+            viewport={{ once: true, amount: 0 }}
             transition={{ duration: 0.5, delay: Math.min(i, 6) * 0.03, ease: EASE }}
             className={`grid gap-6 border-b ${t.border} py-7 sm:grid-cols-[160px_1fr_auto]`}
           >
