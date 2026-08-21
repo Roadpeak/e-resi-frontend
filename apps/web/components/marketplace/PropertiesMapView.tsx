@@ -111,7 +111,18 @@ export function PropertiesMapView({ properties, focusPropertyId }: Props) {
     const ro = new ResizeObserver(() => map.invalidateSize());
     ro.observe(containerRef.current);
 
+    /**
+     * A second pass once any opening animation has settled.
+     *
+     * The map now opens inside a panel that arrives on a scale transform.
+     * A transform does not change layout size, so the observer above never
+     * fires for it, and Leaflet keeps whatever height it measured mid-flight
+     * — which showed as a grey band where the top of the map should be.
+     */
+    const settle = setTimeout(() => map.invalidateSize(), 400);
+
     return () => {
+      clearTimeout(settle);
       ro.disconnect();
       map.remove();
       mapRef.current = null;

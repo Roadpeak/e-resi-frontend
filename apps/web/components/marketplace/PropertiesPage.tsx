@@ -159,15 +159,21 @@ export function PropertiesPage({
     if (lockedCategory) setFilter('category', lockedCategory);
   }
 
-  // Lock page scroll only while the fullscreen map is open
+  /**
+   * Escape closes the map.
+   *
+   * The page deliberately keeps scrolling behind the panel — the point of a
+   * popup rather than a fullscreen view is that the results stay where they
+   * were — so locking scroll, as the fullscreen version did, would work
+   * against it.
+   */
   useEffect(() => {
     if (!showFullMap) return;
-    const html = document.documentElement;
-    const prev = html.style.overflow;
-    html.style.overflow = 'hidden';
-    return () => {
-      html.style.overflow = prev;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowFullMap(false);
     };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [showFullMap]);
 
   return (
@@ -269,37 +275,77 @@ export function PropertiesPage({
           results but always reachable. Labelled on hover rather than
           permanently, so it stays a mark rather than a banner. */}
       <button
-        onClick={() => setShowFullMap(true)}
-        aria-label="View properties on map"
-        className="group fixed bottom-6 right-6 z-40 flex cursor-pointer items-center gap-0 rounded-full bg-brand-600 p-4 text-white shadow-xl shadow-brand-600/30 transition-all duration-300 hover:gap-2 hover:bg-brand-700 hover:pr-5"
+        onClick={() => setShowFullMap((v) => !v)}
+        aria-label={showFullMap ? 'Close map' : 'View properties on map'}
+        aria-expanded={showFullMap}
+        className={cn(
+          'group fixed bottom-6 right-6 z-[61] flex cursor-pointer items-center gap-0 rounded-full p-4 text-white shadow-xl transition-all duration-300 hover:gap-2 hover:pr-5',
+          // Stays put and toggles rather than hiding: the panel grows out of
+          // this button, so it is also the natural thing to press to fold it
+          // back away.
+          showFullMap
+            ? 'bg-gray-900 shadow-gray-900/30 hover:bg-gray-700'
+            : 'bg-brand-600 shadow-brand-600/30 hover:bg-brand-700',
+        )}
       >
         <MapPinned size={20} className="shrink-0" />
         <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-300 group-hover:max-w-[140px]">
-          View on map
+          {showFullMap ? 'Hide map' : 'View on map'}
         </span>
       </button>
 
-      {/* Fullscreen map overlay */}
+      {/* ── Map popup ──
+          A panel that unfolds over the page rather than a separate fullscreen
+          view. Taking over the whole screen made looking at one pin feel like
+          leaving the results behind and coming back; here the listings stay
+          visible around it, so the map reads as a lens on the page rather
+          than a destination.
+
+          Anchored to the button that opens it, growing up and to the left,
+          which is why the transform origin is the bottom right. */}
       <AnimatePresence>
         {showFullMap && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[60] bg-white"
-          >
-            <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
-            <div className="absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-md">
-              {results.length} properties
-            </div>
-            <button
+          <>
+            {/* A faint scrim: enough to lift the panel off the page and to
+                give the whole backdrop a click target for dismissing it,
+                without hiding the results underneath. */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setShowFullMap(false)}
-              className="absolute right-5 top-5 z-30 flex cursor-pointer items-center gap-2 rounded-full bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-gray-700"
+              className="fixed inset-0 z-[55] bg-gray-900/20"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              style={{ transformOrigin: 'bottom right' }}
+              role="dialog"
+              aria-label="Properties map"
+              className="fixed bottom-24 right-6 z-[60] flex h-[min(560px,calc(100vh-11rem))] w-[min(680px,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl shadow-gray-900/20"
             >
-              <X size={14} /> Close map
-            </button>
-          </motion.div>
+              <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3">
+                <p className="text-[14px] font-semibold text-gray-900">
+                  {results.length} {results.length === 1 ? 'property' : 'properties'} on the map
+                </p>
+                <button
+                  onClick={() => setShowFullMap(false)}
+                  aria-label="Close map"
+                  className="flex cursor-pointer items-center justify-center rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="relative min-h-0 flex-1">
+                <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
