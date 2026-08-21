@@ -13,6 +13,7 @@ import type { SectionCopy } from '../../../lib/branding/theme';
 import { useBooking, useLightbox, useUnits, unitStatus } from './hooks';
 import { TourCards } from '../TourCards';
 import { UnitTypeList } from '../UnitTypeList';
+import { unitCurrency } from '../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 import { Reveal } from './shared';
 
@@ -388,6 +389,7 @@ export function KitUnits({
         <UnitTypeList
           units={units}
           propertySlug={propertySlug}
+          currency={currency}
           priceDisplay={priceDisplay}
           onDark={style.onDark}
           radius={style.radius}
@@ -412,7 +414,7 @@ export function KitUnits({
                 </div>
                 <p className={`text-[15px] ${t.body}`}>{unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</p>
                 <p className={`hidden text-[15px] sm:block ${t.body}`}>{unit.sqm} m²</p>
-                <p className={`text-[17px] ${t.heading}`}>{formatPrice(unit.price, unit.currency || currency)}</p>
+                <p className={`text-[17px] ${t.heading}`}>{formatPrice(unit.price, unitCurrency(unit, currency))}</p>
                 <div className="flex items-center justify-end gap-4">
                   <span
                     className="text-[11px] uppercase tracking-[0.14em]"
@@ -470,7 +472,7 @@ export function KitUnits({
 
                 <div className={`mt-6 flex items-end justify-between border-t ${t.border} pt-5`}>
                   <p className={`text-[20px] font-semibold ${t.heading}`}>
-                    {formatPrice(unit.price, unit.currency || currency)}
+                    {formatPrice(unit.price, unitCurrency(unit, currency))}
                   </p>
                   <Link
                     href={`/${propertySlug}/units/${unit.id}`}

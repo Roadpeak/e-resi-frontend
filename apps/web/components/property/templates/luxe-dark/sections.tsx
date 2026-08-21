@@ -11,6 +11,7 @@ import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
 import type { SectionCopy } from '../../../../lib/branding/theme';
 import { TourCards } from '../../TourCards';
 import { UnitTypeList } from '../../UnitTypeList';
+import { unitCurrency } from '../../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
 import { Reveal } from '../shared';
 
@@ -285,6 +286,7 @@ export function LuxeUnits({
         <UnitTypeList
           units={units}
           propertySlug={propertySlug}
+          currency={currency}
           priceDisplay={priceDisplay}
           onDark
           radius="rounded-none"
@@ -316,7 +318,7 @@ export function LuxeUnits({
               </p>
               <p className="hidden text-[15px] text-white/60 sm:block">{unit.sqm} m²</p>
               <p className="text-[17px] font-light text-white">
-                {formatPrice(unit.price, unit.currency || currency)}
+                {formatPrice(unit.price, unitCurrency(unit, currency))}
               </p>
               <div className="flex items-center justify-end gap-4">
                 <span

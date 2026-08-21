@@ -18,6 +18,28 @@ import { formatPrice, formatPriceRange } from '../utils';
  * pulling in a client bundle.
  */
 
+/**
+ * The currency a unit's price is actually in.
+ *
+ * The property's currency wins over the unit's own.
+ *
+ * That looks backwards until you know how the two are set: a developer chooses
+ * the currency once, on the development, and the unit form has never offered
+ * the choice at all. Unit.currency was therefore never written and every row
+ * carries the schema default of "KES" — so a development priced in USD
+ * published its prices as shillings, understating them by around 130×.
+ *
+ * A unit currency that differs from its property's is only meaningful once a
+ * developer can actually set one, so it is honoured when the property has no
+ * currency of its own.
+ */
+export function unitCurrency(
+  unit: { currency?: string | null } | null | undefined,
+  propertyCurrency?: string | null,
+): string {
+  return propertyCurrency || unit?.currency || 'KES';
+}
+
 /** How a developer wants a type's price presented to buyers. */
 export type PriceDisplay =
   /** Every unit's own price, listed individually. Honest when they differ. */
@@ -103,7 +125,7 @@ function labelFor(bedrooms: number): string {
  * order a buyer scanning for affordability wants, and the one that puts the
  * flagship last where it lands as a finish rather than a barrier.
  */
-export function groupUnitsByType(units: Unit[]): UnitType[] {
+export function groupUnitsByType(units: Unit[], propertyCurrency?: string | null): UnitType[] {
   const buckets = new Map<string, { units: Unit[]; label: string }>();
 
   for (const unit of units) {
@@ -145,7 +167,7 @@ export function groupUnitsByType(units: Unit[]): UnitType[] {
       uniformPrice: minPrice === maxPrice,
       minSqm: sizes.length ? Math.min(...sizes) : undefined,
       maxSqm: sizes.length ? Math.max(...sizes) : undefined,
-      currency: group[0]?.currency ?? 'KES',
+      currency: unitCurrency(group[0], propertyCurrency),
       bathrooms: baths.size === 1 ? group[0]?.bathrooms : undefined,
     });
   }

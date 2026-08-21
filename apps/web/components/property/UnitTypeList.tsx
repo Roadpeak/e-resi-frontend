@@ -9,6 +9,7 @@ import { formatPrice, cn } from '../../lib/utils';
 import {
   groupUnitsByType,
   priceDisplayFor,
+  unitCurrency,
   typePriceLabel,
   typeSizeLabel,
   type PriceDisplay,
@@ -31,6 +32,8 @@ import { unitStatus } from './templates/hooks';
 export interface UnitTypeListProps {
   units: Unit[];
   propertySlug: string;
+  /** The development's currency — the one the developer actually chose. */
+  currency?: string | null;
   /** Per-type presentation, keyed by type key. Set by the developer. */
   priceDisplay?: Record<string, string> | null;
   /** Dark grounds need their own text and borders. */
@@ -43,12 +46,13 @@ export interface UnitTypeListProps {
 export function UnitTypeList({
   units,
   propertySlug,
+  currency,
   priceDisplay,
   onDark = false,
   radius = 'rounded-2xl',
   className,
 }: UnitTypeListProps) {
-  const types = groupUnitsByType(units);
+  const types = groupUnitsByType(units, currency);
   // Nothing to group means nothing to show — the caller renders its own empty
   // state, which it words to match its own template.
   if (types.length === 0) return null;
@@ -62,6 +66,7 @@ export function UnitTypeList({
           index={i}
           propertySlug={propertySlug}
           display={priceDisplayFor(type.key, priceDisplay)}
+          currency={currency}
           onDark={onDark}
           radius={radius}
         />
@@ -75,6 +80,7 @@ function TypeRow({
   index,
   propertySlug,
   display,
+  currency,
   onDark,
   radius,
 }: {
@@ -82,6 +88,7 @@ function TypeRow({
   index: number;
   propertySlug: string;
   display: PriceDisplay;
+  currency?: string | null;
   onDark: boolean;
   radius: string;
 }) {
@@ -210,7 +217,7 @@ function TypeRow({
                     <span className={cn('shrink-0 text-[13px]', muted)}>{status.label}</span>
 
                     <span className={cn('shrink-0 text-[14px] font-semibold', heading)}>
-                      {formatPrice(unit.price, unit.currency ?? type.currency)}
+                      {formatPrice(unit.price, unitCurrency(unit, currency) || type.currency)}
                     </span>
 
                     <ArrowRight

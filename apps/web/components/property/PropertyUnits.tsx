@@ -89,6 +89,7 @@ export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: P
         <UnitTypeList
           units={units}
           propertySlug={propertySlug}
+          currency={currency}
           priceDisplay={priceDisplay}
         />
       )}

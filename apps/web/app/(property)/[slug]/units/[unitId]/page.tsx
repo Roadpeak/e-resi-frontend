@@ -12,6 +12,7 @@ import { UnitTopbar } from '../../../../../components/property/UnitTopbar';
 import { ChatWithDeveloper } from '../../../../../components/chat/ChatWithDeveloper';
 import { apiClient } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
+import { unitCurrency } from '../../../../../lib/units/unit-types';
 import { track } from '../../../../../lib/analytics/track';
 
 interface CinematicScene {
@@ -36,6 +37,8 @@ interface UnitDetail {
   floorPlan?: { id: string; name: string; imageUrl: string } | null;
   property: {
     id: string; slug: string; name: string; tagline?: string | null;
+    /** The development's currency — what the developer actually chose. */
+    currency?: string | null;
     city?: string | null; neighborhood?: string | null; heroImageUrl?: string | null;
     hasCinematicTour: boolean;
     developer?: { companyName?: string | null } | null;
@@ -269,7 +272,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <p className="text-sm text-gray-500">Price</p>
-              <p className="text-3xl font-semibold text-gray-900">{formatPrice(unit.price, unit.currency)}</p>
+              <p className="text-3xl font-semibold text-gray-900">{formatPrice(unit.price, unitCurrency(unit, unit.property?.currency))}</p>
 
               <div className="mt-5 space-y-2.5 border-t border-gray-100 pt-5 text-[15px]">
                 <div className="flex justify-between">
