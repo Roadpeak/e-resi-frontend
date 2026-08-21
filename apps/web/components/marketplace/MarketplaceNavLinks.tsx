@@ -41,8 +41,8 @@ const TRAILING_LINKS = [
  */
 const linkClass = (active: boolean) =>
   cn(
-    'relative rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors whitespace-nowrap',
-    'after:absolute after:inset-x-3.5 after:-bottom-0.5 after:h-[2.5px] after:rounded-full',
+    'relative rounded-lg px-2.5 py-1.5 text-[14px] font-medium transition-colors whitespace-nowrap',
+    'after:absolute after:inset-x-2.5 after:-bottom-0.5 after:h-[2px] after:rounded-full',
     'after:transition-all after:duration-300 after:content-[""]',
     active
       ? 'text-brand-600 after:bg-brand-600'
@@ -70,7 +70,7 @@ export function MarketplaceNavLinks() {
   const commercialActive = COMMERCIAL_LINKS.some((l) => pathname === l.href);
 
   return (
-    <nav className="hidden xl:flex items-center gap-0.5 shrink-0">
+    <nav className="hidden shrink-0 items-center justify-start gap-0 xl:flex">
       {LINKS.map((l) => (
         <Link key={l.href} href={l.href} className={linkClass(pathname === l.href)}>
           {l.label}
@@ -90,7 +90,7 @@ export function MarketplaceNavLinks() {
         {commercialOpen && (
           <div
             role="menu"
-            className="absolute left-0 top-11 z-50 w-52 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg"
+            className="absolute left-0 top-10 z-50 w-48 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg"
           >
             {COMMERCIAL_LINKS.map((l) => (
               <Link
@@ -98,7 +98,7 @@ export function MarketplaceNavLinks() {
                 href={l.href}
                 role="menuitem"
                 className={cn(
-                  'block rounded-xl px-3 py-2 text-[15px] font-medium transition-colors',
+                  'block rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors',
                   // A filled row still suits a dropdown, where each item spans
                   // the full width — an underline would float unattached. Only
                   // the colour changes, from black to the brand accent.

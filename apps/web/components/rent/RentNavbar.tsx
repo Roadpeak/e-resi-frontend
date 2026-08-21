@@ -54,7 +54,7 @@ export function RentNavbar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.08] bg-white">
-      <div className="flex h-full items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-full items-center gap-3 px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="shrink-0" aria-label="e-resi home">
           <Logo markSize={28} textClassName="text-gray-900 text-[1.3rem]" />
