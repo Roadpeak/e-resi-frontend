@@ -147,9 +147,16 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
         </div>
       </div>
 
-      {/* Facts bar, lifted over the hero's lower edge. */}
+      {/*
+        Facts bar, lifted over the hero's lower edge.
+
+        `relative z-20` is load-bearing. Without a stacking context of its own
+        the bar sits at z-index auto while the hero's content sits at z-10, so
+        the hero painted straight over it and the whole bar was invisible —
+        every figure a buyer scans for, gone.
+      */}
       {facts.length > 0 && (
-        <div className="mx-auto -mt-14 w-full max-w-6xl px-6 sm:px-10">
+        <div className="relative z-20 mx-auto -mt-14 w-full max-w-6xl px-6 sm:px-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
