@@ -4,14 +4,14 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Building2, MapPin, Phone, Globe, ArrowLeft, Loader2,
+  Building2, MapPin, Phone, Globe, ArrowLeft, ArrowRight, Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { developersApi } from '../../lib/api/developers';
-import { DirectoryCard, DirectoryShell, IconPillLink, Tag } from './DirectoryPrimitives';
+import { developersApi, type DeveloperPropertyPreview } from '../../lib/api/developers';
+import { formatPrice } from '../../lib/utils';
+import { DirectoryCard, DirectoryShell } from './DirectoryPrimitives';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { InstagramIcon, FacebookIcon, TwitterIcon, LinkedinIcon } from './SocialIcons';
-import { DirectoryPropertyCard } from './DirectoryPropertyCard';
 import { PartnersStrip } from './PartnersStrip';
 
 // Leaflet touches `window` at import time — must not run during SSR.
@@ -65,6 +65,10 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
     ? (Object.entries(developer.socials) as [keyof typeof SOCIAL_ICONS, string | undefined][])
         .filter(([key, url]) => url && key in SOCIAL_ICONS)
     : [];
+  // No cover image exists on a developer profile, so their first development
+  // with a photo stands in for one.
+  const heroImage = properties.find((p) => p.heroImageUrl)?.heroImageUrl ?? null;
+
   const mapPlaces = properties
     .filter((p) => p.latitude != null && p.longitude != null)
     .map((p) => ({
@@ -82,123 +86,277 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
 
   return (
     <DirectoryShell className="pt-16">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          href="/developers"
-          className="mb-6 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#6b6b70] transition-colors hover:text-[#111112]"
-        >
-          <ArrowLeft size={15} /> All developers
-        </Link>
+      {/* ── Hero ──
+          A developer's own building, at the size their work deserves. The
+          previous header was a logo tile and a paragraph in a bordered card,
+          which read like a directory row rather than a company's own page.
 
-        {/* ── Header card ── */}
-        <DirectoryCard className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-start gap-5">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-[#f0f0f2]">
-              {developer.logoUrl ? (
-                <Image src={developer.logoUrl} alt="" width={80} height={80} className="h-full w-full object-cover" />
-              ) : (
-                <Building2 size={28} className="text-[#8a8a90]" />
-              )}
-            </div>
+          There is no cover image on the profile, so the first development's
+          hero stands in — a developer who has listed anything has one. */}
+      <section className="relative isolate overflow-hidden bg-[#0b0d11]">
+        {heroImage && (
+          <Image
+            src={heroImage}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-70"
+          />
+        )}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-[#0b0d11] via-[#0b0d11]/55 to-[#0b0d11]/25"
+        />
 
-            <div className="min-w-0 flex-1">
-              <h1 className="text-[24px] font-semibold text-[#111112] sm:text-[28px]">
+        <div className="relative mx-auto flex min-h-[clamp(340px,48vh,520px)] max-w-6xl flex-col justify-between px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex items-start justify-between gap-4">
+            <Link
+              href="/developers"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-white/70 transition-colors hover:text-white"
+            >
+              <ArrowLeft size={15} /> All developers
+            </Link>
+
+            {/* Socials stay at the top, as asked — over the image rather than
+                buried under a description. */}
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-2">
+                {socialLinks.map(([key, url]) => {
+                  const Icon = SOCIAL_ICONS[key];
+                  return (
+                    <a
+                      key={key}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      aria-label={key}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                    >
+                      <Icon size={16} />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-end gap-5">
+            {developer.logoUrl && (
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/95 p-1.5">
+                <Image
+                  src={developer.logoUrl}
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="h-full w-full object-contain"
+                />
+              </span>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-white sm:text-[52px]">
                 {developer.companyName}
               </h1>
               {developer.location && (
-                <p className="mt-1 flex items-center gap-1.5 text-[14px] text-[#6b6b70]">
-                  <MapPin size={14} /> {developer.location}
+                <p className="mt-3 flex items-center gap-1.5 text-[15px] text-white/70">
+                  <MapPin size={15} /> {developer.location}
                 </p>
               )}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Tag tone="blue">
-                  {properties.length} live listing{properties.length === 1 ? '' : 's'}
-                </Tag>
-                {developer.establishedYear && <Tag tone="gray">Since {developer.establishedYear}</Tag>}
-                {developer.completedProjects > 0 && (
-                  <Tag tone="green">{developer.completedProjects} completed projects</Tag>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Intro band ──
+          The reference pairs the hero with a short statement and the two
+          things a visitor might do next. */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-14">
+            <div>
+              {developer.description ? (
+                <p className="max-w-[62ch] text-[16px] leading-relaxed text-[#3f3f45] sm:text-[17px]">
+                  {developer.description}
+                </p>
+              ) : (
+                <p className="max-w-[62ch] text-[16px] leading-relaxed text-[#6b6b70]">
+                  {developer.companyName} has {properties.length} live
+                  {properties.length === 1 ? ' development' : ' developments'} on e-resi.
+                </p>
+              )}
+
+              <div className="mt-6 flex flex-wrap items-center gap-2.5">
+                {developer.whatsapp && (
+                  <a
+                    href={waLink(developer.whatsapp)}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brand-700"
+                  >
+                    <WhatsAppIcon size={15} /> Message them
+                  </a>
+                )}
+                {developer.phone && (
+                  <a
+                    href={telLink(developer.phone)}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                  >
+                    <Phone size={15} /> Call
+                  </a>
+                )}
+                {developer.website && (
+                  <a
+                    href={developer.website}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                  >
+                    <Globe size={15} /> Website
+                  </a>
                 )}
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              {developer.phone && (
-                <IconPillLink href={telLink(developer.phone)} label={`Call ${developer.companyName}`}>
-                  <Phone size={16} />
-                </IconPillLink>
+            {/* The facts that were chips in the old header, as a table — the
+                same treatment the listing cards use. */}
+            <dl className="lg:border-l lg:border-black/5 lg:pl-14">
+              <Fact
+                label="Live listings"
+                value={`${properties.length} development${properties.length === 1 ? '' : 's'}`}
+              />
+              {developer.establishedYear && (
+                <Fact label="Established" value={String(developer.establishedYear)} />
               )}
-              {developer.whatsapp && (
-                <IconPillLink href={waLink(developer.whatsapp)} label={`WhatsApp ${developer.companyName}`} tone="whatsapp">
-                  <WhatsAppIcon size={16} />
-                </IconPillLink>
+              {developer.completedProjects > 0 && (
+                <Fact label="Completed" value={`${developer.completedProjects} projects`} />
               )}
-              {developer.website && (
-                <IconPillLink href={developer.website} label={`${developer.companyName} website`}>
-                  <Globe size={16} />
-                </IconPillLink>
-              )}
-            </div>
+            </dl>
           </div>
+        </div>
+      </section>
 
-          {developer.description && (
-            <p className="mt-6 max-w-3xl text-[15px] leading-relaxed text-[#3f3f45]">
-              {developer.description}
-            </p>
-          )}
-
-          {/* ── Socials ── */}
-          {socialLinks.length > 0 && (
-            <div className="mt-6 flex items-center gap-2 border-t border-black/5 pt-6">
-              <span className="mr-1 text-[13px] font-medium text-[#6b6b70]">Follow</span>
-              {socialLinks.map(([key, url]) => {
-                const Icon = SOCIAL_ICONS[key];
-                return (
-                  <a
-                    key={key}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label={key}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f5f6] text-[#111112] transition-colors hover:bg-[#eaeaec]"
-                  >
-                    <Icon size={16} />
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </DirectoryCard>
-
-        {/* ── Map of their developments ── */}
-        {mapPlaces.length > 0 && (
-          <DirectoryCard className="mt-6 h-[360px] overflow-hidden">
-            <DirectoryMap places={mapPlaces} className="rounded-[28px]" />
-          </DirectoryCard>
-        )}
-
-        {/* ── Agents representing this developer ── */}
+      {/* ── Agents ── kept up here, beside the company rather than below its
+          work: they are who a buyer actually talks to. */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <PartnersStrip side="developer" profileId={profileId} />
+      </div>
 
-        {/* ── Property grid ── */}
-        <div className="mt-8">
-          <h2 className="mb-4 text-[20px] font-semibold text-[#111112]">
-            Developments by {developer.companyName}
+      {/* ── Developments ── */}
+      <section className="bg-white pb-4 pt-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-[28px] font-semibold tracking-[-0.01em] text-[#111112] sm:text-[36px]">
+            Latest developments
           </h2>
+        </div>
 
-          {properties.length === 0 ? (
+        {properties.length === 0 ? (
+          <div className="mx-auto mt-6 max-w-6xl px-4 sm:px-6 lg:px-8">
             <DirectoryCard className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <Building2 size={28} className="text-[#c4c4c8]" />
               <p className="text-[14px] text-[#6b6b70]">No live listings yet.</p>
             </DirectoryCard>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {properties.map((p) => (
-                <DirectoryPropertyCard key={p.id} property={p} />
-              ))}
-            </div>
-          )}
+          </div>
+        ) : (
+          /* Full-bleed bands rather than a card grid: one development at a
+             time, at a size where the photography carries the page. */
+          <div className="mt-8">
+            {properties.map((p, i) => (
+              <ProjectBand key={p.id} property={p} index={i} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Map ── last, as asked: it answers "where are these" once a visitor
+          has seen what the developments actually are. */}
+      {mapPlaces.length > 0 && (
+        <section className="bg-white pb-14 pt-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <h2 className="mb-5 text-[22px] font-semibold text-[#111112]">
+              Where they build
+            </h2>
+            <DirectoryCard className="h-[420px] overflow-hidden">
+              <DirectoryMap places={mapPlaces} className="rounded-[28px]" />
+            </DirectoryCard>
+          </div>
+        </section>
+      )}
+    </DirectoryShell>
+  );
+}
+
+/** One labelled fact on a hairline rule. */
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-black/5 py-3.5 last:border-b-0">
+      <dt className="text-[14px] text-[#6b6b70]">{label}</dt>
+      <dd className="text-[15px] font-semibold text-[#111112]">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * A development as a full-width band.
+ *
+ * The reference runs its projects edge to edge with the name and a category
+ * over the image — at that size a building reads as a piece of work rather
+ * than a search result.
+ */
+function ProjectBand({
+  property,
+  index,
+}: {
+  property: DeveloperPropertyPreview;
+  index: number;
+}) {
+  const where = [property.neighborhood, property.city].filter(Boolean).join(', ');
+
+  return (
+    <Link
+      href={`/${property.slug}`}
+      className="group relative block h-[clamp(280px,42vh,440px)] w-full overflow-hidden"
+    >
+      {property.heroImageUrl ? (
+        <Image
+          src={property.heroImageUrl}
+          alt={property.name}
+          fill
+          priority={index === 0}
+          sizes="100vw"
+          className="object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[#e8eaea]" />
+      )}
+
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"
+      />
+
+      <div className="absolute inset-x-0 bottom-0">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-4 px-4 pb-8 sm:px-6 lg:px-8">
+          <div className="min-w-0">
+            {where && (
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/60">
+                {where}
+              </p>
+            )}
+            <h3 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.01em] text-white sm:text-[34px]">
+              {property.name}
+            </h3>
+            {!!property.priceFrom && property.priceFrom > 0 && (
+              <p className="mt-1.5 text-[15px] text-white/75">
+                From {formatPrice(property.priceFrom, property.currency)}
+              </p>
+            )}
+          </div>
+
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white group-hover:text-[#111112]">
+            View development <ArrowRight size={14} />
+          </span>
         </div>
       </div>
-    </DirectoryShell>
+    </Link>
   );
 }
