@@ -8,7 +8,7 @@ import {
   ArrowLeft, Bath, BedDouble, Building2, CheckCircle2, Clock, Film,
   Loader2, MapPin, Maximize2, Play, X, XCircle,
 } from 'lucide-react';
-import { NavbarLight } from '../../../../../components/layout/NavbarLight';
+import { UnitTopbar } from '../../../../../components/property/UnitTopbar';
 import { ChatWithDeveloper } from '../../../../../components/chat/ChatWithDeveloper';
 import { apiClient } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
@@ -75,7 +75,9 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
-        <NavbarLight />
+        {/* No name to show yet, and a slug rendered as a title reads worse
+            than an empty bar for the moment it is on screen. */}
+        <div className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.07] bg-white/95" />
         <div className="flex h-[60vh] items-center justify-center">
           <Loader2 size={28} className="animate-spin text-gray-400" />
         </div>
@@ -86,7 +88,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   if (isError || !unit) {
     return (
       <div className="min-h-screen bg-white">
-        <NavbarLight />
+        <div className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.07] bg-white/95" />
         <div className="mx-auto max-w-2xl px-6 py-32 text-center">
           <p className="text-lg text-gray-600">This unit could not be found.</p>
           <Link href={`/${slug}`} className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-semibold text-brand-600 hover:text-brand-700">
@@ -109,21 +111,23 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
       .map((m) => ({ id: m.id, url: m.url, title: m.title ?? unit.property.name })),
   ];
   const scenes = unit.property.cinematicScenes ?? [];
+  // The developer's logo is stored as a media row under a sentinel title,
+  // which is also why it is excluded from the gallery above.
+  const logoUrl = (unit.property.media ?? []).find((m) => m.title === '__logo__')?.url;
 
   return (
     <div className="min-h-screen bg-white">
-      <NavbarLight />
+      <UnitTopbar
+        propertySlug={unit.property.slug}
+        propertyName={unit.property.name}
+        developerName={unit.property.developer?.companyName}
+        logoUrl={logoUrl}
+      />
 
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
-        {/* breadcrumb back to the property */}
-        <Link
-          href={`/${unit.property.slug}`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft size={15} /> {unit.property.name}
-        </Link>
-
-        <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_360px]">
+        {/* The topbar already carries the development's name and a route back
+            to it, so the old breadcrumb repeated both a line below itself. */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           {/* ── Left: gallery + details ── */}
           <div>
             {/* Gallery */}
