@@ -29,6 +29,7 @@ import {
   DEFAULT_TEMPLATE,
   templateFor,
 } from '../../../../../../lib/branding/templates';
+import { revalidateMiniSite } from '../../../../../../lib/actions/revalidate-mini-site';
 import { cn } from '../../../../../../lib/utils';
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
@@ -96,7 +97,24 @@ export default function CustomiseMiniSite() {
   );
 
   const save = useMutation({
-    mutationFn: () => propertiesApi.updateBranding(slug, draft!),
+    mutationFn: async () => {
+      const result = await propertiesApi.updateBranding(slug, draft!);
+      // Flush the public page's cache immediately. Without this the mini-site
+      // keeps serving its previous version for up to a minute, so a developer
+      // who saves and opens their live page sees the old design and reasonably
+      // concludes the save failed.
+      //
+      // Deliberately not fatal: the branding is already saved by this point,
+      // and the page would refresh itself within the revalidation window
+      // anyway. Failing the save over a cache flush would be worse than
+      // serving one stale minute.
+      try {
+        await revalidateMiniSite(slug);
+      } catch {
+        // Ignored — see above.
+      }
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property', slug] });
       setError('');
