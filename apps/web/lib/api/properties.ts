@@ -67,6 +67,8 @@ export const propertiesApi = {
     body: Partial<{
       brandColor: string;
       brandFont: string;
+      /** Mini-site template key — see lib/branding/templates.ts. */
+      templateKey: string;
       heroStyle: string;
       sectionOrder: string[];
       hiddenSections: string[];
