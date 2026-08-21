@@ -13,6 +13,12 @@ interface AuthState {
   isLoading: boolean;
 
   setUser: (user: User, token: string) => void;
+  /**
+   * Store a token before the user record is known. Used by the OAuth landing
+   * page, which receives a token in the redirect and must authorise the /me
+   * call that fetches the account it belongs to.
+   */
+  setToken: (token: string) => void;
   /** Merge fresh fields into the cached user (e.g. after a profile save). */
   patchUser: (patch: Partial<User>) => void;
   logout: () => Promise<void>;
@@ -33,6 +39,13 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user, accessToken) => {
         set({ user, accessToken, isAuthenticated: true });
+      },
+
+      setToken: (accessToken) => {
+        // Deliberately not authenticated yet: there is no user record, and the
+        // guards key off isAuthenticated. The caller sets it via setUser once
+        // /me returns.
+        set({ accessToken });
       },
 
       patchUser: (patch) => {

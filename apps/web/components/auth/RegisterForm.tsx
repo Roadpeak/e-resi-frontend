@@ -17,6 +17,7 @@ import { authApi } from '../../lib/api/auth';
 import { ApiError } from '../../lib/api/client';
 import { VerificationCodePanel } from './VerificationCodePanel';
 import { ALL_SPECIALTIES, SPECIALTY_LABELS, type AgentSpecialty } from '../../lib/api/agents';
+import { AuthDivider, GoogleButton } from './GoogleButton';
 
 type Role = 'developer' | 'agent' | 'investor' | 'tenant';
 
@@ -290,6 +291,25 @@ export function RegisterForm() {
                     );
                   })}
                 </div>
+
+                {/*
+                  Google is offered only to investors and tenants. Developer and
+                  agent accounts need KYB/KYC, company details and document
+                  uploads that a one-click flow cannot collect — an account
+                  created that way would look complete but be unable to list.
+                */}
+                {(role === 'investor' || role === 'tenant') && (
+                  <div className="mx-auto mt-6 max-w-2xl space-y-4">
+                    <AuthDivider />
+                    <GoogleButton
+                      role={role === 'tenant' ? 'TENANT' : 'INVESTOR'}
+                      label={`Continue with Google as ${role === 'tenant' ? 'a tenant' : 'an investor'}`}
+                    />
+                    <p className="text-center text-[13px] text-[#5f6368]">
+                      No password to set, and your email is already verified.
+                    </p>
+                  </div>
+                )}
               </motion.div>
             )}
 

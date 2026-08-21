@@ -30,6 +30,19 @@ export interface MeResponse {
   user: User;
 }
 
+/**
+ * Where to send the browser to start Google sign-in.
+ *
+ * A full page redirect, not a fetch: the flow leaves our origin for Google's
+ * consent screen and comes back to the API's callback, which then redirects to
+ * /auth/google/complete. `role` only applies when the account is created —
+ * an existing user keeps the role they already have.
+ */
+export function googleSignInUrl(role: 'INVESTOR' | 'TENANT'): string {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+  return `${base}/auth/google?role=${role}`;
+}
+
 export const authApi = {
   login: (payload: LoginPayload) =>
     apiClient.post<AuthResponse>('/auth/login', payload, { skipAuth: true }),

@@ -14,6 +14,7 @@ import { useAuthStore } from '../../lib/stores/auth.store';
 import { ApiError } from '../../lib/api/client';
 import { VerificationCodePanel } from './VerificationCodePanel';
 import { homePathFor } from '../../lib/auth/role-home';
+import { AuthDivider, GoogleButton } from './GoogleButton';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -189,6 +190,28 @@ export function LoginForm() {
                 <p className="text-sm leading-relaxed text-[#5f6368]">
                   Not your device? Use a private browsing window to sign in.
                 </p>
+
+                <AuthDivider />
+
+                {/*
+                  Role only applies if this Google account is new here; an
+                  existing user keeps the role they already have. Investor is
+                  the default for a first-time sign-in from the login screen —
+                  tenants who want that role pick it on the register screen.
+                */}
+                <div className="space-y-2">
+                  <GoogleButton role="INVESTOR" label="Continue with Google" />
+                  {/*
+                    Said plainly so a developer or agent does not sign in with
+                    Google, land on the wrong account type and have to be
+                    migrated. Those roles need KYB/KYC and company details that
+                    a one-click flow cannot collect.
+                  */}
+                  <p className="text-center text-[13px] leading-relaxed text-[#5f6368]">
+                    For investors and tenants only. Developers and agents sign in
+                    with email and password.
+                  </p>
+                </div>
               </div>
 
               <div className="mt-8 flex items-center justify-between">
