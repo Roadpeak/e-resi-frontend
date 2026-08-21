@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Property } from '../../../../lib/types';
+import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
+import { PropertyCinematicPreview } from '../../PropertyCinematicPreview';
+import { PropertyViewer3D } from '../../PropertyViewer3D';
+import { PropertyRentListings } from '../../PropertyRentListings';
 import { TemplateHero } from '../TemplateHero';
 import {
   LuxeBooking,
@@ -24,6 +29,12 @@ import {
  * ../hooks — the same booking submission, unit filtering and lightbox the
  * other templates use.
  */
+
+/**
+ * Sections whose component renders its own <section id="…">; the wrapper must
+ * not repeat the id, or anchor navigation and scroll-spy break.
+ */
+const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals']);
 
 /** Its own nav: hairline, uppercase, transparent until you leave the hero. */
 function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string }) {
@@ -71,11 +82,15 @@ function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string 
       }}
     >
       <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 sm:px-10">
-        <Link
-          href={`/${property.slug}`}
-          className="text-[15px] font-light uppercase tracking-[0.22em] text-white"
-        >
-          {property.name}
+        <Link href={`/${property.slug}`} className="flex min-w-0 items-center gap-3">
+          {property.logoUrl && (
+            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+              <Image src={property.logoUrl} alt="" fill className="object-cover" sizes="32px" />
+            </span>
+          )}
+          <span className="truncate text-[15px] font-light uppercase tracking-[0.22em] text-white">
+            {property.name}
+          </span>
         </Link>
 
         <div className="hidden items-center gap-9 lg:flex">
@@ -103,7 +118,7 @@ function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string 
 
 function Section({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-28 px-6 py-24 sm:px-10 sm:py-32">
+    <section id={SELF_ANCHORED.has(id) ? undefined : id} className="scroll-mt-28 px-6 py-24 sm:px-10 sm:py-32">
       <div className="mx-auto max-w-[1200px]">{children}</div>
     </section>
   );
@@ -116,6 +131,7 @@ export function LuxeDarkTemplate({
   sections,
   whiteLabel,
   sectionCopy,
+  rentListings,
 }: {
   property: Property;
   ctaLabel?: string;
@@ -125,6 +141,8 @@ export function LuxeDarkTemplate({
   whiteLabel?: boolean;
   /** Developer wording keyed by section id. */
   sectionCopy?: Record<string, SectionCopy>;
+  /** Live rentals for this development, fetched by the page. */
+  rentListings?: RentListing[];
 }) {
   const copy = (id: string) => sectionCopy?.[id] ?? {};
   // Same data, this template's markup. Anything the development does not have
@@ -147,6 +165,9 @@ export function LuxeDarkTemplate({
       <LuxeLocation address={property.address} amenities={property.amenities} copy={copy('location')} />
     ),
     construction: <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />,
+    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
+    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
+    rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <LuxeBooking property={property} copy={copy('booking')} />,
   };
 

@@ -10,6 +10,8 @@ import type {
 import { formatPrice, formatCompletionDate } from '../../../lib/utils';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { useBooking, useLightbox, useUnits, unitStatus } from './hooks';
+import { TourCards } from '../TourCards';
+import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 import { Reveal } from './shared';
 
 /**
@@ -177,6 +179,20 @@ export function KitOverview({ property, style, copy }: { property: Property; sty
       <div className="grid gap-14 lg:grid-cols-[1.15fr_1fr]">
         <Reveal>
           <p className={`text-[17px] leading-[1.8] ${t.body}`}>{property.description}</p>
+
+          {/* The tours and a way to reach the developer — both were missing
+              from every template but Classic, so a buyer on a chosen template
+              could not open a tour from the overview or ask a question. */}
+          <div className="mt-8 space-y-4">
+            <TourCards
+              propertySlug={property.slug}
+              has3D={property.has3DTour}
+              hasVR={property.hasVRTour}
+              hasCinematic={property.hasCinematicTour}
+              onDark={style.onDark}
+            />
+            <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
+          </div>
 
           {property.features?.length > 0 && (
             <ul className="mt-9 grid gap-x-8 gap-y-3 sm:grid-cols-2">
@@ -508,6 +524,26 @@ export function KitLocation({
             <MapPin size={18} className="mt-1 shrink-0" style={{ color: 'var(--brand)' }} />
             <span>{[address?.street, address?.neighborhood, address?.city, address?.county].filter(Boolean).join(', ')}</span>
           </p>
+
+          {/* An address without a map is a fact a buyer cannot act on. Only
+              rendered when the development actually has coordinates. */}
+          {!!address?.coordinates?.lat && !!address?.coordinates?.lng && (
+            <div className={`mt-6 overflow-hidden ${style.radius} border ${t.border}`}>
+              <iframe
+                title="Location map"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="h-[280px] w-full"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+                  address.coordinates.lng - 0.012
+                }%2C${address.coordinates.lat - 0.008}%2C${
+                  address.coordinates.lng + 0.012
+                }%2C${address.coordinates.lat + 0.008}&layer=mapnik&marker=${
+                  address.coordinates.lat
+                }%2C${address.coordinates.lng}`}
+              />
+            </div>
+          )}
         </Reveal>
         {amenities?.length > 0 && (
           <Reveal delay={0.08}>

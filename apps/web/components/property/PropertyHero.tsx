@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Box, Headset, MapPin, Sparkles } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { getStatusLabel, getStatusColor, cn } from '../../lib/utils';
 import { playbackVideoUrl } from '../../lib/media/video';
@@ -90,44 +90,21 @@ function StatusChips({ property, onDark = true }: { property: Property; onDark?:
       >
         {getStatusLabel(property.status)}
       </span>
-      <span
-        className={cn(
-          'rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
-          onDark ? 'bg-gray-900/60 text-white' : 'bg-gray-100 text-gray-700',
-        )}
-      >
-        by {property.developer.name}
-      </span>
+      {/*
+        "by <developer>" removed: the topbar, the overview and the footer each
+        already name the developer, so the hero was the fourth.
+      */}
     </>
   );
 }
 
-/** Immersive capabilities — the reason this page exists rather than a listing. */
-function CapabilityTags({ property, onDark = true }: { property: Property; onDark?: boolean }) {
-  const items = [
-    property.has3DTour && { icon: <Box size={11} />, label: 'Interactive 3D Model' },
-    property.hasVRTour && { icon: <Headset size={11} />, label: 'Virtual Reality Tour' },
-    property.hasDigitalTwin && { icon: <Sparkles size={11} />, label: 'Digital Twin' },
-  ].filter(Boolean) as { icon: React.ReactNode; label: string }[];
-
-  if (items.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((t) => (
-        <span
-          key={t.label}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
-            onDark ? 'bg-gray-900/70 text-white' : 'bg-gray-100 text-gray-700',
-          )}
-        >
-          {t.icon} {t.label}
-        </span>
-      ))}
-    </div>
-  );
-}
+/*
+ * CapabilityTags removed.
+ *
+ * "Interactive 3D Model" and "Virtual Reality Tour" were chips over the hero
+ * repeating what the overview's tour cards now say properly, a screen below.
+ * Two statements of the same fact, and the hero's was the smaller one.
+ */
 
 const scrollToBooking = () =>
   document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -173,7 +150,6 @@ function CinematicHero({ property, overlay }: { property: Property; overlay: boo
           className="absolute inset-x-0 bottom-8 z-10"
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <CapabilityTags property={property} />
           </div>
         </motion.div>
       </motion.div>
@@ -244,8 +220,6 @@ function SplitHero({ property, ctaLabel }: { property: Property; ctaLabel?: stri
               </p>
             )}
 
-            <CapabilityTags property={property} onDark={false} />
-
             <button
               type="button"
               onClick={scrollToBooking}
@@ -296,7 +270,6 @@ function MinimalHero({ property, overlay }: { property: Property; overlay: boole
       {/* Tags sit below the band rather than over it — at this height an
           overlay would crowd the image against the scrim. */}
       <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-        <CapabilityTags property={property} onDark={false} />
       </div>
     </section>
   );

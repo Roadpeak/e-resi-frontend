@@ -165,6 +165,7 @@ export default async function PropertyPage({ params }: Props) {
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            rentListings={rentListings}
           />
         ) : (
           <KitTemplate
@@ -175,6 +176,7 @@ export default async function PropertyPage({ params }: Props) {
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            rentListings={rentListings}
           />
         )}
       </main>

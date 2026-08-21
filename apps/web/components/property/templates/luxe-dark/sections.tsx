@@ -8,6 +8,8 @@ import type { Property, Unit, FloorPlan, Amenity, ConstructionUpdate } from '../
 import { formatPrice, formatCompletionDate } from '../../../../lib/utils';
 import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
 import type { SectionCopy } from '../../../../lib/branding/theme';
+import { TourCards } from '../../TourCards';
+import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
 import { Reveal } from '../shared';
 
 /**
@@ -100,6 +102,17 @@ export function LuxeOverview({ property, copy }: { property: Property; copy?: Se
       <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
         <Reveal>
           <p className="text-[17px] leading-[1.85] text-white/65">{property.description}</p>
+
+          <div className="mt-9 space-y-4">
+            <TourCards
+              propertySlug={property.slug}
+              has3D={property.has3DTour}
+              hasVR={property.hasVRTour}
+              hasCinematic={property.hasCinematicTour}
+              onDark
+            />
+            <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
+          </div>
 
           {property.features?.length > 0 && (
             <ul className="mt-10 grid gap-x-8 gap-y-3.5 sm:grid-cols-2">
@@ -359,6 +372,27 @@ export function LuxeLocation({
                 .join(', ')}
             </span>
           </p>
+
+          {!!address?.coordinates?.lat && !!address?.coordinates?.lng && (
+            <div className="mt-6 overflow-hidden border border-white/12">
+              <iframe
+                title="Location map"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="h-[280px] w-full"
+                // The dark templates get a dimmed map: a bright white tile
+                // sheet in the middle of a near-black page reads as a hole.
+                style={{ filter: 'invert(0.92) hue-rotate(180deg) saturate(0.6)' }}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+                  address.coordinates.lng - 0.012
+                }%2C${address.coordinates.lat - 0.008}%2C${
+                  address.coordinates.lng + 0.012
+                }%2C${address.coordinates.lat + 0.008}&layer=mapnik&marker=${
+                  address.coordinates.lat
+                }%2C${address.coordinates.lng}`}
+              />
+            </div>
+          )}
         </Reveal>
 
         {amenities?.length > 0 && (

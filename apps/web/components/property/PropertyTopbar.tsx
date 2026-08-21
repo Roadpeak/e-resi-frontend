@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Headset, Box, Heart, Share2, Menu, X, ChevronRight, Film,
+  ArrowLeft, Headset, Heart, Share2, Menu, X, ChevronRight,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Property } from '../../lib/types';
@@ -294,31 +294,11 @@ export function PropertyTopbar({
 
           {/* ── Right: actions ── */}
           <div className="flex items-center gap-2 shrink-0 ml-auto lg:ml-0">
-            {/* Tour pills */}
-            {property.hasCinematicTour && (
-              <Link
-                href={`/${property.slug}/tour/cinematic`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-warm-500/25 bg-warm-500/10 px-3 py-1.5 text-xs font-medium text-warm-700 hover:bg-warm-500/20 transition-colors"
-              >
-                <Film size={13} /> Cinematic
-              </Link>
-            )}
-            {property.hasVRTour && (
-              <Link
-                href={`/${property.slug}/tour/vr`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-500/20 transition-colors"
-              >
-                <Headset size={13} /> VR Tour
-              </Link>
-            )}
-            {property.has3DTour && (
-              <Link
-                href={`/${property.slug}/tour/3d`}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-500/20 transition-colors"
-              >
-                <Box size={13} /> 3D Tour
-              </Link>
-            )}
+            {/*
+              Tour pills removed. They repeated the tour cards in the overview
+              a few hundred pixels below, in three unrelated colours, and the
+              bar already links to every tour through its section nav.
+            */}
 
             {/* Save */}
             <button

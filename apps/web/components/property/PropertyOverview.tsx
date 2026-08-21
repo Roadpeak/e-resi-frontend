@@ -126,10 +126,14 @@ export function PropertyOverview({ property }: Props) {
       }
     : { sold: Math.max(total - available, 0), reserved: 0, available };
   const segTotal = Math.max(counts.sold + counts.reserved + counts.available, 1);
+  // One hue, three weights. A stacked bar does need its segments told apart,
+  // but brand / amber / gold put three unrelated colours in a single control —
+  // steps of the platform blue separate them just as well and stop the page
+  // looking like three designs at once.
   const segments = [
-    { key: 'Sold', count: counts.sold, bar: 'bg-brand-500', dot: 'bg-brand-500' },
-    { key: 'Reserved', count: counts.reserved, bar: 'bg-amber-400', dot: 'bg-amber-400' },
-    { key: 'Available', count: counts.available, bar: 'bg-gold-300', dot: 'bg-gold-300' },
+    { key: 'Sold', count: counts.sold, bar: 'bg-brand-700', dot: 'bg-brand-700' },
+    { key: 'Reserved', count: counts.reserved, bar: 'bg-brand-400', dot: 'bg-brand-400' },
+    { key: 'Available', count: counts.available, bar: 'bg-brand-200', dot: 'bg-brand-200' },
   ];
 
   // Unit availability by bedroom type

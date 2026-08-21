@@ -13,10 +13,33 @@ interface Props {
   propertySlug: string;
 }
 
+/**
+ * Unit status, in the platform's own palette.
+ *
+ * Was emerald / amber / red — a traffic light on a page that already carries
+ * the developer's brand colour, so a single card could show four unrelated
+ * hues. Availability is the development's own accent, and the closed states
+ * step down to neutral rather than shouting in a colour that means "error".
+ */
 const statusConfig = {
-  available: { label: 'Available', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-400/10 border-emerald-400/20' },
-  reserved: { label: 'Reserved', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-400/10 border-amber-400/20' },
-  sold: { label: 'Sold', icon: XCircle, color: 'text-red-600', bg: 'bg-red-400/10 border-red-400/20' },
+  available: {
+    label: 'Available',
+    icon: CheckCircle2,
+    color: 'text-brand-700',
+    bg: 'bg-brand-500/10 border-brand-500/20',
+  },
+  reserved: {
+    label: 'Reserved',
+    icon: Clock,
+    color: 'text-gray-600',
+    bg: 'bg-gray-400/10 border-gray-400/25',
+  },
+  sold: {
+    label: 'Sold',
+    icon: XCircle,
+    color: 'text-gray-500',
+    bg: 'bg-gray-400/10 border-gray-400/20',
+  },
 };
 
 type Filter = 'all' | 'available';

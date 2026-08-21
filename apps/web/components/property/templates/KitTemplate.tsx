@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Property } from '../../../lib/types';
 import type { MiniSiteTemplate } from '../../../lib/branding/templates';
+import type { RentListing } from '../../../lib/types';
 import type { SectionCopy } from '../../../lib/branding/theme';
+import { PropertyCinematicPreview } from '../PropertyCinematicPreview';
+import { PropertyViewer3D } from '../PropertyViewer3D';
+import { PropertyRentListings } from '../PropertyRentListings';
 import { TemplateHero } from './TemplateHero';
 import {
   KitBooking, KitConstruction, KitFloorPlans, KitGallery, KitLocation, KitOverview, KitUnits,
@@ -19,6 +24,15 @@ import {
  * section forms. What they share is behaviour, via ./hooks — so a booking is
  * filed the same way whichever page a buyer is looking at.
  */
+
+/**
+ * Sections whose component renders its own <section id="…">.
+ *
+ * The wrapper must not add a second element with the same id — duplicate ids
+ * silently break getElementById scroll targets and the nav's scroll-spy, which
+ * is exactly what happened when the shared tour players were added.
+ */
+const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals']);
 
 export const KIT_STYLES: Record<string, KitStyle> = {
   EDITORIAL: {
@@ -133,15 +147,20 @@ function KitNav({
       }}
     >
       <div className={`mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 sm:px-10`}>
-        <Link
-          href={`/${property.slug}`}
-          className={`text-[16px] ${template.fonts.upperLabels ? 'uppercase tracking-[0.2em]' : 'font-semibold tracking-tight'}`}
-          style={{
-            color: fg,
-            fontFamily: 'var(--tpl-font-heading)',
-          }}
-        >
-          {property.name}
+        {/* The developer's own logo when they have uploaded one — it is their
+            sales site, so their mark belongs in the bar. */}
+        <Link href={`/${property.slug}`} className="flex min-w-0 items-center gap-2.5">
+          {property.logoUrl && (
+            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+              <Image src={property.logoUrl} alt="" fill className="object-cover" sizes="32px" />
+            </span>
+          )}
+          <span
+            className={`truncate text-[16px] ${template.fonts.upperLabels ? 'uppercase tracking-[0.2em]' : 'font-semibold tracking-tight'}`}
+            style={{ color: fg, fontFamily: 'var(--tpl-font-heading)' }}
+          >
+            {property.name}
+          </span>
         </Link>
 
         <div className={`hidden items-center lg:flex ${pill ? 'gap-1 rounded-full px-1.5 py-1.5' : 'gap-8'}`}
@@ -187,6 +206,7 @@ export function KitTemplate({
   sections,
   whiteLabel,
   sectionCopy,
+  rentListings,
 }: {
   template: MiniSiteTemplate;
   property: Property;
@@ -196,6 +216,8 @@ export function KitTemplate({
   whiteLabel?: boolean;
   /** Developer wording keyed by section id. */
   sectionCopy?: Record<string, SectionCopy>;
+  /** Live rentals for this development, fetched by the page. */
+  rentListings?: RentListing[];
 }) {
   const copy = (id: string) => sectionCopy?.[id] ?? {};
   const style = KIT_STYLES[template.key] ?? KIT_STYLES.EDITORIAL;
@@ -234,6 +256,11 @@ export function KitTemplate({
     construction: (
       <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />
     ),
+    // Reuse the shared players rather than rebuild them per template: they
+    // launch real tours and carry their own analytics.
+    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
+    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
+    rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <KitBooking property={property} style={style} copy={copy('booking')} />,
   };
 
@@ -254,7 +281,7 @@ export function KitTemplate({
         blocks[id] ? (
           <section
             key={id}
-            id={id}
+            id={SELF_ANCHORED.has(id) ? undefined : id}
             className={`scroll-mt-28 px-6 sm:px-10 ${pad}`}
             style={
               template.banded && i % 2 === 1
