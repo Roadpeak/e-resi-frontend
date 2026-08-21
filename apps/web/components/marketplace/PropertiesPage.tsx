@@ -5,7 +5,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
   ChevronDown,
-  MapPin,
+  MapPinned,
   Loader2,
   SlidersHorizontal,
   X,
@@ -15,7 +15,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { useProperties } from '../../lib/api/queries';
-import { PropertyCard } from './PropertyCard';
+import { PropertyShowcaseCard } from './PropertyShowcaseCard';
+import { browseSeed, weightedShuffle } from '../../lib/marketplace/shuffle';
 import { Pagination } from '../ui/Pagination';
 // MapLibre touches window/document on import — keep it out of the server bundle.
 const PropertiesMapView = dynamic(
@@ -74,21 +75,6 @@ export function PropertiesPage({
   const [page, setPage] = useState(1);
   const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
-  /**
-   * Whether the lg: sidebar is actually on screen. Starts false so the
-   * server-rendered pass and the first client pass agree — assuming desktop
-   * would mount a map the phone never shows and reintroduce the double
-   * instance. Uses the same 1023px breakpoint as the card's click handler.
-   */
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    const sync = () => setIsDesktop(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
-
   // The filter store is global and survives navigation, so a stale category
   // from a previous page would otherwise leak into a locked-category route.
   useEffect(() => {
@@ -115,6 +101,20 @@ export function PropertiesPage({
   const results: Property[] = (data?.items as unknown as Property[]) ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  /**
+   * Vary which development leads, weighted towards recent ones.
+   *
+   * Applied to the fetched page rather than server-side: reshuffling the whole
+   * result set per request would let a listing appear on two pages, or on
+   * none, as a visitor pages through. Within a page the set is fixed, so only
+   * the order moves.
+   */
+  const seed = useMemo(() => browseSeed(), []);
+  const ordered = useMemo(
+    () => weightedShuffle(results, seed + page),
+    [results, seed, page],
+  );
 
   // The map plots every match, not just the visible page.
   const { data: mapData } = useProperties({ ...query, limit: 100 });
@@ -194,10 +194,13 @@ export function PropertiesPage({
           />
         </div>
 
-        {/* ── Results + map ── */}
-        <div className="mt-8 flex items-start gap-6 lg:mt-10">
-          {/* Cards column */}
-          <section className="min-w-0 flex-1">
+        {/* ── Results ──
+            The map used to take 40% of every viewport for the whole session,
+            whether or not anyone was using it. It is now summoned from the
+            button at the bottom right, which gives each development the full
+            width of the page. */}
+        <div className="mt-8 lg:mt-10">
+          <section className="min-w-0">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{heading ?? 'Best options'}</h2>
@@ -233,16 +236,15 @@ export function PropertiesPage({
               <EmptyState onReset={clearFilters} />
             ) : (
               <>
-                <div className="flex flex-col gap-4">
-                  {results.map((p, i) => (
-                    <PropertyCard
+                <div className="flex flex-col gap-6 lg:gap-8">
+                  {ordered.map((p, i) => (
+                    <PropertyShowcaseCard
                       key={p.id}
                       property={p}
                       index={i}
-                      view="list"
                       onViewOnMap={() => {
                         setFocusPropertyId(p.id);
-                        if (window.matchMedia('(max-width: 1023px)').matches) setShowFullMap(true);
+                        setShowFullMap(true);
                       }}
                     />
                   ))}
@@ -259,35 +261,22 @@ export function PropertiesPage({
             )}
           </section>
 
-          {/* Map panel — always visible on lg+ */}
-          <aside className="sticky top-20 hidden h-[calc(100vh-6.5rem)] w-[40%] max-w-[560px] shrink-0 overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm lg:block">
-            <div className="relative h-full w-full">
-              {/* Only mounted when this panel is genuinely on screen. It is
-                  `hidden` below lg, but display:none still mounts — which
-                  left a zero-size Leaflet instance alive alongside the
-                  fullscreen one on mobile. */}
-              {isDesktop && !showFullMap && (
-                <PropertiesMapView properties={mapResults} focusPropertyId={focusPropertyId} />
-              )}
-            </div>
-            <div className="absolute inset-x-5 bottom-4 z-30">
-              <button
-                onClick={() => setShowFullMap(true)}
-                className="w-full cursor-pointer rounded-full bg-brand-600 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-colors hover:bg-brand-700"
-              >
-                Go to map
-              </button>
-            </div>
-          </aside>
         </div>
       </div>
 
-      {/* Mobile map button */}
+      {/* ── Map summons ──
+          One control on every breakpoint, bottom right, out of the way of the
+          results but always reachable. Labelled on hover rather than
+          permanently, so it stays a mark rather than a banner. */}
       <button
         onClick={() => setShowFullMap(true)}
-        className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 cursor-pointer items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-brand-600/30 transition-colors hover:bg-brand-700 lg:hidden"
+        aria-label="View properties on map"
+        className="group fixed bottom-6 right-6 z-40 flex cursor-pointer items-center gap-0 rounded-full bg-brand-600 p-4 text-white shadow-xl shadow-brand-600/30 transition-all duration-300 hover:gap-2 hover:bg-brand-700 hover:pr-5"
       >
-        <MapPin size={15} /> Map
+        <MapPinned size={20} className="shrink-0" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-300 group-hover:max-w-[140px]">
+          View on map
+        </span>
       </button>
 
       {/* Fullscreen map overlay */}
