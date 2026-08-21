@@ -29,10 +29,24 @@ const TRAILING_LINKS = [
   { href: '/agents', label: 'Agents' },
 ];
 
+/**
+ * The current section is marked with a rule beneath it rather than a filled
+ * pill. A black pill is the heaviest element in a light navbar, so the item a
+ * visitor has already chosen drew more attention than the ones they might go
+ * to next.
+ *
+ * The rule is a pseudo-element on a relative box, so it sits at a fixed
+ * distance below the text and does not change the item's height — an inline
+ * border would shift every other link by a pixel as the active one moves.
+ */
 const linkClass = (active: boolean) =>
   cn(
-    'rounded-full px-3.5 py-2 text-[15px] font-medium transition-colors whitespace-nowrap',
-    active ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+    'relative rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors whitespace-nowrap',
+    'after:absolute after:inset-x-3.5 after:-bottom-0.5 after:h-[2.5px] after:rounded-full',
+    'after:transition-all after:duration-300 after:content-[""]',
+    active
+      ? 'text-brand-600 after:bg-brand-600'
+      : 'text-gray-700 hover:text-gray-900 after:bg-transparent hover:after:bg-gray-200',
   );
 
 export function MarketplaceNavLinks() {
@@ -85,8 +99,11 @@ export function MarketplaceNavLinks() {
                 role="menuitem"
                 className={cn(
                   'block rounded-xl px-3 py-2 text-[15px] font-medium transition-colors',
+                  // A filled row still suits a dropdown, where each item spans
+                  // the full width — an underline would float unattached. Only
+                  // the colour changes, from black to the brand accent.
                   pathname === l.href
-                    ? 'bg-gray-900 text-white'
+                    ? 'bg-brand-50 text-brand-700'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
                 )}
               >
