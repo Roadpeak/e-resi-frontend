@@ -131,6 +131,7 @@ export function LuxeDarkTemplate({
   sections,
   whiteLabel,
   sectionCopy,
+  unitPriceDisplay,
   rentListings,
 }: {
   property: Property;
@@ -141,6 +142,8 @@ export function LuxeDarkTemplate({
   whiteLabel?: boolean;
   /** Developer wording keyed by section id. */
   sectionCopy?: Record<string, SectionCopy>;
+  /** Per-unit-type price presentation chosen by the developer. */
+  unitPriceDisplay?: Record<string, string> | null;
   /** Live rentals for this development, fetched by the page. */
   rentListings?: RentListing[];
 }) {
@@ -158,6 +161,7 @@ export function LuxeDarkTemplate({
         currency={property.currency}
         propertySlug={property.slug}
         copy={copy('units')}
+        priceDisplay={unitPriceDisplay}
       />
     ),
     floorplans: <LuxeFloorPlans floorPlans={property.floorPlans} copy={copy('floorplans')} />,

@@ -331,6 +331,8 @@ export interface BrandingSource {
   hiddenSections?: string[] | null;
   /** Per-section copy overrides, keyed by section id. */
   sectionCopy?: Record<string, SectionCopy> | null;
+  /** How each unit type's price is shown, keyed by unit type key. */
+  unitPriceDisplay?: Record<string, string> | null;
   ctaLabel?: string | null;
   whiteLabel?: boolean | null;
   navbarStyle?: string | null;
@@ -390,6 +392,11 @@ export function resolveBranding(src: BrandingSource) {
      * passing one threw at render and blanked the whole page.
      */
     sectionCopy: (src.sectionCopy ?? {}) as Record<string, SectionCopy>,
+    /**
+     * Per-unit-type price presentation. Only choices differing from the
+     * default are stored, so an absent key is normal rather than missing data.
+     */
+    unitPriceDisplay: (src.unitPriceDisplay ?? {}) as Record<string, string>,
     /** Section ids to render, in order, with hidden ones removed. */
     sections: ordered.filter((id) => {
       const meta = SECTIONS.find((s) => s.id === id);

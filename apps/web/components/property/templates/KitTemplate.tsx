@@ -206,6 +206,7 @@ export function KitTemplate({
   sections,
   whiteLabel,
   sectionCopy,
+  unitPriceDisplay,
   rentListings,
 }: {
   template: MiniSiteTemplate;
@@ -216,6 +217,8 @@ export function KitTemplate({
   whiteLabel?: boolean;
   /** Developer wording keyed by section id. */
   sectionCopy?: Record<string, SectionCopy>;
+  /** Per-unit-type price presentation chosen by the developer. */
+  unitPriceDisplay?: Record<string, string> | null;
   /** Live rentals for this development, fetched by the page. */
   rentListings?: RentListing[];
 }) {
@@ -240,6 +243,7 @@ export function KitTemplate({
         propertySlug={property.slug}
         style={style}
         copy={copy('units')}
+        priceDisplay={unitPriceDisplay}
       />
     ),
     floorplans: (

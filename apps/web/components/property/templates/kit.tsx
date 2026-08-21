@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ import { formatPrice, formatCompletionDate } from '../../../lib/utils';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { useBooking, useLightbox, useUnits, unitStatus } from './hooks';
 import { TourCards } from '../TourCards';
+import { UnitTypeList } from '../UnitTypeList';
 import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 import { Reveal } from './shared';
 
@@ -329,35 +331,49 @@ export function KitUnits({
   propertySlug,
   style,
   copy,
+  priceDisplay,
 }: {
   units: Unit[];
   currency: string;
   propertySlug: string;
   style: KitStyle;
   copy?: SectionCopy;
+  priceDisplay?: Record<string, string> | null;
 }) {
   const t = tone(style);
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
+  // The typology leads, as on the default template: what a buyer is choosing
+  // between is layouts, not apartment numbers.
+  const [byType, setByType] = useState(true);
   if (!units?.length) return null;
 
   const Filter = (
     <div className={`flex gap-1 border ${t.borderStrong} ${style.radius} p-1`}>
-      {(['all', 'available'] as const).map((f) => (
-        <button
-          key={f}
-          onClick={() => setFilter(f)}
-          className={`cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.12em] transition-colors ${style.radius}`}
-          style={
-            filter === f
-              ? { background: 'var(--brand)', color: 'var(--brand-on)' }
-              : undefined
-          }
-        >
-          <span className={filter === f ? '' : t.muted}>
-            {f === 'all' ? `All ${total}` : `Available ${availableCount}`}
-          </span>
-        </button>
-      ))}
+      <button
+        onClick={() => setByType(true)}
+        className={`cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.12em] transition-colors ${style.radius}`}
+        style={byType ? { background: 'var(--brand)', color: 'var(--brand-on)' } : undefined}
+      >
+        <span className={byType ? '' : t.muted}>By type</span>
+      </button>
+      {(['all', 'available'] as const).map((f) => {
+        const active = !byType && filter === f;
+        return (
+          <button
+            key={f}
+            onClick={() => {
+              setByType(false);
+              setFilter(f);
+            }}
+            className={`cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.12em] transition-colors ${style.radius}`}
+            style={active ? { background: 'var(--brand)', color: 'var(--brand-on)' } : undefined}
+          >
+            <span className={active ? '' : t.muted}>
+              {f === 'all' ? `All ${total}` : `Available ${availableCount}`}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -368,7 +384,16 @@ export function KitUnits({
         {Filter}
       </KitHeading>
 
-      {style.unitsAs === 'table' ? (
+      {byType ? (
+        <UnitTypeList
+          units={units}
+          propertySlug={propertySlug}
+          priceDisplay={priceDisplay}
+          onDark={style.onDark}
+          radius={style.radius}
+          className="mt-8"
+        />
+      ) : style.unitsAs === 'table' ? (
         <div className={`border-t ${t.border}`}>
           {displayed.map((unit, i) => {
             const st = unitStatus(unit);

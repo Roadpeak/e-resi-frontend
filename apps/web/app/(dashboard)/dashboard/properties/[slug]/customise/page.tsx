@@ -32,6 +32,25 @@ import {
 } from '../../../../../../lib/branding/templates';
 import { revalidateMiniSite } from '../../../../../../lib/actions/revalidate-mini-site';
 import { cn } from '../../../../../../lib/utils';
+import {
+  groupUnitsByType,
+  priceDisplayFor,
+  typePriceLabel,
+  typeSizeLabel,
+  type PriceDisplay,
+} from '../../../../../../lib/units/unit-types';
+import type { Unit } from '../../../../../../lib/types';
+
+/**
+ * The four ways a price can be published, worded for the developer rather
+ * than named after the stored value.
+ */
+const PRICE_DISPLAY_OPTIONS: Array<{ key: PriceDisplay; label: string }> = [
+  { key: 'from', label: 'Starting price' },
+  { key: 'range', label: 'Price range' },
+  { key: 'exact', label: 'Exact per unit' },
+  { key: 'hidden', label: 'On request' },
+];
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
 const copyFieldCls =
@@ -49,6 +68,8 @@ interface Draft {
   sectionOrder: string[];
   hiddenSections: string[];
   sectionCopy: Record<string, SectionCopy>;
+  /** Per-unit-type price presentation, keyed by unit type key. */
+  unitPriceDisplay: Record<string, string>;
 }
 
 export default function CustomiseMiniSite() {
@@ -95,12 +116,21 @@ export default function CustomiseMiniSite() {
       heroOverlay: p.heroOverlay !== false,
       hiddenSections: (p.hiddenSections as string[]) ?? [],
       sectionCopy: (p.sectionCopy as Record<string, SectionCopy>) ?? {},
+      unitPriceDisplay: (p.unitPriceDisplay as Record<string, string>) ?? {},
     });
   }, [property, draft]);
 
   const theme = useMemo(
     () => buildTheme(draft?.brandColor, draft?.brandFont),
     [draft?.brandColor, draft?.brandFont],
+  );
+
+  // Derived from the development's own inventory, so the list here is exactly
+  // the list a buyer sees — no separate typology for a developer to maintain
+  // or to let drift.
+  const unitTypes = useMemo(
+    () => groupUnitsByType(((property as { units?: Unit[] } | undefined)?.units) ?? []),
+    [property],
   );
 
   const save = useMutation({
@@ -193,6 +223,7 @@ export default function CustomiseMiniSite() {
     // Copy rides as JSON: it is nested and free-text, so a flat param per
     // field would need one name per section per field.
     + `&copy=${encodeURIComponent(JSON.stringify(draft.sectionCopy))}`
+    + `&prices=${encodeURIComponent(JSON.stringify(draft.unitPriceDisplay))}`
     + `&v=${previewNonce}`;
 
   // A developer can still type a pale colour; we warn rather than block, and
@@ -676,6 +707,70 @@ export default function CustomiseMiniSite() {
               })}
             </ul>
           </section>
+
+          {/* Unit type pricing */}
+          {unitTypes.length > 0 && (
+            <section className={cardCls}>
+              <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Unit pricing</h2>
+              <p className="mb-4 text-[13px] text-[#5f6368]">
+                How each layout’s price appears to buyers. This changes what is
+                shown, never what a unit costs.
+              </p>
+
+              <ul className="space-y-3">
+                {unitTypes.map((type) => {
+                  const mode = priceDisplayFor(type.key, draft.unitPriceDisplay);
+                  return (
+                    <li key={type.key} className="rounded-xl border border-[#dadce0] p-3">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-[14px] font-medium text-[#202124]">
+                          {type.label}
+                        </span>
+                        <span className="text-[12px] text-[#5f6368]">
+                          {type.units.length} {type.units.length === 1 ? 'unit' : 'units'}
+                          {typeSizeLabel(type) ? ` · ${typeSizeLabel(type)}` : ''}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {PRICE_DISPLAY_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() =>
+                              set({
+                                unitPriceDisplay: {
+                                  ...draft.unitPriceDisplay,
+                                  [type.key]: opt.key,
+                                },
+                              })
+                            }
+                            className={cn(
+                              'cursor-pointer rounded-lg border px-2.5 py-1 text-[12px] transition-colors',
+                              mode === opt.key
+                                ? 'border-[#1a73e8] bg-[#e8f0fe] text-[#1a73e8]'
+                                : 'border-[#dadce0] text-[#5f6368] hover:border-[#9aa0a6]',
+                            )}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* The actual string a buyer will read, so the choice is
+                          judged on its result rather than on its name. */}
+                      <p className="mt-2 text-[12px] text-[#5f6368]">
+                        Buyers see:{' '}
+                        <span className="font-medium text-[#202124]">
+                          {typePriceLabel(type, mode) ?? 'Price on request'}
+                        </span>
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
         </div>
 
         {/* ── Live preview ──

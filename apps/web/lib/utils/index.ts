@@ -34,8 +34,24 @@ export function formatPrice(amount: number, currency = 'KES'): string {
   return formatMoney(amount, currency);
 }
 
+/**
+ * A price span, with the currency stated once.
+ *
+ * "KES 21.0M – KES 23.5M" reads as two separate prices and takes twice the
+ * width it needs; the code belongs on the pair, not on each end. A range whose
+ * ends are equal is not a range at all, and is returned as a single figure
+ * rather than "KES 21.0M – KES 21.0M".
+ */
 export function formatPriceRange(min: number, max: number, currency = 'KES'): string {
-  return `${formatPrice(min, currency)} – ${formatPrice(max, currency)}`;
+  if (min === max) return formatPrice(min, currency);
+
+  const high = formatPrice(max, currency);
+  // Strip the leading code from the upper bound, which formatPrice always
+  // prefixes. Falls back to the full string if the prefix is not there —
+  // formatMoney's Intl output places the symbol differently.
+  const tail = high.startsWith(`${currency} `) ? high.slice(currency.length + 1) : high;
+
+  return `${formatPrice(min, currency)} – ${tail}`;
 }
 
 export function slugify(text: string): string {

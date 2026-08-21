@@ -6,11 +6,14 @@ import { motion } from 'framer-motion';
 import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
 import type { Unit } from '../../lib/types';
 import { formatPrice, cn } from '../../lib/utils';
+import { UnitTypeList } from './UnitTypeList';
 
 interface Props {
   units: Unit[];
   currency: string;
   propertySlug: string;
+  /** Per-unit-type price presentation chosen by the developer. */
+  priceDisplay?: Record<string, string> | null;
 }
 
 /**
@@ -42,12 +45,19 @@ const statusConfig = {
   },
 };
 
-type Filter = 'all' | 'available';
+/**
+ * Types first, individual units second.
+ *
+ * A buyer asks what layouts exist and what they cost before they care which
+ * apartment is on which floor, so the typology is the default view and the
+ * full inventory is one click away for whoever has narrowed down.
+ */
+type View = 'types' | 'all';
 
-export function PropertyUnits({ units, currency, propertySlug }: Props) {
-  const [filter, setFilter] = useState<Filter>('all');
+export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: Props) {
+  const [view, setView] = useState<View>('types');
 
-  const displayed = filter === 'available' ? units.filter((u) => u.status?.toLowerCase() === 'available') : units;
+  const displayed = units;
 
   return (
     <section id="units" className="scroll-mt-24">
@@ -57,22 +67,38 @@ export function PropertyUnits({ units, currency, propertySlug }: Props) {
           <h2 className="text-3xl font-semibold text-gray-900">Units & Pricing</h2>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-1">
-          {(['all', 'available'] as Filter[]).map((f) => (
+          {([
+            { key: 'types' as View, label: 'By type' },
+            { key: 'all' as View, label: `All units (${units.length})` },
+          ]).map((v) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              key={v.key}
+              onClick={() => setView(v.key)}
               className={cn(
-                'rounded-lg px-4 py-1.5 text-sm font-medium capitalize transition-all cursor-pointer',
-                filter === f ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900',
+                'rounded-lg px-4 py-1.5 text-sm font-medium transition-all cursor-pointer',
+                view === v.key ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900',
               )}
             >
-              {f === 'all' ? `All (${units.length})` : `Available (${units.filter((u) => u.status?.toLowerCase() === 'available').length})`}
+              {v.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {view === 'types' && (
+        <UnitTypeList
+          units={units}
+          propertySlug={propertySlug}
+          priceDisplay={priceDisplay}
+        />
+      )}
+
+      <div
+        className={cn(
+          'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3',
+          view !== 'all' && 'hidden',
+        )}
+      >
         {displayed.map((unit, i) => {
           const statusKey = unit.status?.toLowerCase() as keyof typeof statusConfig;
           const config = statusConfig[statusKey] ?? statusConfig.available;

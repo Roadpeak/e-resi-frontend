@@ -76,6 +76,12 @@ export const propertiesApi = {
       sectionCopy: Record<string, {
         heading?: string; body?: string; ctaLabel?: string; ctaHref?: string;
       }>;
+      /**
+       * How each unit type's price is shown, keyed by unit type key.
+       * Must be listed here or TypeScript strips it from the body and the
+       * setting saves as a no-op.
+       */
+      unitPriceDisplay: Record<string, string>;
       ctaLabel: string;
       navbarStyle: string;
       navbarTheme: string;

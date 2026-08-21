@@ -100,6 +100,16 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
         return (property as BrandingSource).sectionCopy;
       }
     })(),
+    // Unsaved per-unit-type price presentation, same contract as copy above.
+    unitPriceDisplay: (() => {
+      const raw = str(sp.prices);
+      if (!raw) return (property as BrandingSource).unitPriceDisplay;
+      try {
+        return JSON.parse(raw) as Record<string, string>;
+      } catch {
+        return (property as BrandingSource).unitPriceDisplay;
+      }
+    })(),
     sectionOrder: list(sp.order),
   });
 
@@ -113,7 +123,12 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
     viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
     units: (
-      <PropertyUnits units={property.units} currency={property.currency} propertySlug={property.slug} />
+      <PropertyUnits
+        units={property.units}
+        currency={property.currency}
+        propertySlug={property.slug}
+        priceDisplay={branding.unitPriceDisplay}
+      />
     ),
     location: <PropertyLocation address={property.address} amenities={property.amenities} />,
     construction: property.constructionUpdates?.length

@@ -123,7 +123,12 @@ export default async function PropertyPage({ params }: Props) {
     viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
     units: (
-      <PropertyUnits units={property.units} currency={property.currency} propertySlug={property.slug} />
+      <PropertyUnits
+        units={property.units}
+        currency={property.currency}
+        propertySlug={property.slug}
+        priceDisplay={branding.unitPriceDisplay}
+      />
     ),
     rentals: rentListings.length > 0 ? <PropertyRentListings listings={rentListings} /> : null,
     location: <PropertyLocation address={property.address} amenities={property.amenities} />,

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -9,6 +10,7 @@ import { formatPrice, formatCompletionDate } from '../../../../lib/utils';
 import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
 import type { SectionCopy } from '../../../../lib/branding/theme';
 import { TourCards } from '../../TourCards';
+import { UnitTypeList } from '../../UnitTypeList';
 import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
 import { Reveal } from '../shared';
 
@@ -227,38 +229,71 @@ export function LuxeUnits({
   currency,
   propertySlug,
   copy,
+  priceDisplay,
 }: {
   units: Unit[];
   currency: string;
   propertySlug: string;
   copy?: SectionCopy;
+  priceDisplay?: Record<string, string> | null;
 }) {
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
+  // Typology first: a buyer at this end of the market is choosing a residence
+  // type before they are choosing a floor.
+  const [byType, setByType] = useState(true);
   if (!units?.length) return null;
 
   return (
     <div>
       <Heading index="03" eyebrow="Availability" title="Residences." copy={copy}>
         <div className="flex gap-1 border border-white/15 p-1">
-          {(['all', 'available'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className="cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.14em] transition-colors"
-              style={
-                filter === f
-                  ? { background: 'var(--brand)', color: 'var(--brand-on)' }
-                  : { color: 'rgba(255,255,255,0.55)' }
-              }
-            >
-              {f === 'all' ? `All ${total}` : `Available ${availableCount}`}
-            </button>
-          ))}
+          <button
+            onClick={() => setByType(true)}
+            className="cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.14em] transition-colors"
+            style={
+              byType
+                ? { background: 'var(--brand)', color: 'var(--brand-on)' }
+                : { color: 'rgba(255,255,255,0.55)' }
+            }
+          >
+            By type
+          </button>
+          {(['all', 'available'] as const).map((f) => {
+            const active = !byType && filter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => {
+                  setByType(false);
+                  setFilter(f);
+                }}
+                className="cursor-pointer px-5 py-2 text-[12px] uppercase tracking-[0.14em] transition-colors"
+                style={
+                  active
+                    ? { background: 'var(--brand)', color: 'var(--brand-on)' }
+                    : { color: 'rgba(255,255,255,0.55)' }
+                }
+              >
+                {f === 'all' ? `All ${total}` : `Available ${availableCount}`}
+              </button>
+            );
+          })}
         </div>
       </Heading>
 
+      {byType && (
+        <UnitTypeList
+          units={units}
+          propertySlug={propertySlug}
+          priceDisplay={priceDisplay}
+          onDark
+          radius="rounded-none"
+          className="mt-8"
+        />
+      )}
+
       {/* A table, not cards: a buyer comparing residences is comparing rows. */}
-      <div className="border-t border-white/12">
+      <div className={byType ? 'hidden' : 'border-t border-white/12'}>
         {displayed.map((unit, i) => {
           const status = unitStatus(unit);
           return (
