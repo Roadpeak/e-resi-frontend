@@ -1,15 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import type { MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Building2, CalendarCheck2, BedDouble, Maximize2, CheckCircle2, MapPin, Film, Headset, Box,
+  Building2, CalendarCheck2, BedDouble, Maximize2, CheckCircle2, MapPin,
 } from 'lucide-react';
 import type { Property, Unit } from '../../lib/types';
 import { formatPrice, formatCompletionDate, pluralize, cn } from '../../lib/utils';
 import { ChatWithDeveloper } from '../chat/ChatWithDeveloper';
+import { TourCards } from './TourCards';
 
 interface Props { property: Property }
 
@@ -174,9 +174,6 @@ export function PropertyOverview({ property }: Props) {
     document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const tourPill =
-    'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-medium transition-colors';
-
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-14">
       {/* ── LEFT: identity, price, stats, story ── */}
@@ -214,33 +211,17 @@ export function PropertyOverview({ property }: Props) {
             Book a Viewing
           </a>
           <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
-          <div className="flex flex-wrap items-center gap-2">
-            {property.hasCinematicTour && (
-              <Link
-                href={`/${property.slug}/tour/cinematic`}
-                className={cn(tourPill, 'border-warm-500/25 bg-warm-500/10 text-warm-700 hover:bg-warm-500/20')}
-              >
-                <Film size={12} /> Cinematic
-              </Link>
-            )}
-            {property.hasVRTour && (
-              <Link
-                href={`/${property.slug}/tour/vr`}
-                className={cn(tourPill, 'border-violet-500/25 bg-violet-500/10 text-violet-700 hover:bg-violet-500/20')}
-              >
-                <Headset size={12} /> VR Tour
-              </Link>
-            )}
-            {property.has3DTour && (
-              <Link
-                href={`/${property.slug}/tour/3d`}
-                className={cn(tourPill, 'border-brand-500/25 bg-brand-500/10 text-brand-700 hover:bg-brand-500/20')}
-              >
-                <Box size={12} /> 3D Tour
-              </Link>
-            )}
-          </div>
         </div>
+
+        {/* The tours, given their own row rather than trailing the buttons as
+            chips. These are what the development is being sold on. */}
+        <TourCards
+          propertySlug={property.slug}
+          has3D={property.has3DTour}
+          hasVR={property.hasVRTour}
+          hasCinematic={property.hasCinematicTour}
+          className="mt-7"
+        />
 
         {/* Stat tiles */}
         <div className="mt-8 flex flex-wrap overflow-hidden rounded-2xl border border-gray-200 bg-white">
