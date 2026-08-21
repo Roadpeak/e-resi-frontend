@@ -17,8 +17,74 @@ const statusConfig: Record<string, StatusEntry> = {
   NO_SHOW: { label: 'No Show', icon: XCircle, color: 'text-[#c5221f]', bg: 'bg-[#fce8e6]' },
 };
 
+/**
+ * Collects the meeting link that a virtual viewing cannot be confirmed
+ * without.
+ *
+ * Deliberately not a modal: the developer is looking at the booking it belongs
+ * to, and a dialog would hide the date and name they are confirming.
+ */
+function ConfirmVirtual({
+  onConfirm,
+  onCancel,
+  busy,
+}: {
+  onConfirm: (meetingUrl: string) => void;
+  onCancel: () => void;
+  busy?: boolean;
+}) {
+  const [url, setUrl] = useState('');
+  const trimmed = url.trim();
+
+  return (
+    <div className="mt-3 rounded-2xl border border-[#dadce0] bg-[#f8fbff] p-3.5">
+      <label className="block text-[13px] font-medium text-[#202124]">
+        Meeting link
+      </label>
+      <p className="mt-0.5 text-[12px] text-[#5f6368]">
+        Where this viewing happens — Meet, Zoom or Teams. Sent to the buyer
+        when you confirm.
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          // Enter is what a developer pasting a link will press.
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && trimmed) onConfirm(trimmed);
+            if (e.key === 'Escape') onCancel();
+          }}
+          autoFocus
+          placeholder="https://meet.google.com/…"
+          className="h-9 min-w-[240px] flex-1 rounded-lg border border-[#dadce0] px-3 text-[13px] outline-none focus:border-[#1a73e8]"
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          loading={busy}
+          disabled={!trimmed}
+          onClick={() => onConfirm(trimmed)}
+          className="rounded-full bg-[#1a73e8] hover:bg-[#1765cc] border-transparent text-[13px] font-medium text-white h-9 px-4 disabled:opacity-40"
+        >
+          Confirm viewing
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onCancel}
+          className="rounded-full text-[13px] font-medium text-[#5f6368] h-9 px-3"
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardBookings() {
   const [view, setView] = useState<'list' | 'calendar'>('list');
+  /** Booking id awaiting a meeting link before it can be confirmed. */
+  const [confirming, setConfirming] = useState<string | null>(null);
   const { data, isLoading } = useDeveloperBookings({ limit: 50 });
   const updateStatus = useUpdateBookingStatus();
 
@@ -47,6 +113,16 @@ export default function DashboardBookings() {
           ))}
         </div>
       </div>
+
+      {/* The API enforces rules the UI cannot always anticipate — a virtual
+          viewing needing a link is one. Without this the request failed
+          silently and the button simply appeared not to work. */}
+      {updateStatus.isError && (
+        <div className="rounded-2xl border border-[#f5c2c0] bg-[#fce8e6] px-4 py-3 text-[13px] text-[#c5221f]">
+          {(updateStatus.error as { message?: string })?.message
+            || 'Could not update this booking. Please try again.'}
+        </div>
+      )}
 
       {/* List view */}
       {isLoading ? (
@@ -104,7 +180,17 @@ export default function DashboardBookings() {
                         size="sm"
                         variant="secondary"
                         loading={updateStatus.isPending}
-                        onClick={() => updateStatus.mutate({ id: b.id, status: 'CONFIRMED' })}
+                        onClick={() => {
+                          // A virtual viewing cannot be confirmed without a
+                          // link — the API rejects it, and rightly so. Ask for
+                          // it here rather than sending a request that is
+                          // certain to fail.
+                          if (b.type === 'VIRTUAL' && !b.meetingUrl) {
+                            setConfirming(b.id);
+                            return;
+                          }
+                          updateStatus.mutate({ id: b.id, status: 'CONFIRMED' });
+                        }}
                         className="rounded-full bg-[#1a73e8] hover:bg-[#1765cc] border-transparent text-[13px] font-medium text-white h-9 px-4"
                       >
                         Confirm
@@ -121,6 +207,24 @@ export default function DashboardBookings() {
                   )}
                 </div>
                 </div>
+
+                {/* Asked for before confirming, not after. The link field used
+                    to live only in the confirmed-booking actions below, so a
+                    virtual viewing could not be confirmed at all: the API
+                    requires a link to confirm, and confirming was the only way
+                    to reach the field that sets one. */}
+                {confirming === b.id && (
+                  <ConfirmVirtual
+                    busy={updateStatus.isPending}
+                    onCancel={() => setConfirming(null)}
+                    onConfirm={(meetingUrl) => {
+                      updateStatus.mutate(
+                        { id: b.id, status: 'CONFIRMED', meetingUrl },
+                        { onSuccess: () => setConfirming(null) },
+                      );
+                    }}
+                  />
+                )}
 
                 {/* Confirming used to be the end of the road — a status change
                     and nothing else. These are the actions that make the
