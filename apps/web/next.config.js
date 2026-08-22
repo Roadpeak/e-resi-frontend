@@ -40,6 +40,29 @@ const nextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  /**
+   * One three.js, everywhere.
+   *
+   * drei, @react-three/xr and three-stdlib each resolve three themselves, and
+   * the bundler was emitting several copies. That is merely wasteful for
+   * ordinary rendering, but fatal for WebXR: `renderer.xr.setSession()` type-
+   * checks the session against its *own* copy's classes, so a session created
+   * against one instance and handed to another throws and the headset never
+   * gets a frame. Pinning the alias makes every importer share one module.
+   */
+  turbopack: {
+    // Turbopack resolves this itself and rejects an absolute path here.
+    resolveAlias: {
+      three: 'three',
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      three: path.resolve(__dirname, 'node_modules/three'),
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;

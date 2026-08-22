@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { fetchProperty, fetchPropertySlugs, buildTour } from '../../../../../lib/api/fetch-property';
+import { fetchProperty, fetchPropertySlugs, fetchTwins, buildTour } from '../../../../../lib/api/fetch-property';
 import { TourVRClient } from '../../../../../components/property/tour/TourVRClient';
 import type { Metadata } from 'next';
 import { TrackTour } from '../../../../../components/property/TrackTour';
@@ -28,9 +28,18 @@ export default async function TourVRPage({ params }: Props) {
   const property = await fetchProperty(slug);
   if (!property) notFound();
 
+  /**
+   * VR is a headset walking the model, and only falls back to 360° scenes.
+   *
+   * This used to require scenes — equirectangular stills arranged as a
+   * slideshow — so a property captured as geometry, which is now every new
+   * one, 404'd here while its 3D tour worked. Gating on either source keeps
+   * the older panorama tours working without stranding the current ones.
+   */
   const tour = buildTour(property as Parameters<typeof buildTour>[0]);
-  // Gate on real scenes, not the flag — it can drift when scenes are removed.
-  if (!tour || !tour.sections.some((s) => s.scenes.length > 0)) notFound();
+  const twins = await fetchTwins(slug);
+  const hasScenes = !!tour?.sections.some((s) => s.scenes.length > 0);
+  if (!twins.length && !hasScenes) notFound();
 
   return (
     <>

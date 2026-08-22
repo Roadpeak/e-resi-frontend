@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,54 +9,173 @@ import { XR, createXRStore } from '@react-three/xr';
 import * as THREE from 'three';
 import {
   ArrowLeft, Headset, Box as Box3D, Building2, Sparkles, DoorOpen,
-  CheckCircle2, AlertCircle, ChevronRight, Wifi, Monitor,
-  LayoutGrid, X, Play, ChevronLeft,
+  CheckCircle2, AlertCircle, ChevronRight, Monitor, LayoutGrid, X,
+  Play, ChevronLeft, Loader2, Gamepad2, RotateCcw,
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { twinsApi, type DigitalTwin } from '../../../lib/api/twins';
+import { VRScene, SNAP_DEGREES } from './VRScene';
 import type { Property, PropertyTour, TourSection, TourScene } from '../../../lib/types';
 
-// ── XR Store (singleton per session) ─────────────────────────────────────────
-const xrStore = createXRStore();
+/**
+ * The VR tour.
+ *
+ * Two different things wear this name, and the distinction decides everything
+ * below. A *model* tour puts the buyer inside the building's geometry at true
+ * scale and lets them walk it — that is what a headset is for, and what we now
+ * capture. A *panorama* tour is the older 360° stills, which a headset can
+ * still show but cannot be walked. Properties exist with either, so both are
+ * supported and the model is preferred when present.
+ *
+ * The hard constraint shaping the code: a WebXR session can only be requested
+ * from a real user gesture, on a secure origin, against a canvas that already
+ * exists. Deferring any of those to the moment the headset connects is how VR
+ * pages end up with a button that does nothing.
+ */
 
-// ── Section icons ──────────────────────────────────────────────────────────────
+// ─── XR store ────────────────────────────────────────────────────────────────
+
+/**
+ * One store for the page.
+ *
+ * `emulate: false` matters in production: the library will otherwise fabricate
+ * a Meta Quest 3 whenever WebXR is missing on localhost, which is invaluable
+ * for testing and disastrous as a default — it would offer "Enter VR" on a
+ * developer's laptop and report success against a device that isn't there.
+ * It is turned on explicitly and only by the debug flag below.
+ *
+ * `offerSession` is what puts the tour in the headset's own system UI, so a
+ * buyer already wearing one is prompted to enter rather than having to find a
+ * button on a page they cannot comfortably read.
+ */
+const emulateRequested =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('xr') === 'emulate';
+
+const xrStore = createXRStore({
+  emulate: emulateRequested ? 'metaQuest3' : false,
+  offerSession: 'immersive-vr',
+  // Hands are common on Quest and cost nothing to accept; controllers stay
+  // the primary path because locomotion is driven by a thumbstick.
+  hand: true,
+  controller: true,
+  // A tour is geometry and texture, not compute — favour resolution.
+  frameRate: 'high',
+  foveation: 0.2,
+});
+
+/**
+ * Reachable from the console when emulating, so a headset session can be
+ * inspected without one. Only under the debug flag — never in a normal load.
+ */
+if (typeof window !== 'undefined' && emulateRequested) {
+  (window as unknown as { __eresiXR?: unknown }).__eresiXR = xrStore;
+}
+
 const sectionIcons: Record<string, React.FC<{ size?: number; className?: string }>> = {
   Building2, Sparkles, DoorOpen,
 };
 
-// ── WebXR support detection ───────────────────────────────────────────────────
-type XRStatus = 'checking' | 'supported' | 'unsupported' | 'unavailable';
+// ─── Support detection ───────────────────────────────────────────────────────
 
+type XRStatus = 'checking' | 'supported' | 'insecure' | 'unsupported' | 'unavailable';
+
+/**
+ * Whether this browser can actually open a headset session.
+ *
+ * Three failures are separated because the remedy differs and a single "not
+ * supported" would send people to buy hardware they already own. WebXR is
+ * absent entirely (wrong browser); the API exists but refuses (no headset, or
+ * an iframe without the permission); or the page is not on a secure origin,
+ * which silently removes `navigator.xr` and is the single most common reason a
+ * working VR page dies on a staging URL.
+ */
 function useXRSupport() {
   const [status, setStatus] = useState<XRStatus>('checking');
 
   useEffect(() => {
     if (typeof window === 'undefined') { setStatus('unavailable'); return; }
-    if (!('xr' in navigator)) { setStatus('unsupported'); return; }
-    (navigator as any).xr
-      .isSessionSupported('immersive-vr')
-      .then((supported: boolean) => setStatus(supported ? 'supported' : 'unsupported'))
-      .catch(() => setStatus('unavailable'));
+
+    // `navigator.xr` is only exposed on secure origins. Saying so is far more
+    // useful than "no headset detected" when the cause is http://.
+    if (!window.isSecureContext) { setStatus('insecure'); return; }
+
+    let live = true;
+
+    const check = () => {
+      // Re-read `navigator.xr` on every check rather than closing over it.
+      // A runtime can install it after first paint — the emulator does, and so
+      // does a headset whose driver finishes starting a moment late — and a
+      // one-shot check would leave the button permanently greyed out.
+      const xr = (navigator as Navigator).xr;
+      if (!xr) return false;
+      xr.isSessionSupported('immersive-vr')
+        .then((ok) => { if (live) setStatus(ok ? 'supported' : 'unsupported'); })
+        .catch(() => { if (live) setStatus('unavailable'); });
+      return true;
+    };
+
+    check();
+
+    /**
+     * Keep asking for a while, rather than trusting the first answer.
+     *
+     * `isSessionSupported` is a snapshot, and the moment a page loads is the
+     * worst time to take one: a headset's runtime may still be starting, a
+     * Quest browser can answer before its compositor is ready, and a session
+     * offered by the system arrives later still. There is also no reliable
+     * event for any of it — `devicechange` covers hardware being plugged in,
+     * not a runtime that was already plugged in and slow. So the check repeats
+     * for a few seconds and then settles, which costs nothing and is the
+     * difference between a working button and a permanently grey one.
+     */
+    let waited = 0;
+    const id = setInterval(() => {
+      waited += 500;
+      const present = check();
+      if (waited >= 6000) {
+        clearInterval(id);
+        // WebXR never appeared at all — settle, so the banner stops spinning
+        // and says something the visitor can act on.
+        if (live && !present) setStatus('unsupported');
+      }
+    }, 500);
+
+    const recheck = () => { check(); };
+    (navigator as Navigator).xr?.addEventListener?.('devicechange', recheck);
+    window.addEventListener('focus', recheck);
+    window.addEventListener('visibilitychange', recheck);
+
+    return () => {
+      live = false;
+      clearInterval(id);
+      (navigator as Navigator).xr?.removeEventListener?.('devicechange', recheck);
+      window.removeEventListener('focus', recheck);
+      window.removeEventListener('visibilitychange', recheck);
+    };
   }, []);
 
   return status;
 }
 
-// ── 360° equirectangular sphere (inside WebXR session) ────────────────────────
+// ─── Panorama (legacy 360° scenes) ───────────────────────────────────────────
+
 function PanoramaSphere({ imageUrl, videoUrl }: { imageUrl?: string; videoUrl?: string }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const texture = useRef<THREE.Texture | null>(null);
 
   useEffect(() => {
     const apply = (tex: THREE.Texture) => {
       tex.mapping = THREE.EquirectangularReflectionMapping;
-      texture.current = tex;
-      if (meshRef.current) {
-        (meshRef.current.material as THREE.MeshBasicMaterial).map = tex;
-        (meshRef.current.material as THREE.MeshBasicMaterial).needsUpdate = true;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mesh = meshRef.current;
+      if (mesh) {
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        mat.map = tex;
+        mat.needsUpdate = true;
       }
     };
 
-    // A 360° video scene wraps the sphere in a live VideoTexture.
     if (videoUrl) {
       const el = document.createElement('video');
       el.src = videoUrl;
@@ -71,6 +190,7 @@ function PanoramaSphere({ imageUrl, videoUrl }: { imageUrl?: string; videoUrl?: 
 
     if (!imageUrl) return;
     const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
     loader.load(imageUrl, apply);
     return undefined;
   }, [imageUrl, videoUrl]);
@@ -83,42 +203,123 @@ function PanoramaSphere({ imageUrl, videoUrl }: { imageUrl?: string; videoUrl?: 
   );
 }
 
-// ── Floating scene label (visible inside VR headset) ─────────────────────────
-function VRSceneLabel({ label, section }: { label: string; section: string }) {
+// ─── The XR canvas ───────────────────────────────────────────────────────────
+
+/**
+ * The canvas that becomes the headset's display.
+ *
+ * Mounted for the whole life of the page rather than created when VR is
+ * entered. `requestSession` must bind to a WebGL context that already exists
+ * and is XR-compatible, and it must happen inside the click that asked for it
+ * — building a canvas first would spend the user gesture and the browser would
+ * reject the session. It is invisible and inert until a session starts, which
+ * costs one idle context and buys a button that always works.
+ */
+function XRCanvas({
+  twin,
+  scene,
+  onMeasured,
+}: {
+  twin: DigitalTwin | null;
+  scene?: TourScene;
+  onMeasured?: (info: { radius: number; height: number; width: number; triangles?: number | null }) => void;
+}) {
   return (
-    <group position={[0, -1.2, -3]}>
-      <mesh>
-        <planeGeometry args={[2.4, 0.5]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.6} />
-      </mesh>
-    </group>
+    <Canvas
+      // Depth matters more than antialiasing on a headset, and a tour is a
+      // large space seen from inside.
+      camera={{ fov: 70, near: 0.05, far: 1000 }}
+      gl={{ antialias: true, powerPreference: 'high-performance' }}
+      shadows
+    >
+      <XR store={xrStore}>
+        <Suspense fallback={null}>
+          {twin
+            ? <VRScene twin={twin} onMeasured={onMeasured} />
+            : scene
+              ? (
+                <>
+                  <PanoramaSphere imageUrl={scene.imageUrl} videoUrl={scene.videoUrl} />
+                  <ambientLight intensity={1} />
+                </>
+              )
+              : null}
+        </Suspense>
+      </XR>
+    </Canvas>
   );
 }
 
-// ── VR canvas (only mounted when entering VR) ─────────────────────────────────
-function VRCanvas({ scene, section }: { scene: TourScene; section: TourSection }) {
+// ─── Status banner ───────────────────────────────────────────────────────────
+
+function XRStatusBanner({ status, emulating }: { status: XRStatus; emulating: boolean }) {
+  if (status === 'checking') {
+    return (
+      <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/3 px-4 py-3">
+        <Loader2 size={15} className="animate-spin text-white/40 shrink-0" />
+        <p className="text-sm text-white/50">Looking for a headset…</p>
+      </div>
+    );
+  }
+
+  if (status === 'supported') {
+    return (
+      <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
+        <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+        <p className="text-sm text-white/70">
+          {emulating ? (
+            <>Emulated headset active — <span className="font-medium text-white">Enter VR</span> runs the real session path.</>
+          ) : (
+            <>Headset ready — press <span className="font-medium text-white">Enter VR</span> to step inside.</>
+          )}
+        </p>
+      </div>
+    );
+  }
+
+  if (status === 'insecure') {
+    return (
+      <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/8 px-4 py-3">
+        <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-400" />
+        <div>
+          <p className="text-sm text-white/70">VR needs a secure connection.</p>
+          <p className="mt-0.5 text-xs text-white/40">
+            This page is on an insecure origin, so the browser hides WebXR entirely. Open it over https.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="absolute inset-0">
-      <Canvas>
-        <XR store={xrStore}>
-          <Suspense fallback={null}>
-            <PanoramaSphere imageUrl={scene.imageUrl} videoUrl={scene.videoUrl} />
-            <VRSceneLabel label={scene.label} section={section.label} />
-          </Suspense>
-          <ambientLight intensity={1} />
-        </XR>
-      </Canvas>
+    <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/8 px-4 py-3">
+      <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-400" />
+      <div>
+        <p className="text-sm text-white/70">No headset on this browser.</p>
+        <p className="mt-0.5 text-xs text-white/40">
+          Open this page in your headset&apos;s own browser, or connect one to this computer — the tour works
+          on screen in the meantime.
+        </p>
+      </div>
     </div>
   );
 }
 
-// ── Scene grid picker ─────────────────────────────────────────────────────────
+const headsets = [
+  { name: 'Meta Quest 2 / 3 / Pro', note: 'Open this page in Quest Browser' },
+  { name: 'Apple Vision Pro', note: 'Open in Safari' },
+  { name: 'Valve Index · HTC Vive', note: 'SteamVR running, then Chrome or Edge' },
+  { name: 'Pico 4', note: 'Open in Pico Browser' },
+];
+
+// ─── Scene grid (panorama tours) ─────────────────────────────────────────────
+
 function SceneGrid({
   tour, activeSection, activeScene, onSelect, onClose,
 }: {
   tour: PropertyTour;
-  activeSection: TourSection;
-  activeScene: TourScene;
+  activeSection?: TourSection;
+  activeScene?: TourScene;
   onSelect: (section: TourSection, scene: TourScene) => void;
   onClose: () => void;
 }) {
@@ -127,12 +328,16 @@ function SceneGrid({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      className="absolute inset-0 z-30 bg-surface-950/98 backdrop-blur-xl overflow-y-auto"
+      className="absolute inset-0 z-30 overflow-y-auto bg-surface-950/98 backdrop-blur-xl"
     >
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white">Select a Scene</h2>
-          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 hover:text-white transition-colors cursor-pointer">
+      <div className="mx-auto max-w-4xl p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Select a scene</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close scene list"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 transition-colors hover:text-white"
+          >
             <X size={16} />
           </button>
         </div>
@@ -140,39 +345,39 @@ function SceneGrid({
           const Icon = sectionIcons[section.icon] ?? Building2;
           return (
             <div key={section.id} className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <Icon size={14} className="text-violet-400" />
+              <div className="mb-3 flex items-center gap-2">
+                <Icon size={14} className="text-brand-400" />
                 <h3 className="text-sm font-semibold text-white">{section.label}</h3>
                 <span className="text-xs text-white/30">{section.scenes.length} scenes</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {section.scenes.map((scene) => {
-                  const isActive = scene.id === activeScene.id && section.id === activeSection.id;
+                  const isActive = scene.id === activeScene?.id && section.id === activeSection?.id;
                   return (
                     <button
                       key={scene.id}
                       onClick={() => { onSelect(section, scene); onClose(); }}
                       className={cn(
-                        'group relative overflow-hidden rounded-2xl border text-left transition-all cursor-pointer',
-                        isActive ? 'border-violet-500/50 ring-2 ring-violet-500/20' : 'border-white/5 hover:border-white/15',
+                        'group relative cursor-pointer overflow-hidden rounded-2xl border text-left transition-all',
+                        isActive ? 'border-brand-500/50 ring-2 ring-brand-500/20' : 'border-white/5 hover:border-white/15',
                       )}
                     >
                       <div className="relative h-28 overflow-hidden">
-                        {scene.thumbnailUrl ? (
-                          <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="240px" />
-                        ) : <div className="absolute inset-0 bg-white/5" />}
+                        {scene.thumbnailUrl
+                          ? <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="240px" />
+                          : <div className="absolute inset-0 bg-white/5" />}
                         {isActive && (
-                          <div className="absolute inset-0 bg-violet-500/20 flex items-center justify-center">
-                            <Play size={16} className="text-white fill-white" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-brand-500/20">
+                            <Play size={16} className="fill-white text-white" />
                           </div>
                         )}
-                        <div className="absolute top-2 left-2">
-                          <span className="rounded-full border border-violet-500/30 bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[9px] font-medium text-violet-300">360°</span>
+                        <div className="absolute left-2 top-2">
+                          <span className="rounded-full border border-brand-500/30 bg-black/60 px-2 py-0.5 text-[9px] font-medium text-brand-300 backdrop-blur-sm">360°</span>
                         </div>
                       </div>
-                      <div className="p-3 bg-surface-800">
-                        <p className="text-xs font-semibold text-white/80 truncate">{scene.label}</p>
-                        {scene.description && <p className="text-[10px] text-white/35 mt-0.5 line-clamp-1">{scene.description}</p>}
+                      <div className="bg-surface-800 p-3">
+                        <p className="truncate text-xs font-semibold text-white/80">{scene.label}</p>
+                        {scene.description && <p className="mt-0.5 line-clamp-1 text-[10px] text-white/35">{scene.description}</p>}
                       </div>
                     </button>
                   );
@@ -186,45 +391,8 @@ function SceneGrid({
   );
 }
 
-// ── XR Status banner ─────────────────────────────────────────────────────────
-function XRStatusBanner({ status }: { status: XRStatus }) {
-  if (status === 'checking') return null;
+// ─── Main ────────────────────────────────────────────────────────────────────
 
-  if (status === 'supported') {
-    return (
-      <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
-        <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
-        <p className="text-sm text-white/70">
-          VR headset detected — click <span className="text-white font-medium">Enter VR</span> to launch the immersive experience on your device.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/8 px-4 py-3">
-      <AlertCircle size={15} className="text-amber-400 shrink-0 mt-0.5" />
-      <div>
-        <p className="text-sm text-white/70">
-          No VR headset detected on this browser.
-        </p>
-        <p className="text-xs text-white/40 mt-0.5">
-          Connect a WebXR-compatible headset (Meta Quest, Valve Index, etc.) and open this page from its browser to launch the VR experience.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Compatible headsets ───────────────────────────────────────────────────────
-const headsets = [
-  { name: 'Meta Quest 2 / 3 / Pro', note: 'Open in Quest Browser' },
-  { name: 'Valve Index', note: 'SteamVR + Chrome/Edge' },
-  { name: 'HTC Vive / Vive Pro', note: 'SteamVR + Chrome/Edge' },
-  { name: 'PlayStation VR2', note: 'Via PC streaming' },
-];
-
-// ── Main component ─────────────────────────────────────────────────────────────
 interface Props {
   property: Property;
   tour: PropertyTour;
@@ -232,16 +400,42 @@ interface Props {
 
 export function TourVRExperience({ property, tour }: Props) {
   const xrStatus = useXRSupport();
-  // A section can legitimately have no scenes yet — never index blindly.
-  const firstSection = tour.sections.find((s) => s.scenes.length > 0) ?? tour.sections[0];
-  const [activeSection, setActiveSection] = useState<TourSection>(firstSection);
+
+  /**
+   * The published models.
+   *
+   * Fetched client-side for the same reason the 3D viewer does it: the page is
+   * statically generated, and a model published afterwards would otherwise not
+   * appear until the next build.
+   */
+  const { data: twins = [], isLoading: twinsLoading } = useQuery({
+    queryKey: ['twin', property.slug],
+    queryFn: () => twinsApi.list(property.slug),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [twinId, setTwinId] = useState<string | null>(null);
+  const twin = twins.find((t) => t.id === twinId) ?? twins[0] ?? null;
+
+  // Panorama scenes, for properties captured before we modelled them.
+  const sections = tour?.sections ?? [];
+  const firstSection = sections.find((s) => s.scenes.length > 0) ?? sections[0];
+  const [activeSection, setActiveSection] = useState<TourSection | undefined>(firstSection);
   const [activeScene, setActiveScene] = useState<TourScene | undefined>(firstSection?.scenes[0]);
   const [gridOpen, setGridOpen] = useState(false);
-  const noScenes = !activeScene;
   const [showHeadsets, setShowHeadsets] = useState(false);
 
-  const allScenes = tour.sections.flatMap((s) => s.scenes.map((sc) => ({ section: s, scene: sc })));
-  const currentIndex = allScenes.findIndex((a) => a.scene.id === activeScene?.id && a.section.id === activeSection?.id);
+  const [inSession, setInSession] = useState(false);
+  const [enterError, setEnterError] = useState<string | null>(null);
+  const [entering, setEntering] = useState(false);
+
+  const allScenes = useMemo(
+    () => sections.flatMap((s) => s.scenes.map((sc) => ({ section: s, scene: sc }))),
+    [sections],
+  );
+  const currentIndex = allScenes.findIndex(
+    (a) => a.scene.id === activeScene?.id && a.section.id === activeSection?.id,
+  );
   const prev = allScenes[currentIndex - 1];
   const next = allScenes[currentIndex + 1];
 
@@ -250,7 +444,42 @@ export function TourVRExperience({ property, tour }: Props) {
     setActiveScene(scene);
   }, []);
 
-  // Keyboard nav
+  /**
+   * Track the live session.
+   *
+   * The headset's own system menu can end a session without the page being
+   * told through our button, so the chrome follows the store rather than
+   * whatever the last click implied.
+   */
+  useEffect(() => xrStore.subscribe((s) => setInSession(!!s.session)), []);
+
+  /**
+   * Enter VR.
+   *
+   * Called straight from the click with no awaits before `enterVR()` — the
+   * user gesture that permits a session is spent by the first await, so any
+   * preparation has to have happened already. Failures are surfaced because a
+   * silent one is indistinguishable from a broken button.
+   */
+  const enterVR = useCallback(async () => {
+    setEnterError(null);
+    setEntering(true);
+    try {
+      const session = await xrStore.enterVR();
+      if (!session) setEnterError('The headset refused the session. Check it is awake and not in use by another app.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setEnterError(
+        /NotSupported/i.test(msg) ? 'This browser cannot open an immersive session.'
+        : /SecurityError|permission/i.test(msg) ? 'The browser blocked the session — VR needs https and permission for this page.'
+        : /InvalidState/i.test(msg) ? 'A session is already running. Close it in the headset and try again.'
+        : msg || 'Could not start the VR session.',
+      );
+    } finally {
+      setEntering(false);
+    }
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' && next) selectScene(next.section, next.scene);
@@ -261,14 +490,34 @@ export function TourVRExperience({ property, tour }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [next, prev, selectScene]);
 
-  // No VR scenes uploaded yet — show a graceful empty state rather than crashing.
-  if (noScenes || !activeScene) {
+  const hasModel = !!twin;
+  const hasPanorama = !!activeScene;
+
+  /**
+   * Don't commit to a layout until the models are known.
+   *
+   * A property can hold both a model and older 360° scenes. The scenes arrive
+   * with the server-rendered page and the models a moment later over the
+   * network, so rendering as soon as scenes exist would show the panorama
+   * tour, then swap the whole page under the buyer once the model landed —
+   * and on a slow connection they would start reading the wrong one.
+   */
+  if (twinsLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-950">
+        <Loader2 size={22} className="animate-spin text-white/25" />
+      </div>
+    );
+  }
+
+  // Nothing published at all — say so rather than showing dead controls.
+  if (!twinsLoading && !hasModel && !hasPanorama) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface-950 px-6 text-center">
         <Headset size={34} className="mb-5 text-white/25" />
-        <p className="text-xl font-semibold text-white">No VR scenes yet</p>
+        <p className="text-xl font-semibold text-white">No VR tour yet</p>
         <p className="mt-2 max-w-sm text-sm text-white/45">
-          The developer hasn&apos;t published a VR experience for {property.name} yet.
+          {property.name} hasn&apos;t been captured for VR yet.
         </p>
         <Link
           href={`/${property.slug}`}
@@ -281,281 +530,273 @@ export function TourVRExperience({ property, tour }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-surface-950 flex flex-col">
+    <div className="flex min-h-screen flex-col bg-surface-950">
 
       {/* ── Top bar ── */}
-      <header className="flex h-14 items-center gap-3 border-b border-white/5 bg-surface-950/80 backdrop-blur-xl px-4 sm:px-6 shrink-0 sticky top-0 z-20">
-        <Link href={`/${property.slug}`} className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm group">
-          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+      <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-white/5 bg-surface-950/80 px-4 backdrop-blur-xl sm:px-6">
+        <Link href={`/${property.slug}`} className="group flex items-center gap-2 text-sm text-white/40 transition-colors hover:text-white">
+          <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-0.5" />
           <span className="hidden sm:inline">{property.name}</span>
         </Link>
         <div className="h-4 w-px bg-white/10" />
         <div className="flex items-center gap-1.5 text-sm">
-          <Headset size={14} className="text-violet-400" />
-          <span className="text-white font-medium">VR Tour</span>
+          <Headset size={14} className="text-brand-400" />
+          <span className="font-medium text-white">VR Tour</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {tour.has3D && (
-            <Link href={`/${property.slug}/tour/3d`} className="hidden sm:flex items-center gap-1.5 rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-300 hover:bg-brand-500/20 transition-colors">
+          {(tour?.has3D || twins.length > 0) && (
+            <Link
+              href={`/${property.slug}/tour/3d`}
+              className="hidden items-center gap-1.5 rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-300 transition-colors hover:bg-brand-500/20 sm:flex"
+            >
               <Box3D size={12} /> 3D Tour
             </Link>
           )}
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row">
+      <div className="flex flex-1 flex-col lg:flex-row">
 
-        {/* ── Left: scene preview + controls ── */}
-        <div className="flex-1 flex flex-col">
-
-          {/* Scene preview */}
-          <div className="relative overflow-hidden bg-black" style={{ minHeight: 400 }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeScene.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="absolute inset-0"
-              >
-                {activeScene.videoUrl ? (
-                  <video
-                    key={activeScene.videoUrl}
-                    src={activeScene.videoUrl}
-                    poster={activeScene.thumbnailUrl || undefined}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : activeScene.imageUrl ? (
-                  <Image
-                    src={activeScene.imageUrl}
-                    alt={activeScene.label}
-                    fill
-                    className="object-cover"
-                    sizes="100vw"
-                    priority
-                  />
-                ) : null}
-                {/* Immersive overlay */}
-                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)' }} />
-                <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-transparent to-transparent" />
-              </motion.div>
-            </AnimatePresence>
-
-            {/* 360° badge */}
-            <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-black/60 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-violet-300">
-              <Headset size={12} /> 360° Scene Preview
-            </div>
-
-            {/* Scene counter */}
-            <div className="absolute top-4 right-4 text-xs text-white/30 bg-black/40 backdrop-blur-sm rounded-xl px-3 py-1.5">
-              {currentIndex + 1} / {allScenes.length}
-            </div>
-
-            {/* Prev / Next arrows */}
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <AnimatePresence>
-                {prev && (
-                  <motion.button
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    onClick={() => selectScene(prev.section, prev.scene)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/50 backdrop-blur-sm text-white/50 hover:text-white hover:border-white/20 transition-all cursor-pointer"
-                  >
-                    <ChevronLeft size={18} />
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <AnimatePresence>
-                {next && (
-                  <motion.button
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    onClick={() => selectScene(next.section, next.scene)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/50 backdrop-blur-sm text-white/50 hover:text-white hover:border-white/20 transition-all cursor-pointer"
-                  >
-                    <ChevronRight size={18} />
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Scene info overlay */}
-            <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-400 mb-1">{activeSection.label}</p>
-              <h2 className="text-2xl font-semibold text-white">{activeScene.label}</h2>
-              {activeScene.description && (
-                <p className="text-sm text-white/50 mt-1 max-w-lg">{activeScene.description}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Section tabs + thumbnail strip */}
-          <div className="p-4 sm:p-5 border-b border-white/5 bg-surface-900/50">
-            {/* Section tabs */}
-            <div className="flex items-center gap-2 mb-3 overflow-x-auto scrollbar-hide">
-              {tour.sections.map((section) => {
-                const Icon = sectionIcons[section.icon] ?? Building2;
-                const isActive = section.id === activeSection.id;
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => selectScene(section, section.scenes[0])}
-                    className={cn(
-                      'flex items-center gap-1.5 shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer',
-                      isActive ? 'border-violet-500/40 bg-violet-500/15 text-violet-300' : 'border-white/10 bg-white/3 text-white/40 hover:text-white hover:border-white/20',
-                    )}
-                  >
-                    <Icon size={12} /> {section.label}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setGridOpen(true)}
-                className="ml-auto flex items-center gap-1.5 shrink-0 rounded-full border border-white/10 bg-white/3 px-3.5 py-1.5 text-xs text-white/40 hover:text-white transition-colors cursor-pointer"
-              >
-                <LayoutGrid size={12} /> All Scenes
-              </button>
-            </div>
-
-            {/* Thumbnails */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-              {activeSection.scenes.map((scene) => {
-                const isActive = scene.id === activeScene.id;
-                return (
-                  <button
-                    key={scene.id}
-                    onClick={() => selectScene(activeSection, scene)}
-                    className={cn(
-                      'relative shrink-0 overflow-hidden rounded-xl border transition-all cursor-pointer',
-                      isActive ? 'border-violet-400/60 ring-2 ring-violet-400/20' : 'border-white/8 hover:border-white/20 opacity-60 hover:opacity-100',
-                    )}
-                    style={{ width: 96, height: 60 }}
-                  >
-                    {scene.thumbnailUrl ? (
-                      <Image src={scene.thumbnailUrl} alt={scene.label} fill className="object-cover" sizes="96px" />
-                    ) : <div className="absolute inset-0 bg-white/5" />}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-1.5 pb-1 pt-3">
-                      <p className="text-[9px] text-white/80 truncate font-medium">{scene.label}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right panel: VR launcher ── */}
-        <div className="lg:w-96 lg:border-l border-white/5 bg-surface-900/30 flex flex-col">
-          <div className="p-6 flex-1 space-y-5">
-
-            {/* Property identity */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-violet-400 mb-1">VR Experience</p>
-              <h3 className="text-lg font-semibold text-white">{property.name}</h3>
-              <p className="text-sm text-white/40">{tour.sections.length} sections · {allScenes.length} scenes</p>
-            </div>
-
-            {/* XR status */}
-            <XRStatusBanner status={xrStatus} />
-
-            {/* Enter VR button */}
-            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/15 border border-violet-500/20">
-                  <Headset size={22} className="text-violet-300" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">Immersive VR Mode</p>
-                  <p className="text-xs text-white/40">Full 360° on your headset display</p>
+        {/* ── Left: preview ── */}
+        <div className="flex flex-1 flex-col">
+          {/* Fills the column on a desktop, where the model is the point of the
+              page; falls back to a fixed height on a phone, where the panel
+              below it matters more. */}
+          <div className="relative flex-1 overflow-hidden bg-black" style={{ minHeight: 420 }}>
+            {hasModel ? (
+              /**
+               * The model, on screen, in the same canvas VR will use.
+               *
+               * Showing the real thing rather than a poster means the buyer has
+               * already seen it load before they put a headset on — and it is
+               * the only honest preview of what they are about to step into.
+               */
+              <div className="absolute inset-0">
+                <XRCanvas twin={twin} />
+                <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-black/60 px-3 py-1.5 text-xs font-medium text-brand-300 backdrop-blur-sm">
+                  <Box3D size={11} /> {twin!.label}
                 </div>
               </div>
+            ) : activeScene ? (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeScene.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0"
+                >
+                  {activeScene.videoUrl ? (
+                    <video
+                      key={activeScene.videoUrl}
+                      src={activeScene.videoUrl}
+                      poster={activeScene.thumbnailUrl || undefined}
+                      autoPlay loop muted playsInline
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : activeScene.imageUrl ? (
+                    <Image src={activeScene.imageUrl} alt={activeScene.label} fill className="object-cover" sizes="100vw" priority />
+                  ) : null}
+                  <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)' }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-transparent to-transparent" />
 
-              {/* WebXR native button — this is what triggers the headset */}
+                  <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-black/60 px-3 py-1.5 text-xs font-medium text-brand-300 backdrop-blur-sm">
+                    360° scene
+                  </div>
+
+                  {prev && (
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <button
+                        onClick={() => selectScene(prev.section, prev.scene)}
+                        aria-label="Previous scene"
+                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-black/50 text-white/50 backdrop-blur-sm transition-all hover:border-white/20 hover:text-white"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                    </div>
+                  )}
+                  {next && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <button
+                        onClick={() => selectScene(next.section, next.scene)}
+                        aria-label="Next scene"
+                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-black/50 text-white/50 backdrop-blur-sm transition-all hover:border-white/20 hover:text-white"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                    {activeSection && (
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-brand-400">{activeSection.label}</p>
+                    )}
+                    <h2 className="text-2xl font-semibold text-white">{activeScene.label}</h2>
+                    {activeScene.description && (
+                      <p className="mt-1 max-w-lg text-sm text-white/50">{activeScene.description}</p>
+                    )}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 size={22} className="animate-spin text-white/25" />
+              </div>
+            )}
+          </div>
+
+          {/* ── Model switcher / scene strip ── */}
+          {hasModel && twins.length > 1 && (
+            <div className="border-b border-white/5 bg-surface-900/50 p-4 sm:p-5">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                Choose what to tour
+              </p>
+              <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-0.5">
+                {twins.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTwinId(t.id)}
+                    className={cn(
+                      'shrink-0 cursor-pointer rounded-xl border px-3.5 py-2 text-xs font-medium transition-all',
+                      t.id === twin!.id
+                        ? 'border-brand-500/50 bg-brand-500/15 text-brand-200'
+                        : 'border-white/8 bg-white/3 text-white/50 hover:border-white/15 hover:text-white',
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!hasModel && allScenes.length > 1 && (
+            <div className="border-b border-white/5 bg-surface-900/50 p-4 sm:p-5">
               <button
-                onClick={() => xrStore.enterVR()}
-                disabled={xrStatus !== 'supported'}
-                className={cn(
-                  'w-full flex items-center justify-center gap-2.5 rounded-xl py-3.5 text-sm font-semibold transition-all cursor-pointer',
-                  xrStatus === 'supported'
-                    ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/25 active:scale-[0.98]'
-                    : 'bg-white/5 text-white/25 cursor-not-allowed border border-white/8',
-                )}
+                onClick={() => setGridOpen(true)}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-white/3 px-3.5 py-1.5 text-xs text-white/40 transition-colors hover:text-white"
               >
-                <Headset size={16} />
-                {xrStatus === 'checking' ? 'Checking for headset...' : xrStatus === 'supported' ? 'Enter VR' : 'No Headset Detected'}
+                <LayoutGrid size={12} /> All {allScenes.length} scenes
               </button>
+            </div>
+          )}
+        </div>
 
-              <p className="text-[11px] text-white/25 text-center">
-                Puts the scene directly onto your connected VR headset display
+        {/* ── Right: the VR panel ── */}
+        <aside className="w-full shrink-0 space-y-4 border-t border-white/5 p-5 lg:w-[380px] lg:border-l lg:border-t-0">
+
+          <XRStatusBanner status={xrStatus} emulating={emulateRequested} />
+
+          <div className="space-y-4 rounded-2xl border border-brand-500/20 bg-brand-500/5 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-500/20 bg-brand-500/15">
+                <Headset size={22} className="text-brand-300" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Immersive VR</p>
+                <p className="text-xs text-white/40">
+                  {hasModel ? 'Walk the building at full size' : 'Full 360° on your headset'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={enterVR}
+              disabled={xrStatus !== 'supported' || entering || inSession}
+              className={cn(
+                'flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl py-3.5 text-sm font-semibold transition-all',
+                xrStatus === 'supported' && !inSession
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25 hover:bg-brand-500 active:scale-[0.98]'
+                  : 'cursor-not-allowed border border-white/8 bg-white/5 text-white/25',
+              )}
+            >
+              {entering ? <Loader2 size={16} className="animate-spin" /> : <Headset size={16} />}
+              {inSession ? 'In VR — headset active'
+                : entering ? 'Starting…'
+                : xrStatus === 'checking' ? 'Looking for a headset…'
+                : xrStatus === 'supported' ? 'Enter VR'
+                : 'No headset detected'}
+            </button>
+
+            {enterError && (
+              <p className="rounded-lg border border-red-500/20 bg-red-500/8 px-3 py-2 text-xs text-red-300">
+                {enterError}
+              </p>
+            )}
+
+            {inSession && (
+              <button
+                onClick={() => xrStore.getState().session?.end()}
+                className="w-full cursor-pointer rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-medium text-white/60 transition-colors hover:text-white"
+              >
+                Exit VR
+              </button>
+            )}
+          </div>
+
+          {/* ── Controls, only where they apply ── */}
+          {hasModel && (
+            <div className="rounded-2xl border border-white/5 bg-surface-800 p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <Gamepad2 size={14} className="text-white/40" />
+                <p className="text-sm font-semibold text-white/80">In the headset</p>
+              </div>
+              <dl className="space-y-2 text-xs">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/40">Left stick</dt>
+                  <dd className="text-right text-white/70">Walk, facing where you look</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/40">Right stick</dt>
+                  <dd className="text-right text-white/70">Turn in {SNAP_DEGREES}° steps</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/40">Your feet</dt>
+                  <dd className="text-right text-white/70">Walk your real room too</dd>
+                </div>
+              </dl>
+              <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-white/30">
+                <RotateCcw size={11} className="mt-0.5 shrink-0" />
+                Turning snaps rather than sweeps — it is what keeps a long tour comfortable.
               </p>
             </div>
+          )}
 
-            {/* How to connect */}
-            <div className="rounded-2xl border border-white/5 bg-surface-800 p-5">
-              <button
-                onClick={() => setShowHeadsets((v) => !v)}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Monitor size={15} className="text-white/40" />
-                  <span className="text-sm font-medium text-white">Compatible headsets</span>
-                </div>
-                <ChevronRight size={14} className={cn('text-white/30 transition-transform', showHeadsets && 'rotate-90')} />
-              </button>
-
-              <AnimatePresence>
-                {showHeadsets && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 space-y-2.5">
-                      {headsets.map((h) => (
-                        <div key={h.name} className="flex items-center justify-between">
-                          <span className="text-sm text-white/60">{h.name}</span>
-                          <span className="text-xs text-white/30">{h.note}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 flex items-start gap-2 rounded-xl border border-white/5 bg-surface-900 p-3">
-                      <Wifi size={13} className="text-white/25 shrink-0 mt-0.5" />
-                      <p className="text-xs text-white/35 leading-relaxed">
-                        For Meta Quest: open this URL in the Quest Browser directly on the headset, or use Air Link / Quest Link from a PC.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* What's inside */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/30 uppercase tracking-wider">Tour contents</p>
-              {tour.sections.map((section) => {
-                const Icon = sectionIcons[section.icon] ?? Building2;
-                return (
-                  <div key={section.id} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-surface-800 px-3.5 py-2.5">
-                    <Icon size={14} className="text-violet-400 shrink-0" />
-                    <span className="text-sm text-white/60 flex-1">{section.label}</span>
-                    <span className="text-xs text-white/25">{section.scenes.length} scenes</span>
-                  </div>
-                );
-              })}
-            </div>
+          {/* ── How to connect ── */}
+          <div className="rounded-2xl border border-white/5 bg-surface-800 p-5">
+            <button
+              onClick={() => setShowHeadsets((v) => !v)}
+              className="flex w-full cursor-pointer items-center justify-between text-left"
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-white/80">
+                <Monitor size={14} className="text-white/40" /> Supported headsets
+              </span>
+              <ChevronRight size={14} className={cn('text-white/30 transition-transform', showHeadsets && 'rotate-90')} />
+            </button>
+            <AnimatePresence>
+              {showHeadsets && (
+                <motion.ul
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  {headsets.map((h) => (
+                    <li key={h.name} className="flex justify-between gap-3 border-b border-white/5 py-2.5 text-xs last:border-0">
+                      <span className="text-white/70">{h.name}</span>
+                      <span className="text-right text-white/30">{h.note}</span>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
+        </aside>
       </div>
 
-      {/* ── Scene grid overlay ── */}
       <AnimatePresence>
-        {gridOpen && (
+        {gridOpen && tour && (
           <SceneGrid
             tour={tour}
             activeSection={activeSection}
@@ -566,10 +807,17 @@ export function TourVRExperience({ property, tour }: Props) {
         )}
       </AnimatePresence>
 
-      {/* ── Hidden WebXR canvas (only used when headset is active) ── */}
-      {xrStatus === 'supported' && (
-        <div className="fixed inset-0 pointer-events-none opacity-0" style={{ zIndex: -1 }}>
-          <VRCanvas scene={activeScene} section={activeSection} />
+      {/**
+        * The session canvas for panorama tours.
+        *
+        * A model tour already has a live canvas in the preview above and reuses
+        * it; a panorama tour has only an <img>, so one is mounted here — kept
+        * present from first render for the gesture reason described on
+        * XRCanvas, not created when the button is pressed.
+        */}
+      {!hasModel && hasPanorama && (
+        <div className="pointer-events-none fixed inset-0 opacity-0" style={{ zIndex: -1 }} aria-hidden>
+          <XRCanvas twin={null} scene={activeScene} />
         </div>
       )}
     </div>
