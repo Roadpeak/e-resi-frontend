@@ -420,13 +420,12 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
       <Canvas
         shadows
         dpr={[1, 2]}
-        // Explicitly always-on. The camera rig animates every frame from
-        // useFrame, and without this the loop was not running until some
-        // outside event invalidated it — a click, or even a bare resize with
-        // no size change — so the tour opened on an unrendered black frame and
-        // only appeared once the visitor touched something.
+        // The camera rig animates from useFrame every frame, so the loop must
+        // stay on rather than rendering on demand.
         frameloop="always"
         camera={{ position: MODE_CAMERA.dollhouse.pos, fov: 55, near: 0.1, far: 200 }}
+        // Aim the camera before the first frame, so the opening view is the
+        // dollhouse rather than whatever direction the default camera faced.
         onCreated={({ gl, camera }) => {
           gl.setClearColor('#0d1117', 1);
           camera.lookAt(...MODE_CAMERA.dollhouse.look);
