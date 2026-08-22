@@ -91,6 +91,27 @@ export async function fetchProperty(slug: string): Promise<Property | null> {
 }
 
 /** Build slugs for generateStaticParams from the live API (falls back to empty array at build time). */
+/**
+ * Published 3D models for a property, server-side.
+ *
+ * Used to decide whether the tour route exists at all. Returns an empty list
+ * on any failure, so a momentary API blip renders the page's own empty state
+ * rather than a 404 the visitor cannot distinguish from a dead link.
+ */
+export async function fetchTwins(slug: string): Promise<{ id: string; meshUrl: string }[]> {
+  try {
+    const res = await fetch(`${API_BASE}/properties/${slug}/twin`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const data = json.data ?? json;
+    return Array.isArray(data) ? data : data ? [data] : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchPropertySlugs(): Promise<string[]> {
   try {
     const res = await fetch(`${API_BASE}/properties?limit=100`, { next: { revalidate: 3600 } });
