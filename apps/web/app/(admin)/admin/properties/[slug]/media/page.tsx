@@ -116,7 +116,7 @@ export default function AdminPropertyMedia({ params }: { params: Promise<{ slug:
       </div>
 
       {tab === 'media' ? (
-        <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
+        <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} isAdmin />
       ) : (
         <DigitalTwinManager slug={property.slug} />
       )}

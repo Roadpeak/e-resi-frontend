@@ -88,15 +88,25 @@ const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
 export function PropertyMediaManager({
   slug,
   heroImageUrl,
+  /**
+   * Whether the person editing is e-resi staff.
+   *
+   * Passed explicitly rather than read from the session: this component is
+   * mounted from both the developer dashboard and the admin studio, and which
+   * one it is says more about what should be editable than the viewer's role
+   * alone does.
+   */
+  isAdmin = false,
 }: {
   slug: string;
   heroImageUrl?: string | null;
+  isAdmin?: boolean;
 }) {
   return (
     <div className="space-y-6">
       <GalleryCard slug={slug} />
       <LogoCard slug={slug} heroImageUrl={heroImageUrl} />
-      <ToursCard slug={slug} />
+      <ToursCard slug={slug} isAdmin={isAdmin} />
     </div>
   );
 }
@@ -293,29 +303,42 @@ function LogoCard({ slug }: { slug: string; heroImageUrl?: string | null }) {
 
 /* ── Tours: cinematic / 3D / VR across categories ───────────────── */
 
-function ToursCard({ slug }: { slug: string }) {
+function ToursCard({ slug, isAdmin }: { slug: string; isAdmin: boolean }) {
   const [kind, setKind] = useState<VideoKind>('cinematic');
+
+  /**
+   * VR is staff-only.
+   *
+   * A VR scene is a 360° equirectangular capture; shot on an ordinary camera
+   * it uploads happily and renders as a warped mess in a headset. That fails
+   * the worst way — finished to whoever uploaded it, broken to the buyer — so
+   * the capture stays with the people who have the rig. Cinematic is an
+   * ordinary film and a developer with good footage can publish one.
+   */
+  const kinds = isAdmin ? VIDEO_KINDS : VIDEO_KINDS.filter((k) => k.key === 'cinematic');
 
   return (
     <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
       <div>
         <h3 className="text-[18px] font-normal text-[#202124]">Immersive videos</h3>
         <p className="text-sm text-[#5f6368]">
-          Cinematic films and VR scenes for the property, its unit types and amenities.
+          {isAdmin
+            ? 'Cinematic films and VR scenes for the property, its unit types and amenities.'
+            : 'Cinematic films for the property, its unit types and amenities.'}
         </p>
-        {/* Said plainly, because the missing "3D tour" tab would otherwise
-            read as something broken. Worded for both audiences: this component
-            is shared with the developer dashboard, where there is no 3D tour
-            tab to point at — e-resi produces the models. */}
+        {/* Said plainly, because a tab that is simply absent reads as broken.
+            Both of these need a capture rig — a 360° camera, or a scanner —
+            so they are produced rather than uploaded. */}
         <p className="mt-1.5 text-[13px] text-[#80868b]">
-          A 3D tour is a building model rather than a video, and is produced and
-          published by e-resi.
+          {isAdmin
+            ? 'A 3D tour is a building model rather than a video — publish one under the 3D tour tab.'
+            : '3D tours and VR scenes are captured and published by e-resi. Order them from production services below.'}
         </p>
       </div>
 
       {/* kind switcher */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {VIDEO_KINDS.map((k) => (
+      <div className={cn('mt-4 flex-wrap gap-2', kinds.length > 1 ? 'flex' : 'hidden')}>
+        {kinds.map((k) => (
           <button
             key={k.key}
             onClick={() => setKind(k.key)}
