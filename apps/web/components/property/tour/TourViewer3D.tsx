@@ -175,7 +175,19 @@ function Mesh({
     const centre = box.getCenter(new THREE.Vector3());
     const radius = box.getBoundingSphere(new THREE.Sphere()).radius * scale;
 
-    model.position.sub(centre.clone().multiplyScalar(scale));
+    /**
+     * Centred horizontally, but stood on the ground.
+     *
+     * Centring all three axes put the model's midpoint at the origin, which
+     * sinks the lower half of a building beneath the ground plane — the
+     * bottom floors simply disappeared. A building rests on the ground; only
+     * x and z want centring.
+     */
+    model.position.set(
+      -centre.x * scale,
+      -box.min.y * scale,
+      -centre.z * scale,
+    );
     onMeasured(radius, centre);
   }, [model, scale, onMeasured]);
 
@@ -241,21 +253,28 @@ function CameraRig({
       // eye-height position inside one has a wall against the lens; the near
       // plane then clips straight through it and the frame renders black.
       const r = Math.max(4, radius * 0.55) * orbit.dist;
+      const eye = Math.max(1.6, radius * 0.3);
       wantPos.current.set(
         target[0] + Math.sin(orbit.yaw) * r,
-        Math.max(1.6, radius * 0.35) + orbit.pitch * r * 0.4,
+        eye + orbit.pitch * r * 0.4,
         target[2] + Math.cos(orbit.yaw) * r,
       );
-      wantLook.current.set(target[0], target[1] * 0.5, target[2]);
+      // Slightly below eye level, so the building fills the frame rather than
+      // the sky above it.
+      wantLook.current.set(target[0], eye * 0.6, target[2]);
     } else if (mode === 'dollhouse') {
       // Far enough out to hold the whole building in frame, whatever its size.
+      // Aimed at the model's middle height. It stands on the ground now, so
+      // the origin is its base — aiming there tips the whole building into the
+      // top of the frame.
+      const mid = radius * 0.45;
       const r = radius * 2.1 * orbit.dist;
       wantPos.current.set(
         Math.sin(orbit.yaw) * r,
-        Math.max(radius * 0.3, radius * 0.9 + orbit.pitch * radius),
+        Math.max(radius * 0.35, mid + radius * 0.7 + orbit.pitch * radius),
         Math.cos(orbit.yaw) * r,
       );
-      wantLook.current.set(0, 0, 0);
+      wantLook.current.set(0, mid, 0);
     } else {
       // Floor plan: straight down, high enough to see the footprint.
       wantPos.current.set(0.001, radius * 2.4, 0.001);
