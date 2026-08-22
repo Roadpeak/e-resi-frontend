@@ -137,7 +137,16 @@ function Rooms({ activeRoom }: { activeRoom: string | null }) {
  * viewer going blank. Draco and KTX2 decoders are resolved from the file
  * itself; drei ships both.
  */
-function Mesh({ url, scale }: { url: string; scale: number }) {
+function Mesh({
+  url,
+  scale,
+  onMeasured,
+}: {
+  url: string;
+  scale: number;
+  /** Reports the model's size so the camera can frame it. */
+  onMeasured: (radius: number, centre: THREE.Vector3) => void;
+}) {
   const { scene } = useGLTF(url);
 
   // Cloned so a model shown twice on one page cannot have two viewers fighting
@@ -152,7 +161,23 @@ function Mesh({ url, scale }: { url: string; scale: number }) {
         m.receiveShadow = true;
       }
     });
-  }, [model]);
+
+    /**
+     * Measure it, and re-centre it on the origin.
+     *
+     * A model is authored wherever its exporter left it — a tower can sit
+     * hundreds of units from origin — and its size is whatever the building
+     * is. Fixed camera distances suited the stand-in plan and put the lens
+     * inside the glazing of a real skyscraper. Measuring means one rig frames
+     * a studio flat and a forty-storey tower equally.
+     */
+    const box = new THREE.Box3().setFromObject(model);
+    const centre = box.getCenter(new THREE.Vector3());
+    const radius = box.getBoundingSphere(new THREE.Sphere()).radius * scale;
+
+    model.position.sub(centre.clone().multiplyScalar(scale));
+    onMeasured(radius, centre);
+  }, [model, scale, onMeasured]);
 
   return <primitive object={model} scale={scale} />;
 }
@@ -170,10 +195,13 @@ function CameraRig({
   mode,
   target,
   orbit,
+  radius,
 }: {
   mode: ViewMode;
   target: [number, number, number] | null;
   orbit: { yaw: number; pitch: number; dist: number };
+  /** Bounding radius of whatever is loaded; drives every camera distance. */
+  radius: number;
 }) {
   const { camera } = useThree();
   const wantPos = useRef(new THREE.Vector3());
@@ -188,7 +216,6 @@ function CameraRig({
   const look = useRef(new THREE.Vector3(...MODE_CAMERA.dollhouse.look));
 
   useFrame((_, dt) => {
-    const base = MODE_CAMERA[mode];
 
     if (mode === 'walk' && target) {
       // Stand back from the stop and look at it, rather than standing on it
@@ -198,25 +225,26 @@ function CameraRig({
       // room. The stand-in rooms are 2.9m tall and a few metres across, so any
       // eye-height position inside one has a wall against the lens; the near
       // plane then clips straight through it and the frame renders black.
-      const r = 6.4;
+      const r = Math.max(4, radius * 0.55) * orbit.dist;
       wantPos.current.set(
         target[0] + Math.sin(orbit.yaw) * r,
-        4.2 + orbit.pitch * 3,
+        Math.max(1.6, radius * 0.35) + orbit.pitch * r * 0.4,
         target[2] + Math.cos(orbit.yaw) * r,
       );
-      wantLook.current.set(target[0], 0.8, target[2]);
+      wantLook.current.set(target[0], target[1] * 0.5, target[2]);
     } else if (mode === 'dollhouse') {
-      // Orbit the whole model.
-      const r = orbit.dist;
+      // Far enough out to hold the whole building in frame, whatever its size.
+      const r = radius * 2.1 * orbit.dist;
       wantPos.current.set(
         Math.sin(orbit.yaw) * r,
-        Math.max(2.5, 7 + orbit.pitch * 6),
+        Math.max(radius * 0.3, radius * 0.9 + orbit.pitch * radius),
         Math.cos(orbit.yaw) * r,
       );
-      wantLook.current.set(...base.look);
+      wantLook.current.set(0, 0, 0);
     } else {
-      wantPos.current.set(...base.pos);
-      wantLook.current.set(...base.look);
+      // Floor plan: straight down, high enough to see the footprint.
+      wantPos.current.set(0.001, radius * 2.4, 0.001);
+      wantLook.current.set(0, 0, 0);
     }
 
     // Frame-rate independent damping.
@@ -332,9 +360,18 @@ function Scene({
   onOpenTag: (id: string | null) => void;
   twin: DigitalTwin | null;
 }) {
+  /**
+   * Bounding radius of what is on screen.
+   *
+   * Defaults to the stand-in plan's own size, then updates when a real model
+   * reports its dimensions — one rig then frames a flat and a tower alike.
+   */
+  const [radius, setRadius] = useState(7);
+  const onMeasured = useCallback((r: number) => setRadius(Math.max(2, r)), []);
+
   return (
     <>
-      <CameraRig mode={mode} target={target} orbit={orbit} />
+      <CameraRig mode={mode} target={target} orbit={orbit} radius={radius} />
 
       <ambientLight intensity={0.75} />
       <directionalLight position={[7, 12, 6]} intensity={1.25} castShadow />
@@ -346,7 +383,7 @@ function Scene({
           downloads rather than blanking the viewer. */}
       {twin ? (
         <Suspense fallback={<Rooms activeRoom={activeRoom} />}>
-          <Mesh url={twin.meshUrl} scale={twin.scale} />
+          <Mesh url={twin.meshUrl} scale={twin.scale} onMeasured={onMeasured} />
         </Suspense>
       ) : (
         <Rooms activeRoom={activeRoom} />
@@ -429,7 +466,9 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [showRooms, setShowRooms] = useState(false);
   const [measuring, setMeasuring] = useState(false);
-  const [orbit, setOrbit] = useState({ yaw: 0.6, pitch: 0.1, dist: 15 });
+  // dist is a zoom multiplier, not a distance — the rig scales it by the
+  // model's own size, so one value works for any building.
+  const [orbit, setOrbit] = useState({ yaw: 0.6, pitch: 0.1, dist: 1 });
 
   const current = stops[Math.min(index, Math.max(0, stops.length - 1))];
   const target = mode === 'walk' ? anchorFor(current?.scene) : null;
@@ -480,7 +519,7 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
 
   const onWheel = (e: React.WheelEvent) => {
     if (mode !== 'dollhouse') return;
-    setOrbit((o) => ({ ...o, dist: Math.max(8, Math.min(26, o.dist + e.deltaY * 0.01)) }));
+    setOrbit((o) => ({ ...o, dist: Math.max(0.4, Math.min(2.4, o.dist + e.deltaY * 0.0012)) }));
   };
 
   const shellRef = useRef<HTMLDivElement>(null);
