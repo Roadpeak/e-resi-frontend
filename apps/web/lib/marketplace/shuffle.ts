@@ -86,30 +86,36 @@ export function weightedShuffle(properties: Property[], seed: number): Property[
     .map((k) => k.property);
 }
 
-const SEED_KEY = 'eresi:browse-seed';
+/**
+ * The seed drawn for this page load.
+ *
+ * Module-scoped, which is exactly the lifetime the order needs: it survives
+ * every re-render and every page change within the app, and is discarded when
+ * the document is thrown away — that is, on a refresh.
+ */
+let loadSeed: number | null = null;
 
 /**
- * One seed per browsing session.
+ * A different order on every refresh, a stable one while browsing.
  *
- * Held in sessionStorage rather than regenerated per render: the order must
- * change when someone comes back to the site, but not while they are paging
- * through results or returning from a development they clicked into. A seed
- * that changed on every render would reshuffle under them mid-scroll.
+ * A fixed order makes whatever sits below the fold effectively undiscoverable:
+ * the same developments lead every time, and every developer pays the same
+ * listing fee for that placement. So the order is drawn afresh each time the
+ * page is loaded.
+ *
+ * It deliberately does not change *within* a load. Paging to page 2 and back,
+ * or any re-render, reuses the same seed — a reshuffle underfoot would look
+ * like listings disappearing. This was previously held in sessionStorage,
+ * which survives a refresh, so the order never actually changed until the tab
+ * was closed. Module state has the lifetime that was intended.
  */
 export function browseSeed(): number {
+  // Server render: a constant, so the markup the client hydrates against
+  // matches. The client draws the real seed on mount.
   if (typeof window === 'undefined') return 0;
-  try {
-    const existing = window.sessionStorage.getItem(SEED_KEY);
-    if (existing) {
-      const parsed = Number(existing);
-      if (Number.isFinite(parsed)) return parsed;
-    }
-    const seed = Math.floor(Math.random() * 2 ** 31);
-    window.sessionStorage.setItem(SEED_KEY, String(seed));
-    return seed;
-  } catch {
-    // Private browsing can refuse storage; an unstable seed is better than a
-    // crash, and the only cost is a reshuffle between pages.
-    return Math.floor(Math.random() * 2 ** 31);
+
+  if (loadSeed === null) {
+    loadSeed = Math.floor(Math.random() * 2 ** 31);
   }
+  return loadSeed;
 }
