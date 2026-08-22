@@ -200,7 +200,7 @@ function CameraRig({
   mode: ViewMode;
   target: [number, number, number] | null;
   orbit: { yaw: number; pitch: number; dist: number };
-  /** Bounding radius of whatever is loaded; drives every camera distance. */
+  /** Bounding radius of whatever is loaded; drives distances and clip planes. */
   radius: number;
 }) {
   const { camera } = useThree();
@@ -214,6 +214,21 @@ function CameraRig({
    * once something moves the camera enough to damp out of it.
    */
   const look = useRef(new THREE.Vector3(...MODE_CAMERA.dollhouse.look));
+
+  /**
+   * Clipping planes follow the model too.
+   *
+   * These were fixed at 0.1 and 200, which suited a model a few metres across.
+   * A villa exported at 290 units wide needs the camera roughly 440 units out
+   * — beyond the far plane — so every triangle was clipped and the scene
+   * rendered empty while the file downloaded perfectly well.
+   */
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.near = Math.max(0.05, radius * 0.01);
+    cam.far = Math.max(200, radius * 12);
+    cam.updateProjectionMatrix();
+  }, [camera, radius]);
 
   useFrame((_, dt) => {
 
@@ -400,20 +415,22 @@ function Scene({
       {/* Ground, only where it reads — a floor plan wants no context. */}
       {mode !== 'floorplan' && (
         <>
+          {/* Ground and grid scale with the model. Fixed at 60 units they
+              vanished under anything large, leaving it floating in black. */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-            <planeGeometry args={[60, 60]} />
+            <planeGeometry args={[radius * 8, radius * 8]} />
             <meshStandardMaterial color="#0d1117" />
           </mesh>
           <Grid
             position={[0, -0.01, 0]}
-            args={[60, 60]}
-            cellSize={1}
+            args={[radius * 8, radius * 8]}
+            cellSize={Math.max(1, radius / 8)}
             cellThickness={0.4}
             cellColor="#1b2436"
-            sectionSize={5}
+            sectionSize={Math.max(5, radius / 1.6)}
             sectionThickness={0.8}
             sectionColor="#2a3550"
-            fadeDistance={42}
+            fadeDistance={radius * 6}
           />
         </>
       )}
