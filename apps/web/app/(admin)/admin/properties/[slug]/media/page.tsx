@@ -1,10 +1,11 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../../../components/dashboard/MaterialIcon';
 import { PropertyMediaManager } from '../../../../../../components/dashboard/PropertyMediaManager';
+import { Tour3DManager } from '../../../../../../components/admin/Tour3DManager';
 import { apiClient } from '../../../../../../lib/api/client';
 
 interface PropertyDetail {
@@ -24,6 +25,13 @@ interface PropertyDetail {
  */
 export default function AdminPropertyMedia({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+
+  /**
+   * The 3D tour is built, not just uploaded to — a stop needs a camera
+   * position and an order, which the general media uploader has no place to
+   * ask for. Separating them keeps each screen answering one question.
+   */
+  const [tab, setTab] = useState<'media' | 'tour3d'>('media');
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['admin-property', slug],
@@ -87,7 +95,31 @@ export default function AdminPropertyMedia({ params }: { params: Promise<{ slug:
         </p>
       </div>
 
-      <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
+      <div className="flex gap-1 rounded-full border border-[#dadce0] bg-white p-1">
+        {([
+          { key: 'media' as const, label: 'Media' },
+          { key: 'tour3d' as const, label: '3D tour' },
+        ]).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            aria-pressed={tab === t.key}
+            className={
+              tab === t.key
+                ? 'cursor-pointer rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white'
+                : 'cursor-pointer rounded-full px-4 py-2 text-[14px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4]'
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'media' ? (
+        <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
+      ) : (
+        <Tour3DManager slug={property.slug} />
+      )}
     </div>
   );
 }
