@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, Building2, Film, Headset, ImagePlus, Loader2, Trash2, Video,
+  Building2, Film, Headset, ImagePlus, Loader2, Trash2, Video,
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
 import { uploadFile, type UploadProgress } from '../../lib/api/media';
@@ -37,18 +37,19 @@ interface TourScene {
   imageUrl?: string | null;
 }
 
-interface Tour3DSection {
-  id: string;
-  label: string;
-  scenes: TourScene[];
-}
 
-/** Video kinds a developer can attach. */
-type VideoKind = 'cinematic' | '3d' | 'vr';
+/**
+ * Video kinds a developer can attach.
+ *
+ * "3D tour" is deliberately absent. A 3D tour is now a building model — a .glb
+ * uploaded under the 3D tour tab — and the viewer renders that geometry rather
+ * than playing clips. Leaving the option here would let someone fill a tour
+ * with videos that nothing displays, and believe it was done.
+ */
+type VideoKind = 'cinematic' | 'vr';
 
 const VIDEO_KINDS: { key: VideoKind; label: string; icon: React.ReactNode; hint: string }[] = [
   { key: 'cinematic', label: 'Cinematic', icon: <Film size={14} />, hint: 'Scroll-driven cinematic films' },
-  { key: '3d', label: '3D tour', icon: <Box size={14} />, hint: 'Interactive 3D walkthrough scenes' },
   { key: 'vr', label: 'VR / 360°', icon: <Headset size={14} />, hint: 'Immersive headset-ready scenes' },
 ];
 
@@ -300,7 +301,15 @@ function ToursCard({ slug }: { slug: string }) {
       <div>
         <h3 className="text-[18px] font-normal text-[#202124]">Immersive videos</h3>
         <p className="text-sm text-[#5f6368]">
-          Upload cinematic films, 3D walkthroughs and VR scenes for the property, its unit types and amenities.
+          Cinematic films and VR scenes for the property, its unit types and amenities.
+        </p>
+        {/* Said plainly, because the missing "3D tour" tab would otherwise
+            read as something broken. Worded for both audiences: this component
+            is shared with the developer dashboard, where there is no 3D tour
+            tab to point at — e-resi produces the models. */}
+        <p className="mt-1.5 text-[13px] text-[#80868b]">
+          A 3D tour is a building model rather than a video, and is produced and
+          published by e-resi.
         </p>
       </div>
 
@@ -362,11 +371,7 @@ function SceneGroup({
       if (kind === 'cinematic') {
         return apiClient.get<CinematicScene[]>(`/properties/${slug}/tours/cinematic`);
       }
-      if (kind === 'vr') {
-        return apiClient.get<TourScene[]>(`/properties/${slug}/tours/vr`);
-      }
-      const sections = await apiClient.get<Tour3DSection[]>(`/properties/${slug}/tours/3d`);
-      return sections.flatMap((sec) => sec.scenes.map((s) => ({ ...s, sectionLabel: sec.label })));
+      return apiClient.get<TourScene[]>(`/properties/${slug}/tours/vr`);
     },
   });
 
@@ -421,20 +426,8 @@ function SceneGroup({
           category,
           videoUrl: uploaded.url,
         });
-      } else if (kind === 'vr') {
-        await apiClient.post(`/properties/${slug}/tours/vr`, {
-          label,
-          description: scope === 'units' ? `${prefix} · ${unitType}` : `${prefix} · ${label}`,
-          videoUrl: uploaded.url,
-        });
       } else {
-        // 3D scenes live under a section — reuse/create one named for this group
-        const sections = await apiClient.get<Tour3DSection[]>(`/properties/${slug}/tours/3d`);
-        let section = sections.find((s) => s.label === prefix);
-        if (!section) {
-          section = await apiClient.post<Tour3DSection>(`/properties/${slug}/tours/3d/sections`, { label: prefix });
-        }
-        await apiClient.post(`/properties/${slug}/tours/3d/sections/${section.id}/scenes`, {
+        await apiClient.post(`/properties/${slug}/tours/vr`, {
           label,
           description: scope === 'units' ? `${prefix} · ${unitType}` : `${prefix} · ${label}`,
           videoUrl: uploaded.url,
@@ -461,9 +454,7 @@ function SceneGroup({
   async function remove(id: string) {
     const path = kind === 'cinematic'
       ? `/properties/${slug}/tours/cinematic/${id}`
-      : kind === 'vr'
-        ? `/properties/${slug}/tours/vr/${id}`
-        : `/properties/${slug}/tours/3d/scenes/${id}`;
+      : `/properties/${slug}/tours/vr/${id}`;
     await apiClient.delete(path).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['tours', slug, kind] });
   }
