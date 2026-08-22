@@ -32,8 +32,17 @@ export interface TwinTag {
   floor: number;
 }
 
+export type TwinKind = 'BUILDING' | 'UNIT' | 'AMENITY' | 'ROOM';
+
 export interface DigitalTwin {
   id: string;
+  /** What this model is of — shown on the switcher tile. */
+  label: string;
+  kind: TwinKind;
+  /** A still for the switcher tile. */
+  posterUrl?: string | null;
+  isPrimary: boolean;
+  order: number;
   meshUrl: string;
   proxyUrl?: string | null;
   scale: number;
@@ -65,32 +74,39 @@ export interface MeshUploadResult {
 }
 
 export const twinsApi = {
-  get: (slug: string) => apiClient.get<DigitalTwin | null>(`/properties/${slug}/twin`),
+  /** Every model for a property, the one to open on first. */
+  list: (slug: string) => apiClient.get<DigitalTwin[]>(`/properties/${slug}/twin`),
 
-  update: (slug: string, body: Partial<{
+  update: (twinId: string, slug: string, body: Partial<{
+    label: string;
+    kind: TwinKind;
+    posterUrl: string;
+    isPrimary: boolean;
+    order: number;
     scale: number;
     scaleVerified: boolean;
     floors: string[];
     originX: number; originY: number; originZ: number;
     capturedAt: string;
-  }>) => apiClient.patch<DigitalTwin>(`/properties/${slug}/twin`, body),
+  }>) => apiClient.patch<DigitalTwin>(`/properties/${slug}/twin/${twinId}`, body),
 
-  remove: (slug: string) => apiClient.delete<{ message: string }>(`/properties/${slug}/twin`),
+  remove: (twinId: string, slug: string) =>
+    apiClient.delete<{ message: string }>(`/properties/${slug}/twin/${twinId}`),
 
-  addWaypoint: (slug: string, body: {
+  addWaypoint: (twinId: string, slug: string, body: {
     label: string; caption?: string; route?: string;
     posX: number; posY: number; posZ: number;
     lookX?: number; lookY?: number; lookZ?: number;
     floor?: number; order?: number;
-  }) => apiClient.post<TwinWaypoint>(`/properties/${slug}/twin/waypoints`, body),
+  }) => apiClient.post<TwinWaypoint>(`/properties/${slug}/twin/${twinId}/waypoints`, body),
 
   removeWaypoint: (slug: string, id: string) =>
     apiClient.delete<{ message: string }>(`/properties/${slug}/twin/waypoints/${id}`),
 
-  addTag: (slug: string, body: {
+  addTag: (twinId: string, slug: string, body: {
     title: string; body?: string;
     posX: number; posY: number; posZ: number; floor?: number;
-  }) => apiClient.post<TwinTag>(`/properties/${slug}/twin/tags`, body),
+  }) => apiClient.post<TwinTag>(`/properties/${slug}/twin/${twinId}/tags`, body),
 
   removeTag: (slug: string, id: string) =>
     apiClient.delete<{ message: string }>(`/properties/${slug}/twin/tags/${id}`),
@@ -105,9 +121,17 @@ export const twinsApi = {
 export function uploadMesh(
   slug: string,
   file: File,
-  options: { kind?: 'mesh' | 'proxy'; onProgress?: (percent: number) => void; signal?: AbortSignal } = {},
+  options: {
+    kind?: 'mesh' | 'proxy';
+    /** Replaces this model rather than adding another. */
+    twinId?: string;
+    label?: string;
+    twinKind?: TwinKind;
+    onProgress?: (percent: number) => void;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<MeshUploadResult> {
-  const { kind = 'mesh', onProgress, signal } = options;
+  const { kind = 'mesh', twinId, label, twinKind, onProgress, signal } = options;
   const token = useAuthStore.getState().accessToken;
 
   return new Promise((resolve, reject) => {
@@ -115,7 +139,11 @@ export function uploadMesh(
     form.append('file', file);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${BASE_URL}/properties/${slug}/twin/mesh?kind=${kind}`);
+    const q = new URLSearchParams({ kind });
+    if (twinId) q.set('twinId', twinId);
+    if (label) q.set('label', label);
+    if (twinKind) q.set('twinKind', twinKind);
+    xhr.open('POST', `${BASE_URL}/properties/${slug}/twin/mesh?${q}`);
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (e) => {

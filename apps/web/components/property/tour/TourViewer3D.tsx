@@ -9,7 +9,7 @@ import { Environment, Grid, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   ArrowLeft, Play, Pause, ChevronLeft, ChevronRight, Headset,
-  Maximize2, Share2, MoreVertical, Ruler, Layers, X, Home, Footprints,
+  Maximize2, Share2, MoreVertical, Ruler, Layers, LayoutGrid, X, Home, Footprints,
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -433,11 +433,21 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
    * a model published after that build would otherwise never appear until the
    * page was rebuilt.
    */
-  const { data: twin } = useQuery({
+  const { data: twins = [] } = useQuery({
     queryKey: ['twin', property.slug],
-    queryFn: () => twinsApi.get(property.slug),
+    queryFn: () => twinsApi.list(property.slug),
     staleTime: 5 * 60 * 1000,
   });
+
+  /**
+   * Which model is on screen.
+   *
+   * A development is captured in pieces — the building, a show unit, the pool
+   * deck — and a visitor picks between them. Defaults to whichever was marked
+   * to open first.
+   */
+  const [twinId, setTwinId] = useState<string | null>(null);
+  const twin = twins.find((t) => t.id === twinId) ?? twins[0] ?? null;
 
   /** Every stop in the tour, flattened, plus which section it came from. */
   const allStops = useMemo(
@@ -465,6 +475,8 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
   const [playing, setPlaying] = useState(false);
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [showRooms, setShowRooms] = useState(false);
+  /** The model tiles, opened from the control bar. */
+  const [showModels, setShowModels] = useState(false);
   const [measuring, setMeasuring] = useState(false);
   // dist is a zoom multiplier, not a distance — the rig scales it by the
   // model's own size, so one value works for any building.
@@ -586,10 +598,13 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
         </Link>
         <div className="rounded-full bg-black/45 px-3.5 py-1.5 backdrop-blur-md">
           <p className="text-[13px] font-semibold leading-tight text-white">{property.name}</p>
+          {twin && twins.length > 1 && (
+            <p className="text-[11px] leading-tight text-white/55">{twin.label}</p>
+          )}
         </div>
       </div>
 
-      {/* ── Tour selector, top right — the part the reference does not have ── */}
+      {/* ── Tour selector, top right ── */}
       <div className="absolute right-5 top-5 z-20 flex flex-col items-end gap-2">
         <div className="flex items-center gap-1.5 rounded-full bg-black/45 p-1 backdrop-blur-md">
           <RouteChip label="Full tour" active={routeId === 'all'} onClick={() => setRouteId('all')} />
@@ -606,6 +621,60 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
           {stops.length} {stops.length === 1 ? 'stop' : 'stops'}
         </p>
       </div>
+
+      {/* ── Model switcher ──
+          A development is captured in pieces, so a visitor chooses what to
+          tour: the whole building, a show unit, the amenity deck. Tiles rather
+          than a dropdown, because what someone is choosing between is places,
+          and a still says more than a name does. */}
+      {twins.length > 1 && (
+        <AnimatePresence>
+          {showModels && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-x-0 bottom-24 z-20 px-5"
+            >
+              <div className="mx-auto flex max-w-4xl gap-2.5 overflow-x-auto pb-1">
+                {twins.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTwinId(t.id);
+                      setIndex(0);
+                      setOpenTag(null);
+                      setShowModels(false);
+                    }}
+                    className={cn(
+                      'group relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border-2 text-left transition-all',
+                      t.id === twin?.id
+                        ? 'border-white shadow-lg'
+                        : 'border-white/25 hover:border-white/60',
+                    )}
+                  >
+                    {t.posterUrl ? (
+                      <Image src={t.posterUrl} alt="" fill className="object-cover" sizes="128px" />
+                    ) : (
+                      <span className="absolute inset-0 bg-white/10" />
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                    <span className="absolute inset-x-2 bottom-1.5">
+                      <span className="block truncate text-[12px] font-semibold leading-tight text-white">
+                        {t.label}
+                      </span>
+                      <span className="block text-[10px] uppercase tracking-wide text-white/60">
+                        {t.kind.toLowerCase()}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* ── Caption, bottom left ── */}
       <AnimatePresence mode="wait">
@@ -657,6 +726,16 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
             </ModeBtn>
 
             <span className="mx-1 h-5 w-px bg-white/20" />
+
+            {twins.length > 1 && (
+              <ModeBtn
+                active={showModels}
+                label="Choose what to tour"
+                onClick={() => setShowModels((v) => !v)}
+              >
+                <LayoutGrid size={17} />
+              </ModeBtn>
+            )}
 
             <ModeBtn active={measuring} label="Measure" onClick={() => setMeasuring((v) => !v)}>
               <Ruler size={17} />

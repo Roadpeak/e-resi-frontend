@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
-import { twinsApi, uploadMesh, type GlbSummary } from '../../lib/api/twins';
+import { twinsApi, uploadMesh, type GlbSummary, type TwinKind } from '../../lib/api/twins';
 import { ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
 
@@ -20,6 +20,14 @@ const card = 'rounded-3xl border border-[#dadce0] bg-white';
 const field =
   'h-10 w-full rounded-xl border border-[#dadce0] px-3 text-[14px] text-[#202124] outline-none focus:border-[#1a73e8]';
 
+/** Material icon per kind, so the strip reads at a glance. */
+const KIND_ICON: Record<string, string> = {
+  BUILDING: 'apartment',
+  UNIT: 'door_front',
+  AMENITY: 'pool',
+  ROOM: 'chair',
+};
+
 const mb = (bytes?: number | null) =>
   bytes ? `${(bytes / 1048576).toFixed(1)} MB` : '—';
 
@@ -34,11 +42,26 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
   const meshRef = useRef<HTMLInputElement>(null);
   const proxyRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  /** Set just before opening the picker, so one input serves both actions. */
+  const replaceRef = useRef(false);
 
-  const { data: twin, isLoading } = useQuery({
+  const { data: twins = [], isLoading } = useQuery({
     queryKey: ['admin-twin', slug],
-    queryFn: () => twinsApi.get(slug),
+    queryFn: () => twinsApi.list(slug),
   });
+
+  /**
+   * Which model is being edited.
+   *
+   * A property is captured in pieces — the building, a show unit, the amenity
+   * deck — so this screen edits one at a time and the strip above chooses it.
+   */
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const twin = twins.find((t) => t.id === selectedId) ?? twins[0] ?? null;
+
+  /** What the next upload creates, when it is not replacing an existing model. */
+  const [newLabel, setNewLabel] = useState('');
+  const [newKind, setNewKind] = useState<TwinKind>('BUILDING');
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['admin-twin', slug] });
@@ -48,7 +71,7 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
   const onError = (e: unknown) =>
     setError(e instanceof ApiError || e instanceof Error ? e.message : 'Something went wrong.');
 
-  async function upload(file: File, kind: 'mesh' | 'proxy') {
+  async function upload(file: File, kind: 'mesh' | 'proxy', replacing = false) {
     setError('');
     setWarnings([]);
     setBusyKind(kind);
@@ -58,9 +81,16 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
     try {
       const result = await uploadMesh(slug, file, {
         kind,
+        // A proxy always belongs to the model being viewed; a mesh replaces
+        // that model only when one is selected, otherwise it adds another.
+        ...(kind === 'proxy' || replacing
+          ? { twinId: twin?.id }
+          : { label: newLabel.trim() || undefined, twinKind: newKind }),
         onProgress: setProgress,
         signal: abortRef.current.signal,
       });
+      setSelectedId(result.twin.id);
+      setNewLabel('');
       setSummary(result.summary);
       setWarnings(result.warnings);
       refresh();
@@ -78,14 +108,15 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
   }
 
   const save = useMutation({
-    mutationFn: (body: Parameters<typeof twinsApi.update>[1]) => twinsApi.update(slug, body),
+    mutationFn: (body: Parameters<typeof twinsApi.update>[2]) =>
+      twinsApi.update(twin!.id, slug, body),
     onSuccess: () => { setError(''); refresh(); },
     onError,
   });
 
   const remove = useMutation({
-    mutationFn: () => twinsApi.remove(slug),
-    onSuccess: () => { setError(''); setSummary(null); setWarnings([]); refresh(); },
+    mutationFn: () => twinsApi.remove(twin!.id, slug),
+    onSuccess: () => { setError(''); setSummary(null); setWarnings([]); setSelectedId(null); refresh(); },
     onError,
   });
 
@@ -99,6 +130,44 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-4">
+      {/* ── Model switcher ──
+          One row per capture. A development is scanned in pieces, and this is
+          how staff move between them — the same choice a buyer gets in the
+          viewer. */}
+      {twins.length > 0 && (
+        <div className={cn(card, 'p-3')}>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {twins.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setSelectedId(t.id); setSummary(null); setWarnings([]); }}
+                className={cn(
+                  'flex shrink-0 items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-left transition-colors',
+                  t.id === twin?.id
+                    ? 'border-[#1a73e8] bg-[#e8f0fe]'
+                    : 'border-[#dadce0] bg-white hover:bg-[#f8f9fa]',
+                )}
+              >
+                <MaterialIcon
+                  name={KIND_ICON[t.kind] ?? 'view_in_ar'}
+                  size={18}
+                  className={t.id === twin?.id ? 'text-[#1967d2]' : 'text-[#5f6368]'}
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-[13.5px] font-medium text-[#202124]">
+                    {t.label}
+                  </span>
+                  <span className="block text-[11px] uppercase tracking-wide text-[#80868b]">
+                    {t.kind.toLowerCase()}
+                    {t.isPrimary ? ' · opens first' : ''}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Model ── */}
       <div className={cn(card, 'p-5')}>
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -137,15 +206,47 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
           </p>
         )}
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* Adding another capture rather than replacing this one. */}
+        <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+          <input
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Name the next model — e.g. 2 Bed Show Unit, Amenities"
+            maxLength={80}
+            className={field}
+          />
+          <select
+            value={newKind}
+            onChange={(e) => setNewKind(e.target.value as TwinKind)}
+            className={cn(field, 'cursor-pointer sm:w-44')}
+            aria-label="What this model is of"
+          >
+            <option value="BUILDING">Whole building</option>
+            <option value="UNIT">Unit type</option>
+            <option value="AMENITY">Amenity</option>
+            <option value="ROOM">Single room</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             onClick={() => meshRef.current?.click()}
             disabled={busyKind !== null}
             className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-[#1a73e8] px-4 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-40"
           >
             <MaterialIcon name="upload" size={16} />
-            {twin ? 'Replace model' : 'Upload model'}
+            {twins.length ? 'Add model' : 'Upload model'}
           </button>
+
+          {twin && (
+            <button
+              onClick={() => { replaceRef.current = true; meshRef.current?.click(); }}
+              disabled={busyKind !== null}
+              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-[#dadce0] bg-white px-4 text-[14px] font-medium text-[#5f6368] transition-colors hover:bg-[#f8f9fa] disabled:opacity-40"
+            >
+              Replace “{twin.label}”
+            </button>
+          )}
 
           {twin && (
             <button
@@ -182,7 +283,11 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
         </p>
 
         <input ref={meshRef} type="file" accept=".glb,model/gltf-binary" hidden
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f, 'mesh'); }} />
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) upload(f, 'mesh', replaceRef.current);
+            replaceRef.current = false;
+          }} />
         <input ref={proxyRef} type="file" accept=".glb,model/gltf-binary" hidden
           onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f, 'proxy'); }} />
 
@@ -260,9 +365,9 @@ function ModelSettings({
   saving,
   onSave,
 }: {
-  twin: NonNullable<Awaited<ReturnType<typeof twinsApi.get>>>;
+  twin: Awaited<ReturnType<typeof twinsApi.list>>[number];
   saving: boolean;
-  onSave: (body: Parameters<typeof twinsApi.update>[1]) => void;
+  onSave: (body: Parameters<typeof twinsApi.update>[2]) => void;
 }) {
   const [floors, setFloors] = useState(twin.floors.join(', '));
   const [scale, setScale] = useState(String(twin.scale));
@@ -340,7 +445,7 @@ function Waypoints({
   onError,
 }: {
   slug: string;
-  twin: NonNullable<Awaited<ReturnType<typeof twinsApi.get>>>;
+  twin: Awaited<ReturnType<typeof twinsApi.list>>[number];
   onDone: () => void;
   onError: (e: unknown) => void;
 }) {
@@ -352,7 +457,7 @@ function Waypoints({
   async function add() {
     setBusy(true);
     try {
-      await twinsApi.addWaypoint(slug, {
+      await twinsApi.addWaypoint(twin.id, slug, {
         label: form.label.trim(),
         caption: form.caption.trim() || undefined,
         route: form.route.trim() || undefined,
@@ -459,7 +564,7 @@ function Tags({
   onError,
 }: {
   slug: string;
-  twin: NonNullable<Awaited<ReturnType<typeof twinsApi.get>>>;
+  twin: Awaited<ReturnType<typeof twinsApi.list>>[number];
   onDone: () => void;
   onError: (e: unknown) => void;
 }) {
@@ -469,7 +574,7 @@ function Tags({
   async function add() {
     setBusy(true);
     try {
-      await twinsApi.addTag(slug, {
+      await twinsApi.addTag(twin.id, slug, {
         title: form.title.trim(),
         body: form.body.trim() || undefined,
         posX: Number.parseFloat(form.posX) || 0,
