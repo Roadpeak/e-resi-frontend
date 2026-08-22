@@ -5,13 +5,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment, Grid, Html } from '@react-three/drei';
+import { Environment, Grid, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   ArrowLeft, Play, Pause, ChevronLeft, ChevronRight, Headset,
   Maximize2, Share2, MoreVertical, Ruler, Layers, X, Home, Footprints,
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { twinsApi, type DigitalTwin } from '../../../lib/api/twins';
 import type { Property, PropertyTour, TourScene } from '../../../lib/types';
 
 /**
@@ -127,6 +129,34 @@ function Rooms({ activeRoom }: { activeRoom: string | null }) {
   );
 }
 
+/**
+ * The real building, when this property has one.
+ *
+ * useGLTF suspends while the file downloads, so the caller wraps it — the
+ * placeholder rooms stay on screen until the mesh is ready rather than the
+ * viewer going blank. Draco and KTX2 decoders are resolved from the file
+ * itself; drei ships both.
+ */
+function Mesh({ url, scale }: { url: string; scale: number }) {
+  const { scene } = useGLTF(url);
+
+  // Cloned so a model shown twice on one page cannot have two viewers fighting
+  // over the same object's transform.
+  const model = useMemo(() => scene.clone(true), [scene]);
+
+  useEffect(() => {
+    model.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+      }
+    });
+  }, [model]);
+
+  return <primitive object={model} scale={scale} />;
+}
+
 // ─── Camera rig ──────────────────────────────────────────────────────────────
 
 /**
@@ -230,17 +260,32 @@ function Tags({
   activeRoom,
   openTag,
   onOpen,
+  twinTags,
 }: {
   visible: boolean;
   activeRoom: string | null;
   openTag: string | null;
   onOpen: (id: string | null) => void;
+  /** Tags placed against the real model, when there is one. */
+  twinTags?: { id: string; title: string; body?: string | null; posX: number; posY: number; posZ: number }[];
 }) {
   if (!visible) return null;
 
+  // Real tags are anchored in the model's own space and are not filtered by
+  // room — the room filter only means anything for the stand-in plan.
+  const pins: TagDef[] = twinTags?.length
+    ? twinTags.map((t) => ({
+        id: t.id,
+        room: '',
+        pos: [t.posX, t.posY, t.posZ] as [number, number, number],
+        title: t.title,
+        body: t.body ?? '',
+      }))
+    : TAGS.filter((t) => !activeRoom || t.room === activeRoom);
+
   return (
     <group>
-      {TAGS.filter((t) => !activeRoom || t.room === activeRoom).map((t) => (
+      {pins.map((t) => (
         <group key={t.id} position={t.pos}>
           <Html center distanceFactor={9} zIndexRange={[20, 0]}>
             <button
@@ -277,6 +322,7 @@ function Scene({
   activeRoom,
   openTag,
   onOpenTag,
+  twin,
 }: {
   mode: ViewMode;
   target: [number, number, number] | null;
@@ -284,6 +330,7 @@ function Scene({
   activeRoom: string | null;
   openTag: string | null;
   onOpenTag: (id: string | null) => void;
+  twin: DigitalTwin | null;
 }) {
   return (
     <>
@@ -294,8 +341,24 @@ function Scene({
       <directionalLight position={[-6, 5, -5]} intensity={0.45} />
       <Environment preset="city" />
 
-      <Rooms activeRoom={activeRoom} />
-      <Tags visible={mode !== 'floorplan'} activeRoom={activeRoom} openTag={openTag} onOpen={onOpenTag} />
+      {/* The real building when one has been published, the stand-in plan
+          until then. Suspense keeps the placeholder on screen while a mesh
+          downloads rather than blanking the viewer. */}
+      {twin ? (
+        <Suspense fallback={<Rooms activeRoom={activeRoom} />}>
+          <Mesh url={twin.meshUrl} scale={twin.scale} />
+        </Suspense>
+      ) : (
+        <Rooms activeRoom={activeRoom} />
+      )}
+
+      <Tags
+        visible={mode !== 'floorplan'}
+        activeRoom={activeRoom}
+        openTag={openTag}
+        onOpen={onOpenTag}
+        twinTags={twin?.tags}
+      />
 
       {/* Ground, only where it reads — a floor plan wants no context. */}
       {mode !== 'floorplan' && (
@@ -325,6 +388,19 @@ function Scene({
 
 export function TourViewer3D({ property, tour }: { property: Property; tour: PropertyTour }) {
   const sections = tour.sections ?? [];
+
+  /**
+   * The published model, when this property has one.
+   *
+   * Fetched rather than passed in: the tour page is statically generated, and
+   * a model published after that build would otherwise never appear until the
+   * page was rebuilt.
+   */
+  const { data: twin } = useQuery({
+    queryKey: ['twin', property.slug],
+    queryFn: () => twinsApi.get(property.slug),
+    staleTime: 5 * 60 * 1000,
+  });
 
   /** Every stop in the tour, flattened, plus which section it came from. */
   const allStops = useMemo(
@@ -441,6 +517,7 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
             activeRoom={routeId === 'all' ? null : (current?.scene.label ? roomForScene(current.scene.label) : null)}
             openTag={openTag}
             onOpenTag={setOpenTag}
+            twin={twin ?? null}
           />
         </Suspense>
       </Canvas>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../../../components/dashboard/MaterialIcon';
 import { PropertyMediaManager } from '../../../../../../components/dashboard/PropertyMediaManager';
-import { Tour3DManager } from '../../../../../../components/admin/Tour3DManager';
+import { DigitalTwinManager } from '../../../../../../components/admin/DigitalTwinManager';
 import { apiClient } from '../../../../../../lib/api/client';
 
 interface PropertyDetail {
@@ -31,7 +31,7 @@ export default function AdminPropertyMedia({ params }: { params: Promise<{ slug:
    * position and an order, which the general media uploader has no place to
    * ask for. Separating them keeps each screen answering one question.
    */
-  const [tab, setTab] = useState<'media' | 'tour3d'>('media');
+  const [tab, setTab] = useState<'media' | 'twin'>('media');
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['admin-property', slug],
@@ -98,7 +98,7 @@ export default function AdminPropertyMedia({ params }: { params: Promise<{ slug:
       <div className="flex gap-1 rounded-full border border-[#dadce0] bg-white p-1">
         {([
           { key: 'media' as const, label: 'Media' },
-          { key: 'tour3d' as const, label: '3D tour' },
+          { key: 'twin' as const, label: '3D tour' },
         ]).map((t) => (
           <button
             key={t.key}
@@ -118,7 +118,7 @@ export default function AdminPropertyMedia({ params }: { params: Promise<{ slug:
       {tab === 'media' ? (
         <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
       ) : (
-        <Tour3DManager slug={property.slug} />
+        <DigitalTwinManager slug={property.slug} />
       )}
     </div>
   );
