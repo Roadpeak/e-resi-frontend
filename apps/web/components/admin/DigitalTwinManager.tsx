@@ -33,6 +33,61 @@ const KIND_ICON: Record<string, string> = {
 const mb = (bytes?: number | null) =>
   bytes ? `${(bytes / 1048576).toFixed(1)} MB` : '—';
 
+/**
+ * Whether this model will hold up in a headset.
+ *
+ * A standalone headset is a phone strapped to someone's face, rendering twice
+ * — once per eye — at ninety frames a second. A model that is merely heavy on
+ * a desktop becomes unusable there, and dropped frames in VR do not read as
+ * slowness, they make people ill. Desktop has no equivalent stake, so the
+ * budget quoted is the headset's.
+ */
+const VR_TRIANGLE_BUDGET = 400_000;
+const VR_SIZE_BUDGET = 25 * 1048576;
+
+function HeadsetReadiness({
+  triangles,
+  bytes,
+}: { triangles?: number | null; bytes?: number | null }) {
+  // Nothing measured — say nothing rather than imply it passed.
+  if (!triangles && !bytes) return null;
+
+  const heavyTris = !!triangles && triangles > VR_TRIANGLE_BUDGET;
+  const heavyFile = !!bytes && bytes > VR_SIZE_BUDGET;
+  const ok = !heavyTris && !heavyFile;
+
+  const reasons = [
+    heavyTris && `${triangles!.toLocaleString()} triangles is over the ${VR_TRIANGLE_BUDGET.toLocaleString()} a standalone headset handles comfortably`,
+    heavyFile && `${mb(bytes)} is over the 25 MB a buyer will wait for on mobile data`,
+  ].filter(Boolean) as string[];
+
+  return (
+    <div
+      className={cn(
+        'mt-4 flex items-start gap-2.5 rounded-2xl px-4 py-3',
+        ok ? 'bg-[#e6f4ea]' : 'bg-[#fef7e0]',
+      )}
+    >
+      <MaterialIcon
+        name={ok ? 'check_circle' : 'warning'}
+        size={18}
+        className={cn('mt-px shrink-0', ok ? 'text-[#137333]' : 'text-[#b06000]')}
+      />
+      <div>
+        <p className={cn('text-[13.5px] font-medium', ok ? 'text-[#137333]' : 'text-[#b06000]')}>
+          {ok ? 'Comfortable in a headset' : 'Heavy for a headset'}
+        </p>
+        {!ok && (
+          <p className="mt-0.5 text-[12.5px] text-[#5f6368]">
+            {reasons.join('; ')}. It still publishes — decimate the mesh or compress the
+            textures if the VR tour stutters.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DigitalTwinManager({ slug }: { slug: string }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
@@ -196,15 +251,18 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
         </div>
 
         {twin ? (
-          <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-4">
-            <Stat label="Triangles" value={twin.triangles?.toLocaleString() ?? '—'} />
-            <Stat label="File size" value={mb(twin.fileSizeBytes)} />
-            <Stat label="Stops" value={String(twin.waypoints.length)} />
-            <Stat label="Tags" value={String(twin.tags.length)} />
-          </dl>
+          <>
+            <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-4">
+              <Stat label="Triangles" value={twin.triangles?.toLocaleString() ?? '—'} />
+              <Stat label="File size" value={mb(twin.fileSizeBytes)} />
+              <Stat label="Stops" value={String(twin.waypoints.length)} />
+              <Stat label="Tags" value={String(twin.tags.length)} />
+            </dl>
+            <HeadsetReadiness triangles={twin.triangles} bytes={twin.fileSizeBytes} />
+          </>
         ) : (
           <p className="mt-4 rounded-2xl bg-[#f8f9fa] px-4 py-3 text-[13px] text-[#5f6368]">
-            No model yet. Until one is uploaded, this property has no 3D tour.
+            No model yet. Until one is uploaded, this property has neither a 3D nor a VR tour.
           </p>
         )}
 
@@ -335,17 +393,33 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
           <Waypoints slug={slug} twin={twin} onDone={refresh} onError={onError} />
           <Tags slug={slug} twin={twin} onDone={refresh} onError={onError} />
 
+          {/* ── Preview ──
+              Both, because one model is both tours. Publishing here quietly
+              puts a walkable VR tour live too, and staff had no way to know
+              that or to check it before a buyer did. */}
           <div className={cn(card, 'flex flex-wrap items-center justify-between gap-3 p-5')}>
-            <p className="text-[13px] text-[#5f6368]">
-              See it the way a buyer will.
-            </p>
-            <Link
-              href={`/${slug}/tour/3d`}
-              target="_blank"
-              className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
-            >
-              Open the tour
-            </Link>
+            <div>
+              <p className="text-[13px] text-[#5f6368]">See it the way a buyer will.</p>
+              <p className="mt-0.5 text-[12.5px] text-[#80868b]">
+                This model is both tours — on screen, and walkable in a headset.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/${slug}/tour/3d`}
+                target="_blank"
+                className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
+              >
+                Open 3D tour
+              </Link>
+              <Link
+                href={`/${slug}/tour/vr`}
+                target="_blank"
+                className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
+              >
+                Open VR tour
+              </Link>
+            </div>
           </div>
         </>
       )}

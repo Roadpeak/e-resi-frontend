@@ -50,7 +50,10 @@ type VideoKind = 'cinematic' | 'vr';
 
 const VIDEO_KINDS: { key: VideoKind; label: string; icon: React.ReactNode; hint: string }[] = [
   { key: 'cinematic', label: 'Cinematic', icon: <Film size={14} />, hint: 'Scroll-driven cinematic films' },
-  { key: 'vr', label: 'VR / 360°', icon: <Headset size={14} />, hint: 'Immersive headset-ready scenes' },
+  // Deliberately not "headset-ready": the walkable headset tour comes from the
+  // building model on the 3D tour tab, and calling these that sent staff here
+  // expecting to publish one.
+  { key: 'vr', label: 'VR / 360°', icon: <Headset size={14} />, hint: 'Equirectangular 360° stills or clips — 2:1' },
 ];
 
 /**
@@ -78,6 +81,39 @@ const UNIT_SPACES = [
   { key: 'BATHROOM', label: 'Bathroom' },
   { key: 'KITCHEN', label: 'Kitchen' },
 ] as const;
+
+/**
+ * Width ÷ height of an image or video file, read in the browser.
+ *
+ * Used to tell a 360° capture from an ordinary one before it is uploaded.
+ * Returns null when the dimensions cannot be read — a codec the browser will
+ * not decode is not grounds for refusing the upload.
+ */
+function equirectRatio(file: File): Promise<number | null> {
+  const url = URL.createObjectURL(file);
+  const done = (v: number | null) => { URL.revokeObjectURL(url); return v; };
+
+  return new Promise((resolve) => {
+    // Never leave the picker hanging on a file that will not decode.
+    const bail = setTimeout(() => resolve(done(null)), 5000);
+    const finish = (v: number | null) => { clearTimeout(bail); resolve(done(v)); };
+
+    if (file.type.startsWith('video/')) {
+      const el = document.createElement('video');
+      el.preload = 'metadata';
+      el.onloadedmetadata = () =>
+        finish(el.videoHeight ? el.videoWidth / el.videoHeight : null);
+      el.onerror = () => finish(null);
+      el.src = url;
+      return;
+    }
+
+    const img = new window.Image();
+    img.onload = () => finish(img.naturalHeight ? img.naturalWidth / img.naturalHeight : null);
+    img.onerror = () => finish(null);
+    img.src = url;
+  });
+}
 
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
@@ -331,7 +367,8 @@ function ToursCard({ slug, isAdmin }: { slug: string; isAdmin: boolean }) {
             so they are produced rather than uploaded. */}
         <p className="mt-1.5 text-[13px] text-[#80868b]">
           {isAdmin
-            ? 'A 3D tour is a building model rather than a video — publish one under the 3D tour tab.'
+            ? 'The walkable 3D and VR tours both come from the building model — publish one under the 3D tour tab. '
+              + 'The 360° scenes here are the older panorama tour, shown when a property has no model.'
             : '3D tours and VR scenes are captured and published by e-resi. Order them from production services below.'}
         </p>
       </div>
@@ -429,6 +466,29 @@ function SceneGroup({
       return;
     }
 
+    /**
+     * A VR scene has to be equirectangular, and the shape gives it away.
+     *
+     * A flat photo or an ordinary clip uploads happily here and then wraps
+     * itself around the inside of a sphere, which looks like a smeared mess in
+     * a headset — and nobody finds out until someone puts one on. A 360°
+     * capture is always 2:1, so checking the ratio catches the mistake at the
+     * point it can still be fixed. It warns rather than blocks: a legitimate
+     * capture stitched slightly off should not be refused outright.
+     */
+    if (kind === 'vr') {
+      const ratio = await equirectRatio(file);
+      if (ratio && Math.abs(ratio - 2) > 0.15) {
+        setError(
+          `That looks like a normal ${file.type.startsWith('video/') ? 'video' : 'photo'} `
+          + `(${ratio.toFixed(2)}:1), not a 360° capture — those are 2:1. `
+          + `Uploading anyway will wrap it around the viewer and look wrong in a headset.`,
+        );
+        if (fileRef.current) fileRef.current.value = '';
+        return;
+      }
+    }
+
     setBusy(true);
     setProgress({ loaded: 0, total: file.size, percent: 0 });
     const controller = new AbortController();
@@ -450,10 +510,14 @@ function SceneGroup({
           videoUrl: uploaded.url,
         });
       } else {
+        // A 360° still and a 360° clip are both valid scenes, and the viewer
+        // picks its texture from whichever field is set — so a photo must go
+        // in as imageUrl, not squeezed into videoUrl where it never loads.
+        const isVideo = file.type.startsWith('video/');
         await apiClient.post(`/properties/${slug}/tours/vr`, {
           label,
           description: scope === 'units' ? `${prefix} · ${unitType}` : `${prefix} · ${label}`,
-          videoUrl: uploaded.url,
+          ...(isVideo ? { videoUrl: uploaded.url } : { imageUrl: uploaded.url }),
         });
       }
 
@@ -486,13 +550,23 @@ function SceneGroup({
     <div className="rounded-2xl border border-[#f1f3f4] bg-[#f8f9fa] p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[15px] font-medium text-[#202124]">{title}</p>
-        <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
+        {/* A cinematic scene is a film; a VR scene is a 360° capture, which is
+            as often a still as a clip. Offering only video here is why every
+            existing VR scene is a video. */}
+        <input
+          ref={fileRef}
+          type="file"
+          accept={kind === 'vr' ? 'image/*,video/*' : 'video/*'}
+          className="hidden"
+          onChange={handleUpload}
+        />
         <button
           onClick={() => fileRef.current?.click()}
           disabled={busy}
           className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
         >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />} Upload video
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />}
+          {kind === 'vr' ? 'Upload 360° scene' : 'Upload video'}
         </button>
       </div>
 
@@ -500,7 +574,7 @@ function SceneGroup({
         <div className="mt-3">
           <UploadProgressBar
             progress={progress}
-            label="Uploading video"
+            label={kind === 'vr' ? 'Uploading scene' : 'Uploading video'}
             onCancel={() => abortRef.current?.abort()}
           />
         </div>
