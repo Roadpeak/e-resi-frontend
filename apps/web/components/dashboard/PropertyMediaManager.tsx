@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -50,10 +50,10 @@ type VideoKind = 'cinematic' | 'vr';
 
 const VIDEO_KINDS: { key: VideoKind; label: string; icon: React.ReactNode; hint: string }[] = [
   { key: 'cinematic', label: 'Cinematic', icon: <Film size={14} />, hint: 'Scroll-driven cinematic films' },
-  // Deliberately not "headset-ready": the walkable headset tour comes from the
-  // building model on the 3D tour tab, and calling these that sent staff here
-  // expecting to publish one.
-  { key: 'vr', label: 'VR / 360°', icon: <Headset size={14} />, hint: 'Equirectangular 360° stills or clips — 2:1' },
+  // Retired. Kept only to manage scenes published before the model became the
+  // VR tour — the label says so, because a tab named "VR" is otherwise read as
+  // the place to publish one.
+  { key: 'vr', label: '360° scenes (retired)', icon: <Headset size={14} />, hint: 'Published before this property was modelled — the building model is the VR tour now' },
 ];
 
 /**
@@ -343,15 +343,38 @@ function ToursCard({ slug, isAdmin }: { slug: string; isAdmin: boolean }) {
   const [kind, setKind] = useState<VideoKind>('cinematic');
 
   /**
-   * VR is staff-only.
+   * Does this property still have 360° scenes from before we modelled?
    *
-   * A VR scene is a 360° equirectangular capture; shot on an ordinary camera
-   * it uploads happily and renders as a warped mess in a headset. That fails
-   * the worst way — finished to whoever uploaded it, broken to the buyer — so
-   * the capture stays with the people who have the rig. Cinematic is an
-   * ordinary film and a developer with good footage can publish one.
+   * Asked so the retired tab can be hidden without stranding what it
+   * published: four properties still carry panorama scenes, and removing the
+   * only screen that lists them would leave staff unable to see or delete
+   * them.
    */
-  const kinds = isAdmin ? VIDEO_KINDS : VIDEO_KINDS.filter((k) => k.key === 'cinematic');
+  const { data: legacyVR = [] } = useQuery({
+    queryKey: ['tours', slug, 'vr'],
+    queryFn: () => apiClient.get<TourScene[]>(`/properties/${slug}/tours/vr`),
+    enabled: isAdmin,
+  });
+
+  /**
+   * The VR tab is retired, not deleted.
+   *
+   * A 360° scene is the old panorama tour — you stand still and look around a
+   * photo sphere. The walkable headset tour comes from the building model, so
+   * offering this as a way to publish VR sent people to the wrong screen. It
+   * now appears only where scenes already exist, to manage what is there.
+   *
+   * Cinematic stays open to developers: it is an ordinary film, and one with
+   * good footage can publish it themselves.
+   */
+  const kinds = isAdmin && legacyVR.length > 0
+    ? VIDEO_KINDS
+    : VIDEO_KINDS.filter((k) => k.key === 'cinematic');
+
+  // A property whose last scene is deleted must not be left on a hidden tab.
+  useEffect(() => {
+    if (kind === 'vr' && !kinds.some((k) => k.key === 'vr')) setKind('cinematic');
+  }, [kind, kinds]);
 
   return (
     <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
@@ -367,8 +390,7 @@ function ToursCard({ slug, isAdmin }: { slug: string; isAdmin: boolean }) {
             so they are produced rather than uploaded. */}
         <p className="mt-1.5 text-[13px] text-[#80868b]">
           {isAdmin
-            ? 'The walkable 3D and VR tours both come from the building model — publish one under the 3D tour tab. '
-              + 'The 360° scenes here are the older panorama tour, shown when a property has no model.'
+            ? 'The walkable 3D and VR tours both come from the building model — publish one under the 3D tour tab.'
             : '3D tours and VR scenes are captured and published by e-resi. Order them from production services below.'}
         </p>
       </div>
@@ -560,14 +582,19 @@ function SceneGroup({
           className="hidden"
           onChange={handleUpload}
         />
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />}
-          {kind === 'vr' ? 'Upload 360° scene' : 'Upload video'}
-        </button>
+        {/* Nothing new is published to the panorama tour — the model is the
+            VR tour now. What is already here stays listed so it can be
+            reviewed and removed. */}
+        {kind !== 'vr' && (
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />}
+            Upload video
+          </button>
+        )}
       </div>
 
       {progress && (

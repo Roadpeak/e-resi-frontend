@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { twinsApi, uploadMesh, type GlbSummary, type TwinKind } from '../../lib/api/twins';
 import { uploadFile } from '../../lib/api/media';
-import { ApiError } from '../../lib/api/client';
+import { apiClient, ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
 
 /**
@@ -44,6 +44,54 @@ const mb = (bytes?: number | null) =>
  */
 const VR_TRIANGLE_BUDGET = 400_000;
 const VR_SIZE_BUDGET = 25 * 1048576;
+
+/**
+ * Which source this property's VR tour is actually served from.
+ *
+ * Two things can feed /tour/vr — the building model, or 360° scenes captured
+ * before we modelled it — and the model always wins. So a property holding
+ * both has panorama scenes that no visitor will ever see, and nothing said so:
+ * staff could reasonably believe those scenes were the VR tour and keep
+ * maintaining them.
+ */
+function VRSource({ slug, hasModel }: { slug: string; hasModel: boolean }) {
+  const { data: scenes = [] } = useQuery({
+    queryKey: ['tours', slug, 'vr'],
+    queryFn: () => apiClient.get<{ id: string }[]>(`/properties/${slug}/tours/vr`),
+  });
+
+  const shadowed = hasModel && scenes.length > 0;
+
+  return (
+    <div className={cn(card, 'p-5')}>
+      <div className="flex items-start gap-2.5">
+        <MaterialIcon
+          name={hasModel ? 'view_in_ar' : 'panorama_photosphere'}
+          size={18}
+          className="mt-px shrink-0 text-[#1967d2]"
+        />
+        <div>
+          <p className="text-[14px] font-medium text-[#202124]">
+            VR tour source — {hasModel ? 'this building model' : '360° scenes'}
+          </p>
+          <p className="mt-0.5 text-[12.5px] text-[#5f6368]">
+            {hasModel
+              ? 'A headset walks the model at full size. The model is used whenever there is one.'
+              : 'A headset shows the panorama scenes — a buyer can look around but not walk. Publish a model to make it walkable.'}
+          </p>
+
+          {shadowed && (
+            <p className="mt-2 rounded-xl bg-[#fef7e0] px-3 py-2 text-[12.5px] text-[#b06000]">
+              {scenes.length} older 360° {scenes.length === 1 ? 'scene is' : 'scenes are'} still
+              attached to this property and no longer shown — the model replaced them. They can be
+              removed from the Media tab.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HeadsetReadiness({
   triangles,
@@ -262,7 +310,8 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
           </>
         ) : (
           <p className="mt-4 rounded-2xl bg-[#f8f9fa] px-4 py-3 text-[13px] text-[#5f6368]">
-            No model yet. Until one is uploaded, this property has neither a 3D nor a VR tour.
+            No model yet. Until one is uploaded there is no 3D tour, and VR falls back to any
+            360° scenes this property has.
           </p>
         )}
 
@@ -381,6 +430,11 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
           </div>
         )}
       </div>
+
+      {/* Outside the guard on purpose: which source feeds the VR tour matters
+          most when there is no model, since that is when the older 360° scenes
+          are the tour. */}
+      <VRSource slug={slug} hasModel={!!twin} />
 
       {/* Everything below is meaningless without a model to place it in. */}
       {twin && (
