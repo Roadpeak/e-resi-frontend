@@ -1,10 +1,12 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { twinsApi, uploadMesh, type GlbSummary, type TwinKind } from '../../lib/api/twins';
+import { uploadFile } from '../../lib/api/media';
 import { ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
 
@@ -373,9 +375,111 @@ function ModelSettings({
   const [scale, setScale] = useState(String(twin.scale));
   const [verified, setVerified] = useState(twin.scaleVerified);
 
+  /**
+   * The poster is saved on upload rather than with the rest of the form.
+   *
+   * Picking a file is already a deliberate act, and leaving the new image
+   * visible but unsaved until someone finds the button below invites exactly
+   * the mistake where staff navigate away believing it stuck.
+   */
+  const [poster, setPoster] = useState(twin.posterUrl ?? '');
+  const [posterBusy, setPosterBusy] = useState(false);
+  const [posterError, setPosterError] = useState('');
+  const posterRef = useRef<HTMLInputElement>(null);
+
+  // A model swapped in the switcher must not keep the previous one's poster.
+  useEffect(() => {
+    setPoster(twin.posterUrl ?? '');
+    setPosterError('');
+  }, [twin.id, twin.posterUrl]);
+
+  async function choosePoster(file: File) {
+    setPosterError('');
+    // The API's allowlist would reject a non-image anyway, but only after the
+    // upload — this says so before spending it.
+    if (!file.type.startsWith('image/')) {
+      setPosterError('That is not an image. A JPEG or PNG still works best.');
+      return;
+    }
+    setPosterBusy(true);
+    try {
+      const { url } = await uploadFile(file, 'tours');
+      setPoster(url);
+      onSave({ posterUrl: url });
+    } catch (e) {
+      setPosterError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setPosterBusy(false);
+      if (posterRef.current) posterRef.current.value = '';
+    }
+  }
+
   return (
     <div className={cn(card, 'p-5')}>
       <h2 className="text-[16px] font-medium text-[#202124]">Model settings</h2>
+
+      {/* ── Poster ──
+          The still behind this model's tile in the viewer's switcher. Without
+          one the tile is a flat grey block, which reads as broken rather than
+          as a choice — and the switcher is how a buyer finds the show unit or
+          the amenity deck at all. */}
+      <div className="mt-4 flex flex-wrap items-start gap-4">
+        <div className="relative h-[76px] w-[124px] shrink-0 overflow-hidden rounded-xl border border-[#dadce0] bg-[#f1f3f4]">
+          {poster ? (
+            <Image src={poster} alt="" fill className="object-cover" sizes="124px" unoptimized />
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <MaterialIcon name="image" size={20} className="text-[#9aa0a6]" />
+            </span>
+          )}
+          {posterBusy && (
+            <span className="absolute inset-0 flex items-center justify-center bg-white/70">
+              <MaterialIcon name="progress_activity" size={20} className="animate-spin text-[#1a73e8]" />
+            </span>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] text-[#202124]">Switcher thumbnail</p>
+          <p className="mt-0.5 text-[12.5px] text-[#5f6368]">
+            Shown on this model&apos;s tile when a property has more than one. A wide
+            shot of what it covers reads best at tile size.
+          </p>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => posterRef.current?.click()}
+              disabled={posterBusy}
+              className="h-9 cursor-pointer rounded-xl border border-[#dadce0] px-3.5 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8f9fa] disabled:opacity-40"
+            >
+              {posterBusy ? 'Uploading…' : poster ? 'Replace' : 'Upload image'}
+            </button>
+            {poster && !posterBusy && (
+              <button
+                onClick={() => { setPoster(''); onSave({ posterUrl: '' }); }}
+                className="h-9 cursor-pointer rounded-xl px-3 text-[13px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4]"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {posterError && (
+            <p className="mt-2 text-[12.5px] text-[#c5221f]">{posterError}</p>
+          )}
+
+          <input
+            ref={posterRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) choosePoster(file);
+            }}
+          />
+        </div>
+      </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">

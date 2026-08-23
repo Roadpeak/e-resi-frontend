@@ -658,13 +658,29 @@ export function TourVRExperience({ property, tour }: Props) {
                     key={t.id}
                     onClick={() => setTwinId(t.id)}
                     className={cn(
-                      'shrink-0 cursor-pointer rounded-xl border px-3.5 py-2 text-xs font-medium transition-all',
+                      'group relative h-20 w-32 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 text-left transition-all',
                       t.id === twin!.id
-                        ? 'border-brand-500/50 bg-brand-500/15 text-brand-200'
-                        : 'border-white/8 bg-white/3 text-white/50 hover:border-white/15 hover:text-white',
+                        ? 'border-brand-500 shadow-lg shadow-brand-600/20'
+                        : 'border-white/15 hover:border-white/40',
                     )}
                   >
-                    {t.label}
+                    {/* The still staff uploaded, when there is one — a tile
+                        showing the pool deck is worth more than the words
+                        "pool deck" to someone choosing what to walk. */}
+                    {t.posterUrl ? (
+                      <Image src={t.posterUrl} alt="" fill className="object-cover" sizes="128px" />
+                    ) : (
+                      <span className="absolute inset-0 bg-white/8" />
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                    <span className="absolute inset-x-2 bottom-1.5">
+                      <span className="block truncate text-[12px] font-semibold leading-tight text-white">
+                        {t.label}
+                      </span>
+                      <span className="block text-[10px] uppercase tracking-wide text-white/60">
+                        {t.kind.toLowerCase()}
+                      </span>
+                    </span>
                   </button>
                 ))}
               </div>
