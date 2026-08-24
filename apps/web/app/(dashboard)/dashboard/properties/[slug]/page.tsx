@@ -14,6 +14,7 @@ import { ProductionServicesPanel } from '../../../../../components/dashboard/Pro
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
 import { FloorPlansManager } from '../../../../../components/dashboard/FloorPlansManager';
+import { NearbyPlacesManager } from '../../../../../components/dashboard/NearbyPlacesManager';
 import { floorPlansApi } from '../../../../../lib/api/floor-plans';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
@@ -36,6 +37,8 @@ interface DashProperty {
   priceTo?: number | null;
   currency: string;
   completionDate?: string | null;
+  /** Landmarks around the development, editable below. */
+  amenities?: { id?: string; name: string; type: string; distance?: string | null }[];
   /** Details & area — everything the property page shows below the fold. */
   features?: string[];
   unitFeatures?: string[];
@@ -576,6 +579,17 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
 
       {/* ── Media: gallery, logo, immersive videos ── */}
       <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
+
+      {/* ── Nearby places ──
+          Detection has always existed in the creation wizard, but a developer
+          who skipped it there, or who moved the pin afterwards, had no way
+          back to it. */}
+      <NearbyPlacesManager
+        slug={property.slug}
+        latitude={property.latitude}
+        longitude={property.longitude}
+        amenities={property.amenities ?? []}
+      />
 
       {/* ── Floor plans ──
           Above units on purpose: a unit shows the plan matching its bedroom
