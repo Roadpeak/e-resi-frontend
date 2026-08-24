@@ -137,7 +137,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div
-      className="min-h-screen pt-16"
+      className="min-h-screen pt-16 font-listing text-[16px]"
       style={{
         background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)',
         backgroundAttachment: 'fixed',
@@ -164,12 +164,14 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         <>
         {/* Gallery mosaic, ahead of the rail — the same shape a tenant sees on
             a unit page, so the two pages read as one product. */}
-        <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
-          <Link href="/rent" className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+        <div className="px-4 pt-4">
+          <Link href="/rent" className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft size={14} /> All rentals
           </Link>
 
-          <div className="grid h-[300px] gap-2 overflow-hidden rounded-3xl bg-gray-100 sm:h-[440px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
+          {/* Runs almost to the page edge, the way a listing site frames its
+              photography — the content below stays readable at max-w-7xl. */}
+          <div className="grid h-[300px] gap-2 overflow-hidden bg-gray-100 sm:h-[411px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
               <button
                 type="button"
                 onClick={() => listing.heroImageUrl && setLightbox(listing.heroImageUrl)}
@@ -226,12 +228,10 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
 
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <UnitSectionNav sections={sections} />
-        </div>
+        <UnitSectionNav sections={sections} />
 
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+        <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
             {/* Left col */}
             <div className="min-w-0 space-y-4">
               {/* ── Overview ── */}
@@ -240,7 +240,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   <MapPin size={13} />
                   <span>{listing.address.neighborhood}, {listing.address.city}</span>
                 </div>
-                <h1 className="text-2xl font-semibold text-gray-900">{listing.name}</h1>
+                <h1 className="text-[28px] font-bold leading-[1.2] text-gray-900">{listing.name}</h1>
                 {listing.tagline && <p className="mt-1 text-gray-500">{listing.tagline}</p>}
 
                 {/* Rent, on mobile only. The sidebar price card is the same
@@ -293,7 +293,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               {/* Description */}
               {listing.description && (
                 <section id="about" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-3 text-2xl font-semibold text-gray-900">About</h2>
+                  <h2 className="mb-3 text-[23px] font-bold leading-[1.25] text-gray-900">About</h2>
                   <p className="text-[15px] leading-relaxed text-gray-700">{listing.description}</p>
                 </section>
               )}
@@ -301,7 +301,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               {/* Units */}
               {listing.units.length > 0 && (
                 <section id="units" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-4 text-2xl font-semibold text-gray-900">Available units</h2>
+                  <h2 className="mb-4 text-[23px] font-bold leading-[1.25] text-gray-900">Available units</h2>
                   <div className="space-y-3">
                     {listing.units.map((unit) => (
                       <div key={unit.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 gap-4">
@@ -331,8 +331,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                           )}
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-base font-bold text-gray-900">{formatPrice(unit.pricePerMonth, unit.currency)}</p>
-                          <p className="text-xs text-gray-400">/month</p>
+                          <p className="text-[18px] font-bold leading-[1.25] text-gray-900">{formatPrice(unit.pricePerMonth, unit.currency)}</p>
+                          <p className="text-[13px] text-gray-400">/month</p>
                           <ReserveUnitButton
                             unit={unit}
                             propertySlug={listing.propertySlug}
@@ -350,7 +350,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   wants are the same ones the sales side publishes. */}
               {floorPlans.length > 0 && (
                 <section id="floorplans" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-1 text-2xl font-semibold text-gray-900">Floor plans</h2>
+                  <h2 className="mb-1 text-[23px] font-bold leading-[1.25] text-gray-900">Floor plans</h2>
                   <p className="mb-5 text-[14px] text-gray-500">
                     The layouts in this development.
                   </p>
@@ -399,7 +399,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 {/* Price card */}
                 <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                   <p className="text-xs text-gray-400 mb-1">Starting from</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatPrice(listing.priceFrom, listing.currency)}<span className="text-sm font-normal text-gray-400">/mo</span></p>
+                  <p className="text-[23px] font-bold leading-[1.25] text-gray-900">{formatPrice(listing.priceFrom, listing.currency)}<span className="text-[14px] font-normal text-gray-400">/mo</span></p>
                   {listing.priceTo > listing.priceFrom && (
                     <p className="text-sm text-gray-400">up to {formatPrice(listing.priceTo, listing.currency)}/mo</p>
                   )}

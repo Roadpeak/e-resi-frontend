@@ -137,7 +137,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   ];
 
   return (
-    <div className="min-h-screen bg-[#faf9f7]">
+    <div className="min-h-screen bg-[#faf9f7] font-listing text-[16px]">
       <UnitTopbar
         propertySlug={unit.property.slug}
         propertyName={unit.property.name}
@@ -147,11 +147,14 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
 
       {/* Gallery sits above the rail, full width — it is the first thing a
           buyer judges and the rail would otherwise push it below the fold. */}
-      <div className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+      {/* Gallery runs almost to the page edge — 16px gutters, the way a
+          listing site frames its photography. Deliberately wider than the
+          content below it, which stays readable at max-w-7xl. */}
+      <div className="px-4 pt-[72px]">
         {/* Height is set on the grid, not left to the tallest child: the two
             stacked stills are absolutely-positioned fills, so without it the
             row collapses and the whole mosaic renders as a sliver. */}
-        <div className="grid h-[300px] gap-2 overflow-hidden rounded-3xl bg-gray-100 sm:h-[440px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
+        <div className="grid h-[300px] gap-2 overflow-hidden bg-gray-100 sm:h-[411px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
           <button
             onClick={() => setActiveImage(0)}
             className="relative h-full w-full cursor-pointer sm:row-span-2"
@@ -193,7 +196,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
         </div>
 
         {images.length > 1 && (
-          <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
             {images.map((img, i) => (
               <button
                 key={img.id}
@@ -210,23 +213,21 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
         )}
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <UnitSectionNav sections={sections} />
-      </div>
+      <UnitSectionNav sections={sections} />
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           {/* ── Left: the unit ── */}
           <div className="min-w-0 space-y-4">
             {/* ── Overview ── */}
             <section id="overview" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-semibold text-gray-900">{unit.name}</h1>
+                <h1 className="text-[28px] font-bold leading-[1.2] text-gray-900">{unit.name}</h1>
                 <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold', status.cls)}>
                   <StatusIcon size={13} /> {status.label}
                 </span>
               </div>
-              <p className="mt-2 flex items-center gap-1.5 text-base text-gray-600">
+              <p className="mt-2 flex items-center gap-1.5 text-[16px] text-gray-600">
                 <MapPin size={15} />
                 {[unit.property.neighborhood, unit.property.city].filter(Boolean).join(', ')}
                 {unit.floor != null && <span className="text-gray-400">· Floor {unit.floor}</span>}
@@ -242,8 +243,8 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl bg-[#faf9f7] p-4">
                   <span className="text-gray-400">{s.icon}</span>
-                  <p className="mt-2 text-xl font-semibold text-gray-900">{s.value}</p>
-                  <p className="text-[13px] text-gray-500">{s.label}</p>
+                  <p className="mt-2 text-[18px] font-bold leading-[1.25] text-gray-900">{s.value}</p>
+                  <p className="text-[14px] text-gray-500">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -297,7 +298,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
             {unit.floorPlan && (
               <section id="floorplan" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
                 <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-2xl font-semibold text-gray-900">Floor plan</h2>
+                  <h2 className="text-[23px] font-bold leading-[1.25] text-gray-900">Floor plan</h2>
                   <span className="text-[14px] text-gray-500">{unit.floorPlan.name}</span>
                 </div>
 
@@ -327,8 +328,8 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
                     },
                   ].map(({ label, value }) => (
                     <div key={label} className="rounded-2xl bg-[#faf9f7] px-4 py-3 text-center">
-                      <p className="text-lg font-semibold text-gray-900">{value}</p>
-                      <p className="text-[12.5px] text-gray-500">{label}</p>
+                      <p className="text-[18px] font-bold leading-[1.25] text-gray-900">{value}</p>
+                      <p className="text-[14px] text-gray-500">{label}</p>
                     </div>
                   ))}
                 </div>
@@ -345,10 +346,10 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
             {/* Features */}
             {unit.features?.length > 0 && (
               <section id="features" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                <h2 className="mb-4 text-2xl font-semibold text-gray-900">What&apos;s included</h2>
+                <h2 className="mb-4 text-[23px] font-bold leading-[1.25] text-gray-900">What&apos;s included</h2>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {unit.features.map((f) => (
-                    <span key={f} className="flex items-center gap-2 text-[15px] text-gray-700">
+                    <span key={f} className="flex items-center gap-2 text-[16px] text-gray-700">
                       <CheckCircle2 size={15} className="shrink-0 text-emerald-500" />
                       <span className="capitalize">{f.replace(/-/g, ' ')}</span>
                     </span>
@@ -366,10 +367,10 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
               already lives on the property page and the chat is real-time. */}
           <aside className="lg:sticky lg:top-32 lg:self-start">
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Price</p>
-              <p className="text-3xl font-semibold text-gray-900">{formatPrice(unit.price, unitCurrency(unit, unit.property?.currency))}</p>
+              <p className="text-[14px] text-gray-500">Price</p>
+              <p className="text-[23px] font-bold leading-[1.25] text-gray-900">{formatPrice(unit.price, unitCurrency(unit, unit.property?.currency))}</p>
 
-              <div className="mt-5 space-y-2.5 border-t border-gray-100 pt-5 text-[15px]">
+              <div className="mt-5 space-y-2.5 border-t border-gray-100 pt-5 text-[14px]">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Development</span>
                   <span className="font-medium text-gray-900">{unit.property.name}</span>

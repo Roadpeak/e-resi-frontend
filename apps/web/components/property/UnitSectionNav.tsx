@@ -48,23 +48,33 @@ export function UnitSectionNav({
 
   if (sections.length < 2) return null;
 
+  /**
+   * Matches PropertyNav: same offset, same width, same pill buttons.
+   *
+   * A unit page is part of the development's mini-site, and a visitor moving
+   * between the property and one of its units should not feel the chrome
+   * change shape under them — so this is the property nav's treatment rather
+   * than a second style of its own.
+   */
   return (
-    <div className="sticky top-16 z-40 -mx-4 border-b border-gray-200 bg-white/95 backdrop-blur-md sm:-mx-6">
-      <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {sections.map((s) => (
-          <a
-            key={s.id}
-            href={`#${s.id}`}
-            className={cn(
-              'shrink-0 border-b-2 px-3 py-3.5 text-[14px] font-medium transition-colors',
-              active === s.id
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-900',
-            )}
-          >
-            {s.label}
-          </a>
-        ))}
+    <div className="sticky top-16 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <nav className="scrollbar-hide flex items-center gap-1 overflow-x-auto py-1">
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className={cn(
+                'shrink-0 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
+                active === s.id
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700',
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );

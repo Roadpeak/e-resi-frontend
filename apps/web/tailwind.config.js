@@ -91,6 +91,14 @@ module.exports = {
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
         display: ['var(--font-cormorant)', 'Georgia', 'serif'],
         google: ['"Google Sans"', 'var(--font-roboto)', 'Roboto', 'Arial', 'sans-serif'],
+        /**
+         * Listing pages — the unit and rent detail views.
+         *
+         * Scoped rather than made the default: the portal reads in Geist, and
+         * a listing is the one place we deliberately follow the convention
+         * buyers already know from Redfin and Zillow, both of which set Inter.
+         */
+        listing: ['var(--font-inter)', 'Inter', '-apple-system', 'system-ui', 'Helvetica', 'Arial', 'sans-serif'],
       },
       borderRadius: {
         '4xl': '2rem',
