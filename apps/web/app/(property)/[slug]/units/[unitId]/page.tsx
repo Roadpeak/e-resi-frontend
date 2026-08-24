@@ -6,9 +6,10 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Bath, BedDouble, Building2, CheckCircle2, Clock, Film,
-  Loader2, MapPin, Maximize2, Play, X, XCircle,
+  Loader2, MapPin, Maximize2, Play, X, XCircle, Ruler, Images,
 } from 'lucide-react';
 import { UnitTopbar } from '../../../../../components/property/UnitTopbar';
+import { UnitSectionNav } from '../../../../../components/property/UnitSectionNav';
 import { ChatWithDeveloper } from '../../../../../components/chat/ChatWithDeveloper';
 import { apiClient } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
@@ -34,7 +35,11 @@ interface UnitDetail {
   currency: string;
   status: string;
   features: string[];
-  floorPlan?: { id: string; name: string; imageUrl: string } | null;
+  floorPlan?: {
+    id: string; name: string; imageUrl: string;
+    bedrooms?: number | null; bathrooms?: number | null;
+    sqm?: number | null; sqft?: number | null;
+  } | null;
   property: {
     id: string; slug: string; name: string; tagline?: string | null;
     /** The development's currency — what the developer actually chose. */
@@ -118,8 +123,21 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
   // which is also why it is excluded from the gallery above.
   const logoUrl = (unit.property.media ?? []).find((m) => m.title === '__logo__')?.url;
 
+  /**
+   * The rail, built from what this unit actually has.
+   *
+   * Listing a section that is not on the page is worse than having no rail —
+   * it scrolls nowhere and reads as a broken link.
+   */
+  const sections = [
+    { id: 'overview', label: 'Overview' },
+    ...(unit.floorPlan ? [{ id: 'floorplan', label: 'Floor plan' }] : []),
+    ...(scenes.length ? [{ id: 'tour', label: 'Tour' }] : []),
+    ...(unit.features?.length ? [{ id: 'features', label: 'Features' }] : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#faf9f7]">
       <UnitTopbar
         propertySlug={unit.property.slug}
         propertyName={unit.property.name}
@@ -127,50 +145,81 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
         logoUrl={logoUrl}
       />
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
-        {/* The topbar already carries the development's name and a route back
-            to it, so the old breadcrumb repeated both a line below itself. */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          {/* ── Left: gallery + details ── */}
-          <div>
-            {/* Gallery */}
-            <div className="overflow-hidden rounded-3xl bg-gray-100">
-              <div className="relative aspect-[16/10] w-full">
-                {images.length > 0 ? (
-                  <Image
-                    src={images[activeImage]?.url ?? images[0].url}
-                    alt={`${unit.name} — ${unit.property.name}`}
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 66vw"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-gray-400">
-                    <Building2 size={40} strokeWidth={1.5} />
-                  </div>
-                )}
-              </div>
-            </div>
-            {images.length > 1 && (
-              <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
-                {images.map((img, i) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setActiveImage(i)}
-                    className={cn(
-                      'relative h-20 w-28 shrink-0 overflow-hidden rounded-xl transition-all cursor-pointer',
-                      i === activeImage ? 'ring-2 ring-gray-900' : 'opacity-70 hover:opacity-100',
-                    )}
-                  >
-                    <Image src={img.url} alt={img.title ?? ''} fill className="object-cover" sizes="112px" />
-                  </button>
-                ))}
-              </div>
+      {/* Gallery sits above the rail, full width — it is the first thing a
+          buyer judges and the rail would otherwise push it below the fold. */}
+      <div className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+        {/* Height is set on the grid, not left to the tallest child: the two
+            stacked stills are absolutely-positioned fills, so without it the
+            row collapses and the whole mosaic renders as a sliver. */}
+        <div className="grid h-[300px] gap-2 overflow-hidden rounded-3xl bg-gray-100 sm:h-[440px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
+          <button
+            onClick={() => setActiveImage(0)}
+            className="relative h-full w-full cursor-pointer sm:row-span-2"
+          >
+            {images.length > 0 ? (
+              <Image
+                src={images[activeImage]?.url ?? images[0].url}
+                alt={`${unit.name} — ${unit.property.name}`}
+                fill priority className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 66vw"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-gray-400">
+                <Building2 size={40} strokeWidth={1.5} />
+              </span>
             )}
+          </button>
 
-            {/* Title */}
-            <div className="mt-8">
+          {/* Two stacked stills, the way an agent lays out a listing. Hidden on
+              a phone, where they would each be a thumbnail of a thumbnail. */}
+          {[1, 2].map((i) => (
+            <button
+              key={i}
+              onClick={() => setActiveImage(i)}
+              className="relative hidden cursor-pointer sm:block"
+            >
+              {images[i] ? (
+                <Image src={images[i].url} alt={images[i].title ?? ''} fill className="object-cover" sizes="33vw" />
+              ) : (
+                <span className="absolute inset-0 bg-gray-100" />
+              )}
+              {i === 2 && images.length > 3 && (
+                <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[13px] font-semibold text-gray-900 shadow-sm">
+                  <Images size={13} /> {images.length} photos
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {images.length > 1 && (
+          <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+            {images.map((img, i) => (
+              <button
+                key={img.id}
+                onClick={() => setActiveImage(i)}
+                className={cn(
+                  'relative h-16 w-24 shrink-0 overflow-hidden rounded-xl transition-all cursor-pointer',
+                  i === activeImage ? 'ring-2 ring-gray-900' : 'opacity-70 hover:opacity-100',
+                )}
+              >
+                <Image src={img.url} alt={img.title ?? ''} fill className="object-cover" sizes="96px" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <UnitSectionNav sections={sections} />
+      </div>
+
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6">
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+          {/* ── Left: the unit ── */}
+          <div className="min-w-0 space-y-4">
+            {/* ── Overview ── */}
+            <section id="overview" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-3xl font-semibold text-gray-900">{unit.name}</h1>
                 <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold', status.cls)}>
@@ -182,27 +231,27 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
                 {[unit.property.neighborhood, unit.property.city].filter(Boolean).join(', ')}
                 {unit.floor != null && <span className="text-gray-400">· Floor {unit.floor}</span>}
               </p>
-            </div>
 
             {/* Key stats */}
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6 sm:grid-cols-4">
               {[
                 { icon: <BedDouble size={17} />, value: unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms}`, label: unit.bedrooms === 0 ? 'Layout' : 'Bedrooms' },
                 { icon: <Bath size={17} />, value: `${unit.bathrooms}`, label: 'Bathrooms' },
                 { icon: <Maximize2 size={17} />, value: unit.sqm ? `${unit.sqm}` : '—', label: 'Square metres' },
                 { icon: <Building2 size={17} />, value: unit.floor != null ? `${unit.floor}` : '—', label: 'Floor' },
               ].map((s) => (
-                <div key={s.label} className="rounded-2xl border border-gray-200 p-4">
-                  <span className="text-gray-500">{s.icon}</span>
+                <div key={s.label} className="rounded-2xl bg-[#faf9f7] p-4">
+                  <span className="text-gray-400">{s.icon}</span>
                   <p className="mt-2 text-xl font-semibold text-gray-900">{s.value}</p>
                   <p className="text-[13px] text-gray-500">{s.label}</p>
                 </div>
               ))}
             </div>
+            </section>
 
             {/* Cinematic tour of the unit */}
             {scenes.length > 0 && (
-              <section className="mt-10">
+              <section id="tour" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
                 <div className="mb-4 flex items-end justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">Cinematic</p>
@@ -242,19 +291,60 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
               </section>
             )}
 
-            {/* Floor plan */}
+            {/* ── Floor plan ──
+                This unit's layout only. Every layout in the development is on
+                the property page, which is where someone comparing them looks. */}
             {unit.floorPlan && (
-              <section className="mt-10">
-                <h2 className="mb-4 text-2xl font-semibold text-gray-900">Floor plan</h2>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-gray-200 bg-white">
-                  <Image src={unit.floorPlan.imageUrl} alt={unit.floorPlan.name} fill className="object-contain p-4" sizes="(max-width:1024px) 100vw, 66vw" />
+              <section id="floorplan" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-2xl font-semibold text-gray-900">Floor plan</h2>
+                  <span className="text-[14px] text-gray-500">{unit.floorPlan.name}</span>
                 </div>
+
+                <div className="relative mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#faf9f7]">
+                  <Image
+                    src={unit.floorPlan.imageUrl}
+                    alt={unit.floorPlan.name}
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width:1024px) 100vw, 66vw"
+                    unoptimized
+                  />
+                </div>
+
+                {/* A drawing rarely states its own areas legibly at screen size. */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {[
+                    {
+                      label: 'Bedrooms',
+                      value: (unit.floorPlan.bedrooms ?? unit.bedrooms) === 0
+                        ? 'Studio' : `${unit.floorPlan.bedrooms ?? unit.bedrooms}`,
+                    },
+                    { label: 'Bathrooms', value: `${unit.floorPlan.bathrooms ?? unit.bathrooms}` },
+                    {
+                      label: 'Floor area',
+                      value: (unit.floorPlan.sqm ?? unit.sqm) ? `${unit.floorPlan.sqm ?? unit.sqm} m²` : '—',
+                    },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded-2xl bg-[#faf9f7] px-4 py-3 text-center">
+                      <p className="text-lg font-semibold text-gray-900">{value}</p>
+                      <p className="text-[12.5px] text-gray-500">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <Link
+                  href={`/${unit.property.slug}#floorplans`}
+                  className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand-600 hover:text-brand-700"
+                >
+                  <Ruler size={14} /> All layouts in this development →
+                </Link>
               </section>
             )}
 
             {/* Features */}
             {unit.features?.length > 0 && (
-              <section className="mt-10">
+              <section id="features" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
                 <h2 className="mb-4 text-2xl font-semibold text-gray-900">What&apos;s included</h2>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {unit.features.map((f) => (
@@ -269,7 +359,12 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
           </div>
 
           {/* ── Right rail ── */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          {/* ── Right: the actions ──
+              Pinned below the section rail so the way to enquire is on screen
+              at every point of the page, which is the whole reason Redfin's
+              form sits here. Ours are actions rather than a form: the enquiry
+              already lives on the property page and the chat is real-time. */}
+          <aside className="lg:sticky lg:top-32 lg:self-start">
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <p className="text-sm text-gray-500">Price</p>
               <p className="text-3xl font-semibold text-gray-900">{formatPrice(unit.price, unitCurrency(unit, unit.property?.currency))}</p>

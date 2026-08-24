@@ -13,6 +13,8 @@ import { fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catal
 import { ProductionServicesPanel } from '../../../../../components/dashboard/ProductionServicesPanel';
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
+import { FloorPlansManager } from '../../../../../components/dashboard/FloorPlansManager';
+import { floorPlansApi } from '../../../../../lib/api/floor-plans';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
 
@@ -467,6 +469,12 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
       {/* ── Media: gallery, logo, immersive videos ── */}
       <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />
 
+      {/* ── Floor plans ──
+          Above units on purpose: a unit shows the plan matching its bedroom
+          count, so publishing the layouts first means every unit added after
+          has a drawing from the moment it exists. */}
+      <FloorPlansManager slug={property.slug} />
+
       {/* ── Units ── */}
       <UnitsManager slug={property.slug} currency={property.currency} units={property.units} />
 
@@ -526,6 +534,20 @@ function UnitsManager({ slug, currency, units }: { slug: string; currency: strin
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '', floor: '', bedrooms: '', bathrooms: '', sqm: '', price: '', status: 'AVAILABLE',
+    floorPlanId: '',
+  });
+
+  /**
+   * The layouts published for this development.
+   *
+   * Offered on the unit form because a unit with no plan of its own falls back
+   * to matching on bedroom count, and that fallback declines to guess when a
+   * bedroom count has more than one layout — which is exactly when naming it
+   * here is the only way the buyer sees a drawing.
+   */
+  const { data: plans = [] } = useQuery({
+    queryKey: ['floor-plans', slug],
+    queryFn: () => floorPlansApi.list(slug),
   });
   const [saving, setSaving] = useState(false);
 
@@ -550,8 +572,12 @@ function UnitsManager({ slug, currency, units }: { slug: string; currency: strin
         sqm: form.sqm ? Number.parseFloat(form.sqm) : undefined,
         price,
         status: form.status,
+        floorPlanId: form.floorPlanId || undefined,
       });
-      setForm({ name: '', floor: '', bedrooms: '', bathrooms: '', sqm: '', price: '', status: 'AVAILABLE' });
+      setForm({
+        name: '', floor: '', bedrooms: '', bathrooms: '', sqm: '', price: '', status: 'AVAILABLE',
+        floorPlanId: '',
+      });
       setAdding(false);
       refresh();
     } catch (err) {
@@ -641,6 +667,20 @@ function UnitsManager({ slug, currency, units }: { slug: string; currency: strin
                 ))}
               </select>
             </div>
+            {plans.length > 0 && (
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Floor plan</label>
+                <select value={form.floorPlanId} onChange={set('floorPlanId')} className={inputCls}>
+                  <option value="">Match automatically by bedrooms</option>
+                  {plans.map((fp) => (
+                    <option key={fp.id} value={fp.id}>
+                      {fp.name}
+                      {fp.bedrooms == null ? '' : ` · ${fp.bedrooms === 0 ? 'Studio' : `${fp.bedrooms} bed`}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex items-end">
               <button
                 type="submit"

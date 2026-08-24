@@ -73,9 +73,18 @@ export function PropertyOverview({ property }: Props) {
   const units: Unit[] = property.units ?? [];
   const floorPlans = property.floorPlans ?? [];
 
-  // Bedroom + size ranges (units first, floor plans as fallback)
-  const bedSource = units.length ? units.map((u) => u.bedrooms) : floorPlans.map((f) => f.bedrooms);
-  const sqmSource = units.length ? units.map((u) => u.sqm) : floorPlans.map((f) => f.sqm);
+  /**
+   * Bedroom and size ranges — units first, floor plans as fallback.
+   *
+   * Nulls are dropped rather than passed through: a plan uploaded before its
+   * schedule of areas is final has no sqm, and one of those in the list makes
+   * Math.min return NaN — which published "NaN–220 m²" on the property page.
+   */
+  const num = (xs: (number | null | undefined)[]) =>
+    xs.filter((n): n is number => typeof n === 'number' && Number.isFinite(n));
+
+  const bedSource = num(units.length ? units.map((u) => u.bedrooms) : floorPlans.map((f) => f.bedrooms));
+  const sqmSource = num(units.length ? units.map((u) => u.sqm) : floorPlans.map((f) => f.sqm));
   const bedLabel = bedSource.length
     ? (() => {
         const min = Math.min(...bedSource);

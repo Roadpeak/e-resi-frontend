@@ -156,10 +156,17 @@ export interface FloorPlan {
   id: string;
   name: string;
   imageUrl: string;
-  bedrooms: number;
-  bathrooms: number;
-  sqft: number;
-  sqm: number;
+  /**
+   * Nullable on the API, and genuinely unknown for some plans — a developer
+   * can upload a drawing before the schedule of areas is final. Declaring
+   * these non-optional made every consumer render "null sqm" as though it
+   * were a measurement.
+   */
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  sqft?: number | null;
+  sqm?: number | null;
+  order?: number;
 }
 
 export interface Unit {
