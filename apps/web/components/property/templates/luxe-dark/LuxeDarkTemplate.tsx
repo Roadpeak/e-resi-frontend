@@ -6,6 +6,7 @@ import Image from 'next/image';
 import type { Property } from '../../../../lib/types';
 import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
+import { PropertyInsights } from '../../PropertyInsights';
 import { PropertyCinematicPreview } from '../../PropertyCinematicPreview';
 import { PropertyTours } from '../../PropertyTours';
 import { PropertyViewer3D } from '../../PropertyViewer3D';
@@ -186,6 +187,7 @@ export function LuxeDarkTemplate({
     location: (
       <LuxeLocation address={property.address} amenities={property.amenities} copy={copy('location')} />
     ),
+    insights: <PropertyInsights property={property as never} tone="dark" />,
     construction: <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />,
     cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
     viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,

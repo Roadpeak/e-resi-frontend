@@ -12,6 +12,7 @@ import { PropertyCinematicPreview } from '../../../components/property/PropertyC
 import { PropertyFloorPlans } from '../../../components/property/PropertyFloorPlans';
 import { PropertyUnits } from '../../../components/property/PropertyUnits';
 import { PropertyLocation } from '../../../components/property/PropertyLocation';
+import { PropertyInsights } from '../../../components/property/PropertyInsights';
 import { PropertyConstruction } from '../../../components/property/PropertyConstruction';
 import { PropertyBooking } from '../../../components/property/PropertyBooking';
 import { PropertyRentListings } from '../../../components/property/PropertyRentListings';
@@ -167,6 +168,7 @@ export default async function PropertyPage({ params }: Props) {
     ),
     rentals: rentListings.length > 0 ? <PropertyRentListings listings={rentListings} /> : null,
     location: <PropertyLocation address={property.address} amenities={property.amenities} />,
+    insights: <PropertyInsights property={property as never} />,
     construction: property.constructionUpdates?.length
       ? <PropertyConstruction updates={property.constructionUpdates} />
       : null,

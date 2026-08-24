@@ -7,6 +7,7 @@ import type { Property } from '../../../lib/types';
 import type { MiniSiteTemplate } from '../../../lib/branding/templates';
 import type { RentListing } from '../../../lib/types';
 import type { SectionCopy } from '../../../lib/branding/theme';
+import { PropertyInsights } from '../PropertyInsights';
 import { PropertyCinematicPreview } from '../PropertyCinematicPreview';
 import { PropertyTours } from '../PropertyTours';
 import { PropertyViewer3D } from '../PropertyViewer3D';
@@ -271,6 +272,7 @@ export function KitTemplate({
         copy={copy('location')}
       />
     ),
+    insights: <PropertyInsights property={property as never} />,
     construction: (
       <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />
     ),

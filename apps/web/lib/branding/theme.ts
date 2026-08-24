@@ -115,6 +115,10 @@ export const SECTIONS = [
   { id: 'units', label: 'Available units' },
   { id: 'rentals', label: 'Rentals' },
   { id: 'location', label: 'Location' },
+  // House rules, what the home and the building have, the neighbourhood and
+  // the climate. Sits after location because it is reference material a buyer
+  // reads once they are interested, not what draws them in.
+  { id: 'insights', label: 'Details & area' },
   { id: 'construction', label: 'Construction updates' },
   { id: 'booking', label: 'Book a viewing', alwaysOn: true },
 ] as const;

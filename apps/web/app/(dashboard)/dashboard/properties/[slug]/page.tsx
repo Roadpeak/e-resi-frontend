@@ -36,6 +36,13 @@ interface DashProperty {
   priceTo?: number | null;
   currency: string;
   completionDate?: string | null;
+  /** Details & area — everything the property page shows below the fold. */
+  features?: string[];
+  unitFeatures?: string[];
+  areaDescription?: string | null;
+  petsAllowed?: boolean | null;
+  petPolicy?: string | null;
+  leaseTerms?: string | null;
   submissionData?: {
     development?: Record<string, unknown>;
     media?: { services?: Record<string, unknown> };
@@ -59,6 +66,11 @@ const inputCls =
 const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
 
 /** Accepts "-1.2673, 36.8065"; ignores anything that isn't a valid pair. */
+/** "pool, gym, borehole" -> ['pool','gym','borehole']. Blank entries dropped. */
+function splitList(raw: string): string[] {
+  return raw.split(',').map((x) => x.trim()).filter(Boolean);
+}
+
 function parseCoordinates(raw?: string): { latitude?: number; longitude?: number } {
   if (!raw) return {};
   const [lat, lng] = raw.split(',').map((v) => Number.parseFloat(v.trim()));
@@ -92,6 +104,9 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
   const [form, setForm] = useState({
     name: '', tagline: '', description: '', neighborhood: '', city: '', county: '',
     priceFrom: '', priceTo: '', heroImageUrl: '', coordinates: '',
+    // Shown on the property page under Details & area.
+    unitFeatures: '', features: '', areaDescription: '',
+    petsAllowed: '', petPolicy: '', leaseTerms: '',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -114,6 +129,13 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           property.latitude != null && property.longitude != null
             ? `${property.latitude}, ${property.longitude}`
             : '',
+        unitFeatures: (property.unitFeatures ?? []).join(', '),
+        features: (property.features ?? []).join(', '),
+        areaDescription: property.areaDescription ?? '',
+        // '' is "not stated", which is a real answer distinct from "no".
+        petsAllowed: property.petsAllowed == null ? '' : property.petsAllowed ? 'yes' : 'no',
+        petPolicy: property.petPolicy ?? '',
+        leaseTerms: property.leaseTerms ?? '',
       });
     }
   }, [property]);
@@ -134,6 +156,13 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
         priceFrom: form.priceFrom ? Number.parseFloat(form.priceFrom) : undefined,
         priceTo: form.priceTo ? Number.parseFloat(form.priceTo) : undefined,
         heroImageUrl: form.heroImageUrl.trim(),
+        // Comma-separated in the form, arrays on the wire.
+        unitFeatures: splitList(form.unitFeatures),
+        features: splitList(form.features),
+        areaDescription: form.areaDescription.trim() || undefined,
+        petsAllowed: form.petsAllowed === '' ? undefined : form.petsAllowed === 'yes',
+        petPolicy: form.petPolicy.trim() || undefined,
+        leaseTerms: form.leaseTerms.trim() || undefined,
         // Without coordinates the property can't be plotted on the map.
         ...parseCoordinates(form.coordinates),
       });
@@ -387,6 +416,85 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
             className={inputCls}
             placeholder="Full marketing description"
           />
+        </div>
+
+        {/* ── Details & area ──
+            Everything the property page shows below the fold. Each renders
+            only when filled, so a half-completed listing shows fewer sections
+            rather than empty headings. */}
+        <div className="rounded-2xl border border-[#dadce0] p-5">
+          <p className="text-[15px] font-medium text-[#202124]">Details &amp; area</p>
+          <p className="mt-0.5 text-[13px] text-[#5f6368]">
+            Shown on your property page. Leave anything blank and that section stays hidden.
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelCls}>In-unit features</label>
+              <input
+                value={form.unitFeatures}
+                onChange={(e) => setForm((f) => ({ ...f, unitFeatures: e.target.value }))}
+                placeholder="Fitted kitchen, ensuite, balcony, DSQ"
+                className={inputCls}
+              />
+              <p className="mt-1 text-[12px] text-[#80868b]">What comes with a home. Separate with commas.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Community features</label>
+              <input
+                value={form.features}
+                onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
+                placeholder="Pool, gym, borehole, backup generator"
+                className={inputCls}
+              />
+              <p className="mt-1 text-[12px] text-[#80868b]">What the development has. Separate with commas.</p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className={labelCls}>About the area</label>
+            <textarea
+              value={form.areaDescription}
+              onChange={(e) => setForm((f) => ({ ...f, areaDescription: e.target.value }))}
+              rows={3}
+              className={inputCls}
+              placeholder="What the neighbourhood is like — schools, commute, what is walkable."
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-[160px_1fr]">
+            <div>
+              <label className={labelCls}>Pets</label>
+              <select
+                value={form.petsAllowed}
+                onChange={(e) => setForm((f) => ({ ...f, petsAllowed: e.target.value }))}
+                className={inputCls}
+              >
+                <option value="">Not stated</option>
+                <option value="yes">Allowed</option>
+                <option value="no">Not allowed</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Pet policy</label>
+              <input
+                value={form.petPolicy}
+                onChange={(e) => setForm((f) => ({ ...f, petPolicy: e.target.value }))}
+                placeholder="Cats and small dogs. KES 3,000/month per pet."
+                className={inputCls}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className={labelCls}>Lease terms</label>
+            <input
+              value={form.leaseTerms}
+              onChange={(e) => setForm((f) => ({ ...f, leaseTerms: e.target.value }))}
+              placeholder="Minimum 12 months. Two months deposit, one month rent in advance."
+              className={inputCls}
+            />
+          </div>
         </div>
 
         <DetectLocationButton

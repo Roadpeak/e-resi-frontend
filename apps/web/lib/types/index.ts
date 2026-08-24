@@ -229,6 +229,13 @@ export interface Property {
   currency: string;
   completionDate?: string;
   features: string[];
+  /** What a home comes with, as opposed to what the development has. */
+  unitFeatures?: string[];
+  /** Null means not stated — distinct from "no pets". */
+  petsAllowed?: boolean | null;
+  petPolicy?: string | null;
+  leaseTerms?: string | null;
+  areaDescription?: string | null;
   tags: string[];
   isFeatured: boolean;
   has3DTour: boolean;
