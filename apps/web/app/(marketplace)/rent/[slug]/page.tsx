@@ -8,10 +8,12 @@ import { useRouter } from 'next/navigation';
 import {
   Building2,
   MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
-  ArrowLeft, CheckCircle2, Loader2, X
+  ArrowLeft, CheckCircle2, Loader2, X, Images
 } from 'lucide-react';
 import { RentNavbar } from '../../../../components/rent/RentNavbar';
+import { UnitSectionNav } from '../../../../components/property/UnitSectionNav';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
+import { floorPlansApi } from '../../../../lib/api/floor-plans';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { RentEnquiryModal } from '../../../../components/rent/RentEnquiryModal';
 import { formatPrice } from '../../../../lib/utils';
@@ -102,6 +104,31 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       ? (bedroomCounts[0] === 0 ? 'Studio' : `${bedroomCounts[0]} bed`)
       : `${bedroomCounts[0] === 0 ? 'Studio' : bedroomCounts[0]}–${bedroomCounts[bedroomCounts.length - 1]} bed`;
 
+  /**
+   * Layouts, from the development the units sit in.
+   *
+   * A rent listing has no floor plans of its own — the drawings a tenant asks
+   * for are the same ones the sales side publishes for the building, so they
+   * are fetched from the parent property when there is one.
+   */
+  const { data: floorPlans = [] } = useQuery({
+    queryKey: ['floor-plans', listing?.propertySlug],
+    queryFn: () => floorPlansApi.list(listing!.propertySlug),
+    enabled: !!listing?.propertySlug,
+  });
+
+  /**
+   * The rail, built from the sections this listing actually has.
+   *
+   * Listing one that scrolls nowhere is worse than having no rail at all.
+   */
+  const sections = [
+    { id: 'overview', label: 'Overview' },
+    ...(listing?.description ? [{ id: 'about', label: 'About' }] : []),
+    ...(units.length ? [{ id: 'units', label: 'Units' }] : []),
+    ...(floorPlans.length ? [{ id: 'floorplans', label: 'Floor plans' }] : []),
+  ];
+
   /** Nearby landmarks come from the development, not the rent listing. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const amenities: { id?: string; name: string; distance?: string }[] =
@@ -134,17 +161,20 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       )}
 
       {listing && (
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          {/* Back */}
-          <Link href="/rent" className="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+        <>
+        {/* Gallery mosaic, ahead of the rail — the same shape a tenant sees on
+            a unit page, so the two pages read as one product. */}
+        <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
+          <Link href="/rent" className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft size={14} /> All rentals
           </Link>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Left col */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Hero */}
-              <div className="relative aspect-video overflow-hidden rounded-2xl shadow-sm">
+          <div className="grid h-[300px] gap-2 overflow-hidden rounded-3xl bg-gray-100 sm:h-[440px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
+              <button
+                type="button"
+                onClick={() => listing.heroImageUrl && setLightbox(listing.heroImageUrl)}
+                className="relative h-full w-full cursor-pointer sm:row-span-2"
+              >
                 {listing.heroImageUrl ? (
                   <Image src={listing.heroImageUrl} alt={listing.name} fill className="object-cover" sizes="(max-width:1024px) 100vw, 66vw" priority />
                 ) : (
@@ -170,38 +200,42 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     </span>
                   )}
                 </div>
-              </div>
+              </button>
 
-              {/* Gallery — fetched already but never rendered, so every
-                  listing showed a single hero and nothing else. */}
-              {gallery.length > 0 && (
-                <div className="grid grid-cols-3 gap-3">
-                  {gallery.slice(0, 3).map((src, i) => (
-                    <button
-                      key={src}
-                      type="button"
-                      onClick={() => setLightbox(src)}
-                      className="relative aspect-[4/3] overflow-hidden rounded-xl shadow-sm transition-opacity hover:opacity-90 cursor-pointer"
-                    >
-                      <Image
-                        src={src}
-                        alt={`${listing.name} — photo ${i + 2}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width:1024px) 33vw, 22vw"
-                      />
-                      {i === 2 && gallery.length > 3 && (
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-semibold text-white">
-                          +{gallery.length - 3} more
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Two stacked stills. Hidden on a phone, where each would be a
+                  thumbnail of a thumbnail. */}
+              {[0, 1].map((i) => (
+                <button
+                  key={gallery[i] ?? `empty-${i}`}
+                  type="button"
+                  onClick={() => gallery[i] && setLightbox(gallery[i])}
+                  className="relative hidden cursor-pointer sm:block"
+                >
+                  {gallery[i] ? (
+                    <Image src={gallery[i]} alt={`${listing.name} — photo ${i + 2}`} fill className="object-cover" sizes="33vw" />
+                  ) : (
+                    <span className="absolute inset-0 bg-gray-100" />
+                  )}
+                  {i === 1 && gallery.length > 2 && (
+                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[13px] font-semibold text-gray-900 shadow-sm">
+                      <Images size={13} /> {gallery.length + 1} photos
+                    </span>
+                  )}
+                </button>
+              ))}
+          </div>
+        </div>
 
-              {/* Title */}
-              <div>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <UnitSectionNav sections={sections} />
+        </div>
+
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+            {/* Left col */}
+            <div className="min-w-0 space-y-4">
+              {/* ── Overview ── */}
+              <section id="overview" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
                 <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-1">
                   <MapPin size={13} />
                   <span>{listing.address.neighborhood}, {listing.address.city}</span>
@@ -224,13 +258,12 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     </span>
                   )}
                 </div>
-              </div>
 
               {/* Key facts — the things a tenant scans for before reading
                   anything. Previously these were split between the sidebar
                   and the unit rows, so a phone visitor had to scroll past the
                   whole page to find the bedroom range. */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6 sm:grid-cols-4">
                 {[
                   {
                     label: 'Bedrooms',
@@ -249,25 +282,26 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     value: `${listing.minLeaseTerm} months`,
                   },
                 ].map((f) => (
-                  <div key={f.label} className="rounded-2xl bg-white/70 p-4 shadow-sm">
+                  <div key={f.label} className="rounded-2xl bg-[#faf9f7] p-4">
                     <p className="text-[11px] uppercase tracking-wider text-gray-400">{f.label}</p>
                     <p className="mt-1 text-[15px] font-semibold text-gray-900">{f.value}</p>
                   </div>
                 ))}
               </div>
+              </section>
 
               {/* Description */}
               {listing.description && (
-                <div className="rounded-2xl bg-white/70 p-5 shadow-sm">
-                  <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-400">About</h2>
-                  <p className="text-sm text-gray-700 leading-relaxed">{listing.description}</p>
-                </div>
+                <section id="about" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
+                  <h2 className="mb-3 text-2xl font-semibold text-gray-900">About</h2>
+                  <p className="text-[15px] leading-relaxed text-gray-700">{listing.description}</p>
+                </section>
               )}
 
               {/* Units */}
               {listing.units.length > 0 && (
-                <div className="rounded-2xl bg-white/70 p-5 shadow-sm">
-                  <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Available Units</h2>
+                <section id="units" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
+                  <h2 className="mb-4 text-2xl font-semibold text-gray-900">Available units</h2>
                   <div className="space-y-3">
                     {listing.units.map((unit) => (
                       <div key={unit.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 gap-4">
@@ -307,7 +341,44 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
+              )}
+
+              {/* ── Floor plans ──
+                  Borrowed from the development the units sit in: a rent
+                  listing has no layouts of its own, and the drawings a tenant
+                  wants are the same ones the sales side publishes. */}
+              {floorPlans.length > 0 && (
+                <section id="floorplans" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
+                  <h2 className="mb-1 text-2xl font-semibold text-gray-900">Floor plans</h2>
+                  <p className="mb-5 text-[14px] text-gray-500">
+                    The layouts in this development.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {floorPlans.map((fp) => (
+                      <button
+                        key={fp.id}
+                        type="button"
+                        onClick={() => setLightbox(fp.imageUrl)}
+                        className="overflow-hidden rounded-2xl border border-gray-200 text-left transition-colors hover:border-gray-300 cursor-pointer"
+                      >
+                        <div className="relative h-40 bg-[#faf9f7]">
+                          <Image src={fp.imageUrl} alt={fp.name} fill className="object-contain p-3" sizes="320px" unoptimized />
+                        </div>
+                        <div className="border-t border-gray-100 px-4 py-3">
+                          <p className="truncate text-[14px] font-medium text-gray-900">{fp.name}</p>
+                          <p className="mt-0.5 text-[12.5px] text-gray-500">
+                            {[
+                              fp.bedrooms == null ? null : fp.bedrooms === 0 ? 'Studio' : `${fp.bedrooms} bed`,
+                              fp.bathrooms == null ? null : `${fp.bathrooms} bath`,
+                              fp.sqm == null ? null : `${fp.sqm} m²`,
+                            ].filter(Boolean).join(' · ') || 'Layout'}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
               )}
 
               {/* Tags */}
@@ -320,11 +391,13 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               )}
             </div>
 
-            {/* Right col — sticky summary */}
+            {/* Right col — sticky summary.
+                Pinned below the section rail so the way to enquire, chat or
+                reserve is on screen at every point of the page. */}
             <div className="space-y-4">
-              <div className="sticky top-24 space-y-4">
+              <div className="sticky top-32 space-y-4">
                 {/* Price card */}
-                <div className="rounded-2xl bg-white p-5 shadow-sm">
+                <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                   <p className="text-xs text-gray-400 mb-1">Starting from</p>
                   <p className="text-2xl font-bold text-gray-900">{formatPrice(listing.priceFrom, listing.currency)}<span className="text-sm font-normal text-gray-400">/mo</span></p>
                   {listing.priceTo > listing.priceFrom && (
@@ -376,7 +449,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
                 {/* Developer card */}
                 {(raw as any)?.developer && (
-                  <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Listed by</p>
                     <div className="flex items-center gap-3">
                       {(raw as any).developer.logoUrl && (
@@ -400,7 +473,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 {/* Amenities — the listing has none of its own, so these come
                     from the development the units sit in. */}
                 {amenities.length > 0 && (
-                  <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Amenities</p>
                     <ul className="space-y-1.5">
                       {amenities.map((a) => (
@@ -419,6 +492,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Full-size image from the gallery */}
