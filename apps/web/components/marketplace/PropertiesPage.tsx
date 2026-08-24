@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { useProperties } from '../../lib/api/queries';
-import { PropertyShowcaseCard } from './PropertyShowcaseCard';
+import { PropertyListCard } from './PropertyListCard';
 import { browseSeed, weightedShuffle } from '../../lib/marketplace/shuffle';
 import { Pagination } from '../ui/Pagination';
 // MapLibre touches window/document on import — keep it out of the server bundle.
@@ -49,7 +49,11 @@ const STATUSES: { value: PropertyStatus; label: string }[] = [
   { value: 'SOLD_OUT', label: 'Sold Out' },
 ];
 
-const PAGE_SIZE = 9;
+/**
+ * Rows are compact enough that nine left the page feeling thin. Twelve fills
+ * a scroll without pushing pagination so far down that nobody reaches it.
+ */
+const PAGE_SIZE = 12;
 
 const PRICE_STEPS = [5, 10, 20, 30, 50, 80, 100, 150].map((m) => m * 1_000_000);
 
@@ -190,8 +194,12 @@ export function PropertiesPage({
           }}
         />
 
-        {/* ── Floating filter bar ── */}
-        <div className="relative z-20 -mt-9 px-3 sm:px-6 lg:px-10">
+        {/* ── Filter bar ──
+            Sticks below the navbar once the hero scrolls away, so filters stay
+            reachable through a long list rather than only at the top of it.
+            `top-16` is the navbar's own height; the negative margin lifts it
+            onto the hero the way it did before. */}
+        <div className="sticky top-16 z-30 -mt-9 px-3 sm:px-6 lg:px-10">
           <FilterBar
             moreOpen={moreOpen}
             onToggleMore={() => setMoreOpen((v) => !v)}
@@ -205,7 +213,10 @@ export function PropertiesPage({
             whether or not anyone was using it. It is now summoned from the
             button at the bottom right, which gives each development the full
             width of the page. */}
-        <div className="mt-8 lg:mt-10">
+        {/* Constrained rather than full-bleed: a row spanning 1400px leaves
+            its detail column mostly empty whatever the image does, and a list
+            is read down rather than across. */}
+        <div className="mx-auto mt-8 max-w-5xl lg:mt-10">
           <section className="min-w-0">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -242,9 +253,12 @@ export function PropertiesPage({
               <EmptyState onReset={clearFilters} />
             ) : (
               <>
-                <div className="flex flex-col gap-6 lg:gap-8">
+                {/* Rows rather than a grid, tighter than before: the portal
+                    layout gets more listings on screen at once, which is what
+                    someone comparing developments actually wants. */}
+                <div className="flex flex-col gap-4">
                   {ordered.map((p, i) => (
-                    <PropertyShowcaseCard
+                    <PropertyListCard
                       key={p.id}
                       property={p}
                       index={i}
