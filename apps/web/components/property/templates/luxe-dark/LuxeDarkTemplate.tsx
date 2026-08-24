@@ -7,6 +7,7 @@ import type { Property } from '../../../../lib/types';
 import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
 import { PropertyInsights } from '../../PropertyInsights';
+import { StreetViewButtons } from '../../StreetViewButtons';
 import { PropertyCinematicPreview } from '../../PropertyCinematicPreview';
 import { PropertyTours } from '../../PropertyTours';
 import { PropertyViewer3D } from '../../PropertyViewer3D';
@@ -162,7 +163,18 @@ export function LuxeDarkTemplate({
   const blocks: Record<string, React.ReactNode> = {
     overview: <LuxeOverview property={property} copy={copy('overview')} />,
     gallery: (
-      <LuxeGallery images={property.galleryImages} name={property.name} copy={copy('gallery')} />
+      <div className="space-y-5">
+        <LuxeGallery images={property.galleryImages} name={property.name} copy={copy('gallery')} />
+        <StreetViewButtons
+          propertyName={property.name}
+          photos={property.galleryImages}
+          areaPhotos={property.areaPhotos}
+          latitude={property.address?.coordinates?.lat}
+          longitude={property.address?.coordinates?.lng}
+          address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
+          tone="dark"
+        />
+      </div>
     ),
     tours: (
       <PropertyTours

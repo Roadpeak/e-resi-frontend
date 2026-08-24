@@ -141,6 +141,7 @@ export function PropertyMediaManager({
   return (
     <div className="space-y-6">
       <GalleryCard slug={slug} />
+      <AreaPhotosCard slug={slug} />
       <LogoCard slug={slug} heroImageUrl={heroImageUrl} />
       <ToursCard slug={slug} isAdmin={isAdmin} />
     </div>
@@ -148,6 +149,125 @@ export function PropertyMediaManager({
 }
 
 /* ── Gallery photos ─────────────────────────────────────────────── */
+
+/**
+ * Photographs of the surrounding area.
+ *
+ * Shown under Neighbourhood beside Street View, and deliberately kept out of
+ * the gallery: a shot of the local high street among the apartment photography
+ * reads as a mistake. Tagged with a sentinel title rather than given its own
+ * table, which is the same mechanism the property logo already uses.
+ */
+const AREA_TAG = '__area__';
+
+function AreaPhotosCard({ slug }: { slug: string }) {
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { data: media } = useQuery({
+    queryKey: ['property-media', slug],
+    queryFn: () => apiClient.get<MediaAsset[]>(`/media/properties/${slug}`),
+  });
+  const photos = (media ?? []).filter((m) => m.title === AREA_TAG);
+
+  async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    setError('');
+    setBusy(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try {
+      for (const file of files) {
+        const uploaded = await uploadFile(file, 'properties', {
+          onProgress: setProgress,
+          signal: controller.signal,
+        });
+        await apiClient.post(`/media/properties/${slug}`, {
+          type: 'PHOTO',
+          url: uploaded.url,
+          // The tag is what separates these from the gallery.
+          title: AREA_TAG,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['property-media', slug] });
+    } catch (err) {
+      const message = err instanceof ApiError || err instanceof Error ? err.message : 'Upload failed.';
+      setError(message === 'Upload cancelled' ? '' : message);
+      queryClient.invalidateQueries({ queryKey: ['property-media', slug] });
+    } finally {
+      setBusy(false);
+      setProgress(null);
+      abortRef.current = null;
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  }
+
+  async function remove(id: string) {
+    await apiClient.delete(`/media/${id}`).catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ['property-media', slug] });
+  }
+
+  return (
+    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-[18px] font-normal text-[#202124]">Neighbourhood photos</h3>
+          <p className="text-sm text-[#5f6368]">
+            The area around the development — the street, local shops, the park. Shown beside
+            Street View, and kept out of the main gallery.
+          </p>
+        </div>
+        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50 cursor-pointer"
+        >
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} Add photos
+        </button>
+      </div>
+
+      {progress && (
+        <div className="mt-3">
+          <UploadProgressBar
+            progress={progress}
+            label="Uploading"
+            onCancel={() => abortRef.current?.abort()}
+          />
+        </div>
+      )}
+
+      {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
+
+      {photos.length === 0 ? (
+        <p className="mt-4 rounded-2xl bg-[#f8f9fa] px-4 py-3 text-[13px] text-[#5f6368]">
+          None yet. Without these the Neighbourhood tab stays hidden — Street View still works
+          from the map pin.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {photos.map((p) => (
+            <div key={p.id} className="group relative aspect-[4/3] overflow-hidden rounded-2xl">
+              <Image src={p.url} alt="" fill className="object-cover" sizes="200px" unoptimized />
+              <button
+                onClick={() => remove(p.id)}
+                aria-label="Remove photo"
+                className="absolute right-2 top-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function GalleryCard({ slug }: { slug: string }) {
   const queryClient = useQueryClient();
@@ -162,7 +282,12 @@ function GalleryCard({ slug }: { slug: string }) {
     queryKey: ['property-media', slug],
     queryFn: () => apiClient.get<MediaAsset[]>(`/media/properties/${slug}`),
   });
-  const photos = (media ?? []).filter((m) => ['PHOTO', 'DRONE_PHOTO'].includes(m.type) && m.title !== '__logo__');
+  // Area photos live in their own card, so they must not appear here too.
+  const photos = (media ?? []).filter(
+    (m) => ['PHOTO', 'DRONE_PHOTO'].includes(m.type)
+      && m.title !== '__logo__'
+      && m.title !== AREA_TAG,
+  );
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);

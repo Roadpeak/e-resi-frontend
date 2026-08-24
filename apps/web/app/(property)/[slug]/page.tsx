@@ -144,7 +144,17 @@ export default async function PropertyPage({ params }: Props) {
   // reordering and hiding need no changes in the section components.
   const blocks: Record<string, React.ReactNode> = {
     overview: <PropertyOverview property={property} />,
-    gallery: <PropertyGallery images={property.galleryImages} name={property.name} />,
+    gallery: (
+      <PropertyGallery
+        images={property.galleryImages}
+        name={property.name}
+        latitude={property.address?.coordinates?.lat}
+        longitude={property.address?.coordinates?.lng}
+        address={[property.address?.street, property.address?.neighborhood, property.address?.city]
+          .filter(Boolean).join(', ')}
+        areaPhotos={property.areaPhotos ?? []}
+      />
+    ),
     tours: (
       <PropertyTours
         propertySlug={property.slug}

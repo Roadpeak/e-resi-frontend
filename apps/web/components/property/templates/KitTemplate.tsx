@@ -8,6 +8,7 @@ import type { MiniSiteTemplate } from '../../../lib/branding/templates';
 import type { RentListing } from '../../../lib/types';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { PropertyInsights } from '../PropertyInsights';
+import { StreetViewButtons } from '../StreetViewButtons';
 import { PropertyCinematicPreview } from '../PropertyCinematicPreview';
 import { PropertyTours } from '../PropertyTours';
 import { PropertyViewer3D } from '../PropertyViewer3D';
@@ -234,12 +235,22 @@ export function KitTemplate({
   const blocks: Record<string, React.ReactNode> = {
     overview: <KitOverview property={property} style={style} copy={copy('overview')} />,
     gallery: (
-      <KitGallery
-        images={property.galleryImages}
-        name={property.name}
-        style={style}
-        copy={copy('gallery')}
-      />
+      <div className="space-y-5">
+        <KitGallery
+          images={property.galleryImages}
+          name={property.name}
+          style={style}
+          copy={copy('gallery')}
+        />
+        <StreetViewButtons
+          propertyName={property.name}
+          photos={property.galleryImages}
+          areaPhotos={property.areaPhotos}
+          latitude={property.address?.coordinates?.lat}
+          longitude={property.address?.coordinates?.lng}
+          address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
+        />
+      </div>
     ),
     tours: (
       <PropertyTours

@@ -217,6 +217,8 @@ export interface Property {
   /** Developer-uploaded property logo, if any. */
   logoUrl?: string;
   galleryImages: string[];
+  /** Photographs of the surrounding area, shown under Neighbourhood. */
+  areaPhotos?: { id: string; url: string; title?: string | null }[];
   media: MediaAsset[];
   floorPlans: FloorPlan[];
   units: Unit[];

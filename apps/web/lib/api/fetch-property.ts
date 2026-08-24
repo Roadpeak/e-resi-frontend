@@ -21,12 +21,30 @@ function findLogo(raw: any): string | undefined {
   return (raw.media ?? []).find((m: any) => m?.title === '__logo__')?.url ?? undefined;
 }
 
+/**
+ * Photographs of the surrounding area, tagged with a sentinel title.
+ *
+ * Same mechanism as the logo: a media row whose title marks what it is for.
+ * These belong to the neighbourhood rather than the building, so they are
+ * pulled out here and excluded from the gallery below — a shot of the local
+ * high street among the apartment photography reads as a mistake.
+ */
+export const AREA_PHOTO_TAG = '__area__';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function areaPhotosOf(raw: any): { id: string; url: string; title?: string | null }[] {
+  return (raw?.media ?? [])
+    .filter((m: any) => m?.title === AREA_PHOTO_TAG && m?.url)
+    .map((m: any, i: number) => ({ id: m.id ?? `area-${i}`, url: m.url as string, title: null }));
+}
+
 /** Gallery images may arrive as MediaAsset objects or plain URLs. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseGallery(raw: any): string[] {
   const source = raw.galleryImages ?? raw.media ?? [];
   return source
-    .filter((m: any) => typeof m === 'string' || (m?.title !== '__logo__' && m?.url))
+    .filter((m: any) => typeof m === 'string'
+      || (m?.title !== '__logo__' && m?.title !== AREA_PHOTO_TAG && m?.url))
     .map((m: any) => (typeof m === 'string' ? m : m.url))
     .filter(Boolean);
 }
@@ -63,6 +81,8 @@ function normaliseProperty(raw: any): Property {
     // Backend returns MediaAsset objects; the UI expects plain URLs.
     // The logo is stored as a media row with a sentinel title — keep it out of galleries.
     galleryImages: normaliseGallery(raw),
+    /** Neighbourhood photography, kept apart from the building's own. */
+    areaPhotos: areaPhotosOf(raw),
     logoUrl: findLogo(raw),
     // Backend exposes the developer as companyName; the UI reads .name.
     developer: normaliseDeveloper(raw.developer),

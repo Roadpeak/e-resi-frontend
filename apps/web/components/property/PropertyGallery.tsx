@@ -4,13 +4,22 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { StreetViewButtons } from './StreetViewButtons';
 
 interface Props {
   images: string[];
   name: string;
+  /** Needed for Street View — without coordinates the button is not offered. */
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string;
+  /** Photographs of the surrounding area, uploaded by the developer. */
+  areaPhotos?: { id: string; url: string; title?: string | null }[];
 }
 
-export function PropertyGallery({ images, name }: Props) {
+export function PropertyGallery({
+  images, name, latitude, longitude, address, areaPhotos = [],
+}: Props) {
   const [lightbox, setLightbox] = useState<number | null>(null);
 
   const prev = () => setLightbox((i) => (i === null ? null : (i - 1 + images.length) % images.length));
@@ -19,7 +28,21 @@ export function PropertyGallery({ images, name }: Props) {
   return (
     <section id="gallery" className="scroll-mt-24">
       <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Gallery</p>
-      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Photography & Visuals</h2>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <h2 className="text-3xl font-semibold text-gray-900">Photography &amp; Visuals</h2>
+
+        {/* The street outside and the area around it, alongside the building's
+            own photography — a buyer asking what it is like there wants all
+            three, and will not hunt for separate buttons to get them. */}
+        <StreetViewButtons
+          propertyName={name}
+          photos={images}
+          areaPhotos={areaPhotos}
+          latitude={latitude}
+          longitude={longitude}
+          address={address}
+        />
+      </div>
 
       {/* Grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
