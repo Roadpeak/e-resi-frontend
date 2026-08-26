@@ -394,6 +394,16 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
               >
                 View gallery
               </a>
+              {/* Squared to match, rather than the round glyph the pill-based
+                  heroes use — a circle beside two rectangles would be the only
+                  curved thing in this composition. */}
+              <ChatWithDeveloper
+                propertySlug={property.slug}
+                tone="dark"
+                variant="icon"
+                label="Chat with the developer"
+                className="[&>button]:h-[54px] [&>button]:w-[54px] [&>button]:rounded-none"
+              />
             </div>
             {/* Same figures, in the flow, for the phone layout the glass cards
                 are hidden on. */}

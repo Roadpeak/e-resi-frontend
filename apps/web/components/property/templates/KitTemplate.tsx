@@ -86,16 +86,32 @@ const GROUNDS: Record<string, string> = {
   WARM_LUXE: '#f3efe9',
 };
 
-function KitNav({
+/**
+ * The bar, for every template.
+ *
+ * Exported because Dark Luxury used to carry its own near-identical copy —
+ * same rAF scroll poll, same four hardcoded links, same missing everything
+ * else. Two copies meant the mobile menu, save, share and scroll-spy were
+ * restored to one of them and not the other. One implementation, parameterised
+ * by the template's own ground and type, is the only arrangement in which the
+ * next fix lands everywhere.
+ */
+export function KitNav({
   property,
   ctaLabel,
   style,
   template,
+  /** Overrides for templates that are not in KIT_STYLES — currently Luxe. */
+  ground: groundOverride,
+  navLabels,
 }: {
   property: Property;
   ctaLabel: string;
   style: KitStyle;
   template: MiniSiteTemplate;
+  ground?: string;
+  /** Per-template wording, e.g. Luxe calls its units "Residences". */
+  navLabels?: Record<string, string>;
 }) {
   const [scrolled, setScrolled] = useState(false);
   /** Which section the page is currently on, for the active link state. */
@@ -202,7 +218,11 @@ function KitNav({
     },
     { id: 'units', label: 'Units', show: !!property.units?.length },
     { id: 'location', label: 'Location', show: true },
-  ].filter((l) => l.show);
+  ]
+    .filter((l) => l.show)
+    // A template may name a section in its own register — Luxe calls the units
+    // "Residences" — without needing its own copy of the bar.
+    .map((l) => ({ ...l, label: navLabels?.[l.id] ?? l.label }));
 
   // Scroll-spy. The Kit navs were plain anchors with no active state, so a
   // buyer halfway down a nine-thousand-pixel page had no indication of where
@@ -228,7 +248,7 @@ function KitNav({
   // takes the template's own ground and its text flips to match.
   // White text only when the bar is actually dark or actually transparent.
   const onDarkBar = style.onDark;
-  const ground = GROUNDS[template.key] ?? '#ffffff';
+  const ground = groundOverride ?? GROUNDS[template.key] ?? '#ffffff';
   // Text colours resolved once, so the bar can never end up light-on-light —
   // which is what happened when a transparent bar kept its over-hero white.
   const fg = onDarkBar ? '#ffffff' : '#18191a';

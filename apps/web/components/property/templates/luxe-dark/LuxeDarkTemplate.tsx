@@ -1,8 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import type { Property } from '../../../../lib/types';
 import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
@@ -11,6 +8,11 @@ import { StreetViewButtons } from '../../StreetViewButtons';
 import { PropertyTours } from '../../PropertyTours';
 import { PropertyRentListings } from '../../PropertyRentListings';
 import { TemplateHero } from '../TemplateHero';
+import { KitNav } from '../KitTemplate';
+import type { KitStyle } from '../kit';
+import { templateFor } from '../../../../lib/branding/templates';
+import { SECTIONS } from '../../../../lib/branding/theme';
+import { PropertyMonogram } from '../../PropertyMonogram';
 import {
   LuxeBooking,
   LuxeConstruction,
@@ -37,85 +39,23 @@ import {
  */
 const SELF_ANCHORED = new Set(['rentals', 'tours']);
 
-/** Its own nav: hairline, uppercase, transparent until you leave the hero. */
-function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string }) {
-  const [scrolled, setScrolled] = useState(false);
+/**
+ * What the shared bar and footer need to know about this template.
+ *
+ * Luxe is hand-written rather than driven by KIT_STYLES, but the bar is
+ * parameterised by exactly these two shapes — so describing Luxe in their
+ * terms is cheaper than keeping a second bar alive.
+ */
+const LUXE_STYLE: KitStyle = {
+  onDark: true,
+  radius: 'rounded-none',
+  headingKind: 'numbered',
+  unitsAs: 'table',
+  galleryAs: 'mosaic',
+  outlined: true,
+};
 
-  useEffect(() => {
-    // Polled on the animation frame rather than driven by the scroll event.
-    //
-    // A scroll event does not fire for every way a page can move —
-    // scrollIntoView, an anchor jump and a restored position can all leave the
-    // bar transparent while the page sits deep in the document, which showed up
-    // as white nav links on a white ground. Reading scrollY each frame cannot
-    // miss a change however it was caused.
-    let raf = 0;
-    // Track the boolean, not the offset: setting state on every frame the page
-    // moves re-rendered the bar continuously, so a read of its background
-    // caught the 500ms transition mid-flight rather than at rest.
-    let was: boolean | null = null;
-    const tick = () => {
-      const now = window.scrollY > 80;
-      if (now !== was) {
-        was = now;
-        setScrolled(now);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  const links = [
-    { id: 'overview', label: 'Development' },
-    { id: 'gallery', label: 'Gallery' },
-    { id: 'units', label: 'Residences' },
-    { id: 'location', label: 'Location' },
-  ];
-
-  return (
-    <nav
-      className="fixed inset-x-0 top-0 z-50 transition-all duration-500"
-      style={{
-        background: scrolled ? 'rgba(11,11,12,0.86)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(14px)' : 'none',
-        borderBottom: `1px solid ${scrolled ? 'rgba(255,255,255,0.10)' : 'transparent'}`,
-      }}
-    >
-      <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 sm:px-10">
-        <Link href={`/${property.slug}`} className="flex min-w-0 items-center gap-3">
-          {property.logoUrl && (
-            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-              <Image src={property.logoUrl} alt="" fill className="object-cover" sizes="32px" />
-            </span>
-          )}
-          <span className="truncate text-[15px] font-light uppercase tracking-[0.22em] text-white">
-            {property.name}
-          </span>
-        </Link>
-
-        <div className="hidden items-center gap-9 lg:flex">
-          {links.map((l) => (
-            <a
-              key={l.id}
-              href={`#${l.id}`}
-              className="text-[11px] uppercase tracking-[0.18em] text-white/55 transition-colors hover:text-white"
-            >
-              {l.label}
-            </a>
-          ))}
-        </div>
-
-        <a
-          href="#booking"
-          className="border border-white/25 px-6 py-2.5 text-[11px] uppercase tracking-[0.16em] text-white transition-colors hover:bg-white hover:text-black"
-        >
-          {ctaLabel}
-        </a>
-      </div>
-    </nav>
-  );
-}
+const LUXE_TEMPLATE = templateFor('LUXE_DARK');
 
 /** Sections that span the viewport and bring their own padding. */
 const FULL_BLEED = new Set(['tours']);
@@ -210,7 +150,23 @@ export function LuxeDarkTemplate({
 
   return (
     <div className="min-h-screen bg-[#0b0b0c]">
-      <LuxeNav property={property} ctaLabel={ctaLabel} />
+      {/*
+        The shared bar, not a private copy.
+
+        Luxe carried its own near-identical LuxeNav, which is why the mobile
+        menu, save, share and scroll-spy were restored to the other seven
+        templates and not to this one. It keeps its own register through
+        navLabels and its own ground through the override; everything else is
+        the one implementation.
+      */}
+      <KitNav
+        property={property}
+        ctaLabel={ctaLabel}
+        style={LUXE_STYLE}
+        template={LUXE_TEMPLATE}
+        ground="#0b0b0c"
+        navLabels={{ units: 'Residences', gallery: 'Gallery', location: 'Location' }}
+      />
 
       <TemplateHero
         templateKey="LUXE_DARK"
@@ -227,28 +183,102 @@ export function LuxeDarkTemplate({
         ) : null,
       )}
 
-      <footer className="border-t border-white/12 px-6 py-14 sm:px-10">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-6">
-          <div>
-            <p className="text-[15px] font-light uppercase tracking-[0.2em] text-white">
-              {property.name}
-            </p>
+      {/* The full footer, in Luxe's register. It carried one line — the name,
+          "Developed by X" and our attribution — and dropped the developer, the
+          section links, the copyright and the disclaimer, exactly as the Kit
+          footer did before it was rebuilt. */}
+      <footer className="border-t border-white/12 px-6 pb-10 pt-16 sm:px-10">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+            <div>
+              <div className="flex items-center gap-3">
+                <PropertyMonogram
+                  name={property.name}
+                  logoUrl={property.logoUrl}
+                  size={42}
+                  onDark
+                />
+                <p className="text-[15px] font-light uppercase tracking-[0.2em] text-white">
+                  {property.name}
+                </p>
+              </div>
+              {property.tagline && (
+                <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-white/45">
+                  {property.tagline}
+                </p>
+              )}
+              {(property.address?.neighborhood || property.address?.city) && (
+                <p className="mt-4 text-[13px] text-white/45">
+                  {[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
+                </p>
+              )}
+            </div>
+
             {property.developer?.name && (
-              <p className="mt-2 text-[13px] text-white/45">
-                Developed by {property.developer.name}
-              </p>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Developer</p>
+                <div className="mt-4 flex items-center gap-3">
+                  <PropertyMonogram
+                    name={property.developer.name}
+                    logoUrl={property.developer.logoUrl}
+                    size={38}
+                    onDark
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[14px] text-white">{property.developer.name}</p>
+                    {property.developer.establishedYear && (
+                      <p className="text-[12px] text-white/45">
+                        Est. {property.developer.establishedYear}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {property.developer.description && (
+                  <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-white/45">
+                    {property.developer.description}
+                  </p>
+                )}
+              </div>
             )}
+
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Explore</p>
+              <ul className="mt-4 space-y-2.5">
+                {sections
+                  .filter((id) => blocks[id] && id !== 'overview')
+                  .slice(0, 6)
+                  .map((id) => (
+                    <li key={id}>
+                      <a
+                        href={`#${id}`}
+                        className="text-[13px] text-white/45 transition-colors hover:text-white"
+                      >
+                        {SECTIONS.find((s) => s.id === id)?.label ?? id}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
+            </div>
           </div>
-          {!whiteLabel && (
-            <a
-              href="https://e-resi.com"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-[11px] uppercase tracking-[0.16em] text-white/30 transition-colors hover:text-white/60"
-            >
-              Tours by e-resi
-            </a>
-          )}
+
+          <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+            <p className="text-[12px] text-white/40">
+              © {new Date().getFullYear()} {property.developer?.name ?? property.name}
+            </p>
+            {!whiteLabel && (
+              <a
+                href="https://e-resi.com"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-[11px] uppercase tracking-[0.16em] text-white/30 transition-colors hover:text-white/60"
+              >
+                Tours by e-resi
+              </a>
+            )}
+            <p className="text-[12px] text-white/40">
+              All property details are provided by the developer.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
