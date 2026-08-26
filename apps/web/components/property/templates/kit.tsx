@@ -384,6 +384,11 @@ export function KitUnits({
           priceDisplay={priceDisplay}
           onDark={style.onDark}
           radius={style.radius}
+          // The templates that set their sections as an editorial schedule —
+          // squared corners, numbered headings, units as a table — get the
+          // ruled treatment here too, rather than a stack of rounded cards
+          // dropped into the middle of a serif page.
+          variant={style.unitsAs === 'table' ? 'editorial' : 'card'}
           className="mt-8"
         />
       ) : style.unitsAs === 'table' ? (

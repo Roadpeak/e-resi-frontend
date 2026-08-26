@@ -40,6 +40,17 @@ export interface UnitTypeListProps {
   onDark?: boolean;
   /** Templates carry their own corner radius. */
   radius?: string;
+  /**
+   * How the list is drawn.
+   *
+   * `card` is the default — a bordered, rounded panel per type, which suits
+   * the templates whose whole language is soft panels. `editorial` is the same
+   * information as a ruled schedule: no boxes, hairline rules between rows,
+   * figures set in the template's display face. A serif page with a stack of
+   * rounded sans-serif cards in the middle of it reads as two designs at once,
+   * and this is the section a buyer spends longest in.
+   */
+  variant?: 'card' | 'editorial';
   className?: string;
 }
 
@@ -50,6 +61,7 @@ export function UnitTypeList({
   priceDisplay,
   onDark = false,
   radius = 'rounded-2xl',
+  variant = 'card',
   className,
 }: UnitTypeListProps) {
   const types = groupUnitsByType(units, currency);
@@ -57,8 +69,16 @@ export function UnitTypeList({
   // state, which it words to match its own template.
   if (types.length === 0) return null;
 
+  const editorial = variant === 'editorial';
+
   return (
-    <div className={cn('space-y-3', className)}>
+    <div
+      className={cn(
+        editorial ? 'border-t' : 'space-y-3',
+        editorial && (onDark ? 'border-white/15' : 'border-neutral-200'),
+        className,
+      )}
+    >
       {types.map((type) => (
         <TypeRow
           key={type.key}
@@ -68,6 +88,7 @@ export function UnitTypeList({
           currency={currency}
           onDark={onDark}
           radius={radius}
+          editorial={editorial}
         />
       ))}
     </div>
@@ -81,6 +102,7 @@ function TypeRow({
   currency,
   onDark,
   radius,
+  editorial = false,
 }: {
   type: ReturnType<typeof groupUnitsByType>[number];
   propertySlug: string;
@@ -88,6 +110,7 @@ function TypeRow({
   currency?: string | null;
   onDark: boolean;
   radius: string;
+  editorial?: boolean;
 }) {
   // 'exact' promises per-unit figures, so it opens showing them rather than
   // making the buyer hunt for the disclosure.
@@ -118,10 +141,12 @@ function TypeRow({
       animate={{ opacity: type.soldOut ? 0.65 : 1 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'overflow-hidden border transition-colors',
-        radius,
-        border,
-        onDark ? 'bg-white/[0.03]' : 'bg-white',
+        'overflow-hidden transition-colors',
+        // Editorial rows are separated by a rule rather than framed by a
+        // border, and sit directly on the page ground.
+        editorial
+          ? cn('border-b', border)
+          : cn('border', radius, border, onDark ? 'bg-white/[0.03]' : 'bg-white'),
       )}
     >
       <button
@@ -129,36 +154,76 @@ function TypeRow({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          'flex w-full items-center gap-4 p-5 text-left transition-colors sm:gap-5',
-          onDark ? 'hover:bg-white/[0.03]' : 'hover:bg-neutral-50',
+          'flex w-full items-center gap-4 text-left transition-colors sm:gap-6',
+          editorial ? 'py-7' : 'p-5',
+          onDark ? 'hover:bg-white/[0.03]' : editorial ? 'hover:bg-black/[0.015]' : 'hover:bg-neutral-50',
         )}
       >
         {/* A bedroom-count mark, so the eye can run the list by type without
             reading. Rows of pure text made the most commercially important
-            section on the page the flattest thing on it. */}
-        <span
-          aria-hidden
-          className="hidden h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl text-[15px] font-bold leading-none sm:flex"
-          style={
-            onDark
-              ? { background: 'rgba(255,255,255,0.07)', color: '#fff' }
-              : {
-                  background: 'color-mix(in srgb, var(--brand) 9%, white)',
-                  color: 'var(--brand)',
-                }
-          }
-        >
-          {type.bedrooms === 0 ? 'St' : type.bedrooms}
+            section on the page the flattest thing on it.
+
+            Editorial takes a set numeral rather than a tinted tile — the
+            schedule convention, where the count is typeset alongside the entry
+            rather than badged onto it. */}
+        {editorial ? (
           <span
-            className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-70"
+            aria-hidden
+            // Aligned to the top of the row rather than centred, so the numeral
+            // sits on the same line as the type name beside it — a schedule
+            // reads down its left edge.
+            className="hidden w-14 shrink-0 items-baseline gap-1 self-start pt-0.5 sm:flex"
+            style={{ fontFamily: 'var(--tpl-font-heading)' }}
           >
-            {type.bedrooms === 0 ? 'udio' : 'bed'}
+            <span
+              className="text-[30px] leading-none"
+              style={{
+                color: onDark ? '#fff' : '#18191a',
+                fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+              }}
+            >
+              {type.bedrooms === 0 ? '—' : type.bedrooms}
+            </span>
+            <span className={cn('text-[10px] uppercase tracking-[0.14em]', muted)}>
+              {type.bedrooms === 0 ? 'st' : 'bd'}
+            </span>
           </span>
-        </span>
+        ) : (
+          <span
+            aria-hidden
+            className="hidden h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl text-[15px] font-bold leading-none sm:flex"
+            style={
+              onDark
+                ? { background: 'rgba(255,255,255,0.07)', color: '#fff' }
+                : {
+                    background: 'color-mix(in srgb, var(--brand) 9%, white)',
+                    color: 'var(--brand)',
+                  }
+            }
+          >
+            {type.bedrooms === 0 ? 'St' : type.bedrooms}
+            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-70">
+              {type.bedrooms === 0 ? 'udio' : 'bed'}
+            </span>
+          </span>
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className={cn('text-[17px] font-semibold', heading)}>{type.label}</span>
+            <span
+              className={cn(editorial ? 'text-[21px]' : 'text-[17px] font-semibold', heading)}
+              style={
+                editorial
+                  ? {
+                      fontFamily: 'var(--tpl-font-heading)',
+                      fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+                      letterSpacing: 'var(--tpl-heading-tracking)',
+                    }
+                  : undefined
+              }
+            >
+              {type.label}
+            </span>
             {type.soldOut && (
               <span
                 className={cn(
@@ -189,24 +254,52 @@ function TypeRow({
           </div>
 
           {/* Scarcity, shown rather than stated. A bar reads at a glance where
-              "1 of 2 available" has to be parsed. */}
+              "1 of 2 available" has to be parsed.
+
+              Editorial counts in marks instead — a rounded meter is a
+              soft-interface device and would be the only one on a ruled page.
+              Filled and hollow squares carry the same ratio in the register of
+              a schedule, and stay legible at a couple of units where a 132px
+              bar showing one-of-two is just a half-filled line. */}
           {!type.soldOut && (
             <div className="mt-3 flex items-center gap-2.5">
-              <span
-                aria-hidden
-                className={cn(
-                  'h-1 w-full max-w-[132px] overflow-hidden rounded-full',
-                  onDark ? 'bg-white/12' : 'bg-neutral-200',
-                )}
-              >
+              {editorial ? (
+                <span aria-hidden className="flex items-center gap-[3px]">
+                  {Array.from({ length: Math.min(type.units.length, 12) }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="block h-[7px] w-[7px]"
+                      style={{
+                        background:
+                          i < type.availableCount
+                            ? onDark ? 'rgba(255,255,255,0.85)' : 'var(--brand)'
+                            : 'transparent',
+                        border: `1px solid ${
+                          i < type.availableCount
+                            ? 'transparent'
+                            : onDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.22)'
+                        }`,
+                      }}
+                    />
+                  ))}
+                </span>
+              ) : (
                 <span
-                  className="block h-full rounded-full"
-                  style={{
-                    background: onDark ? 'rgba(255,255,255,0.75)' : 'var(--brand)',
-                    width: `${Math.round((type.availableCount / Math.max(type.units.length, 1)) * 100)}%`,
-                  }}
-                />
-              </span>
+                  aria-hidden
+                  className={cn(
+                    'h-1 w-full max-w-[132px] overflow-hidden rounded-full',
+                    onDark ? 'bg-white/12' : 'bg-neutral-200',
+                  )}
+                >
+                  <span
+                    className="block h-full rounded-full"
+                    style={{
+                      background: onDark ? 'rgba(255,255,255,0.75)' : 'var(--brand)',
+                      width: `${Math.round((type.availableCount / Math.max(type.units.length, 1)) * 100)}%`,
+                    }}
+                  />
+                </span>
+              )}
               <span className={cn('shrink-0 text-[12px]', muted)}>
                 {type.availableCount} of {type.units.length} available
               </span>
@@ -214,9 +307,23 @@ function TypeRow({
           )}
         </div>
 
-        <div className="shrink-0 text-right">
+        <div className={cn('shrink-0 text-right', editorial && 'self-start')}>
           {price ? (
-            <span className={cn('block text-[19px] font-bold tracking-[-0.01em]', heading)}>
+            <span
+              className={cn(
+                'block',
+                editorial ? 'text-[22px]' : 'text-[19px] font-bold tracking-[-0.01em]',
+                heading,
+              )}
+              style={
+                editorial
+                  ? {
+                      fontFamily: 'var(--tpl-font-heading)',
+                      fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+                    }
+                  : undefined
+              }
+            >
               {price}
             </span>
           ) : (
