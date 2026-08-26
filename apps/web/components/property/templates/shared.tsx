@@ -142,6 +142,68 @@ export function Reveal({
  * rising a fraction of its own size while fading in, so a long name staggers
  * into place without any box that could clip it.
  */
+/**
+ * A hero element that fades up on entry — and is never left invisible if it
+ * doesn't.
+ *
+ * Every hero in this file opened with `initial={{opacity:0}} animate={...}`
+ * and a delay. That pattern has failed repeatedly and in the same way: the
+ * hero mounts during hydration, and if the browser is busy — decoding a large
+ * photograph, running the parallax rAF, mounting a lazily-rendered section —
+ * a delayed animation can be dropped, leaving the element stranded at its
+ * initial opacity. Observed on Editorial's headline, Statement's panels, the
+ * unit typology, and here on Confident's tagline and CTA row.
+ *
+ * The fix is the same one applied to RisingWords: paint at the resting state
+ * first, arm the entrance a frame later. If the animation never runs, the
+ * content is simply there — which is the only acceptable failure mode for a
+ * headline, a price or a call to action.
+ */
+export function HeroReveal({
+  children,
+  delay = 0,
+  y = 14,
+  className,
+  as = 'div',
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  /** Distance to rise from, in px. */
+  y?: number;
+  className?: string;
+  as?: 'div' | 'p' | 'dl';
+}) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setArmed(true));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
+
+  const reduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  const run = armed && !reduced;
+  const Tag = motion[as];
+
+  return (
+    <Tag
+      initial={run ? { opacity: 0, y } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={run ? { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
+      className={className}
+    >
+      {children}
+    </Tag>
+  );
+}
+
 export function RisingWords({
   text,
   className,

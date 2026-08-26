@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, MapPin } from 'lucide-react';
 import type { Property } from '../../../lib/types';
 import { formatPrice, getStatusLabel } from '../../../lib/utils';
-import { HeroMedia, RisingWords, heroFacts, tourBadges, useParallax } from './shared';
+import { HeroMedia, HeroReveal, RisingWords, heroFacts, tourBadges, useParallax } from './shared';
 import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 
 /**
@@ -73,35 +73,26 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
       {overlay && <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/60" />}
 
       <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
+        <HeroReveal delay={0.1} as="p"
           className="mb-5 flex items-center justify-center gap-2 text-[13px] font-medium uppercase tracking-[0.2em] text-white/80"
         >
           <MapPin size={14} />
           {[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
-        </motion.p>
+        </HeroReveal>
 
         <h1 className="text-[42px] leading-[1.08] tracking-tight text-white sm:text-[62px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
           <RisingWords text={property.name} delay={0.15} />
         </h1>
 
         {property.tagline && (
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+          <HeroReveal delay={0.5} as="p"
             className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-white/75"
           >
             {property.tagline}
-          </motion.p>
+          </HeroReveal>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.65 }}
+        <HeroReveal delay={0.65}
           className="mt-9 flex items-center justify-center gap-3"
         >
           <CtaRow ctaLabel={ctaLabel} onDark />
@@ -114,7 +105,7 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
             variant="icon"
             label="Chat with the developer"
           />
-        </motion.div>
+        </HeroReveal>
 
         {/*
           The figures, on a rule below the CTA.
@@ -126,10 +117,7 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
           information Classic carries at its fold, in this template's register.
         */}
         {facts.length > 0 && (
-          <motion.dl
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+          <HeroReveal delay={0.8} as="dl"
             className="mx-auto mt-12 flex max-w-2xl flex-wrap items-baseline justify-center gap-x-12 gap-y-5 border-t border-white/25 pt-7"
           >
             {facts.map((f) => (
@@ -148,7 +136,7 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 </dd>
               </div>
             ))}
-          </motion.dl>
+          </HeroReveal>
         )}
       </div>
     </section>
@@ -172,23 +160,21 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 <RisingWords text={property.name} />
               </h1>
               {property.tagline && (
-                <motion.p
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.45 }}
+                <HeroReveal delay={0.45} as="p"
                   className="mt-6 max-w-lg text-[17px] leading-relaxed text-white/75"
                 >
                   {property.tagline}
-                </motion.p>
+                </HeroReveal>
               )}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="mt-9"
-              >
+              <HeroReveal delay={0.6} className="mt-9 flex items-center gap-3">
                 <CtaRow ctaLabel={ctaLabel} onDark />
-              </motion.div>
+                <ChatWithDeveloper
+                  propertySlug={property.slug}
+                  tone="dark"
+                  variant="icon"
+                  label="Chat with the developer"
+                />
+              </HeroReveal>
             </div>
           </div>
         </div>
@@ -204,11 +190,13 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
       */}
       {facts.length > 0 && (
         <div className="relative z-20 mx-auto -mt-14 w-full max-w-6xl px-6 sm:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.75 }}
-            className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-black/[0.06] shadow-xl shadow-black/10 sm:grid-cols-4"
+          <HeroReveal delay={0.75} y={24}
+            // Columns follow the fact count. Fixed at four, a development
+            // with three figures rendered an empty white cell on the end of
+            // the bar, which reads as a missing value rather than as spacing.
+            className={`grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-black/[0.06] shadow-xl shadow-black/10 ${
+              facts.length >= 4 ? 'sm:grid-cols-4' : facts.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+            }`}
           >
             {facts.map((f) => (
               <div key={f.label} className="bg-white px-6 py-6">
@@ -218,7 +206,7 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 <p className="mt-1.5 text-[17px] font-semibold text-neutral-900">{f.value}</p>
               </div>
             ))}
-          </motion.div>
+          </HeroReveal>
         </div>
       )}
     </section>
@@ -276,10 +264,7 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
             boxed facts bar would compete with it.
           */}
           {facts.length > 0 && (
-            <motion.dl
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.9, delay: 0.5 }}
+            <HeroReveal delay={0.5} as="dl"
               className="mx-auto mt-8 flex max-w-3xl flex-wrap items-baseline justify-center gap-x-10 gap-y-4 sm:mt-10 sm:gap-x-16"
             >
               {facts.map((f) => (
@@ -292,7 +277,7 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
                   </dd>
                 </div>
               ))}
-            </motion.dl>
+            </HeroReveal>
           )}
         </div>
 
@@ -375,16 +360,15 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
         {facts.length > 0 && (
           <div className="absolute right-6 top-1/2 z-10 hidden -translate-y-1/2 flex-col gap-3 lg:flex">
             {facts.map((f, i) => (
-              <motion.div
+              <HeroReveal
                 key={f.label}
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 + i * 0.12 }}
+                delay={0.6 + i * 0.12}
+                y={0}
                 className="w-56 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md"
               >
                 <p className="text-[26px] font-semibold leading-none text-white">{f.value}</p>
                 <p className="mt-2 text-[12px] uppercase tracking-[0.14em] text-white/60">{f.label}</p>
-              </motion.div>
+              </HeroReveal>
             ))}
           </div>
         )}
@@ -448,23 +432,17 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 <RisingWords text={property.name} />
               </h1>
               {property.tagline && (
-                <motion.p
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.45 }}
+                <HeroReveal delay={0.45} as="p"
                   className="mt-5 text-[16px] leading-relaxed text-white/75"
                 >
                   {property.tagline}
-                </motion.p>
+                </HeroReveal>
               )}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
+              <HeroReveal delay={0.6}
                 className="mt-8"
               >
                 <CtaRow ctaLabel={ctaLabel} onDark />
-              </motion.div>
+              </HeroReveal>
             </div>
           </div>
 
@@ -472,7 +450,7 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
           {(unit || plan) && (
             <motion.a
               href="#units"
-              initial={{ opacity: 0, y: 24 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.75 }}
               className="absolute bottom-8 right-8 z-10 hidden w-72 rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] md:block"
@@ -514,43 +492,33 @@ function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
 
       <div className="relative z-10 flex h-full flex-col justify-between px-6 pb-8 pt-32 sm:px-12">
         <div className="mx-auto w-full max-w-7xl">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
+          <HeroReveal delay={0.1} as="p"
             className="mb-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white/70"
           >
             {[property.address?.neighborhood, property.address?.city].filter(Boolean).join(' · ')}
-          </motion.p>
+          </HeroReveal>
           <h1 className="max-w-3xl text-[38px] leading-[1.1] tracking-tight text-white sm:text-[58px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
             <RisingWords text={property.name} />
           </h1>
           {property.tagline && (
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.45 }}
+            <HeroReveal delay={0.45} as="p"
               className="mt-5 max-w-lg text-[16px] leading-relaxed text-white/70"
             >
               {property.tagline}
-            </motion.p>
+            </HeroReveal>
           )}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+          <HeroReveal delay={0.6}
             className="mt-8"
           >
             <CtaRow ctaLabel={ctaLabel} onDark />
-          </motion.div>
+          </HeroReveal>
         </div>
 
         {facts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-6 border-t border-white/20 pt-6 sm:grid-cols-4"
+          <HeroReveal delay={0.8} y={20}
+            className={`mx-auto grid w-full max-w-7xl grid-cols-2 gap-6 border-t border-white/20 pt-6 ${
+              facts.length >= 4 ? 'sm:grid-cols-4' : facts.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+            }`}
           >
             {facts.map((f) => (
               <div key={f.label}>
@@ -558,7 +526,7 @@ function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 <p className="mt-1.5 text-[11px] uppercase tracking-[0.14em] text-white/60">{f.label}</p>
               </div>
             ))}
-          </motion.div>
+          </HeroReveal>
         )}
       </div>
     </section>
@@ -578,7 +546,7 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
 
           <div className="relative z-10 flex h-full flex-col justify-center px-8 sm:px-14">
             <motion.span
-              initial={{ opacity: 0 }}
+              initial={false}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.7 }}
               className="mb-5 w-fit rounded-full border border-white/30 bg-white/15 px-4 py-1.5 text-[12px] font-medium text-white backdrop-blur-sm"
@@ -590,32 +558,23 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
               <RisingWords text={property.name} />
             </h1>
             {property.tagline && (
-              <motion.p
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.45 }}
+              <HeroReveal delay={0.45} as="p"
                 className="mt-5 max-w-md text-[16px] leading-relaxed text-white/75"
               >
                 {property.tagline}
-              </motion.p>
+              </HeroReveal>
             )}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+            <HeroReveal delay={0.6}
               className="mt-8"
             >
               <CtaRow ctaLabel={ctaLabel} onDark />
-            </motion.div>
+            </HeroReveal>
           </div>
         </div>
       </div>
 
       {facts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
+        <HeroReveal delay={0.7} y={20}
           className="mx-auto mt-8 grid max-w-[1360px] grid-cols-1 gap-3 sm:grid-cols-3"
         >
           {facts.map((f) => (
@@ -626,7 +585,7 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
               <p className="mt-1.5 text-[19px] font-semibold text-neutral-900">{f.value}</p>
             </div>
           ))}
-        </motion.div>
+        </HeroReveal>
       )}
     </section>
   );
