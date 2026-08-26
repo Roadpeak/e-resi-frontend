@@ -15,6 +15,7 @@ import { cn } from '../../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { twinsApi, type DigitalTwin } from '../../../lib/api/twins';
 import type { Property, PropertyTour, TourScene } from '../../../lib/types';
+import { deriveRooms, type DerivedRoom } from '../../../lib/tour/rooms';
 
 /**
  * The immersive 3D tour.
@@ -48,6 +49,27 @@ const PRESET_ANCHOR: Record<string, [number, number, number]> = {
   pool: [2.8, 7.2, -2.2],
   gym: [3.6, 1.6, -3.4],
 };
+
+/**
+ * One stop on the tour, whatever it was built from.
+ *
+ * `pos` is null only for legacy scenes, which carry no coordinates — the
+ * viewer falls back to the preset anchors for those and cannot do better,
+ * because the data does not exist.
+ */
+interface Stop {
+  id: string;
+  label: string;
+  caption: string | null;
+  pos: [number, number, number] | null;
+  look: [number, number, number] | null;
+  /** Longest side of the room, for framing. Zero when unknown. */
+  extent: number;
+  sectionId: string;
+  sectionLabel: string;
+  /** Present only on legacy scene stops. */
+  scene?: TourScene;
+}
 
 function anchorFor(scene: TourScene | undefined): [number, number, number] {
   const key = String(scene?.cameraPreset ?? 'interior').toLowerCase();
@@ -141,11 +163,14 @@ function Mesh({
   url,
   scale,
   onMeasured,
+  onRooms,
 }: {
   url: string;
   scale: number;
   /** Reports the model's size so the camera can frame it. */
   onMeasured: (radius: number, centre: THREE.Vector3) => void;
+  /** Reports the rooms read out of the model's own node names. */
+  onRooms?: (rooms: DerivedRoom[]) => void;
 }) {
   const { scene } = useGLTF(url);
 
@@ -189,7 +214,21 @@ function Mesh({
       -centre.z * scale,
     );
     onMeasured(radius, centre);
-  }, [model, scale, onMeasured]);
+
+    /**
+     * Read the rooms *after* positioning.
+     *
+     * deriveRooms measures world-space boxes, and the line above has just
+     * moved the model — measuring before it would hand the camera coordinates
+     * from the model's authored origin, which for a Sketchfab capture can be
+     * anywhere. Updating the world matrices first is what makes the derived
+     * centres the same space the camera flies in.
+     */
+    if (onRooms) {
+      model.updateWorldMatrix(true, true);
+      onRooms(deriveRooms(model));
+    }
+  }, [model, scale, onMeasured, onRooms]);
 
   return <primitive object={model} scale={scale} />;
 }
@@ -208,12 +247,15 @@ function CameraRig({
   target,
   orbit,
   radius,
+  focusExtent = 0,
 }: {
   mode: ViewMode;
   target: [number, number, number] | null;
   orbit: { yaw: number; pitch: number; dist: number };
   /** Bounding radius of whatever is loaded; drives distances and clip planes. */
   radius: number;
+  /** Longest side of the room in focus, so framing suits the room not the block. */
+  focusExtent?: number;
 }) {
   const { camera } = useThree();
   const wantPos = useRef(new THREE.Vector3());
@@ -262,6 +304,27 @@ function CameraRig({
       // Slightly below eye level, so the building fills the frame rather than
       // the sky above it.
       wantLook.current.set(target[0], eye * 0.6, target[2]);
+    } else if (mode === 'dollhouse' && target) {
+      /**
+       * Dollhouse, focused on one room.
+       *
+       * This is what makes a guided tour read as a tour rather than as a
+       * caption changing under a static model. The camera stays outside and
+       * above — the dollhouse view's whole appeal is seeing the plan with the
+       * roof off — but it closes in on the room being described and orbits
+       * around *that*, not around the building's centre.
+       *
+       * Distance is taken from the room's own extent rather than the
+       * building's, so a corridor is framed as tightly as a corridor deserves
+       * and a living room gets the room it needs.
+       */
+      const roomR = Math.max(2.5, (focusExtent || radius * 0.5) * 1.9) * orbit.dist;
+      wantPos.current.set(
+        target[0] + Math.sin(orbit.yaw) * roomR,
+        target[1] + roomR * (0.55 + orbit.pitch * 0.5),
+        target[2] + Math.cos(orbit.yaw) * roomR,
+      );
+      wantLook.current.set(target[0], target[1], target[2]);
     } else if (mode === 'dollhouse') {
       // Far enough out to hold the whole building in frame, whatever its size.
       // Aimed at the model's middle height. It stands on the ground now, so
@@ -385,6 +448,8 @@ function Scene({
   openTag,
   onOpenTag,
   twin,
+  focusExtent,
+  onRooms,
 }: {
   mode: ViewMode;
   target: [number, number, number] | null;
@@ -393,6 +458,10 @@ function Scene({
   openTag: string | null;
   onOpenTag: (id: string | null) => void;
   twin: DigitalTwin | null;
+  /** Longest side of the room in focus, for framing. */
+  focusExtent: number;
+  /** Rooms read out of the model, reported up to build the tour from. */
+  onRooms: (rooms: DerivedRoom[]) => void;
 }) {
   /**
    * Bounding radius of what is on screen.
@@ -405,7 +474,13 @@ function Scene({
 
   return (
     <>
-      <CameraRig mode={mode} target={target} orbit={orbit} radius={radius} />
+      <CameraRig
+        mode={mode}
+        target={target}
+        orbit={orbit}
+        radius={radius}
+        focusExtent={focusExtent}
+      />
 
       <ambientLight intensity={0.75} />
       <directionalLight position={[7, 12, 6]} intensity={1.25} castShadow />
@@ -417,7 +492,7 @@ function Scene({
           downloads rather than blanking the viewer. */}
       {twin ? (
         <Suspense fallback={<Rooms activeRoom={activeRoom} />}>
-          <Mesh url={twin.meshUrl} scale={twin.scale} onMeasured={onMeasured} />
+          <Mesh url={twin.meshUrl} scale={twin.scale} onMeasured={onMeasured} onRooms={onRooms} />
         </Suspense>
       ) : (
         <Rooms activeRoom={activeRoom} />
@@ -485,11 +560,75 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
   const [twinId, setTwinId] = useState<string | null>(null);
   const twin = twins.find((t) => t.id === twinId) ?? twins[0] ?? null;
 
-  /** Every stop in the tour, flattened, plus which section it came from. */
-  const allStops = useMemo(
-    () => sections.flatMap((s) => s.scenes.map((sc) => ({ scene: sc, sectionId: s.id, sectionLabel: s.label }))),
-    [sections],
-  );
+  /** Rooms read out of the loaded model's own node names. */
+  const [rooms, setRooms] = useState<DerivedRoom[]>([]);
+  // Identity-stable, so Mesh's effect does not re-run every render.
+  const handleRooms = useCallback((r: DerivedRoom[]) => setRooms(r), []);
+
+  /**
+   * Every stop in the tour, in order of how much the data is worth trusting.
+   *
+   * 1. Waypoints a person authored. `TwinWaypoint` has carried posX/Y/Z and
+   *    lookX/Y/Z since the schema was written — "where the camera goes and
+   *    what it says there" — and the viewer never read it. Someone who has
+   *    walked the building and placed stops knows better than any heuristic.
+   *
+   * 2. Rooms derived from the model. Every building arrives with its rooms
+   *    named by whoever modelled it, which is enough to build a tour nobody
+   *    had to author. This is what a freshly uploaded model gets.
+   *
+   * 3. The legacy scene list. Photographs and clips arranged as a slideshow,
+   *    which is what a "3D tour" meant before it was geometry. Kept so old
+   *    developments do not lose their tour, but it cannot move a camera —
+   *    a TourScene3D has no coordinates at all, only a cameraPreset enum
+   *    mapping onto seven positions invented for the placeholder flat.
+   */
+  const allStops = useMemo((): Stop[] => {
+    if (twin?.waypoints?.length) {
+      return [...twin.waypoints]
+        .sort((a, b) => a.order - b.order)
+        .map((w) => ({
+          id: w.id,
+          label: w.label,
+          caption: w.caption ?? null,
+          pos: [w.posX, w.posY, w.posZ] as [number, number, number],
+          look:
+            w.lookX === null || w.lookY === null || w.lookZ === null
+              ? null
+              : ([w.lookX, w.lookY, w.lookZ] as [number, number, number]),
+          extent: 0,
+          sectionId: w.route ?? 'all',
+          sectionLabel: w.route ?? '',
+        }));
+    }
+
+    if (rooms.length) {
+      return rooms.map((r) => ({
+        id: r.id,
+        label: r.label,
+        caption: null,
+        pos: r.centre,
+        look: r.centre,
+        extent: r.extent,
+        sectionId: 'all',
+        sectionLabel: '',
+      }));
+    }
+
+    return sections.flatMap((s) =>
+      s.scenes.map((sc) => ({
+        id: sc.id,
+        label: sc.label,
+        caption: sc.description ?? null,
+        pos: null,
+        look: null,
+        extent: 0,
+        sectionId: s.id,
+        sectionLabel: s.label,
+        scene: sc,
+      })),
+    );
+  }, [twin?.waypoints, rooms, sections]);
 
   // 'all' is the full tour; otherwise a single section.
   const [routeId, setRouteId] = useState<string>('all');
@@ -519,7 +658,27 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
   const [orbit, setOrbit] = useState({ yaw: 0.6, pitch: 0.1, dist: 1 });
 
   const current = stops[Math.min(index, Math.max(0, stops.length - 1))];
-  const target = mode === 'walk' ? anchorFor(current?.scene) : null;
+
+  /**
+   * Where the camera is going.
+   *
+   * A stop with real coordinates drives both walk and dollhouse — which is the
+   * whole point, because dollhouse is the mode this viewer opens in and it
+   * previously had no target at all. `target` being null there is what made
+   * Play advance a caption under a camera that never moved.
+   *
+   * Floor plan stays overhead: it is a plan, and a plan that pans is a map.
+   */
+  const target = useMemo<[number, number, number] | null>(() => {
+    if (mode === 'floorplan') return null;
+    if (current?.pos) return current.look ?? current.pos;
+    // Legacy scenes: the preset anchors are all there is, and they only ever
+    // made sense for walk mode against the placeholder plan.
+    return mode === 'walk' ? anchorFor(current?.scene) : null;
+  }, [mode, current]);
+
+  /** How big the room in focus is, so the camera frames it rather than the block. */
+  const focusExtent = current?.extent ?? 0;
 
   // Changing route restarts the tour rather than landing mid-way through a
   // sequence the visitor did not choose.
@@ -538,12 +697,28 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
     setIndex((i) => (stops.length ? (i - 1 + stops.length) % stops.length : 0));
   }, [stops.length]);
 
-  /** Guided playback: hold each stop, then move on. */
+  /**
+   * Guided playback: hold each stop, then move on.
+   *
+   * The count is read through a ref rather than depended on. `stops` is
+   * derived from the rooms the model reports, and that array gets a fresh
+   * identity whenever the mesh re-measures — which re-ran this effect, cleared
+   * the pending timeout and started a new 6s wait every time. The tour sat on
+   * its first stop indefinitely while the Pause button insisted it was
+   * playing. Only `playing` and `index` should restart the hold.
+   */
+  const stopCount = useRef(stops.length);
+  stopCount.current = stops.length;
+
   useEffect(() => {
-    if (!playing || stops.length < 2) return;
-    const t = setTimeout(next, 6000);
+    if (!playing) return;
+    const t = setTimeout(() => {
+      if (stopCount.current < 2) return;
+      setOpenTag(null);
+      setIndex((i) => (i + 1) % stopCount.current);
+    }, 6000);
     return () => clearTimeout(t);
-  }, [playing, index, next, stops.length]);
+  }, [playing, index]);
 
   // Drag to look around, in whichever mode the drag makes sense.
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -601,10 +776,12 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
             mode={mode}
             target={target}
             orbit={orbit}
-            activeRoom={routeId === 'all' ? null : (current?.scene.label ? roomForScene(current.scene.label) : null)}
+            activeRoom={routeId === 'all' ? null : (current?.scene?.label ? roomForScene(current.scene.label) : null)}
             openTag={openTag}
             onOpenTag={setOpenTag}
             twin={twin ?? null}
+            focusExtent={focusExtent}
+            onRooms={handleRooms}
           />
         </Suspense>
       </Canvas>
@@ -716,22 +893,24 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
       <AnimatePresence mode="wait">
         {current && mode !== 'floorplan' && (
           <motion.div
-            key={current.scene.id}
+            key={current.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="pointer-events-none absolute bottom-28 left-5 z-20 max-w-md"
           >
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/55">
-              {current.sectionLabel}
-            </p>
+            {current.sectionLabel && (
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/55">
+                {current.sectionLabel}
+              </p>
+            )}
             <h2 className="mt-1.5 text-[28px] font-semibold leading-tight text-white drop-shadow-lg sm:text-[34px]">
-              {current.scene.label}
+              {current.label}
             </h2>
-            {current.scene.description && (
+            {current.caption && (
               <p className="mt-1.5 max-w-sm text-[14px] leading-relaxed text-white/75 drop-shadow">
-                {current.scene.description}
+                {current.caption}
               </p>
             )}
           </motion.div>
@@ -799,9 +978,9 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
         <div className="flex gap-1 px-5 pb-4">
           {stops.map((s, i) => (
             <button
-              key={s.scene.id}
+              key={s.id}
               onClick={() => { setIndex(i); setOpenTag(null); }}
-              aria-label={`Go to ${s.scene.label}`}
+              aria-label={`Go to ${s.label}`}
               className="group h-1.5 flex-1 cursor-pointer rounded-full bg-white/25 transition-colors hover:bg-white/45"
             >
               <span
@@ -838,7 +1017,7 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
 
             {stops.map((s, i) => (
               <button
-                key={s.scene.id}
+                key={s.id}
                 onClick={() => { setIndex(i); setShowRooms(false); setOpenTag(null); }}
                 className={cn(
                   'flex w-full cursor-pointer items-center gap-3 rounded-xl p-2 text-left transition-colors',
@@ -846,12 +1025,18 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
                 )}
               >
                 <span className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg bg-white/10">
-                  {s.scene.thumbnailUrl && (
+                  {s.scene?.thumbnailUrl ? (
                     <Image src={s.scene.thumbnailUrl} alt="" fill className="object-cover" sizes="64px" />
+                  ) : (
+                    // A room derived from the model has no photograph — its
+                    // index reads better than an empty grey box.
+                    <span className="flex h-full w-full items-center justify-center text-[12px] font-semibold text-white/40">
+                      {i + 1}
+                    </span>
                   )}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium text-white">{s.scene.label}</span>
+                  <span className="block truncate text-[13px] font-medium text-white">{s.label}</span>
                   <span className="block truncate text-[11px] text-white/45">{s.sectionLabel}</span>
                 </span>
               </button>
