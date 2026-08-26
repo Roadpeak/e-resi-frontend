@@ -154,6 +154,41 @@ export function RisingWords({
   delay?: number;
 }) {
   const words = text.split(/\s+/).filter(Boolean);
+
+  /**
+   * Whether the stagger may run at all.
+   *
+   * A mount animation with a per-word delay is fragile in exactly the place
+   * this is used: the hero mounts during hydration, and if the browser is busy
+   * — decoding the hero image, running the parallax rAF — the later words can
+   * be left at their initial opacity indefinitely. The observed failure was a
+   * headline rendering its first word and nothing else, which is worse than any
+   * entrance is good.
+   *
+   * So the animation is opt-in per mount: the words are painted immediately,
+   * and only once the component has confirmed it is alive and the document has
+   * settled does it hand control to the stagger. If that never happens, the
+   * headline is simply there.
+   */
+  const [animate, setAnimate] = useState(false);
+  useEffect(() => {
+    // Two frames: one to let this commit paint, one to be sure the browser is
+    // past it. Cheaper and more reliable than a timeout.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setAnimate(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, []);
+
+  // Respect a reduced-motion preference: the words simply appear.
+  const reduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
   return (
     <span className={className}>
       {words.map((word, i) => (
@@ -171,9 +206,16 @@ export function RisingWords({
         <motion.span
           key={`${word}-${i}`}
           className={`inline-block ${wordClassName ?? ''}`}
-          initial={{ y: '0.35em', opacity: 0 }}
+          // `initial={false}` until the stagger is armed, so the words are
+          // painted at their resting state from the first frame. There is no
+          // window in which a word can be stranded invisible.
+          initial={animate && !reduced ? { y: '0.35em', opacity: 0 } : false}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.85, delay: delay + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+          transition={
+            animate && !reduced
+              ? { duration: 0.85, delay: delay + i * 0.07, ease: [0.16, 1, 0.3, 1] }
+              : { duration: 0 }
+          }
         >
           {word}
           {/*

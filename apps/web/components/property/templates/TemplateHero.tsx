@@ -6,6 +6,7 @@ import { ArrowRight, MapPin } from 'lucide-react';
 import type { Property } from '../../../lib/types';
 import { formatPrice, getStatusLabel } from '../../../lib/utils';
 import { HeroMedia, RisingWords, heroFacts, tourBadges, useParallax } from './shared';
+import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 
 /**
  * Template heroes.
@@ -61,6 +62,8 @@ function CtaRow({
 /** 1 — EDITORIAL: centred headline over full-bleed photography. */
 function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
   const y = useParallax(0.2);
+  // Location is already the eyebrow above the name, so it would be a repeat.
+  const facts = heroFacts(property).filter((f) => f.label !== 'Location');
 
   return (
     <section className="relative flex h-[92vh] min-h-[560px] w-full items-center justify-center overflow-hidden">
@@ -99,10 +102,54 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.65 }}
-          className="mt-9 flex justify-center"
+          className="mt-9 flex items-center justify-center gap-3"
         >
           <CtaRow ctaLabel={ctaLabel} onDark />
+          {/* The one question a buyer has after reading a price, answerable
+              without scrolling. Icon-only so the CTA stays the single filled
+              control on this centred composition. */}
+          <ChatWithDeveloper
+            propertySlug={property.slug}
+            tone="dark"
+            variant="icon"
+            label="Chat with the developer"
+          />
         </motion.div>
+
+        {/*
+          The figures, on a rule below the CTA.
+
+          This hero used to end at the button, so a buyer learned the name and
+          the tagline and had to scroll to find out what the development costs.
+          Editorial is a quiet, centred composition and a facts bar would break
+          it, so these sit as a single hairline-ruled line — the same
+          information Classic carries at its fold, in this template's register.
+        */}
+        {facts.length > 0 && (
+          <motion.dl
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mx-auto mt-12 flex max-w-2xl flex-wrap items-baseline justify-center gap-x-12 gap-y-5 border-t border-white/25 pt-7"
+          >
+            {facts.map((f) => (
+              <div key={f.label} className="text-center">
+                <dt className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/55">
+                  {f.label}
+                </dt>
+                <dd
+                  className="mt-2 text-[21px] text-white"
+                  style={{
+                    fontFamily: 'var(--tpl-font-heading)',
+                    fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+                  }}
+                >
+                  {f.value}
+                </dd>
+              </div>
+            ))}
+          </motion.dl>
+        )}
       </div>
     </section>
   );
