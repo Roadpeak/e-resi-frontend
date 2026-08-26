@@ -537,14 +537,26 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
 
 /** 6 — ARCHITECTURAL: quiet hero, stat row along the base. */
 function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
-  const facts = heroFacts(property);
+  // Location is the eyebrow above the name, so repeating it in the stat row
+  // spent one of four columns restating what the hero already said.
+  const facts = heroFacts(property).filter((f) => f.label !== 'Location');
 
   return (
     <section className="relative h-[90vh] min-h-[560px] w-full overflow-hidden">
       <HeroMedia property={property} />
       {overlay && <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />}
 
-      <div className="relative z-10 flex h-full flex-col justify-between px-6 pb-8 pt-32 sm:px-12">
+      {/*
+        justify-end rather than justify-between.
+
+        The two blocks were pinned to opposite ends of a 90vh box, which on a
+        laptop left a screen-and-a-half of empty scrim between the buttons and
+        the figures. This template is meant to be quiet, not sparse — the
+        content now sits together at the base and lets the photograph have the
+        upper two thirds, which is the point of a hero that "lets the building
+        lead".
+      */}
+      <div className="relative z-10 flex h-full flex-col justify-end gap-12 px-6 pb-8 pt-32 sm:px-12">
         <div className="mx-auto w-full max-w-7xl">
           <HeroReveal delay={0.1} as="p"
             className="mb-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white/70"
@@ -561,10 +573,14 @@ function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
               {property.tagline}
             </HeroReveal>
           )}
-          <HeroReveal delay={0.6}
-            className="mt-8"
-          >
+          <HeroReveal delay={0.6} className="mt-8 flex items-center gap-3">
             <CtaRow ctaLabel={ctaLabel} onDark />
+            <ChatWithDeveloper
+              propertySlug={property.slug}
+              tone="dark"
+              variant="icon"
+              label="Chat with the developer"
+            />
           </HeroReveal>
         </div>
 
