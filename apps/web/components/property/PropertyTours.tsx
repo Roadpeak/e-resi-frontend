@@ -4,8 +4,9 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Navigation } from 'lucide-react';
 import { TourMark, type TourKind } from './TourMarks';
+import { PropertyMediaLightbox, type LightboxTab } from './PropertyMediaLightbox';
 import { cn } from '../../lib/utils';
 
 /**
@@ -30,15 +31,33 @@ import { cn } from '../../lib/utils';
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 interface TourDef {
-  kind: TourKind;
+  /** Undefined for Street view, which draws a lucide icon rather than a mark. */
+  kind?: TourKind;
   /** Two lines: the label a buyer scans, and what it actually is. */
   label: string;
   kicker: string;
   note: string;
-  href: (slug: string) => string;
-  /** Own accent, so the three read as distinct offerings. */
+  /** Tours navigate; Street view opens an overlay instead, and omits this. */
+  href?: (slug: string) => string;
+  /** Own accent, so the panels read as distinct offerings. */
   accent: string;
 }
+
+/**
+ * Street view, as a fourth panel.
+ *
+ * Not a tour we produced — it is Google's imagery of the road outside — so it
+ * takes a plain icon rather than one of the drawn marks, and a cooler,
+ * quieter accent than the three we sell. It earns its place here because a
+ * buyer asking "what is it like there" wants it alongside the tours, not
+ * hidden behind a pill above the photographs.
+ */
+const STREET_VIEW: TourDef = {
+  label: 'Street view',
+  kicker: 'Look around',
+  note: 'See the road outside and the streets around the development, at ground level.',
+  accent: '#6ba3a0',
+};
 
 const TOURS: Record<TourKind, TourDef> = {
   cinematic: {
@@ -75,6 +94,12 @@ export function PropertyTours({
   hasCinematic,
   /** A still to sit behind the panels, when the development has one. */
   backdropUrl,
+  /** Coordinates and area photography, for the Street view panel. */
+  photos = [],
+  areaPhotos = [],
+  latitude,
+  longitude,
+  address,
   className,
 }: {
   propertySlug: string;
@@ -83,10 +108,16 @@ export function PropertyTours({
   hasVR?: boolean;
   hasCinematic?: boolean;
   backdropUrl?: string | null;
+  photos?: string[];
+  areaPhotos?: { id: string; url: string; title?: string | null }[];
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string;
   className?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
-
+  /** Which lightbox tab the Street view panel opened, if any. */
+  const [overlay, setOverlay] = useState<LightboxTab | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -102,7 +133,20 @@ export function PropertyTours({
     ...(hasVR ? (['vr'] as const) : []),
   ];
 
-  if (available.length === 0) return null;
+  /**
+   * Street view belongs here rather than beside the gallery heading.
+   *
+   * It answers the same question the three tours do — what is it actually like
+   * to be there — so burying it as a small pill above the photographs
+   * undersold it. The difference is only in mechanism: the tours navigate to
+   * their own routes, this opens the media overlay in place.
+   */
+  const hasStreet = typeof latitude === 'number' && typeof longitude === 'number';
+
+  // Nothing to show at all.
+  if (available.length === 0 && !hasStreet) return null;
+
+  const panelCount = available.length + (hasStreet ? 1 : 0);
 
   return (
     <section
@@ -131,17 +175,11 @@ export function PropertyTours({
         className="absolute inset-0 bg-gradient-to-b from-[#0b0d11] via-[#0b0d11]/80 to-[#0b0d11]"
       />
 
-      <div className="relative mx-auto max-w-6xl px-6 py-24 sm:px-10 sm:py-32">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          // Animated on mount, not on scroll. An anchor jump to #tours puts
-          // this past the viewport before whileInView can observe it, and the
-          // whole section then sits invisible on a black ground — which is
-          // precisely what it did.
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE }}
-          className="max-w-2xl"
-        >
+      <div className="relative mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+        {/* Not animated in, for the same reason as the panels below: a mount
+            animation on a lazily-mounted section can stall part-way and leave
+            this heading invisible on black. */}
+        <div className="max-w-2xl">
           <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.24em] text-white/40">
             <span className="h-px w-8 bg-white/25" />
             Immersive tours
@@ -154,13 +192,14 @@ export function PropertyTours({
             been captured in full, so you can walk it, watch it and stand inside
             it — without leaving where you are.
           </p>
-        </motion.div>
+        </div>
 
         <div
           className={cn(
             'mt-14 grid gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 sm:mt-16',
-            available.length === 3 && 'lg:grid-cols-3',
-            available.length === 2 && 'sm:grid-cols-2',
+            panelCount === 4 && 'sm:grid-cols-2 lg:grid-cols-4',
+            panelCount === 3 && 'lg:grid-cols-3',
+            panelCount === 2 && 'sm:grid-cols-2',
           )}
         >
           {available.map((kind, i) => (
@@ -169,11 +208,34 @@ export function PropertyTours({
               def={TOURS[kind]}
               slug={propertySlug}
               index={i}
-              solo={available.length === 1}
+              solo={panelCount === 1}
             />
           ))}
+
+          {hasStreet && (
+            <TourPanel
+              def={STREET_VIEW}
+              index={available.length}
+              solo={panelCount === 1}
+              onClick={() => setOverlay('street')}
+            />
+          )}
         </div>
       </div>
+
+      {/* The overlay the Street view panel opens. Rendered once here rather
+          than per panel so only one can ever be mounted. */}
+      <PropertyMediaLightbox
+        open={overlay !== null}
+        onClose={() => setOverlay(null)}
+        initialTab={overlay ?? 'street'}
+        propertyName={propertyName ?? ''}
+        photos={photos.map((url, i) => ({ id: `${i}`, url }))}
+        areaPhotos={areaPhotos}
+        latitude={latitude}
+        longitude={longitude}
+        address={address}
+      />
     </section>
   );
 }
@@ -183,34 +245,37 @@ function TourPanel({
   slug,
   index,
   solo,
+  onClick,
 }: {
   def: TourDef;
-  slug: string;
+  slug?: string;
   index: number;
   solo: boolean;
+  /** Supplied instead of a href when the panel opens an overlay in place. */
+  onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.75, delay: index * 0.12, ease: EASE }}
-      className="relative bg-[#0b0d11]"
-    >
-      <Link
-        href={def.href(slug)}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onFocus={() => setHovered(true)}
-        onBlur={() => setHovered(false)}
-        className={cn(
-          'group relative flex h-full flex-col justify-between gap-10 p-9 outline-none sm:p-11',
-          // A single tour in a full-width panel would strand its content in
-          // the left third of a very wide, very empty box.
-          solo ? 'min-h-[280px] sm:flex-row sm:items-center sm:gap-14 sm:p-14' : 'min-h-[380px]',
-        )}
-      >
+  // A panel either navigates or acts. Rendering the acting one as a <button>
+  // rather than an anchor with a click handler keeps it keyboard-operable and
+  // announced correctly.
+  const interactive = {
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+    onFocus: () => setHovered(true),
+    onBlur: () => setHovered(false),
+    className: cn(
+      'group relative flex h-full w-full flex-col justify-between gap-10 p-9 text-left outline-none sm:p-11',
+      // A single tour in a full-width panel would strand its content in
+      // the left third of a very wide, very empty box.
+      // 380px was taller than the content ever needs, so every panel
+      // carried ~120px of empty ground beneath its link.
+      solo ? 'min-h-[260px] sm:flex-row sm:items-center sm:gap-14 sm:p-14' : 'min-h-[300px]',
+    ),
+  };
+
+  const body = (
+    <>
         {/* The tour's own colour, kept to a wash that lifts on approach rather
             than three saturated panels competing on one dark ground. */}
         <span
@@ -235,8 +300,13 @@ function TourPanel({
             className="origin-left"
           >
             {/* Large enough to read as an object rather than an icon — the
-                whole point of drawing them. */}
-            <TourMark kind={def.kind} size={84} />
+                whole point of drawing them. Street view has no drawn mark, so
+                it takes a plain glyph at a size that still reads as an object. */}
+            {def.kind ? (
+              <TourMark kind={def.kind} size={84} />
+            ) : (
+              <Navigation size={64} strokeWidth={1.1} />
+            )}
           </motion.div>
         </div>
 
@@ -255,14 +325,40 @@ function TourPanel({
           </p>
 
           <span className="mt-6 inline-flex items-center gap-2 text-[13px] font-medium text-white/70 transition-colors group-hover:text-white">
-            Open tour
+            {def.href ? 'Open tour' : 'Look around'}
             <ArrowRight
               size={15}
               className="transition-transform duration-500 group-hover:translate-x-1"
             />
           </span>
         </div>
-      </Link>
+    </>
+  );
+
+  // Not animated in.
+  //
+  // These panels sit in a lazily-mounted, full-bleed section, and a mount
+  // animation with a per-panel delay stalls part-way whenever that mount
+  // happens mid-scroll — leaving tours frozen at opacity 0 on a black ground,
+  // which is indistinguishable from them not existing. The same failure the
+  // unit typology had. The tours are the most expensive thing a developer buys
+  // from us; they render.
+  return (
+    <motion.div
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: EASE }}
+      className="relative bg-[#0b0d11]"
+    >
+      {def.href && slug ? (
+        <Link href={def.href(slug)} {...interactive}>
+          {body}
+        </Link>
+      ) : (
+        <button type="button" onClick={onClick} {...interactive}>
+          {body}
+        </button>
+      )}
     </motion.div>
   );
 }

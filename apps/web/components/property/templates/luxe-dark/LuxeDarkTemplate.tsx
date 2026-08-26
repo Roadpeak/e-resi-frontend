@@ -37,7 +37,7 @@ import {
  * Sections whose component renders its own <section id="…">; the wrapper must
  * not repeat the id, or anchor navigation and scroll-spy break.
  */
-const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals', 'tours']);
+const SELF_ANCHORED = new Set(['rentals', 'tours']);
 
 /** Its own nav: hairline, uppercase, transparent until you leave the hero. */
 function LuxeNav({ property, ctaLabel }: { property: Property; ctaLabel: string }) {
@@ -184,6 +184,11 @@ export function LuxeDarkTemplate({
         hasVR={property.hasVRTour}
         hasCinematic={property.hasCinematicTour}
         backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+        photos={property.galleryImages}
+        areaPhotos={property.areaPhotos}
+        latitude={property.address?.coordinates?.lat}
+        longitude={property.address?.coordinates?.lng}
+        address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
     units: (

@@ -248,8 +248,15 @@ export function surfaceTokens(surface: TemplateSurface): SurfaceTokens {
     };
   }
   return {
-    bg: '#ffffff',
-    panel: '#f7f8fa',
+    // A faintly warm off-white rather than pure #fff.
+    //
+    // Pure white gives a page no depth: every card is the same value as the
+    // ground it sits on, so the only thing separating them is a hairline
+    // border, and the result reads as a wireframe. A ground a couple of points
+    // down from white lets white cards lift off it — the arrangement every
+    // premium property brand uses — and costs nothing but this hex.
+    bg: '#fbfaf9',
+    panel: '#ffffff',
     text: '#18191a',
     muted: 'rgba(24,25,26,0.60)',
     border: 'rgba(0,0,0,0.08)',

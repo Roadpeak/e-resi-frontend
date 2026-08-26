@@ -7,6 +7,7 @@ import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, ArrowRight } 
 import type { Unit } from '../../lib/types';
 import { formatPrice, cn } from '../../lib/utils';
 import { UnitTypeList } from './UnitTypeList';
+import { SectionHeading } from './SectionHeading';
 
 interface Props {
   units: Unit[];
@@ -56,17 +57,75 @@ type View = 'types' | 'all';
 
 export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: Props) {
   const [view, setView] = useState<View>('types');
+  /** Show only what a buyer can still act on. Off by default — hiding stock
+      without being asked would misrepresent the development's size. */
+  const [availableOnly, setAvailableOnly] = useState(false);
 
-  const displayed = units;
+  const statusOf = (u: Unit) => (u.status ?? '').toLowerCase();
+  const availableCount = units.filter((u) => statusOf(u) === 'available').length;
+
+  // The figures that orient a buyer before they read a single row: how much of
+  // this is still for sale, what it costs to get in, and what layouts exist.
+  const availablePrices = units
+    .filter((u) => statusOf(u) === 'available')
+    .map((u) => u.price)
+    .filter((p): p is number => typeof p === 'number' && Number.isFinite(p) && p > 0);
+  const beds = units
+    .map((u) => u.bedrooms)
+    .filter((n): n is number => typeof n === 'number' && Number.isFinite(n));
+  const bedLabel = beds.length
+    ? (() => {
+        const lo = Math.min(...beds);
+        const hi = Math.max(...beds);
+        const one = (n: number) => (n === 0 ? 'Studio' : `${n}`);
+        return lo === hi ? one(lo) : `${one(lo)}–${hi}`;
+      })()
+    : null;
+
+  const filtered = availableOnly
+    ? units.filter((u) => statusOf(u) === 'available')
+    : units;
+  const displayed = filtered;
+
+  const summary = [
+    { value: `${availableCount}`, label: availableCount === 1 ? 'Unit available' : 'Units available' },
+    ...(availablePrices.length
+      ? [{ value: formatPrice(Math.min(...availablePrices), currency), label: 'Starting from' }]
+      : []),
+    ...(bedLabel ? [{ value: bedLabel, label: 'Bedrooms' }] : []),
+  ];
 
   return (
     <section id="units" className="scroll-mt-24">
-      <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Availability</p>
-          <h2 className="text-3xl font-semibold text-gray-900">Units & Pricing</h2>
+      <SectionHeading eyebrow="Availability" title="Units & Pricing" className="mb-7" />
+
+      {/*
+        A summary before the list.
+
+        The section used to open straight onto rows, so a buyer had to read and
+        total them to answer the two questions they came with — is there
+        anything left, and what does it start at. Stating that up front means
+        the list becomes something they browse rather than something they have
+        to parse.
+      */}
+      {availableCount > 0 && (
+        <div className="mb-6 flex flex-wrap gap-x-12 gap-y-4 rounded-2xl border border-gray-200/80 bg-white px-7 py-6">
+          {summary.map((s) => (
+            <div key={s.label}>
+              <p className="text-[26px] font-medium leading-none tracking-[-0.02em] text-gray-900">
+                {s.value}
+              </p>
+              <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.1em] text-gray-400">
+                {s.label}
+              </p>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-1">
+      )}
+
+      {/* Controls: how to group, and whether to hide what is gone. */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1">
           {([
             { key: 'types' as View, label: 'By type' },
             { key: 'all' as View, label: `All units (${units.length})` },
@@ -76,18 +135,38 @@ export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: P
               onClick={() => setView(v.key)}
               className={cn(
                 'rounded-lg px-4 py-1.5 text-sm font-medium transition-all cursor-pointer',
-                view === v.key ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900',
+                view !== v.key && 'text-gray-500 hover:text-gray-900',
               )}
+              // The developer's colour, not the platform's indigo.
+              style={
+                view === v.key
+                  ? { backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }
+                  : undefined
+              }
             >
               {v.label}
             </button>
           ))}
         </div>
+
+        {/* Only offered when it would change anything. */}
+        {availableCount > 0 && availableCount < units.length && (
+          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-gray-600">
+            <input
+              type="checkbox"
+              checked={availableOnly}
+              onChange={(e) => setAvailableOnly(e.target.checked)}
+              className="h-4 w-4 cursor-pointer"
+              style={{ accentColor: 'var(--brand)' }}
+            />
+            Show available only
+          </label>
+        )}
       </div>
 
       {view === 'types' && (
         <UnitTypeList
-          units={units}
+          units={filtered}
           propertySlug={propertySlug}
           currency={currency}
           priceDisplay={priceDisplay}

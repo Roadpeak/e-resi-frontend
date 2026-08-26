@@ -59,11 +59,10 @@ export function UnitTypeList({
 
   return (
     <div className={cn('space-y-3', className)}>
-      {types.map((type, i) => (
+      {types.map((type) => (
         <TypeRow
           key={type.key}
           type={type}
-          index={i}
           propertySlug={propertySlug}
           display={priceDisplayFor(type.key, priceDisplay)}
           currency={currency}
@@ -77,7 +76,6 @@ export function UnitTypeList({
 
 function TypeRow({
   type,
-  index,
   propertySlug,
   display,
   currency,
@@ -85,7 +83,6 @@ function TypeRow({
   radius,
 }: {
   type: ReturnType<typeof groupUnitsByType>[number];
-  index: number;
   propertySlug: string;
   display: PriceDisplay;
   currency?: string | null;
@@ -105,13 +102,21 @@ function TypeRow({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      // Animated on mount rather than on scroll. whileInView never fires for a
-      // row that is already past the viewport when the page jumps to an anchor
-      // — which is exactly how a buyer arrives here, via the "Units" nav link —
-      // leaving the whole typology stranded at opacity 0.
-      animate={{ opacity: type.soldOut ? 0.65 : 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      // Not animated in or out.
+      //
+      // This list is the point of the page — it is what a buyer scrolls to and
+      // what the "Units" nav link jumps to — so it must be legible the instant
+      // it is on screen, under every arrival path. Both animation strategies
+      // failed it: whileInView never fired when an anchor jump put the rows
+      // past the viewport, and a mount animation stalled part-way whenever the
+      // rows mounted lazily mid-scroll, freezing the typology at partial
+      // opacity. A price list that sometimes does not appear is worse than one
+      // that never fades in, so it simply renders.
+      //
+      // Sold-out types are still dimmed, as state rather than as animation.
+      initial={false}
+      animate={{ opacity: type.soldOut ? 0.65 : 1 }}
+      transition={{ duration: 0.2 }}
       className={cn(
         'overflow-hidden border transition-colors',
         radius,
@@ -123,12 +128,38 @@ function TypeRow({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center gap-4 p-5 text-left"
+        className={cn(
+          'flex w-full items-center gap-4 p-5 text-left transition-colors sm:gap-5',
+          onDark ? 'hover:bg-white/[0.03]' : 'hover:bg-neutral-50',
+        )}
       >
+        {/* A bedroom-count mark, so the eye can run the list by type without
+            reading. Rows of pure text made the most commercially important
+            section on the page the flattest thing on it. */}
+        <span
+          aria-hidden
+          className="hidden h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl text-[15px] font-bold leading-none sm:flex"
+          style={
+            onDark
+              ? { background: 'rgba(255,255,255,0.07)', color: '#fff' }
+              : {
+                  background: 'color-mix(in srgb, var(--brand) 9%, white)',
+                  color: 'var(--brand)',
+                }
+          }
+        >
+          {type.bedrooms === 0 ? 'St' : type.bedrooms}
+          <span
+            className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-70"
+          >
+            {type.bedrooms === 0 ? 'udio' : 'bed'}
+          </span>
+        </span>
+
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className={cn('text-[17px] font-semibold', heading)}>{type.label}</span>
-            {type.soldOut ? (
+            {type.soldOut && (
               <span
                 className={cn(
                   'rounded-full border px-2 py-0.5 text-[11px] font-medium',
@@ -136,10 +167,6 @@ function TypeRow({
                 )}
               >
                 Sold out
-              </span>
-            ) : (
-              <span className={cn('text-[13px]', muted)}>
-                {type.availableCount} of {type.units.length} available
               </span>
             )}
           </div>
@@ -160,15 +187,45 @@ function TypeRow({
               </span>
             )}
           </div>
+
+          {/* Scarcity, shown rather than stated. A bar reads at a glance where
+              "1 of 2 available" has to be parsed. */}
+          {!type.soldOut && (
+            <div className="mt-3 flex items-center gap-2.5">
+              <span
+                aria-hidden
+                className={cn(
+                  'h-1 w-full max-w-[132px] overflow-hidden rounded-full',
+                  onDark ? 'bg-white/12' : 'bg-neutral-200',
+                )}
+              >
+                <span
+                  className="block h-full rounded-full"
+                  style={{
+                    background: onDark ? 'rgba(255,255,255,0.75)' : 'var(--brand)',
+                    width: `${Math.round((type.availableCount / Math.max(type.units.length, 1)) * 100)}%`,
+                  }}
+                />
+              </span>
+              <span className={cn('shrink-0 text-[12px]', muted)}>
+                {type.availableCount} of {type.units.length} available
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="shrink-0 text-right">
           {price ? (
-            <span className={cn('block text-[17px] font-semibold', heading)}>{price}</span>
+            <span className={cn('block text-[19px] font-bold tracking-[-0.01em]', heading)}>
+              {price}
+            </span>
           ) : (
             <span className={cn('block text-[13px]', muted)}>Price on request</span>
           )}
-          <span className={cn('mt-0.5 inline-flex items-center gap-1 text-[12px]', muted)}>
+          <span
+            className="mt-1 inline-flex items-center gap-1 text-[12px] font-medium"
+            style={{ color: onDark ? 'rgba(255,255,255,0.7)' : 'var(--brand)' }}
+          >
             {open ? 'Hide' : 'See'} {type.units.length === 1 ? 'unit' : `${type.units.length} units`}
             <ChevronDown
               size={13}

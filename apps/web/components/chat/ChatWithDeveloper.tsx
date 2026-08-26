@@ -15,10 +15,25 @@ export function ChatWithDeveloper({
   propertySlug,
   rentListingSlug,
   className = '',
+  tone = 'light',
+  variant = 'button',
+  label = 'Chat with developer',
 }: {
   propertySlug?: string;
   rentListingSlug?: string;
   className?: string;
+  /**
+   * Dark grounds — the hero photograph, dark templates — need the inverse
+   * treatment. The light styling is a white pill, which over a render reads as
+   * a second primary action competing with the actual CTA beside it.
+   */
+  tone?: 'light' | 'dark';
+  /**
+   * `icon` is a square glyph-only control, for places where a full pill would
+   * crowd the layout. It keeps an accessible name via aria-label and title.
+   */
+  variant?: 'button' | 'icon';
+  label?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,17 +60,52 @@ export function ChatWithDeveloper({
     }
   }
 
+  const onDark = tone === 'dark';
+  const Glyph = busy ? Loader2 : MessageCircle;
+
+  if (variant === 'icon') {
+    return (
+      <div className={className}>
+        <button
+          onClick={start}
+          disabled={busy}
+          aria-label={label}
+          title={label}
+          className={`inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:opacity-60 ${
+            onDark
+              ? // Stronger than a 10% wash. This can land on a bright sky as
+                // easily as on a dark façade, so it carries its own ground
+                // rather than relying on the photograph behind it.
+                'border-white/40 bg-black/35 text-white backdrop-blur-md hover:border-white/70 hover:bg-black/50'
+              : 'border-[#dadce0] bg-white text-[#1a73e8] hover:bg-[#f8fbff]'
+          }`}
+        >
+          <Glyph size={19} className={busy ? 'animate-spin' : undefined} />
+        </button>
+        {error && (
+          <p className={`mt-2 text-sm ${onDark ? 'text-red-300' : 'text-[#c5221f]'}`}>{error}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <button
         onClick={start}
         disabled={busy}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#dadce0] bg-white px-6 py-3 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer disabled:opacity-60"
+        className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-6 py-3 text-[15px] font-medium transition-colors disabled:opacity-60 ${
+          onDark
+            ? 'border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20'
+            : 'border-[#dadce0] bg-white text-[#1a73e8] hover:bg-[#f8fbff]'
+        }`}
       >
-        {busy ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />}
-        Chat with developer
+        <Glyph size={16} className={busy ? 'animate-spin' : undefined} />
+        {label}
       </button>
-      {error && <p className="mt-2 text-sm text-[#c5221f]">{error}</p>}
+      {error && (
+        <p className={`mt-2 text-sm ${onDark ? 'text-red-300' : 'text-[#c5221f]'}`}>{error}</p>
+      )}
     </div>
   );
 }

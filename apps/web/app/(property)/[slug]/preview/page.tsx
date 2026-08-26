@@ -6,8 +6,6 @@ import { PropertyHero } from '../../../../components/property/PropertyHero';
 import { PropertyOverview } from '../../../../components/property/PropertyOverview';
 import { PropertyGallery } from '../../../../components/property/PropertyGallery';
 import { PropertyTours } from '../../../../components/property/PropertyTours';
-import { PropertyViewer3D } from '../../../../components/property/PropertyViewer3D';
-import { PropertyCinematicPreview } from '../../../../components/property/PropertyCinematicPreview';
 import { PropertyFloorPlans } from '../../../../components/property/PropertyFloorPlans';
 import { PropertyUnits } from '../../../../components/property/PropertyUnits';
 import { PropertyLocation } from '../../../../components/property/PropertyLocation';
@@ -62,7 +60,7 @@ const list = (v: string | string[] | undefined) =>
 
 /** Mirrors the public page — components that own their anchor id. */
 const SELF_ANCHORED = new Set([
-  'gallery', 'tours', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
+  'gallery', 'tours', 'floorplans', 'units', 'location', 'construction', 'booking',
 ]);
 
 /** Mirrors the public page — sections that span the viewport. */
@@ -142,10 +140,13 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
         hasVR={property.hasVRTour}
         hasCinematic={property.hasCinematicTour}
         backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+        photos={property.galleryImages}
+        areaPhotos={property.areaPhotos}
+        latitude={property.address?.coordinates?.lat}
+        longitude={property.address?.coordinates?.lng}
+        address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
-    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
-    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
     units: (
       <PropertyUnits
@@ -188,6 +189,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            unitPriceDisplay={branding.unitPriceDisplay}
           />
         ) : (
           <KitTemplate
@@ -198,6 +200,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            unitPriceDisplay={branding.unitPriceDisplay}
           />
         )}
       </main>

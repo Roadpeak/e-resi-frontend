@@ -1,13 +1,13 @@
 'use client';
 
-import Image from 'next/image';
 import type { MouseEvent } from 'react';
+import { PropertyMonogram } from './PropertyMonogram';
 import { motion } from 'framer-motion';
 import {
   Building2, CalendarCheck2, BedDouble, Maximize2, CheckCircle2, MapPin,
 } from 'lucide-react';
 import type { Property, Unit } from '../../lib/types';
-import { formatPrice, formatCompletionDate, pluralize, cn } from '../../lib/utils';
+import { formatPrice, formatCompletionDate, pluralize } from '../../lib/utils';
 import { ChatWithDeveloper } from '../chat/ChatWithDeveloper';
 
 interface Props { property: Property }
@@ -26,13 +26,15 @@ function ProgressRing({ value }: { value: number }) {
           cy="36"
           r={r}
           fill="none"
-          stroke="#6172f3"
+          stroke="var(--brand)"
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           whileInView={{ strokeDashoffset: c * (1 - Math.min(value, 100) / 100) }}
-          viewport={{ once: true }}
+          // Already on screen at first paint on a tall viewport, so it needs
+          // amount: 0 to fire at all — otherwise the ring reads as 0%.
+          viewport={{ once: true, amount: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
         />
       </svg>
@@ -65,7 +67,21 @@ function MiniDonut({ pct, color }: { pct: number; color: string }) {
   );
 }
 
-const DONUT_COLORS = ['#6172f3', '#f59e0b', '#eab308', '#8098fa'];
+/**
+ * Availability donuts, in one hue at four strengths.
+ *
+ * Was ['#6172f3', '#f59e0b', '#eab308', '#8098fa'] — the platform's indigo,
+ * two unrelated yellows and a periwinkle, which put four disagreeing colours
+ * in one small card on a page that already carries the developer's own. These
+ * are the developer's colour, stepped down: the donuts differ by weight rather
+ * than by hue, which is what makes a set of figures read as one control.
+ */
+const DONUT_COLORS = [
+  'var(--brand)',
+  'color-mix(in srgb, var(--brand) 72%, white)',
+  'color-mix(in srgb, var(--brand) 48%, white)',
+  'color-mix(in srgb, var(--brand) 30%, white)',
+];
 
 // ── Overview ──────────────────────────────────
 
@@ -139,9 +155,9 @@ export function PropertyOverview({ property }: Props) {
   // steps of the platform blue separate them just as well and stop the page
   // looking like three designs at once.
   const segments = [
-    { key: 'Sold', count: counts.sold, bar: 'bg-brand-700', dot: 'bg-brand-700' },
-    { key: 'Reserved', count: counts.reserved, bar: 'bg-brand-400', dot: 'bg-brand-400' },
-    { key: 'Available', count: counts.available, bar: 'bg-brand-200', dot: 'bg-brand-200' },
+    { key: 'Sold', count: counts.sold, fill: 'color-mix(in srgb, var(--brand) 100%, black 22%)' },
+    { key: 'Reserved', count: counts.reserved, fill: 'var(--brand)' },
+    { key: 'Available', count: counts.available, fill: 'color-mix(in srgb, var(--brand) 32%, white)' },
   ];
 
   // Unit availability by bedroom type
@@ -187,34 +203,80 @@ export function PropertyOverview({ property }: Props) {
   };
 
   return (
+    <div>
+      {/*
+        Stat tiles span the full width, above the split.
+
+        Inside the left column they were squeezed into two-thirds of the page
+        while the sticky rail beside them ran on — which is what opened the
+        band of dead white this section was known for. Full width they read as
+        a summary bar under the hero, and the columns below start level.
+      */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-10 flex flex-wrap overflow-hidden rounded-2xl border border-gray-200 bg-white lg:mb-12"
+      >
+        {stats.map(({ icon: Icon, value, label }) => (
+          <div
+            key={label}
+            className="flex min-w-[150px] flex-1 items-center gap-3 border-r border-gray-100 px-5 py-4 last:border-r-0"
+          >
+            {/* No chip behind it. A tinted rounded square around every small
+                glyph adds a second shape to read and makes a row of stats look
+                like a row of buttons; the icon on its own is quieter and the
+                figure beside it is what carries the meaning. */}
+            <Icon size={17} strokeWidth={1.6} className="shrink-0 text-gray-900" />
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900">{value}</p>
+              <p className="text-xs text-gray-400">{label}</p>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-14">
-      {/* ── LEFT: identity, price, stats, story ── */}
+      {/* ── LEFT: the story ── */}
+      {/*
+        Animated on mount, not on scroll — the same fix UnitTypeList and
+        PropertyTours already carry. whileInView leaves an element latched at
+        opacity 0 whenever its observer resolves while the block is off screen
+        (an anchor jump, a restored scroll position, or simply sitting below a
+        tall hero), and `once: true` makes that permanent. The overview is the
+        first thing under the fold, so it hit this every load.
+      */}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="lg:col-span-2"
       >
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{property.name}</h1>
-        <p className="mt-2 flex items-start gap-1.5 text-gray-500">
-          <MapPin size={15} className="mt-1 shrink-0 text-gray-400" />
+        {/*
+          No name, address, price or CTA here.
+
+          The hero above now carries all four over the photograph. Repeating
+          them a few hundred pixels later gave every visitor the same headline
+          twice.
+        */}
+
+        {/* Tagline + description */}
+        <p
+          className="mt-9 text-[22px] font-semibold leading-snug tracking-[-0.01em] text-gray-900 sm:text-[26px]"
+          style={{ fontFamily: 'var(--brand-font-heading)' }}
+        >
+          {property.tagline}
+        </p>
+        <p className="mt-4 max-w-[62ch] text-[16px] leading-[1.75] text-gray-600">
+          {property.description}
+        </p>
+
+        <p className="mt-6 flex items-start gap-1.5 text-[14px] text-gray-500">
+          <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
           <span>{fullAddress}</span>
         </p>
 
-        {/* Price + CTA row */}
-        <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">From</p>
-            <p className="text-3xl font-bold text-gray-900">
-              {formatPrice(property.priceFrom, property.currency)}
-              {property.priceTo > property.priceFrom && (
-                <span className="ml-2 text-base font-medium text-gray-400">
-                  – {formatPrice(property.priceTo, property.currency)}
-                </span>
-              )}
-            </p>
-          </div>
+        <div className="mt-7 flex flex-wrap items-center gap-3">
           <a
             href="#booking"
             onClick={scrollToBooking}
@@ -225,46 +287,73 @@ export function PropertyOverview({ property }: Props) {
           <ChatWithDeveloper propertySlug={property.slug} className="inline-flex" />
         </div>
 
-        {/* Stat tiles */}
-        <div className="mt-8 flex flex-wrap overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          {stats.map(({ icon: Icon, value, label }) => (
-            <div
-              key={label}
-              className="flex min-w-[150px] flex-1 items-center gap-3 border-r border-gray-100 px-5 py-4 last:border-r-0"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500">
-                <Icon size={16} />
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-gray-900">{value}</p>
-                <p className="text-xs text-gray-400">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tagline + description */}
-        <p className="mt-10 text-lg font-semibold text-gray-900">{property.tagline}</p>
-        <p className="mt-4 leading-relaxed text-gray-500">{property.description}</p>
-
         {/* ✳ features */}
         {featureItems.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-            {featureItems.map((feat) => (
-              <div key={feat} className="flex items-start gap-2 text-sm text-gray-600">
-                <span aria-hidden className="leading-5 text-brand-500">✳</span>
-                <span>{feat}</span>
-              </div>
-            ))}
+          <div className="mt-10 border-t border-gray-100 pt-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+              What this development has
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+              {featureItems.map((feat) => (
+                <div key={feat} className="flex items-start gap-2 text-[14px] text-gray-600">
+                  <span aria-hidden className="leading-5" style={{ color: 'var(--brand)' }}>✳</span>
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/*
+          Who is building it, in the story column rather than the rail.
+
+          It belongs with the narrative — a buyer reads the pitch and then asks
+          who is behind it. Keeping it here also stops the sticky rail running
+          past the bottom of this column on developments with no feature list,
+          which is what left a band of dead white beside the description.
+        */}
+        {property.developer?.name && (
+          <div className="mt-10 flex items-start gap-4 border-t border-gray-100 pt-8">
+            <PropertyMonogram
+              name={property.developer.name}
+              logoUrl={property.developer.logoUrl}
+              size={48}
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                Developer
+              </p>
+              <p className="mt-1.5 text-[15px] font-semibold text-gray-900">
+                {property.developer.name}
+              </p>
+              {(() => {
+                const est = property.developer?.establishedYear;
+                const done = property.developer?.completedProjects ?? 0;
+                const bits = [
+                  est ? `Est. ${est}` : null,
+                  done > 0 ? `${pluralize(done, 'project')} completed` : null,
+                ].filter(Boolean);
+                return bits.length ? (
+                  <p className="mt-0.5 text-[13px] text-gray-500">{bits.join(' · ')}</p>
+                ) : null;
+              })()}
+              {property.developer.description && (
+                <p className="mt-2.5 max-w-[52ch] text-[14px] leading-relaxed text-gray-600">
+                  {property.developer.description}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </motion.div>
 
       {/* ── RIGHT rail ── */}
+      {/* Mount-animated for the same reason as the column beside it — and
+          doubly so here, because a sticky element that never un-hides leaves
+          the page looking like it lost a third of its content. */}
       <motion.aside
         initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
         className="space-y-5 self-start lg:sticky lg:top-24"
       >
@@ -286,8 +375,16 @@ export function PropertyOverview({ property }: Props) {
             </div>
           </div>
 
-          {/* Segmented bar */}
-          <div className="mt-5 flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-gray-100">
+          {/*
+            The ring above reports construction; this bar reports sales. Two
+            different measures in one card read as one — a 100% ring over a
+            half-filled bar looked like a rendering fault. The label says which
+            is which.
+          */}
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Unit sales
+          </p>
+          <div className="mt-2.5 flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-gray-100">
             {segments.map(
               (s) =>
                 s.count > 0 && (
@@ -295,9 +392,14 @@ export function PropertyOverview({ property }: Props) {
                     key={s.key}
                     initial={{ width: 0 }}
                     whileInView={{ width: `${(s.count / segTotal) * 100}%` }}
-                    viewport={{ once: true }}
+                    // amount: 0 for the same reason Reveal needs it — this bar
+                    // sits high enough to be on screen at first paint, and a
+                    // default threshold never fires for an element that was
+                    // already visible, leaving it stuck at width 0.
+                    viewport={{ once: true, amount: 0 }}
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                    className={cn('h-full', s.bar)}
+                    className="h-full"
+                    style={{ background: s.fill }}
                   />
                 ),
             )}
@@ -305,7 +407,7 @@ export function PropertyOverview({ property }: Props) {
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
             {segments.map((s) => (
               <span key={s.key} className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span className={cn('h-2 w-2 rounded-full', s.dot)} />
+                <span className="h-2 w-2 rounded-full" style={{ background: s.fill }} />
                 {s.key} {s.count}
               </span>
             ))}
@@ -323,7 +425,8 @@ export function PropertyOverview({ property }: Props) {
                   key={g.bedrooms}
                   className="flex items-center gap-3 border-b border-gray-100 py-3.5 last:border-b-0"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                    style={{ background: 'color-mix(in srgb, var(--brand) 10%, white)', color: 'var(--brand)' }}>
                     {g.initial}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -345,36 +448,11 @@ export function PropertyOverview({ property }: Props) {
             </p>
           )}
 
-          {/* Developer */}
-          <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-5">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-500">
-              {property.developer?.logoUrl ? (
-                <Image
-                  src={property.developer.logoUrl}
-                  alt={property.developer.name ?? 'Developer'}
-                  fill
-                  className="object-contain p-1.5"
-                  sizes="40px"
-                />
-              ) : (
-                (property.developer?.name ?? '?')
-                  .split(' ')
-                  .map((w) => w[0])
-                  .join('')
-                  .slice(0, 2)
-                  .toUpperCase()
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">{property.developer?.name ?? '—'}</p>
-              <p className="text-xs text-gray-500">
-                {property.developer?.establishedYear ? `Est. ${property.developer.establishedYear} · ` : ''}
-                {pluralize(property.developer?.completedProjects ?? 0, 'project')} completed
-              </p>
-            </div>
-          </div>
+          {/* The developer now sits in the story column, where a buyer looks
+              for it after reading the pitch. */}
         </div>
       </motion.aside>
+    </div>
     </div>
   );
 }

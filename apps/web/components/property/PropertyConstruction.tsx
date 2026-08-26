@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Calendar } from 'lucide-react';
 import type { ConstructionUpdate } from '../../lib/types';
+import { SectionHeading } from './SectionHeading';
 import { formatDate } from '../../lib/utils';
 
 interface Props { updates: ConstructionUpdate[] }
@@ -13,21 +14,28 @@ export function PropertyConstruction({ updates }: Props) {
 
   return (
     <section id="construction" className="scroll-mt-24">
-      <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Construction</p>
-      <div className="mb-8 flex items-end justify-between">
-        <h2 className="text-3xl font-semibold text-gray-900">Development Progress</h2>
-        <div className="text-right">
-          <p className="text-3xl font-semibold text-gray-900">{latest?.percentComplete}%</p>
-          <p className="text-xs text-gray-500">Overall completion</p>
-        </div>
-      </div>
+      <SectionHeading
+        eyebrow="Construction"
+        title="Development Progress"
+        actions={
+          <div className="text-right">
+            <p className="text-[32px] font-medium leading-none tracking-[-0.02em] text-gray-900">
+              {latest?.percentComplete}%
+            </p>
+            <p className="mt-1.5 text-[12px] text-gray-500">Overall completion</p>
+          </div>
+        }
+      />
 
       {/* Progress bar */}
       <div className="mb-12 h-2 overflow-hidden rounded-full bg-gray-200">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${latest?.percentComplete ?? 0}%` }}
-          viewport={{ once: true }}
+          // amount: 0 — a default threshold silently skips the animation for a
+          // bar that is already in view, which showed a 100% development as an
+          // empty track.
+          viewport={{ once: true, amount: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
         />

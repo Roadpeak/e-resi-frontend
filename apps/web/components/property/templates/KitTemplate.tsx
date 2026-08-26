@@ -35,7 +35,7 @@ import {
  * silently break getElementById scroll targets and the nav's scroll-spy, which
  * is exactly what happened when the shared tour players were added.
  */
-const SELF_ANCHORED = new Set(['viewer3d', 'cinematic', 'rentals', 'tours']);
+const SELF_ANCHORED = new Set(['rentals', 'tours']);
 
 /** Sections that span the viewport rather than the centred column. */
 const FULL_BLEED = new Set(['tours']);
@@ -260,6 +260,11 @@ export function KitTemplate({
         hasVR={property.hasVRTour}
         hasCinematic={property.hasCinematicTour}
         backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+        photos={property.galleryImages}
+        areaPhotos={property.areaPhotos}
+        latitude={property.address?.coordinates?.lat}
+        longitude={property.address?.coordinates?.lng}
+        address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
     units: (

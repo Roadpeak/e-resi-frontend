@@ -12,6 +12,7 @@ import { Input } from '../ui/Input';
 import { cn } from '../../lib/utils';
 import { bookingsApi } from '../../lib/api/bookings';
 import { ApiError } from '../../lib/api/client';
+import { track } from '../../lib/analytics/track';
 
 const schema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -51,6 +52,13 @@ export function PropertyBooking({ property }: Props) {
         message: data.message,
       });
       setSubmitted(true);
+      // Mirrors the shared useBooking hook: a filed booking must show up in
+      // the developer's dashboard whichever template took it.
+      track({
+        type: 'BOOKING_SUBMITTED',
+        propertyId: property.id,
+        metadata: { viewingType: data.type === 'virtual' ? 'VIRTUAL' : 'PHYSICAL' },
+      });
     } catch (err) {
       if (err instanceof ApiError) {
         setServerError(err.message);
@@ -65,40 +73,58 @@ export function PropertyBooking({ property }: Props) {
       <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-5">
           {/* Left panel */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-950 p-8 lg:col-span-2">
-            {/* Glow */}
-            <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-brand-600/20 blur-3xl pointer-events-none" />
+          {/*
+            A near-black ground with the developer's colour as the accent.
+
+            It used to be a gradient of brand-900 → brand-950, which are the
+            *platform's* indigo-violet steps — so a development branded blue
+            got a violet slab here, and one branded maroon would get the same
+            violet. Neutral ink lets any brand colour sit on it, and reads more
+            expensive than a saturated panel besides: the luxury convention is
+            restraint in the ground and colour only where it means something.
+          */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#15171c] to-[#0b0d11] p-8 lg:col-span-2">
+            {/* A wash of the developer's own colour, not the platform's. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full opacity-20 blur-3xl"
+              style={{ background: 'var(--brand)' }}
+            />
 
             <div className="relative">
-              <p className="mb-2 text-xs font-medium uppercase tracking-widest text-brand-400">Get in touch</p>
-              <h2 className="text-2xl font-semibold text-white">Book a Viewing</h2>
+              <p
+                className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em]"
+                style={{ color: 'var(--brand)' }}
+              >
+                Get in touch
+              </p>
+              <h2
+                className="text-[28px] font-medium leading-[1.1] tracking-[-0.025em] text-white"
+                style={{ fontFamily: 'var(--brand-font-heading)' }}
+              >
+                Book a Viewing
+              </h2>
               <p className="mt-3 text-sm text-white/50 leading-relaxed">
                 Schedule a physical or virtual tour of {property.name}. Our team will confirm your booking within 24 hours.
               </p>
 
               <div className="mt-8 space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20">
-                    <CheckCircle2 size={15} className="text-brand-400" />
-                  </div>
+                  <CheckCircle2 size={17} strokeWidth={1.6} className="mt-0.5 shrink-0 text-white" />
                   <div>
                     <p className="text-sm font-medium text-white">Confirmed in 24hrs</p>
                     <p className="text-xs text-white/40">Quick response from the developer</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20">
-                    <Video size={15} className="text-brand-400" />
-                  </div>
+                  <Video size={17} strokeWidth={1.6} className="mt-0.5 shrink-0 text-white" />
                   <div>
                     <p className="text-sm font-medium text-white">Virtual or Physical</p>
                     <p className="text-xs text-white/40">Your choice of tour format</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20">
-                    <MapPin size={15} className="text-brand-400" />
-                  </div>
+                  <MapPin size={17} strokeWidth={1.6} className="mt-0.5 shrink-0 text-white" />
                   <div>
                     <p className="text-sm font-medium text-white">{property.address.neighborhood}, {property.address.city}</p>
                     <p className="text-xs text-white/40">On-site or online</p>
@@ -221,7 +247,21 @@ export function PropertyBooking({ property }: Props) {
                   </div>
                 </div>
 
-                <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
+                {/*
+                  The developer's colour, overriding the shared Button's
+                  platform indigo. This is the mini-site's primary conversion
+                  control, so it has to be the same blue as the navbar CTA
+                  above it — two different blues on one screen is the single
+                  loudest way a page reads as unfinished. The shared Button is
+                  left alone because it is used across the dashboard too.
+                */}
+                <Button
+                  type="submit"
+                  size="lg"
+                  loading={isSubmitting}
+                  className="w-full !shadow-none"
+                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+                >
                   {isSubmitting ? 'Sending...' : 'Request a Viewing'}
                 </Button>
 

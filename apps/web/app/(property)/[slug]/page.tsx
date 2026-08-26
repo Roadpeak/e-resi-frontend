@@ -7,8 +7,6 @@ import { PropertyHero } from '../../../components/property/PropertyHero';
 import { PropertyOverview } from '../../../components/property/PropertyOverview';
 import { PropertyGallery } from '../../../components/property/PropertyGallery';
 import { PropertyTours } from '../../../components/property/PropertyTours';
-import { PropertyViewer3D } from '../../../components/property/PropertyViewer3D';
-import { PropertyCinematicPreview } from '../../../components/property/PropertyCinematicPreview';
 import { PropertyFloorPlans } from '../../../components/property/PropertyFloorPlans';
 import { PropertyUnits } from '../../../components/property/PropertyUnits';
 import { PropertyLocation } from '../../../components/property/PropertyLocation';
@@ -49,7 +47,7 @@ interface Props {
  * `getElementById` scroll targets and the IntersectionObserver scroll-spy.
  */
 const SELF_ANCHORED = new Set([
-  'gallery', 'tours', 'viewer3d', 'floorplans', 'units', 'location', 'construction', 'booking',
+  'gallery', 'tours', 'floorplans', 'units', 'location', 'construction', 'booking',
 ]);
 
 /**
@@ -163,10 +161,13 @@ export default async function PropertyPage({ params }: Props) {
         hasVR={property.hasVRTour}
         hasCinematic={property.hasCinematicTour}
         backdropUrl={property.galleryImages?.[0] ?? property.heroImageUrl}
+        photos={property.galleryImages}
+        areaPhotos={property.areaPhotos}
+        latitude={property.address?.coordinates?.lat}
+        longitude={property.address?.coordinates?.lng}
+        address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
-    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
-    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     floorplans: <PropertyFloorPlans floorPlans={property.floorPlans} />,
     units: (
       <PropertyUnits
@@ -217,6 +218,7 @@ export default async function PropertyPage({ params }: Props) {
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            unitPriceDisplay={branding.unitPriceDisplay}
             rentListings={rentListings}
           />
         ) : (
@@ -228,6 +230,7 @@ export default async function PropertyPage({ params }: Props) {
             sections={branding.sections}
             whiteLabel={branding.whiteLabel}
             sectionCopy={branding.sectionCopy}
+            unitPriceDisplay={branding.unitPriceDisplay}
             rentListings={rentListings}
           />
         )}
@@ -279,10 +282,17 @@ export default async function PropertyPage({ params }: Props) {
         // trying to escape it. Margin and transform tricks all measure against
         // the padded wrapper rather than the viewport, so they leave the
         // section inset by the gutters — the container simply has to end.
-        <div className="pb-24 pt-2">
+        //
+        // Spacing carries hierarchy. Every section used to be separated by a
+        // flat space-y-24, so the page read as a stack of unrelated blocks with
+        // no sense of which mattered. Sections now get more air than they did,
+        // and a full-bleed break gets more still, because its whole job is to
+        // interrupt. Rhythm is most of what separates a designed page from a
+        // rendered list of components.
+        <div className="pb-28 pt-12 sm:pt-16">
           {runs(visible).map((run, i) =>
             run.bleed ? (
-              <div key={`bleed-${i}`} className="my-24">
+              <div key={`bleed-${i}`} className="my-28 sm:my-32">
                 {run.ids.map((id) => (
                   <div key={id}>{blocks[id]}</div>
                 ))}
@@ -290,7 +300,7 @@ export default async function PropertyPage({ params }: Props) {
             ) : (
               <div
                 key={`col-${i}`}
-                className="mx-auto max-w-7xl space-y-24 px-4 sm:px-6 lg:px-8"
+                className="mx-auto max-w-7xl space-y-20 px-4 sm:space-y-28 sm:px-6 lg:px-8"
               >
                 {/* Only wrap with an id when the component does not already
                     provide its own <section id="…">. Wrapping unconditionally

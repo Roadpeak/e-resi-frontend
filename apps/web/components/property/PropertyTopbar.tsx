@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,21 +9,38 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Property } from '../../lib/types';
+import { PropertyMonogram } from './PropertyMonogram';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
 import { track } from '../../lib/analytics/track';
 import { navbarPalette, type NavbarPalette } from '../../lib/branding/theme';
 
+/**
+ * What the bar links to.
+ *
+ * Deliberately short. Every section used to get a link, which produced a bar
+ * of eight or nine items — Overview, Gallery, Cinematic, 3D Tour, Floor Plans,
+ * Units, Location, Progress, Book a viewing — reading as a table of contents
+ * rather than as navigation. At that length nothing is emphasised and the
+ * developer's own name, in the highest-status corner of the page, has to
+ * compete with it.
+ *
+ * These five are the questions a buyer actually navigates by: what does it
+ * look like, can I go inside it, what can I buy, where is it, and how do I
+ * arrange a visit. The rest of the page is still reachable by scrolling and
+ * still linked from the footer — a nav link is not the only way to find a
+ * section, and treating it as one is what made the bar unusable.
+ *
+ * `floorplans` and `construction` are the two most defensible omissions: both
+ * are detail a buyer reads *after* deciding they are interested, not a
+ * destination they arrive looking for.
+ */
 const sections = [
-  { id: 'overview', label: 'Overview' },
   { id: 'gallery', label: 'Gallery' },
-  { id: 'cinematic', label: 'Cinematic' },
-  { id: 'viewer3d', label: '3D Tour' },
-  { id: 'floorplans', label: 'Floor Plans' },
+  { id: 'tours', label: 'Tours' },
   { id: 'units', label: 'Units' },
   { id: 'location', label: 'Location' },
-  { id: 'construction', label: 'Progress' },
   { id: 'booking', label: 'Book a Viewing' }, // overridden by ctaLabel at render
 ];
 
@@ -84,9 +100,18 @@ export function PropertyTopbar({
     // call to action, so nav and button never disagree.
     .map((s) => (s.id === 'booking' ? { ...s, label: ctaLabel } : s))
     .filter((s) => {
-    if (s.id === 'cinematic' && !property.hasCinematicTour) return false;
-    if (s.id === 'viewer3d' && !property.has3DTour) return false;
-    if (s.id === 'construction' && property.constructionUpdates.length === 0) return false;
+    // The tours section renders nothing when a development has none, so a
+    // link to it would scroll to an anchor that does not exist.
+    if (
+      s.id === 'tours' &&
+      !property.hasCinematicTour &&
+      !property.has3DTour &&
+      !property.hasVRTour
+    ) {
+      return false;
+    }
+    if (s.id === 'gallery' && !property.galleryImages?.length) return false;
+    if (s.id === 'units' && !property.units?.length) return false;
     return true;
   });
 
@@ -213,24 +238,12 @@ export function PropertyTopbar({
               site; our attribution lives in the footer instead. */}
           <div className="flex items-center gap-3 shrink-0">
             <Link href={homeHref} className="flex items-center gap-2.5 min-w-0" aria-label={property.name}>
-              {logoUrl ? (
-                <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-black/5">
-                  <Image
-                    src={logoUrl}
-                    alt={`${property.name} logo`}
-                    fill
-                    className="object-contain p-0.5"
-                    sizes="36px"
-                  />
-                </span>
-              ) : (
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
-                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
-                >
-                  {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                </div>
-              )}
+              <PropertyMonogram
+                name={property.name}
+                logoUrl={logoUrl}
+                size={36}
+                onDark={navbar.onDark}
+              />
               <span
                 className="text-[15px] font-semibold truncate max-w-[10rem] sm:max-w-xs"
                 style={{ fontFamily: 'var(--brand-font-heading)', color: navbar.foreground }}
@@ -382,18 +395,7 @@ export function PropertyTopbar({
           >
             {/* Property identity on mobile */}
             <div className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-4">
-              {logoUrl ? (
-                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-black/5">
-                  <Image src={logoUrl} alt="" fill className="object-contain p-0.5" sizes="40px" />
-                </span>
-              ) : (
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold"
-                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
-                >
-                  {property.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                </div>
-              )}
+              <PropertyMonogram name={property.name} logoUrl={logoUrl} size={40} />
               <div>
                 <p className="font-semibold text-gray-900 text-sm">{property.name}</p>
                 <p className="text-xs text-gray-500">{property.address.neighborhood}, {property.address.city}</p>

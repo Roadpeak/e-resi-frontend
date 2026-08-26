@@ -358,7 +358,11 @@ export function PropertyInsights({
 
   return (
     <ToneContext.Provider value={tone}>
-    <div className="mx-auto max-w-5xl">
+    {/* Full column width, like every other section. A narrower max-width here
+        stepped the page in by ~90px at this one block, which read as a
+        misalignment rather than as emphasis. Line length is held by the
+        max-w-3xl on the prose inside instead. */}
+    <div>
       <AmenitiesSection features={features} unitFeatures={unitFeatures} />
       <PoliciesSection
         petsAllowed={property.petsAllowed}

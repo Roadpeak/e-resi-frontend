@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowLeft, MapPin, Globe, ExternalLink } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { MapPin, Globe, ExternalLink } from 'lucide-react';
 import type { Property } from '../../lib/types';
+import { PropertyMonogram } from './PropertyMonogram';
 
 interface Props {
   property: Property;
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export function PropertyFooter({ property, whiteLabel = false }: Props) {
-  const initials = (property.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   return (
     <footer className="border-t border-gray-200 bg-white">
@@ -22,18 +20,7 @@ export function PropertyFooter({ property, whiteLabel = false }: Props) {
           {/* Property identity */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              {property.logoUrl ? (
-                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-gray-200">
-                  <Image src={property.logoUrl} alt={`${property.name} logo`} fill className="object-contain p-1" sizes="48px" />
-                </span>
-              ) : (
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold shrink-0"
-                  style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
-                >
-                  {initials}
-                </div>
-              )}
+              <PropertyMonogram name={property.name} logoUrl={property.logoUrl} size={48} />
               <div>
                 <h3 className="font-semibold text-gray-900">{property.name}</h3>
                 <p className="text-xs font-medium text-gray-500">{property.developer.name}</p>
@@ -51,15 +38,11 @@ export function PropertyFooter({ property, whiteLabel = false }: Props) {
           <div className="lg:col-span-1">
             <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-gray-400">Developer</h4>
             <div className="flex items-center gap-3 mb-5">
-              {property.developer?.logoUrl ? (
-                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                  <Image src={property.developer.logoUrl} alt={`${property.developer.name} logo`} fill className="object-contain p-1" sizes="40px" />
-                </span>
-              ) : (
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold text-gray-500">
-                  {(property.developer?.name ?? '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
-                </div>
-              )}
+              <PropertyMonogram
+                name={property.developer?.name ?? ''}
+                logoUrl={property.developer?.logoUrl}
+                size={40}
+              />
               <div>
                 <p className="font-medium text-gray-900 text-sm">{property.developer.name}</p>
                 <p className="text-xs text-gray-500">{property.developer.establishedYear && `Est. ${property.developer.establishedYear}`}</p>
@@ -80,9 +63,13 @@ export function PropertyFooter({ property, whiteLabel = false }: Props) {
                   <ExternalLink size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
               )}
-              <p className="text-sm text-gray-400">
-                {property.developer.completedProjects} completed projects
-              </p>
+              {/* Omitted when zero — an unfilled profile field should say
+                  nothing, not contradict the bio above it. */}
+              {(property.developer.completedProjects ?? 0) > 0 && (
+                <p className="text-sm text-gray-400">
+                  {property.developer.completedProjects} completed projects
+                </p>
+              )}
             </div>
           </div>
 
@@ -93,7 +80,9 @@ export function PropertyFooter({ property, whiteLabel = false }: Props) {
               {[
                 { label: 'Overview', href: '#overview' },
                 { label: 'Gallery', href: '#gallery' },
-                ...(property.has3DTour ? [{ label: '3D Tour', href: '#viewer3d' }] : []),
+                ...(property.has3DTour || property.hasVRTour || property.hasCinematicTour
+                  ? [{ label: 'Immersive Tours', href: '#tours' }]
+                  : []),
                 { label: 'Floor Plans', href: '#floorplans' },
                 { label: 'Available Units', href: '#units' },
                 { label: 'Location', href: '#location' },

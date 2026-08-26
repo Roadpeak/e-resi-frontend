@@ -104,13 +104,18 @@ export const DEFAULT_HERO_STYLE = 'CINEMATIC';
 export const SECTIONS = [
   { id: 'overview', label: 'Overview', alwaysOn: true },
   { id: 'gallery', label: 'Gallery' },
-  // The gateway to all three tours. Distinct from the cinematic/viewer3d
-  // sections below, which are the players themselves — this is what tells a
-  // buyer the tours exist at all, and it sits high because it is the reason
-  // most of them are on the page.
+  // One section for all three tours, and the only one.
+  //
+  // There used to be a `cinematic` and a `viewer3d` section as well: this
+  // gateway announced the tours, and then two further blocks embedded a video
+  // player and a 3D canvas inline. That meant a buyer met the same tour twice
+  // in one scroll — once as an invitation, once as a widget — and the inline
+  // versions were the weaker showing: a muted autoplay clip and a placeholder
+  // model with dead zoom buttons, both styled light so they broke on the dark
+  // templates. The tours have proper full-screen routes under /[slug]/tour/*,
+  // which is where an immersive experience belongs; this section's job is to
+  // send people there.
   { id: 'tours', label: 'Immersive tours' },
-  { id: 'cinematic', label: 'Cinematic tour' },
-  { id: 'viewer3d', label: '3D tour' },
   { id: 'floorplans', label: 'Floor plans' },
   { id: 'units', label: 'Available units' },
   { id: 'rentals', label: 'Rentals' },

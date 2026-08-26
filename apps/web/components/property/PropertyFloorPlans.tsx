@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BedDouble, Bath, Maximize2 } from 'lucide-react';
 import type { FloorPlan } from '../../lib/types';
+import { SectionHeading } from './SectionHeading';
 import { cn } from '../../lib/utils';
 
 interface Props { floorPlans: FloorPlan[] }
@@ -17,8 +18,7 @@ export function PropertyFloorPlans({ floorPlans }: Props) {
 
   return (
     <section id="floorplans" className="scroll-mt-24">
-      <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Layouts</p>
-      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Floor Plans</h2>
+      <SectionHeading eyebrow="Layouts" title="Floor Plans" />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Plan selector */}

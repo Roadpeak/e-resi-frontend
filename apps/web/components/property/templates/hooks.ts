@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { bookingsApi } from '../../../lib/api/bookings';
 import { ApiError } from '../../../lib/api/client';
+import { track } from '../../../lib/analytics/track';
 import type { Property, Unit } from '../../../lib/types';
 
 /**
@@ -100,6 +101,15 @@ export function useBooking(property: Property) {
         message: data.message,
       });
       setSubmitted(true);
+      // Fired only after the booking is actually filed, so the developer's
+      // dashboard counts real bookings rather than form submissions that
+      // failed validation upstream. BOOKING_SUBMITTED has been in the schema
+      // since the beginning and was never emitted — a booking was invisible.
+      track({
+        type: 'BOOKING_SUBMITTED',
+        propertyId: property.id,
+        metadata: { viewingType: data.type === 'virtual' ? 'VIRTUAL' : 'PHYSICAL' },
+      });
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : 'Failed to submit booking. Please try again.',

@@ -1,11 +1,18 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   MapPin, ShoppingBag, Building2, Train, Plane, TreePine, Landmark,
   GraduationCap, UtensilsCrossed, Dumbbell, ShoppingCart, BedDouble,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import type { Address, Amenity } from '../../lib/types';
+import { SectionHeading } from './SectionHeading';
+
+// Leaflet touches `window` at import time, so it cannot be server-rendered.
+const PropertyMiniMap = dynamic(
+  () => import('./PropertyMiniMap').then((m) => m.PropertyMiniMap),
+  { ssr: false, loading: () => <div className="absolute inset-0 bg-gray-100" /> },
+);
 
 interface Props {
   address: Address;
@@ -30,44 +37,36 @@ const amenityIcons: Record<string, React.FC<{ size?: number; className?: string 
 };
 
 export function PropertyLocation({ address, amenities }: Props) {
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${address.coordinates.lng - 0.02},${address.coordinates.lat - 0.02},${address.coordinates.lng + 0.02},${address.coordinates.lat + 0.02}&layer=mapnik&marker=${address.coordinates.lat},${address.coordinates.lng}`;
 
   return (
     <section id="location" className="scroll-mt-24">
-      <p className="mb-3 text-xs font-medium uppercase tracking-widest text-brand-400">Location</p>
       {/* "Amenities" here means the neighbourhood's, not the development's —
           on-site facilities are listed in the overview instead. */}
-      <h2 className="mb-8 text-3xl font-semibold text-gray-900">Neighbourhood</h2>
+      <SectionHeading eyebrow="Location" title="Neighbourhood" />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      {/* items-stretch so the map panel matches the column beside it. It was
+          pinned to a fixed 420px while the amenities list grew with its
+          content, so the two columns ended at different heights and the map
+          read as cut off. */}
+      <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3">
         {/* Map */}
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="lg:col-span-2 overflow-hidden rounded-3xl border border-gray-200"
-          style={{ height: '420px' }}
-        >
-          <iframe
-            src={mapUrl}
-            width="100%"
-            height="100%"
-            title={`Map of ${address.neighborhood}`}
-            style={{ border: 'none' }}
+        <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-gray-200 lg:col-span-2">
+          <PropertyMiniMap
+            latitude={address.coordinates.lat}
+            longitude={address.coordinates.lng}
+            label={address.neighborhood}
+            className="absolute inset-0 h-full w-full"
           />
-        </motion.div>
+        </div>
 
-        {/* Amenities */}
-        <motion.div
-          initial={{ opacity: 0, x: 16 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="flex flex-col gap-4"
-        >
+        {/* Amenities. Not animated in — this column sits beside a lazily
+            mounted map embed, and an entrance animation here can stall and
+            leave the address and the nearby list invisible. */}
+        <div className="flex flex-col gap-4">
           {/* Address */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <div className="flex items-start gap-3">
-              <MapPin size={18} className="text-brand-400 mt-0.5 shrink-0" />
+              <MapPin size={18} className="mt-0.5 shrink-0 text-gray-900" />
               <div>
                 <p className="font-medium text-gray-900">{address.neighborhood}</p>
                 <p className="text-sm text-gray-500 mt-0.5">{address.city}, {address.country}</p>
@@ -86,9 +85,11 @@ export function PropertyLocation({ address, amenities }: Props) {
                 const Icon = amenityIcons[amenity.type] ?? MapPin;
                 return (
                   <div key={amenity.id} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                      <Icon size={14} className="text-brand-400" />
-                    </div>
+                    {/* Bare glyph, in ink. A grey tile behind every amenity
+                        turned a plain list into a grid of chips, and the icon
+                        inside it was the platform's periwinkle rather than
+                        anything the developer chose. */}
+                    <Icon size={16} className="shrink-0 text-gray-900" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 truncate">{amenity.name}</p>
                     </div>
@@ -101,7 +102,7 @@ export function PropertyLocation({ address, amenities }: Props) {
             </div>
           </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
