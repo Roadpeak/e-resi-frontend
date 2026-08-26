@@ -286,24 +286,63 @@ function CameraRig({
 
   useFrame((_, dt) => {
 
-    if (mode === 'walk' && target) {
-      // Stand back from the stop and look at it, rather than standing on it
-      // and facing outward — at eye height inside a 3m room, "outward" is a
-      // wall a foot from the lens, which rendered as a black frame.
-      // Above the wall line looking down into the stop, not standing in the
-      // room. The stand-in rooms are 2.9m tall and a few metres across, so any
-      // eye-height position inside one has a wall against the lens; the near
-      // plane then clips straight through it and the frame renders black.
-      const r = Math.max(4, radius * 0.55) * orbit.dist;
-      const eye = Math.max(1.6, radius * 0.3);
+    if (mode === 'walk' && target && focusExtent > 0) {
+      /**
+       * Standing in the room, at eye height, looking across it.
+       *
+       * This used to hold the camera outside the room looking in, because the
+       * placeholder plan was five hollow boxes and any eye-height position
+       * inside one had a wall against the lens. A real captured interior does
+       * not have that problem: it has furniture, depth and something to look
+       * at in every direction, which is exactly why a first-person viewpoint
+       * is what a walkthrough should be — it is the difference between being
+       * in a room and inspecting a model of one.
+       *
+       * Stand at the room's edge and look across it, rather than on its
+       * centre point.
+       *
+       * Standing on the centre point is what a floor-plan pin describes, not
+       * what a person does — and with the near plane at a few centimetres, the
+       * centre of a furnished room is usually inside a sofa. Backing off by
+       * most of the room's half-width puts the camera against the wall it
+       * entered by, which is where a photographer stands and what makes the
+       * whole room readable in one frame.
+       */
+      const half = Math.max(1.6, (focusExtent || 4) * 0.42);
+      const back = half * orbit.dist;
+      const eye = target[1] + Math.max(0.2, (focusExtent || 4) * 0.06);
       wantPos.current.set(
-        target[0] + Math.sin(orbit.yaw) * r,
-        eye + orbit.pitch * r * 0.4,
-        target[2] + Math.cos(orbit.yaw) * r,
+        target[0] + Math.sin(orbit.yaw) * back,
+        eye,
+        target[2] + Math.cos(orbit.yaw) * back,
       );
-      // Slightly below eye level, so the building fills the frame rather than
-      // the sky above it.
-      wantLook.current.set(target[0], eye * 0.6, target[2]);
+      // Aim at the room's centre, level. A walkthrough that looks at the floor
+      // reads as a stumble, and one that looks at the ceiling reads as a fall.
+      wantLook.current.set(
+        target[0],
+        eye + orbit.pitch * 1.5,
+        target[2],
+      );
+    } else if (
+      (mode === 'walk' && (!target || focusExtent <= 0)) ||
+      (mode === 'dollhouse' && !target)
+    ) {
+      /**
+       * No stop to stand in yet — frame the whole thing.
+       *
+       * Walk mode has no target until the model has loaded and reported its
+       * rooms, which takes a second or two on a real mesh. Without this branch
+       * the camera sat at the origin inside the geometry and the opening frame
+       * was black, which reads as a broken viewer rather than as loading.
+       */
+      const mid = radius * 0.45;
+      const r = radius * 2.1 * orbit.dist;
+      wantPos.current.set(
+        Math.sin(orbit.yaw) * r,
+        Math.max(radius * 0.35, mid + radius * 0.7 + orbit.pitch * radius),
+        Math.cos(orbit.yaw) * r,
+      );
+      wantLook.current.set(0, mid, 0);
     } else if (mode === 'dollhouse' && target) {
       /**
        * Dollhouse, focused on one room.
@@ -373,31 +412,42 @@ interface TagDef {
   body: string;
 }
 
-const TAGS: TagDef[] = [
-  { id: 't1', room: 'kitchen', pos: [2.9, 1.5, 2.2], title: 'Fitted kitchen', body: 'Quartz worktops, soft-close cabinetry and a fitted oven and hob.' },
-  { id: 't2', room: 'living', pos: [-1.6, 1.7, 1.4], title: 'Double volume', body: 'Full-height glazing to the balcony, with the dining area open to the living space.' },
-  { id: 't3', room: 'master', pos: [-2.6, 1.5, -2.6], title: 'En-suite master', body: 'Walk-in wardrobe and a private bathroom, positioned away from the living areas.' },
-  { id: 't4', room: 'balcony', pos: [-1.6, 1.2, 4.4], title: 'Balcony', body: 'Deep enough for a table and chairs, facing the open aspect.' },
-];
-
+/**
+ * Pins on the model.
+ *
+ * There is no fallback list any more. This used to carry four invented tags —
+ * "Quartz worktops, soft-close cabinetry and a fitted oven and hob" — at
+ * coordinates picked for the placeholder flat, so every development with a
+ * real model showed four pins floating in the wrong places describing a
+ * kitchen nobody had photographed. Copy a buyer could reasonably act on, about
+ * a property, invented by us.
+ *
+ * A tag is now either something a person placed against this model, or a room
+ * the model itself declares. Both are true statements. Nothing else is shown.
+ */
 function Tags({
   visible,
-  activeRoom,
   openTag,
   onOpen,
   twinTags,
+  rooms,
 }: {
   visible: boolean;
-  activeRoom: string | null;
   openTag: string | null;
   onOpen: (id: string | null) => void;
   /** Tags placed against the real model, when there is one. */
   twinTags?: { id: string; title: string; body?: string | null; posX: number; posY: number; posZ: number }[];
+  /** Rooms read out of the model, used only when nobody has placed tags. */
+  rooms?: DerivedRoom[];
 }) {
   if (!visible) return null;
 
-  // Real tags are anchored in the model's own space and are not filtered by
-  // room — the room filter only means anything for the stand-in plan.
+  /**
+   * Authored tags win. They are anchored in the model's own space and say
+   * something specific about the place; a derived room label only says what
+   * the room is called, which is worth showing when there is nothing better
+   * and worth replacing the moment someone writes a real one.
+   */
   const pins: TagDef[] = twinTags?.length
     ? twinTags.map((t) => ({
         id: t.id,
@@ -406,7 +456,15 @@ function Tags({
         title: t.title,
         body: t.body ?? '',
       }))
-    : TAGS.filter((t) => !activeRoom || t.room === activeRoom);
+    : (rooms ?? []).map((r) => ({
+        id: r.id,
+        room: '',
+        // Head height inside the room rather than its centre, so the pin sits
+        // where a person would be standing rather than inside the furniture.
+        pos: [r.centre[0], r.centre[1] + r.size[1] * 0.18, r.centre[2]] as [number, number, number],
+        title: r.label,
+        body: '',
+      }));
 
   return (
     <group>
@@ -472,6 +530,18 @@ function Scene({
   const [radius, setRadius] = useState(7);
   const onMeasured = useCallback((r: number) => setRadius(Math.max(2, r)), []);
 
+  // Kept here as well as reported upward: Tags needs them to label rooms when
+  // nobody has placed a real tag, and threading them back down would be a
+  // round trip through the parent for data this component already produced.
+  const [derivedRooms, setDerivedRooms] = useState<DerivedRoom[]>([]);
+  const handleMeshRooms = useCallback(
+    (r: DerivedRoom[]) => {
+      setDerivedRooms(r);
+      onRooms(r);
+    },
+    [onRooms],
+  );
+
   return (
     <>
       <CameraRig
@@ -492,7 +562,7 @@ function Scene({
           downloads rather than blanking the viewer. */}
       {twin ? (
         <Suspense fallback={<Rooms activeRoom={activeRoom} />}>
-          <Mesh url={twin.meshUrl} scale={twin.scale} onMeasured={onMeasured} onRooms={onRooms} />
+          <Mesh url={twin.meshUrl} scale={twin.scale} onMeasured={onMeasured} onRooms={handleMeshRooms} />
         </Suspense>
       ) : (
         <Rooms activeRoom={activeRoom} />
@@ -500,10 +570,10 @@ function Scene({
 
       <Tags
         visible={mode !== 'floorplan'}
-        activeRoom={activeRoom}
         openTag={openTag}
         onOpen={onOpenTag}
         twinTags={twin?.tags}
+        rooms={derivedRooms}
       />
 
       {/* Ground, only where it reads — a floor plan wants no context. */}
@@ -639,12 +709,15 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
 
   const [index, setIndex] = useState(0);
   /**
-   * Opens on the dollhouse, as the reference viewer does.
+   * Opens on the dollhouse.
    *
-   * Walk mode drops the camera inside a room, and the first thing a visitor
-   * sees is then the inside of one wall with no context for where they are.
-   * Starting pulled back shows the whole plan first, so "explore" becomes a
-   * choice made from somewhere rather than a place to escape from.
+   * First-person is the better opening — it is what the reference viewers do
+   * and what a buyer came for — but walk mode cannot place a camera until the
+   * mesh has loaded and reported its rooms, which is a second or two on a real
+   * model. Opening there means opening on a black frame, and a viewer that
+   * looks broken for two seconds is worse than one that opens on the plan and
+   * lets you step inside. Walk is one button away, and it now stands in the
+   * room properly once there is a room to stand in.
    */
   const [mode, setMode] = useState<ViewMode>('dollhouse');
   const [playing, setPlaying] = useState(false);
