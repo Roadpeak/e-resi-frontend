@@ -20,9 +20,7 @@ import type { RentListing } from '../../../lib/types';
 import type { SectionCopy } from '../../../lib/branding/theme';
 import { PropertyInsights } from '../PropertyInsights';
 import { StreetViewButtons } from '../StreetViewButtons';
-import { PropertyCinematicPreview } from '../PropertyCinematicPreview';
 import { PropertyTours } from '../PropertyTours';
-import { PropertyViewer3D } from '../PropertyViewer3D';
 import { PropertyRentListings } from '../PropertyRentListings';
 import { TemplateHero } from './TemplateHero';
 import {
@@ -459,6 +457,9 @@ export function KitTemplate({
           latitude={property.address?.coordinates?.lat}
           longitude={property.address?.coordinates?.lng}
           address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
+          // Same reason as PropertyInsights: the light-mode pills are grey on
+          // grey once this template's ground goes dark.
+          tone={style.onDark ? 'dark' : 'light'}
         />
       </div>
     ),
@@ -498,14 +499,13 @@ export function KitTemplate({
         copy={copy('location')}
       />
     ),
-    insights: <PropertyInsights property={property as never} />,
+    // tone is load-bearing on the dark templates. Without it this renders its
+    // default near-black text, which on Statement's #0b0b0c ground is
+    // invisible — an entire reference section a buyer simply could not read.
+    insights: <PropertyInsights property={property as never} tone={style.onDark ? 'dark' : 'light'} />,
     construction: (
       <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />
     ),
-    // Reuse the shared players rather than rebuild them per template: they
-    // launch real tours and carry their own analytics.
-    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
-    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <KitBooking property={property} style={style} copy={copy('booking')} />,
   };

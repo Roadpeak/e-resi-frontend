@@ -228,6 +228,11 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
 /** 3 — STATEMENT: the name set oversized across the image. */
 function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
   const badges = tourBadges(property);
+  // Location is stated in the nav and the footer; three figures is the most
+  // this centred composition carries without becoming a table.
+  const facts = heroFacts(property)
+    .filter((f) => f.label !== 'Location')
+    .slice(0, 3);
 
   return (
     <section className="relative w-full bg-[#0b0b0c]">
@@ -247,7 +252,9 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
           shears the tops off. mix-blend is dropped for the same reason it
           looked wrong — over a dark photograph it erased the word entirely.
         */}
-        <div className="absolute inset-x-0 top-[16%] z-10 px-4">
+        {/* top-[22%] rather than 16%: at the largest clamp sizes the wordmark's
+            cap height reached into the fixed navbar and the two collided. */}
+        <div className="absolute inset-x-0 top-[22%] z-10 px-4">
           <h1
             className="text-center leading-[1.02] tracking-[-0.03em] text-white"
             style={{
@@ -258,6 +265,35 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
           >
             <RisingWords text={property.name} />
           </h1>
+
+          {/*
+            The figures, directly under the wordmark.
+
+            This hero ended at the tagline and the CTA, so the one number a
+            buyer is looking for was a screen away. Centred and widely tracked
+            under the name, they read as a subtitle to it rather than as a
+            panel — Statement's whole idea is that the name dominates, and a
+            boxed facts bar would compete with it.
+          */}
+          {facts.length > 0 && (
+            <motion.dl
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.9, delay: 0.5 }}
+              className="mx-auto mt-8 flex max-w-3xl flex-wrap items-baseline justify-center gap-x-10 gap-y-4 sm:mt-10 sm:gap-x-16"
+            >
+              {facts.map((f) => (
+                <div key={f.label} className="text-center">
+                  <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/50">
+                    {f.label}
+                  </dt>
+                  <dd className="mt-2 text-[19px] font-semibold tracking-[-0.01em] text-white sm:text-[22px]">
+                    {f.value}
+                  </dd>
+                </div>
+              ))}
+            </motion.dl>
+          )}
         </div>
 
         <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-10 sm:px-10">
@@ -266,20 +302,32 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
               {property.tagline && (
                 <p className="text-[16px] leading-relaxed text-white/75">{property.tagline}</p>
               )}
+              {/* The tours a development actually has, stated rather than
+                  badged. These were 12px pills the same weight as a filter
+                  chip, for the thing a developer pays the most for. */}
               {badges.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
                   {badges.map((b) => (
                     <span
                       key={b}
-                      className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                      className="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em] text-white/80"
                     >
+                      <span aria-hidden className="h-1 w-1 rounded-full bg-white/60" />
                       {b}
                     </span>
                   ))}
                 </div>
               )}
             </div>
-            <CtaRow ctaLabel={ctaLabel} onDark />
+            <div className="flex items-center gap-3">
+              <CtaRow ctaLabel={ctaLabel} onDark />
+              <ChatWithDeveloper
+                propertySlug={property.slug}
+                tone="dark"
+                variant="icon"
+                label="Chat with the developer"
+              />
+            </div>
           </div>
         </div>
       </div>

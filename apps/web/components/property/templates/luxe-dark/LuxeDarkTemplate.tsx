@@ -8,9 +8,7 @@ import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
 import { PropertyInsights } from '../../PropertyInsights';
 import { StreetViewButtons } from '../../StreetViewButtons';
-import { PropertyCinematicPreview } from '../../PropertyCinematicPreview';
 import { PropertyTours } from '../../PropertyTours';
-import { PropertyViewer3D } from '../../PropertyViewer3D';
 import { PropertyRentListings } from '../../PropertyRentListings';
 import { TemplateHero } from '../TemplateHero';
 import {
@@ -206,8 +204,6 @@ export function LuxeDarkTemplate({
     ),
     insights: <PropertyInsights property={property as never} tone="dark" />,
     construction: <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />,
-    cinematic: property.hasCinematicTour ? <PropertyCinematicPreview property={property} /> : null,
-    viewer3d: property.has3DTour ? <PropertyViewer3D property={property} /> : null,
     rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <LuxeBooking property={property} copy={copy('booking')} />,
   };
