@@ -615,12 +615,16 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
           {overlay && <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />}
 
           <div className="relative z-10 flex h-full flex-col justify-center px-8 sm:px-14">
+            {/* A dot and a word, matching the status treatment on the other
+                heroes — over a photograph the status is a caption, not a
+                filled badge competing with the headline beneath it. */}
             <motion.span
               initial={false}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.7 }}
-              className="mb-5 w-fit rounded-full border border-white/30 bg-white/15 px-4 py-1.5 text-[12px] font-medium text-white backdrop-blur-sm"
+              className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/5 px-3.5 py-1.5 text-[12px] font-medium tracking-wide text-white backdrop-blur-sm"
             >
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-white" />
               {getStatusLabel(property.status)}
             </motion.span>
 
@@ -634,25 +638,43 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
                 {property.tagline}
               </HeroReveal>
             )}
-            <HeroReveal delay={0.6}
-              className="mt-8"
-            >
+            <HeroReveal delay={0.6} className="mt-8 flex items-center gap-3">
               <CtaRow ctaLabel={ctaLabel} onDark />
+              <ChatWithDeveloper
+                propertySlug={property.slug}
+                tone="dark"
+                variant="icon"
+                label="Chat with the developer"
+              />
             </HeroReveal>
           </div>
         </div>
       </div>
 
+      {/* Columns follow the fact count, so a development with two figures does
+          not leave a third of the row empty. */}
       {facts.length > 0 && (
-        <HeroReveal delay={0.7} y={20}
-          className="mx-auto mt-8 grid max-w-[1360px] grid-cols-1 gap-3 sm:grid-cols-3"
+        <HeroReveal
+          delay={0.7}
+          y={20}
+          className={`mx-auto mt-8 grid max-w-[1360px] grid-cols-1 gap-3 ${
+            facts.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+          }`}
         >
           {facts.map((f) => (
             <div key={f.label} className="rounded-2xl bg-white/70 px-6 py-5 backdrop-blur-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {f.label}
               </p>
-              <p className="mt-1.5 text-[19px] font-semibold text-neutral-900">{f.value}</p>
+              <p
+                className="mt-1.5 text-[21px] text-neutral-900"
+                style={{
+                  fontFamily: 'var(--tpl-font-heading)',
+                  fontWeight: 'var(--tpl-heading-weight)' as unknown as number,
+                }}
+              >
+                {f.value}
+              </p>
             </div>
           ))}
         </HeroReveal>
