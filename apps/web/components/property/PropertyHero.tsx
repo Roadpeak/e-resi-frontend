@@ -48,7 +48,8 @@ export function PropertyHero({
   // SPLIT has no overlay to begin with — its media sits in its own rounded
   // panel with the text beside it, never on top of it.
   if (heroStyle === 'SPLIT') return <SplitHero property={property} ctaLabel={ctaLabel} />;
-  if (heroStyle === 'MINIMAL') return <MinimalHero property={property} overlay={overlay} />;
+  if (heroStyle === 'MINIMAL')
+    return <MinimalHero property={property} overlay={overlay} ctaLabel={ctaLabel} />;
   return <CinematicHero property={property} overlay={overlay} ctaLabel={ctaLabel} />;
 }
 
@@ -389,14 +390,25 @@ function SplitHero({ property, ctaLabel }: { property: Property; ctaLabel?: stri
               </p>
             )}
 
-            <button
-              type="button"
-              onClick={scrollToBooking}
-              className="mt-1 inline-flex w-fit items-center rounded-full px-6 py-3 text-[15px] font-semibold transition-opacity hover:opacity-90 cursor-pointer"
-              style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
-            >
-              {ctaLabel ?? 'Book a viewing'}
-            </button>
+            {/* tone="light": unlike every other hero, Split's copy sits on the
+                page's white ground beside the image rather than over it, so the
+                dark treatment would be a black button on white. */}
+            <div className="mt-1 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={scrollToBooking}
+                className="inline-flex w-fit items-center rounded-full px-6 py-3 text-[15px] font-semibold transition-opacity hover:opacity-90 cursor-pointer"
+                style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+              >
+                {ctaLabel ?? 'Book a viewing'}
+              </button>
+              <ChatWithDeveloper
+                propertySlug={property.slug}
+                tone="light"
+                variant="icon"
+                label="Chat with the developer"
+              />
+            </div>
           </div>
         </motion.div>
       </div>
@@ -412,7 +424,15 @@ function SplitHero({ property, ctaLabel }: { property: Property; ctaLabel?: stri
  * For developments whose real asset is the tour or the unit list: a second
  * large render above the fold only delays the thing the buyer came for.
  */
-function MinimalHero({ property, overlay }: { property: Property; overlay: boolean }) {
+function MinimalHero({
+  property,
+  overlay,
+  ctaLabel,
+}: {
+  property: Property;
+  overlay: boolean;
+  ctaLabel?: string;
+}) {
   return (
     <section className="bg-white pt-16">
       <motion.div
@@ -436,9 +456,31 @@ function MinimalHero({ property, overlay }: { property: Property; overlay: boole
         </div>
       </motion.div>
 
-      {/* Tags sit below the band rather than over it — at this height an
-          overlay would crowd the image against the scrim. */}
-      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+      {/*
+        The two actions, below the band rather than over it — at this height an
+        overlay would crowd the image against the scrim.
+
+        Minimal is deliberately short: a development whose real asset is the
+        tour or the unit list should not be delayed by another full-bleed
+        render. That is not a reason to make a buyer scroll to find out how to
+        get in touch, though, so the same pair every other hero carries sits
+        here on the page's own ground.
+      */}
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 pt-5 sm:px-6 lg:px-8">
+        <button
+          type="button"
+          onClick={scrollToBooking}
+          className="inline-flex cursor-pointer items-center rounded-full px-6 py-3 text-[15px] font-semibold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-on)' }}
+        >
+          {ctaLabel ?? 'Book a viewing'}
+        </button>
+        <ChatWithDeveloper
+          propertySlug={property.slug}
+          tone="light"
+          variant="icon"
+          label="Chat with the developer"
+        />
       </div>
     </section>
   );
