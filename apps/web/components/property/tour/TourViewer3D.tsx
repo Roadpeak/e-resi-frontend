@@ -248,6 +248,7 @@ function CameraRig({
   orbit,
   radius,
   focusExtent = 0,
+  eyepoint = null,
 }: {
   mode: ViewMode;
   target: [number, number, number] | null;
@@ -256,6 +257,8 @@ function CameraRig({
   radius: number;
   /** Longest side of the room in focus, so framing suits the room not the block. */
   focusExtent?: number;
+  /** An authored stand-here-look-there viewpoint, which overrides the orbit. */
+  eyepoint?: { pos: [number, number, number]; look: [number, number, number] } | null;
 }) {
   const { camera } = useThree();
   const wantPos = useRef(new THREE.Vector3());
@@ -286,7 +289,26 @@ function CameraRig({
 
   useFrame((_, dt) => {
 
-    if (mode === 'walk' && target && focusExtent > 0) {
+    if (eyepoint) {
+      /**
+       * Exactly where the author put it.
+       *
+       * Drag still turns the head — yaw rotates the aim around the standing
+       * point rather than moving the camera — so a visitor can look around
+       * from the spot without losing it.
+       */
+      wantPos.current.set(eyepoint.pos[0], eyepoint.pos[1], eyepoint.pos[2]);
+      const dx = eyepoint.look[0] - eyepoint.pos[0];
+      const dz = eyepoint.look[2] - eyepoint.pos[2];
+      const dist = Math.max(0.5, Math.hypot(dx, dz));
+      const baseYaw = Math.atan2(dx, dz);
+      const yaw = baseYaw + orbit.yaw;
+      wantLook.current.set(
+        eyepoint.pos[0] + Math.sin(yaw) * dist,
+        eyepoint.look[1] + orbit.pitch * 1.5,
+        eyepoint.pos[2] + Math.cos(yaw) * dist,
+      );
+    } else if (mode === 'walk' && target && focusExtent > 0) {
       /**
        * Standing in the room, at eye height, looking across it.
        *
@@ -507,6 +529,7 @@ function Scene({
   onOpenTag,
   twin,
   focusExtent,
+  eyepoint,
   onRooms,
 }: {
   mode: ViewMode;
@@ -518,6 +541,8 @@ function Scene({
   twin: DigitalTwin | null;
   /** Longest side of the room in focus, for framing. */
   focusExtent: number;
+  /** An authored stand-here-look-there viewpoint. */
+  eyepoint: { pos: [number, number, number]; look: [number, number, number] } | null;
   /** Rooms read out of the model, reported up to build the tour from. */
   onRooms: (rooms: DerivedRoom[]) => void;
 }) {
@@ -550,6 +575,7 @@ function Scene({
         orbit={orbit}
         radius={radius}
         focusExtent={focusExtent}
+        eyepoint={eyepoint}
       />
 
       <ambientLight intensity={0.75} />
@@ -720,6 +746,23 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
    * room properly once there is a room to stand in.
    */
   const [mode, setMode] = useState<ViewMode>('dollhouse');
+
+  /**
+   * An authored tour opens where its author put the first stop.
+   *
+   * The dollhouse is the right opening when the tour is derived — nobody has
+   * said where to stand, so showing the plan first is honest. But a waypoint
+   * is someone stating exactly that, and opening on the plan then makes the
+   * visitor click into the thing that was authored for them. Switching once,
+   * when the waypoints arrive, is the difference between a tour and a model.
+   */
+  const authoredOpen = useRef(false);
+  useEffect(() => {
+    if (authoredOpen.current) return;
+    if (!twin?.waypoints?.length) return;
+    authoredOpen.current = true;
+    setMode('walk');
+  }, [twin?.waypoints?.length]);
   const [playing, setPlaying] = useState(false);
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [showRooms, setShowRooms] = useState(false);
@@ -748,6 +791,23 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
     // Legacy scenes: the preset anchors are all there is, and they only ever
     // made sense for walk mode against the placeholder plan.
     return mode === 'walk' ? anchorFor(current?.scene) : null;
+  }, [mode, current]);
+
+  /**
+   * An authored viewpoint: stand exactly here, aim exactly there.
+   *
+   * A derived room gives a centre and nothing else, so the rig has to invent a
+   * viewpoint by orbiting around it. A waypoint is someone standing in the
+   * building saying "from this spot, facing that way" — which is the whole
+   * value of authoring one, and orbiting it would throw that away. Only walk
+   * mode honours it; the dollhouse is a view *of* the building rather than a
+   * view *from* somewhere inside it.
+   */
+  const eyepoint = useMemo<
+    { pos: [number, number, number]; look: [number, number, number] } | null
+  >(() => {
+    if (mode !== 'walk' || !current?.pos || !current.look) return null;
+    return { pos: current.pos, look: current.look };
   }, [mode, current]);
 
   /** How big the room in focus is, so the camera frames it rather than the block. */
@@ -854,6 +914,7 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
             onOpenTag={setOpenTag}
             twin={twin ?? null}
             focusExtent={focusExtent}
+            eyepoint={eyepoint}
             onRooms={handleRooms}
           />
         </Suspense>
