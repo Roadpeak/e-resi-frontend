@@ -30,6 +30,7 @@ import {
   DEFAULT_TEMPLATE,
   templateFor,
 } from '../../../../../../lib/branding/templates';
+import { TemplatePreviewCard } from '../../../../../../components/dashboard/TemplatePreviewCard';
 import { revalidateMiniSite } from '../../../../../../lib/actions/revalidate-mini-site';
 import { cn } from '../../../../../../lib/utils';
 import {
@@ -283,7 +284,18 @@ export default function CustomiseMiniSite() {
               The layout of your development&apos;s page. Everything you have set up —
               units, tours, bookings — works the same in every one.
             </p>
-            <div className="space-y-2">
+            {/*
+              A grid of drawn previews, not a list of chips.
+
+              Each card shows the template's actual structure — where the
+              headline sits, whether the hero is inset or full-bleed, whether
+              figures float over the image or sit under it, how the sections
+              below are ruled or banded — in the developer's own brand colour
+              and the template's own typeface. The previous control was a 36px
+              two-tone square that conveyed only whether the page was dark, so
+              eight of them in a column made the choice effectively blind.
+            */}
+            <div className="grid grid-cols-2 gap-2.5">
               {MINI_SITE_TEMPLATES.map((t) => {
                 const active = draft.templateKey === t.key;
                 return (
@@ -292,43 +304,37 @@ export default function CustomiseMiniSite() {
                     type="button"
                     onClick={() => set({ templateKey: t.key })}
                     aria-pressed={active}
+                    title={t.note}
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-2xl border p-3 text-left transition-colors cursor-pointer',
-                      active ? 'border-[#1a73e8] bg-[#e8f0fe]' : 'border-[#dadce0] hover:bg-[#f8f9fa]',
+                      'group cursor-pointer rounded-2xl border p-2 text-left transition-all',
+                      active
+                        ? 'border-[#1a73e8] bg-[#e8f0fe] ring-1 ring-[#1a73e8]'
+                        : 'border-[#dadce0] hover:border-[#9aa0a6] hover:bg-[#f8f9fa]',
                     )}
                   >
-                    {/* A two-tone chip standing in for the template's ground,
-                        so dark layouts are identifiable before previewing. */}
-                    <span
-                      className="mt-0.5 flex h-9 w-9 shrink-0 flex-col overflow-hidden rounded-lg border border-black/10"
-                      aria-hidden="true"
-                    >
-                      <span
-                        className="h-1/2 w-full"
-                        style={{ background: t.surface === 'DARK' ? '#18191a' : '#c9ced6' }}
-                      />
-                      <span
-                        className="h-1/2 w-full"
-                        style={{ background: t.surface === 'DARK' ? '#0b0b0c' : '#ffffff' }}
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-2">
-                        <span className="text-[14px] font-medium text-[#202124]">{t.label}</span>
-                        {t.surface === 'DARK' && (
-                          <span className="rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[10px] font-medium text-[#5f6368]">
-                            Dark
-                          </span>
-                        )}
+                    <TemplatePreviewCard
+                      template={t}
+                      brandColor={colourValid ? draft.brandColor : DEFAULT_BRAND_COLOR}
+                    />
+                    <span className="mt-2 flex items-center justify-between gap-2 px-0.5 pb-0.5">
+                      <span className="truncate text-[13px] font-medium text-[#202124]">
+                        {t.label}
                       </span>
-                      <span className="mt-0.5 block text-[12px] leading-relaxed text-[#5f6368]">
-                        {t.note}
-                      </span>
+                      {t.surface === 'DARK' && (
+                        <span className="shrink-0 rounded-full bg-[#f1f3f4] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[#5f6368]">
+                          Dark
+                        </span>
+                      )}
                     </span>
                   </button>
                 );
               })}
             </div>
+            {/* The chosen template's own description, once — rather than eight
+                lines of prose competing with eight pictures. */}
+            <p className="mt-3 text-[12px] leading-relaxed text-[#5f6368]">
+              {templateFor(draft.templateKey).note}
+            </p>
           </section>
 
           {/* Presets first: most developers click one and stop, which is the
