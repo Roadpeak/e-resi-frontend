@@ -418,6 +418,13 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
 function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
   const unit = property.units?.[0];
   const plan = property.floorPlans?.[0];
+  // The price is carried by the featured card beside these, so it is dropped
+  // here to avoid stating the same figure twice in one composition. Location
+  // stays: this hero has no eyebrow, so it is the only place the development
+  // says where it is above the fold.
+  const facts = heroFacts(property)
+    .filter((f) => f.label !== 'From')
+    .slice(0, 3);
 
   return (
     <section className="w-full bg-[#f4f5f7] px-3 pb-16 pt-3 sm:px-5">
@@ -438,11 +445,35 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
                   {property.tagline}
                 </HeroReveal>
               )}
-              <HeroReveal delay={0.6}
-                className="mt-8"
-              >
+              <HeroReveal delay={0.6} className="mt-8 flex items-center gap-3">
                 <CtaRow ctaLabel={ctaLabel} onDark />
+                <ChatWithDeveloper
+                  propertySlug={property.slug}
+                  tone="dark"
+                  variant="icon"
+                  label="Chat with the developer"
+                />
               </HeroReveal>
+
+              {/* The figures, on a rule under the buttons. Showcase put its
+                  only number inside the floating card, which is hidden below
+                  md — so on a phone this hero stated no price at all. */}
+              {facts.length > 0 && (
+                <HeroReveal
+                  delay={0.75}
+                  as="dl"
+                  className="mt-9 flex flex-wrap gap-x-10 gap-y-4 border-t border-white/20 pt-6"
+                >
+                  {facts.map((f) => (
+                    <div key={f.label}>
+                      <dt className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/55">
+                        {f.label}
+                      </dt>
+                      <dd className="mt-1.5 text-[16px] font-semibold text-white">{f.value}</dd>
+                    </div>
+                  ))}
+                </HeroReveal>
+              )}
             </div>
           </div>
 
@@ -453,22 +484,45 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
               initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.75 }}
-              className="absolute bottom-8 right-8 z-10 hidden w-72 rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] md:block"
+              className="absolute bottom-10 right-10 z-10 hidden w-72 rounded-2xl bg-white/95 p-4 shadow-2xl backdrop-blur-sm transition-transform hover:scale-[1.02] md:block"
             >
-              <div className="flex items-center gap-3">
-                {property.heroImageUrl && (
-                  <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl">
-                    <Image src={property.heroImageUrl} alt="" fill className="object-cover" sizes="80px" />
+              <div className="flex items-center gap-3.5">
+                {/*
+                  The floor plan, not the hero photograph.
+
+                  This used to show `heroImageUrl` — the very image the card is
+                  floating on top of — so the thumbnail was a crop of the
+                  background behind it and read as a rendering fault. A plan
+                  drawing is what a featured layout should show; when there is
+                  none, the mark stands in rather than repeating the render.
+                */}
+                {plan?.imageUrl ? (
+                  <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                    <Image src={plan.imageUrl} alt="" fill className="object-cover" sizes="80px" />
                   </div>
+                ) : (
+                  <span
+                    aria-hidden
+                    className="flex h-16 w-20 shrink-0 flex-col items-center justify-center rounded-xl text-[20px] font-bold leading-none"
+                    style={{
+                      background: 'color-mix(in srgb, var(--brand) 10%, white)',
+                      color: 'var(--brand)',
+                    }}
+                  >
+                    {plan?.bedrooms ?? unit?.bedrooms ?? '—'}
+                    <span className="mt-1 text-[9px] font-semibold uppercase tracking-wider opacity-70">
+                      bed
+                    </span>
+                  </span>
                 )}
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] font-semibold text-neutral-900">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                    Featured
+                  </p>
+                  <p className="mt-1 truncate text-[14px] font-semibold text-neutral-900">
                     {plan?.name ?? `${plan?.bedrooms ?? unit?.bedrooms ?? ''} bed`}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-neutral-500">
-                    {getStatusLabel(property.status)}
-                  </p>
-                  <p className="mt-1 text-[14px] font-semibold" style={{ color: 'var(--brand)' }}>
+                  <p className="mt-1 text-[15px] font-bold" style={{ color: 'var(--brand)' }}>
                     {formatPrice(property.priceFrom, property.currency)}
                   </p>
                 </div>
