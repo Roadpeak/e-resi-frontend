@@ -9,8 +9,9 @@ import { Environment, Grid, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   ArrowLeft, Play, Pause, ChevronLeft, ChevronRight, Headset,
-  Maximize2, Share2, MoreVertical, Ruler, Layers, LayoutGrid, X, Home, Footprints,
+  Maximize2, Share2, MoreVertical, Ruler, Layers, LayoutGrid, X, Home, Footprints, Eye,
 } from 'lucide-react';
+import { PanoramaView } from './PanoramaView';
 import { cn } from '../../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { twinsApi, type DigitalTwin } from '../../../lib/api/twins';
@@ -30,10 +31,21 @@ import { deriveRooms, type DerivedRoom } from '../../../lib/tour/rooms';
  * kitchen, the amenities — and the tour re-routes to just those stops.
  */
 
-export type ViewMode = 'walk' | 'dollhouse' | 'floorplan';
+/**
+ * The modes.
+ *
+ * `inside` is the odd one out: the other three move a camera through the mesh,
+ * while it shows a 360° image baked from a waypoint and never renders the model
+ * at all. It is separated from ModelMode below because it has no rig camera to
+ * describe — there is nothing to place.
+ */
+export type ViewMode = ModelMode | 'inside';
+
+/** The three modes that render the model itself. */
+type ModelMode = 'walk' | 'dollhouse' | 'floorplan';
 
 /** Where the camera sits, per mode. The rig eases between these. */
-const MODE_CAMERA: Record<ViewMode, { pos: [number, number, number]; look: [number, number, number] }> = {
+const MODE_CAMERA: Record<ModelMode, { pos: [number, number, number]; look: [number, number, number] }> = {
   walk: { pos: [4.5, 4.2, 6.4], look: [0, 0.8, 0] },
   dollhouse: { pos: [11, 9, 13], look: [0, 1.2, 0] },
   floorplan: { pos: [0.001, 20, 0.001], look: [0, 0, 0] },
@@ -67,6 +79,13 @@ interface Stop {
   extent: number;
   sectionId: string;
   sectionLabel: string;
+  /**
+   * A 360° image rendered from this waypoint, when one has been baked.
+   *
+   * Its presence is what makes the panorama mode available: standing inside a
+   * photograph is only possible where a photograph exists.
+   */
+  panoramaUrl?: string | null;
   /** Present only on legacy scene stops. */
   scene?: TourScene;
 }
@@ -250,7 +269,7 @@ function CameraRig({
   focusExtent = 0,
   eyepoint = null,
 }: {
-  mode: ViewMode;
+  mode: ModelMode;
   target: [number, number, number] | null;
   orbit: { yaw: number; pitch: number; dist: number };
   /** Bounding radius of whatever is loaded; drives distances and clip planes. */
@@ -532,7 +551,7 @@ function Scene({
   eyepoint,
   onRooms,
 }: {
-  mode: ViewMode;
+  mode: ModelMode;
   target: [number, number, number] | null;
   orbit: { yaw: number; pitch: number; dist: number };
   activeRoom: string | null;
@@ -695,6 +714,7 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
           extent: 0,
           sectionId: w.route ?? 'all',
           sectionLabel: w.route ?? '',
+          panoramaUrl: w.panoramaUrl ?? null,
         }));
     }
 
@@ -761,8 +781,46 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
     if (authoredOpen.current) return;
     if (!twin?.waypoints?.length) return;
     authoredOpen.current = true;
-    setMode('walk');
-  }, [twin?.waypoints?.length]);
+    // Inside when there are photographs to stand in, walk otherwise. The
+    // panorama is both the better opening and the cheaper one: it is an image,
+    // so it is up before the mesh has finished downloading.
+    setMode(twin.waypoints.some((w) => w.panoramaUrl) ? 'inside' : 'walk');
+  }, [twin?.waypoints]);
+
+  /**
+   * The stops that have a baked panorama.
+   *
+   * A tour can be partly baked — a waypoint added after the last bake has no
+   * image yet — so this is a filter rather than an assumption, and the mode is
+   * only offered when it finds something.
+   */
+  const panoramaStops = useMemo(
+    () =>
+      stops
+        .filter((s): s is Stop & { panoramaUrl: string } => !!s.panoramaUrl)
+        .map((s) => ({
+          id: s.id,
+          label: s.label,
+          caption: s.caption,
+          panoramaUrl: s.panoramaUrl,
+          pos: s.pos,
+          look: s.look,
+        })),
+    [stops],
+  );
+
+  /**
+   * Which panorama the current stop corresponds to.
+   *
+   * The two lists differ whenever some stops are unbaked, so the shared index
+   * cannot be reused directly — mapping by id keeps Next, Prev and Play driving
+   * this mode without any of them knowing it exists. An unbaked stop holds the
+   * last panorama rather than blanking.
+   */
+  const panoramaIndex = useMemo(() => {
+    const found = panoramaStops.findIndex((s) => s.id === stops[index]?.id);
+    return found >= 0 ? found : 0;
+  }, [panoramaStops, stops, index]);
   const [playing, setPlaying] = useState(false);
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [showRooms, setShowRooms] = useState(false);
@@ -888,6 +946,20 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
 
   return (
     <div ref={shellRef} className="relative h-[100dvh] w-full overflow-hidden bg-[#0d1117]">
+      {mode === 'inside' ? (
+        /**
+         * Inside: the model is not rendered at all.
+         *
+         * The whole point of the baked panorama is that nothing moves through
+         * geometry, so mounting the mesh Canvas underneath would pay for a
+         * scene nobody can see. It unmounts, and the GPU goes to the image.
+         */
+        <PanoramaView
+          stops={panoramaStops}
+          index={panoramaIndex}
+          className="absolute inset-0 h-full w-full"
+        />
+      ) : (
       <Canvas
         shadows
         dpr={[1, 2]}
@@ -919,20 +991,36 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
           />
         </Suspense>
       </Canvas>
+      )}
 
-      {/* Pointer surface, over the canvas so drags never select page text. */}
-      <div
-        className={cn(
-          'absolute inset-0',
-          mode === 'floorplan' ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
-        )}
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerLeave={onUp}
-        onWheel={onWheel}
-        style={{ pointerEvents: openTag ? 'none' : 'auto' }}
-      />
+      {/**
+       * A scrim under the caption and controls.
+       *
+       * The rendered modes put dark geometry behind them and a drop-shadow was
+       * enough. A baked panorama is a photograph, and a kitchen with a marble
+       * splashback in it is bright enough to swallow white text whole — so the
+       * legibility has to come from the page rather than from luck about what
+       * the camera happens to be facing.
+       */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-64 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+
+      {/* Pointer surface, over the canvas so drags never select page text.
+          Not in 'inside' mode: this covers the viewport, and it would take every
+          drag before the panorama — which does its own looking — ever saw one. */}
+      {mode !== 'inside' && (
+        <div
+          className={cn(
+            'absolute inset-0',
+            mode === 'floorplan' ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
+          )}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerLeave={onUp}
+          onWheel={onWheel}
+          style={{ pointerEvents: openTag ? 'none' : 'auto' }}
+        />
+      )}
 
       {/* ── Brand, top left ── */}
       <div className="pointer-events-none absolute left-5 top-5 z-20 flex items-center gap-3">
@@ -1064,6 +1152,12 @@ export function TourViewer3D({ property, tour }: { property: Property; tour: Pro
 
             <span className="mx-1 h-5 w-px bg-white/20" />
 
+            {/* Offered only where something was baked — see panoramaStops. */}
+            {panoramaStops.length > 0 && (
+              <ModeBtn active={mode === 'inside'} label="Inside" onClick={() => setMode('inside')}>
+                <Eye size={17} />
+              </ModeBtn>
+            )}
             <ModeBtn active={mode === 'walk'} label="Explore" onClick={() => setMode('walk')}>
               <Footprints size={17} />
             </ModeBtn>

@@ -22,6 +22,13 @@ export interface TwinWaypoint {
   lookX: number; lookY: number; lookZ: number;
   floor: number;
   order: number;
+  /**
+   * A 360° image rendered from this waypoint by the API's bake step, when one
+   * exists. Absent on a twin uploaded before panoramas, or one whose bake was
+   * skipped — the viewer falls back to the live model in both cases.
+   */
+  panoramaUrl?: string | null;
+  panoramaAt?: string | null;
 }
 
 export interface TwinTag {
