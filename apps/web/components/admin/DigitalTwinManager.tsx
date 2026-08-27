@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
+import { WaypointStudio } from './WaypointStudio';
 import { twinsApi, uploadMesh, type GlbSummary, type TwinKind } from '../../lib/api/twins';
 import { uploadFile } from '../../lib/api/media';
 import { apiClient, ApiError } from '../../lib/api/client';
@@ -444,7 +445,21 @@ export function DigitalTwinManager({ slug }: { slug: string }) {
             saving={save.isPending}
             onSave={(body) => save.mutate(body)}
           />
-          <Waypoints slug={slug} twin={twin} onDone={refresh} onError={onError} />
+          {/* Placing stops needs the model on screen: the coordinates are
+              unguessable, and the look direction has no sensible typed form at
+              all. Falls back to the numeric editor if the model is missing. */}
+          {twin.meshUrl ? (
+            <WaypointStudio
+              slug={slug}
+              twinId={twin.id}
+              meshUrl={twin.meshUrl}
+              waypoints={twin.waypoints}
+              onChanged={refresh}
+              onError={onError}
+            />
+          ) : (
+            <Waypoints slug={slug} twin={twin} onDone={refresh} onError={onError} />
+          )}
           <Tags slug={slug} twin={twin} onDone={refresh} onError={onError} />
 
           {/* ── Preview ──

@@ -107,6 +107,35 @@ export const twinsApi = {
     floor?: number; order?: number;
   }) => apiClient.post<TwinWaypoint>(`/properties/${slug}/twin/${twinId}/waypoints`, body),
 
+  /**
+   * Edit a stop in place.
+   *
+   * Partial: send only what changed. Moving a stop clears its baked panorama
+   * server-side, because the image was rendered from the old position; re-aiming
+   * does not, because where the camera looks is a viewer-side heading rather
+   * than something baked into the sphere.
+   */
+  updateWaypoint: (slug: string, id: string, body: {
+    label?: string; caption?: string; route?: string;
+    posX?: number; posY?: number; posZ?: number;
+    lookX?: number; lookY?: number; lookZ?: number;
+    floor?: number; order?: number;
+  }) => apiClient.patch<TwinWaypoint>(`/properties/${slug}/twin/waypoints/${id}`, body),
+
+  /** Save a new order for every stop on the model, in one transaction. */
+  reorderWaypoints: (twinId: string, slug: string, ids: string[]) =>
+    apiClient.patch<{ message: string }>(
+      `/properties/${slug}/twin/${twinId}/waypoints/order`,
+      { ids },
+    ),
+
+  /** Render a 360° image from every stop. Slow — about 25s per stop. */
+  bakePanoramas: (twinId: string, slug: string, opts: { stale?: boolean } = {}) =>
+    apiClient.post<{ baked: number; total: number; message: string }>(
+      `/properties/${slug}/twin/${twinId}/panoramas${opts.stale ? '?stale=true' : ''}`,
+      {},
+    ),
+
   removeWaypoint: (slug: string, id: string) =>
     apiClient.delete<{ message: string }>(`/properties/${slug}/twin/waypoints/${id}`),
 
