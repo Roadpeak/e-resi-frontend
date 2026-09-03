@@ -24,7 +24,23 @@ export function HeroSection() {
   const cinCardRef = useRef<HTMLDivElement>(null);
   const phase2HeadRef = useRef<HTMLDivElement>(null);
 
-  // Builds the pinned, scrub-driven hero once the video's duration is known.
+  // Builds the pinned, scrub-driven hero — immediately, not once the video's
+  // duration is known.
+  //
+  // It used to wait for metadata, and that gate was a landing-page bug in two
+  // parts. Until the video yielded a duration the hero had no ScrollTrigger at
+  // all — a plain 100vh section a visitor scrolls past in one flick, which on a
+  // slow connection is the first N seconds of the page's centrepiece. Worse,
+  // when metadata finally arrived mid-scroll, building the pin injected five
+  // viewport-heights of spacer at the top of the document: everything below
+  // teleported down, and the showcase's already-measured trigger was left
+  // pointing at positions that no longer existed — pins refusing to engage,
+  // black voids where sections should be.
+  //
+  // The pin never needed the duration. Only the seek multiplier does, so the
+  // duration lives in a ref that starts null: the rig builds on mount into a
+  // layout that never shifts, and the scrub starts driving frames the moment
+  // metadata lands — snapping first to wherever the scroll already is.
   //
   // Scroll restoration is deliberately not handled here — SmoothScroll owns
   // Lenis and so can reset the window and Lenis's own position together, where
@@ -38,186 +54,218 @@ export function HeroSection() {
     // a frame immediately so the hero shows imagery before the first scroll.
     if (video.currentTime === 0) video.currentTime = 0.01;
 
-    let initialised = false;
-    const onReady = () => {
-      // loadedmetadata and canplay can both fire; without this the timeline and
-      // ScrollTrigger get built twice and fight each other.
-      if (initialised) return;
-      const duration = video.duration;
-      if (!duration || isNaN(duration)) return;
-      initialised = true;
+    // null until metadata arrives; the poster covers the wait.
+    const durationRef = { current: null as number | null };
+    // Progress is remembered so a late-arriving duration can seek straight to
+    // where the visitor already is, rather than to wherever the video was.
+    const progressRef = { current: 0 };
 
-      const ctx = gsap.context(() => {
+    let removeVideoListeners: (() => void) | null = null;
 
-        // ── Entrance sequence ──
-        // Safe to always play: the effect above guarantees we start at the top,
-        // so the intro never animates over values the scrub already owns.
-        const tl = gsap.timeline({ delay: 0.3 });
-        tl.from(lineRef.current, {
-          scaleX: 0,
-          transformOrigin: 'left center',
-          duration: 1.2,
-          ease: 'power4.out',
-        })
-        .from('.hero-word', {
-          y: '110%',
-          opacity: 0,
-          duration: 1,
-          stagger: 0.08,
-          ease: 'power4.out',
-        }, '-=0.8')
-        .from(subRef.current, {
-          y: 24,
-          opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        }, '-=0.4')
-        .from(ctaRef.current, {
-          y: 16,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power3.out',
-        }, '-=0.3')
-        .from(scrollIndRef.current, {
-          opacity: 0,
-          duration: 0.6,
-        }, '-=0.2');
+    const ctx = gsap.context(() => {
 
-        // ── Phase 2 hidden initially ──
-        gsap.set(phase2Ref.current, { autoAlpha: 0 });
-        gsap.set(vrCardRef.current, { autoAlpha: 0, x: -60 });
-        gsap.set(tdCardRef.current, { autoAlpha: 0, x: 60 });
-        gsap.set(cinCardRef.current, { autoAlpha: 0, y: 40 });
-        gsap.set(phase2HeadRef.current, { autoAlpha: 0, y: 30 });
+      // ── Entrance sequence ──
+      // Safe to always play: SmoothScroll guarantees we start at the top,
+      // so the intro never animates over values the scrub already owns.
+      const tl = gsap.timeline({ delay: 0.3 });
+      tl.from(lineRef.current, {
+        scaleX: 0,
+        transformOrigin: 'left center',
+        duration: 1.2,
+        ease: 'power4.out',
+      })
+      .from('.hero-word', {
+        y: '110%',
+        opacity: 0,
+        duration: 1,
+        stagger: 0.08,
+        ease: 'power4.out',
+      }, '-=0.8')
+      .from(subRef.current, {
+        y: 24,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out',
+      }, '-=0.4')
+      .from(ctaRef.current, {
+        y: 16,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+      }, '-=0.3')
+      .from(scrollIndRef.current, {
+        opacity: 0,
+        duration: 0.6,
+      }, '-=0.2');
 
-        // ── Main scroll driver ──
-        // A phone travels five screen-heights of finger-scrolling to clear a
-        // 500% pin while seeking a video frame the whole way. Shorten the
-        // travel, lighten the scrub, and ask for fewer seeks — mobile decoders
-        // are far slower, and a seek queue that cannot keep up is the stutter.
-        const isMobile = window.matchMedia('(max-width: 767px)').matches;
-        const minDelta = isMobile ? 1 / 12 : 1 / 24;
+      // ── Phase 2 hidden initially ──
+      gsap.set(phase2Ref.current, { autoAlpha: 0 });
+      gsap.set(vrCardRef.current, { autoAlpha: 0, x: -60 });
+      gsap.set(tdCardRef.current, { autoAlpha: 0, x: 60 });
+      gsap.set(cinCardRef.current, { autoAlpha: 0, y: 40 });
+      gsap.set(phase2HeadRef.current, { autoAlpha: 0, y: 30 });
 
-        // Seeking is asynchronous: assigning currentTime while the decoder is
-        // still seeking is dropped on the floor. So rather than track "am I
-        // mid-seek?" in a flag — which strands the scrub permanently if an
-        // event is missed, freezing the video while the decoder sits idle —
-        // read the decoder's own `seeking` property at the moment of use. It
-        // cannot go stale, so the next scroll event always re-issues.
-        //
-        // Driven straight from onUpdate rather than gsap.ticker: a ticker
-        // callback registered inside gsap.context() is torn down when that
-        // context reverts, which left the video frozen with the pin still
-        // running. onUpdate fires on every scrub frame anyway.
-        const seekTo = (time: number) => {
-          if (video.seeking) return;
-          if (Math.abs(time - video.currentTime) < minDelta) return;
-          video.currentTime = time;
-        };
+      // ── Main scroll driver ──
+      // A phone travels five screen-heights of finger-scrolling to clear a
+      // 500% pin while seeking a video frame the whole way. Shorten the
+      // travel, lighten the scrub, and ask for fewer seeks — mobile decoders
+      // are far slower, and a seek queue that cannot keep up is the stutter.
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      const minDelta = isMobile ? 1 / 12 : 1 / 24;
 
-        ScrollTrigger.create({
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: isMobile ? '+=250%' : '+=500%',
-          pin: true,
-          scrub: isMobile ? 0.6 : 1.5,
-          onUpdate: (self) => {
-            const p = self.progress;
-
-            // Video scrub — full duration across full scroll.
-            seekTo(p * duration);
-
-            // ── Phase 1: 0 → 0.28  (headline visible → fades out) ──
-            const p1out = Math.max(0, Math.min(1, (p - 0.18) / 0.12)); // fades 0.18→0.30
-            if (headlineRef.current) {
-              gsap.set(headlineRef.current, {
-                y: p1out * -80,
-                opacity: 1 - p1out,
-              });
-            }
-            if (subRef.current)  gsap.set(subRef.current,  { opacity: 1 - p1out * 1.4 });
-            if (ctaRef.current)  gsap.set(ctaRef.current,  { opacity: 1 - p1out * 1.4 });
-            if (lineRef.current) gsap.set(lineRef.current, { opacity: 1 - p1out });
-            if (scrollIndRef.current) gsap.set(scrollIndRef.current, { opacity: Math.max(0, 1 - p * 6) });
-
-            // ── Phase 2: 0.32 → 0.72 (VR/3D panel fades in, stays, fades out) ──
-            const p2in  = Math.max(0, Math.min(1, (p - 0.32) / 0.12)); // fade in
-            const p2out = Math.max(0, Math.min(1, (p - 0.62) / 0.12)); // fade out
-
-            const p2Opacity = p2in * (1 - p2out);
-
-            if (phase2Ref.current)    gsap.set(phase2Ref.current,    { autoAlpha: p2Opacity });
-            if (phase2HeadRef.current) {
-              gsap.set(phase2HeadRef.current, {
-                autoAlpha: p2Opacity,
-                y: (1 - p2in) * 30,
-              });
-            }
-            if (vrCardRef.current) {
-              gsap.set(vrCardRef.current, {
-                autoAlpha: p2Opacity,
-                x: (1 - p2in) * -60,
-              });
-            }
-            if (tdCardRef.current) {
-              gsap.set(tdCardRef.current, {
-                autoAlpha: p2Opacity,
-                x: (1 - p2in) * 60,
-              });
-            }
-            if (cinCardRef.current) {
-              gsap.set(cinCardRef.current, {
-                autoAlpha: p2Opacity,
-                y: (1 - p2in) * 40,
-              });
-            }
-          },
-        });
-
-        // ── Scroll indicator float ──
-        if (scrollIndRef.current) {
-          gsap.to(scrollIndRef.current, {
-            y: 8,
-            duration: 1.4,
-            ease: 'sine.inOut',
-            repeat: -1,
-            yoyo: true,
-          });
+      // Seeking is asynchronous: assigning currentTime while the decoder is
+      // still seeking is dropped on the floor. Dropping the *request* along
+      // with it broke reverse scrubbing: a backward seek jumps to an earlier
+      // keyframe and decodes forward to the target, so it is much slower
+      // than a forward one, and with Lenis still easing out scroll events
+      // the decoder was busy for most frames of an upward scroll. Nearly
+      // every seek got dropped, the video lagged half its length behind the
+      // scroll, and the stale frames only caught up whenever a much later
+      // event slipped one through — which read as the second half of the
+      // video playing by itself, well after the scrolling stopped.
+      //
+      // So: never drop, defer. While the decoder is busy the latest target
+      // is parked in `pending`, and the `seeked` handler issues it the
+      // moment the in-flight seek lands. Latest wins; the video converges
+      // to wherever the scroll actually is, in one corrective step, in
+      // both directions. Because `pending` is re-issued from an event
+      // rather than a poll, a missed frame cannot strand it.
+      //
+      // Driven straight from onUpdate rather than gsap.ticker: a ticker
+      // callback registered inside gsap.context() is torn down when that
+      // context reverts, which left the video frozen with the pin still
+      // running. onUpdate fires on every scrub frame anyway.
+      let pending: number | null = null;
+      const seekTo = (time: number) => {
+        if (video.seeking) {
+          pending = time;
+          return;
         }
+        if (Math.abs(time - video.currentTime) < minDelta) return;
+        video.currentTime = time;
+      };
+      const onSeeked = () => {
+        if (pending === null) return;
+        const target = pending;
+        pending = null;
+        // Same threshold as seekTo, so this cannot ping-pong: a target
+        // within minDelta of where the decoder just landed is done.
+        if (Math.abs(target - video.currentTime) < minDelta) return;
+        video.currentTime = target;
+      };
+      video.addEventListener('seeked', onSeeked);
 
-      }, sectionRef);
+      // Metadata may land after the visitor has already scrolled — the pin
+      // no longer waits for it. Snap the frame to where they are, not to
+      // wherever the video happened to be.
+      const onMeta = () => {
+        if (!video.duration || isNaN(video.duration)) return;
+        durationRef.current = video.duration;
+        seekTo(progressRef.current * video.duration);
+      };
+      video.addEventListener('loadedmetadata', onMeta);
+      // Already loaded (cached, or a remount that reused the resource).
+      if (video.readyState >= 1) onMeta();
 
-      // Hold the context so the effect's cleanup can revert it. Returning it
-      // from this callback went nowhere, so every re-init leaked a context.
-      ctxRef.current = ctx;
+      // The video listeners live on a DOM element gsap did not create, so
+      // revert() would leave them behind. Handed to the outer effect's own
+      // cleanup instead — not ctx.add(), which cannot be called from inside
+      // the context callback (`ctx` does not exist yet while it runs).
+      removeVideoListeners = () => {
+        video.removeEventListener('seeked', onSeeked);
+        video.removeEventListener('loadedmetadata', onMeta);
+      };
 
-      // The pin's `end: '+=500%'` is resolved to a pixel distance the moment
-      // the trigger is created. When the video is cached this runs during mount,
-      // before the page below has settled, so re-measure once the browser has
-      // painted. Two rAFs because the first only guarantees we are before a
-      // paint; the second runs after it, when layout reflects reality.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => ScrollTrigger.refresh());
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: 'top top',
+        end: isMobile ? '+=250%' : '+=500%',
+        pin: true,
+        scrub: isMobile ? 0.6 : 1.5,
+        onUpdate: (self) => {
+          const p = self.progress;
+          progressRef.current = p;
+
+          // Video scrub — full duration across full scroll. Until metadata
+          // arrives there is nothing to seek; the poster holds the frame
+          // and onMeta catches the scrub up the moment there is.
+          if (durationRef.current) seekTo(p * durationRef.current);
+
+          // ── Phase 1: 0 → 0.28  (headline visible → fades out) ──
+          const p1out = Math.max(0, Math.min(1, (p - 0.18) / 0.12)); // fades 0.18→0.30
+          if (headlineRef.current) {
+            gsap.set(headlineRef.current, {
+              y: p1out * -80,
+              opacity: 1 - p1out,
+            });
+          }
+          if (subRef.current)  gsap.set(subRef.current,  { opacity: 1 - p1out * 1.4 });
+          if (ctaRef.current)  gsap.set(ctaRef.current,  { opacity: 1 - p1out * 1.4 });
+          if (lineRef.current) gsap.set(lineRef.current, { opacity: 1 - p1out });
+          if (scrollIndRef.current) gsap.set(scrollIndRef.current, { opacity: Math.max(0, 1 - p * 6) });
+
+          // ── Phase 2: 0.32 → 0.72 (VR/3D panel fades in, stays, fades out) ──
+          const p2in  = Math.max(0, Math.min(1, (p - 0.32) / 0.12)); // fade in
+          const p2out = Math.max(0, Math.min(1, (p - 0.62) / 0.12)); // fade out
+
+          const p2Opacity = p2in * (1 - p2out);
+
+          if (phase2Ref.current)    gsap.set(phase2Ref.current,    { autoAlpha: p2Opacity });
+          if (phase2HeadRef.current) {
+            gsap.set(phase2HeadRef.current, {
+              autoAlpha: p2Opacity,
+              y: (1 - p2in) * 30,
+            });
+          }
+          if (vrCardRef.current) {
+            gsap.set(vrCardRef.current, {
+              autoAlpha: p2Opacity,
+              x: (1 - p2in) * -60,
+            });
+          }
+          if (tdCardRef.current) {
+            gsap.set(tdCardRef.current, {
+              autoAlpha: p2Opacity,
+              x: (1 - p2in) * 60,
+            });
+          }
+          if (cinCardRef.current) {
+            gsap.set(cinCardRef.current, {
+              autoAlpha: p2Opacity,
+              y: (1 - p2in) * 40,
+            });
+          }
+        },
       });
-    };
 
-    // NOT { once: true }. onReady bails without initialising when duration is
-    // not known yet, and a one-shot listener is removed whether or not that
-    // happened — so a `canplay` that arrived before metadata consumed the only
-    // chance to build the trigger, and the hero was left with no ScrollTrigger
-    // at all. That is what broke after navigating back to the page: the video
-    // element remounts and reloads, and the retry never came. `initialised`
-    // already makes repeat calls harmless, and cleanup removes these.
-    video.addEventListener('loadedmetadata', onReady);
-    video.addEventListener('canplay', onReady);
-    video.addEventListener('durationchange', onReady);
-    // Already loaded (cached, or a remount that reused the decoded resource).
-    if (video.readyState >= 1) onReady();
+      // ── Scroll indicator float ──
+      if (scrollIndRef.current) {
+        gsap.to(scrollIndRef.current, {
+          y: 8,
+          duration: 1.4,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+        });
+      }
+
+    }, sectionRef);
+
+    // Hold the context so the effect's cleanup can revert it. Returning it
+    // from this callback went nowhere, so every re-init leaked a context.
+    ctxRef.current = ctx;
+
+    // The pin's `end: '+=500%'` is resolved to a pixel distance the moment
+    // the trigger is created — during mount, before the page below has
+    // settled. Re-measure once the browser has painted. Two rAFs because the
+    // first only guarantees we are before a paint; the second runs after it,
+    // when layout reflects reality.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+    });
 
     return () => {
-      video.removeEventListener('loadedmetadata', onReady);
-      video.removeEventListener('canplay', onReady);
-      video.removeEventListener('durationchange', onReady);
+      removeVideoListeners?.();
       ctxRef.current?.revert();
       ctxRef.current = null;
     };
