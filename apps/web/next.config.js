@@ -25,6 +25,12 @@ const nextConfig = {
       { protocol: 'https', hostname: 'media.e-resi.com' },
       // Cloudinary (production media storage)
       { protocol: 'https', hostname: 'res.cloudinary.com' },
+      // Agent/developer avatars and logos are URLs those users supply, so
+      // they can live on any host — and next/image throws a runtime error
+      // (crashing the whole page) for a hostname not listed here. Any https
+      // host is allowed; dangerouslyAllowSVG above stays safe because the
+      // CSP below blocks script in anything the optimizer serves.
+      { protocol: 'https', hostname: '**' },
       // local API uploads (sandbox storage in development)
       { protocol: 'http', hostname: 'localhost', port: '4000', pathname: '/uploads/**' },
       { protocol: 'http', hostname: '127.0.0.1', port: '4000', pathname: '/uploads/**' },

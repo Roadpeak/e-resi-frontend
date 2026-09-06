@@ -53,7 +53,10 @@ export function AgentReferralBar() {
       >
         <div className="flex w-full max-w-md items-center gap-3 rounded-full border border-black/10 bg-white/95 py-2 pl-2 pr-2 shadow-xl backdrop-blur">
           {avatar ? (
-            <Image src={avatar} alt={agent.displayName} width={40} height={40}
+            // Unoptimized: agents upload avatars from anywhere, and next/image
+            // throws outright on a hostname next.config doesn't list — a
+            // stranger's avatar must never be able to crash a property page.
+            <Image src={avatar} alt={agent.displayName} width={40} height={40} unoptimized
               className="h-10 w-10 shrink-0 rounded-full object-cover" />
           ) : (
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[15px] font-medium text-[#1967d2]">

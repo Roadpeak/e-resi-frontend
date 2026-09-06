@@ -1,58 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
-import { captureReferral, getReferral } from '../../lib/analytics/referral';
+import { captureReferral } from '../../lib/analytics/referral';
+import { track } from '../../lib/analytics/track';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
-
-function sessionId(): string {
-  try {
-    let id = sessionStorage.getItem('e-resi-session');
-    if (!id) {
-      id = crypto.randomUUID();
-      sessionStorage.setItem('e-resi-session', id);
-    }
-    return id;
-  } catch {
-    return 'anonymous';
-  }
-}
-
-function sourceFromReferrer(): string {
-  try {
-    if (!document.referrer) return 'Direct';
-    const host = new URL(document.referrer).hostname;
-    if (host === window.location.hostname) return 'Direct';
-    if (/google\.|bing\.|duckduckgo\.|yahoo\./.test(host)) return 'Search';
-    if (/facebook\.|instagram\.|twitter\.|x\.com|tiktok\.|linkedin\.|youtube\./.test(host)) return 'Social';
-    return 'Referral';
-  } catch {
-    return 'Direct';
-  }
-}
-
-/** Fire-and-forget PAGE_VIEW analytics event for a property page. */
+/**
+ * Fire-and-forget PAGE_VIEW for a property page.
+ *
+ * This used to carry its own copy of the emitter, which put the referring
+ * agent under metadata instead of the top-level agentId column — so agent
+ * link traffic never showed up in the referral report. It now goes through
+ * the central track(), the same path every other event uses.
+ */
 export function TrackPageView({ propertyId }: { propertyId: string }) {
-  // An agent's shared link carries ?ref=<agentId>. Captured here, before the
-  // visitor navigates anywhere and loses the query string.
-  useEffect(() => {
-    captureReferral();
-  }, []);
-
   useEffect(() => {
     if (!propertyId) return;
-    fetch(`${API_BASE}/analytics/track`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true,
-      body: JSON.stringify({
-        type: 'PAGE_VIEW',
-        propertyId,
-        sessionId: sessionId(),
-        source: sourceFromReferrer(),
-        ...(getReferral() ? { metadata: { agentId: getReferral() } } : {}),
-      }),
-    }).catch(() => {});
+    // Capture must run before the event fires, or the very first visit
+    // through an agent's link — the click that IS the referral — would be
+    // the one view that isn't credited.
+    captureReferral();
+    track({ type: 'PAGE_VIEW', propertyId });
   }, [propertyId]);
 
   return null;

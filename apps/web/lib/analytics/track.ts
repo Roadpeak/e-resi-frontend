@@ -66,6 +66,26 @@ export function sourceFromReferrer(): string {
   }
 }
 
+/**
+ * The signed-in visitor's id, surviving the store's slow start.
+ *
+ * On a fresh page load the user record arrives only after /me resolves, but
+ * PAGE_VIEW fires on mount — reading user?.id alone loses exactly the event
+ * the viewer-interest report cares most about. The persisted access token is
+ * available immediately, so fall back to its sub claim.
+ */
+function currentUserId(): string | undefined {
+  const state = useAuthStore.getState();
+  if (state.user?.id) return state.user.id;
+  const token = state.accessToken;
+  if (!token) return undefined;
+  try {
+    return (JSON.parse(atob(token.split('.')[1])) as { sub?: string }).sub;
+  } catch {
+    return undefined;
+  }
+}
+
 export interface TrackInput {
   type: AnalyticsEventType;
   propertyId?: string;
@@ -87,7 +107,7 @@ export function track({ type, propertyId, metadata }: TrackInput): void {
   // And the signed-in visitor, when there is one: a registered investor
   // quietly opening the same development four times is the warmest lead the
   // platform can see, and without this line that interest is anonymous.
-  const userId = useAuthStore.getState().user?.id;
+  const userId = currentUserId();
 
   const body = JSON.stringify({
     type,
