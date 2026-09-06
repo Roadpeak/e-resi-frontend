@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { notificationsApi } from '../../lib/api/notifications';
 import { Logo } from '../brand/Logo';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { cn } from '../../lib/utils';
@@ -30,6 +32,13 @@ export function AccountNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const { data: notifMeta } = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: () => notificationsApi.list(1),
+    refetchInterval: 60_000,
+  });
+  const unreadCount = notifMeta?.unreadCount ?? 0;
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -72,6 +81,21 @@ export function AccountNav() {
             className="hidden rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] sm:inline-flex"
           >
             Browse properties
+          </Link>
+
+          {/* Notifications — the badge polls so a purchase update or shared
+              document surfaces without the person hunting for it. */}
+          <Link
+            href="/account/notifications"
+            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#5f6368] transition-colors hover:bg-[#f1f3f4]"
+          >
+            <MaterialIcon name="notifications" size={22} fill={pathname.startsWith('/account/notifications')} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#d93025] px-1 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Link>
 
           {/* Account menu */}
@@ -162,6 +186,23 @@ export function AccountNav() {
               );
             })}
             <div className="mt-2 border-t border-[#f1f3f4] pt-2">
+              <Link
+                href="/account/notifications"
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium transition-colors',
+                  pathname.startsWith('/account/notifications')
+                    ? 'bg-[#e8f0fe] text-[#1a73e8]'
+                    : 'text-[#3c4043] hover:bg-[#f1f3f4]',
+                )}
+              >
+                <MaterialIcon name="notifications" size={20} fill={pathname.startsWith('/account/notifications')} />
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#d93025] px-1.5 text-[11px] font-bold text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               <Link
                 href="/properties"
                 className="flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
