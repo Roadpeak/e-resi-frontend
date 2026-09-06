@@ -13,6 +13,7 @@ const NAV = [
   { label: 'Overview', href: '/dashboard', icon: 'dashboard' },
   { label: 'Properties', href: '/dashboard/properties', icon: 'apartment' },
   { label: 'Units', href: '/dashboard/units', icon: 'meeting_room' },
+  { label: 'Reservations', href: '/dashboard/reservations', icon: 'vpn_key' },
   { label: 'Rentals', href: '/dashboard/rentals', icon: 'home_work' },
   { label: 'Messages', href: '/dashboard/messages', icon: 'chat' },
   { label: 'Agent Partners', href: '/dashboard/partners', icon: 'handshake' },
