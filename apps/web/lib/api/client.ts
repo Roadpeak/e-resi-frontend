@@ -31,6 +31,13 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
   /** Skip auth header even if token is present */
   skipAuth?: boolean;
+  /**
+   * Never attempt a token refresh on 401. Required for calls made from
+   * inside the refresh flow itself: a 401 there would call doRefresh(),
+   * receive the refresh promise currently awaiting this very call, and
+   * deadlock — the "site stuck on a spinner" failure.
+   */
+  noRefresh?: boolean;
 };
 
 // Lazy import to avoid circular dependency (auth store imports apiClient)
@@ -51,7 +58,7 @@ async function request<T>(
   opts: RequestOptions = {},
   isRetry = false,
 ): Promise<T> {
-  const { body, skipAuth, headers: extraHeaders, ...rest } = opts;
+  const { body, skipAuth, noRefresh, headers: extraHeaders, ...rest } = opts;
 
   const headers: Record<string, string> = {
     ...(extraHeaders as Record<string, string>),
@@ -78,7 +85,7 @@ async function request<T>(
   // /auth/refresh would re-enter doRefresh() and recurse indefinitely.
   const isAuthEndpoint = path.startsWith('/auth/refresh') || path.startsWith('/auth/logout');
 
-  if (res.status === 401 && !isRetry && !isAuthEndpoint && doRefresh) {
+  if (res.status === 401 && !isRetry && !isAuthEndpoint && !noRefresh && doRefresh) {
     const refreshed = await doRefresh();
     if (refreshed) {
       return request<T>(method, path, opts, true);

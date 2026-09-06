@@ -44,6 +44,23 @@ export function RequireAuth({ roles, children }: RequireAuthProps) {
     }
   }, [hydrated, pendingHydration, isAuthenticated, allowed, pathname, router, user?.role]);
 
+  // Failsafe: a guard must never hold a spinner forever. While hydration is
+  // pending, re-kick it (covers any ordering where the provider's one-shot
+  // hydrate ran before the persisted token appeared); if it still hasn't
+  // resolved after a generous timeout, the session is treated as dead — the
+  // token is dropped, which flips the effect above into the login redirect.
+  useEffect(() => {
+    if (!hydrated || !pendingHydration) return;
+    useAuthStore.getState().hydrate();
+    const deadline = setTimeout(() => {
+      const s = useAuthStore.getState();
+      if (s.accessToken && !s.isAuthenticated) {
+        useAuthStore.setState({ accessToken: null, user: null, isAuthenticated: false, isLoading: false });
+      }
+    }, 12_000);
+    return () => clearTimeout(deadline);
+  }, [hydrated, pendingHydration]);
+
   if (!hydrated || !allowed) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">

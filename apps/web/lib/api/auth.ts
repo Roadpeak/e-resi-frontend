@@ -57,7 +57,7 @@ export const authApi = {
       skipAuth: true,
     }),
 
-  me: () => apiClient.get<User>('/auth/me'),
+  me: (opts?: { noRefresh?: boolean }) => apiClient.get<User>('/auth/me', opts),
 
   verifyEmail: (token: string) =>
     apiClient.get<{ message: string }>(`/auth/verify-email?token=${token}`, { skipAuth: true }),

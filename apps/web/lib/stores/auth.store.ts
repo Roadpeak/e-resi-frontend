@@ -70,8 +70,14 @@ export const useAuthStore = create<AuthState>()(
         refreshInFlight = (async () => {
           try {
             const { accessToken } = await authApi.refresh();
-            const user = await authApi.me();
-            set({ accessToken, user, isAuthenticated: true });
+            // Store the new token BEFORE the follow-up /me: that call reads
+            // the token from this store, and with the old expired one it
+            // would 401 → ask for a refresh → be handed this very promise →
+            // await itself forever. That deadlock was the "site stuck on a
+            // spinner" bug. noRefresh below is the second lock on that door.
+            set({ accessToken });
+            const user = await authApi.me({ noRefresh: true });
+            set({ user, isAuthenticated: true });
             return true;
           } catch {
             set({ user: null, accessToken: null, isAuthenticated: false });
@@ -85,17 +91,20 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hydrate: async () => {
-        const { accessToken } = get();
-        if (!accessToken) return;
+        const { accessToken, isLoading } = get();
+        if (!accessToken || isLoading) return;
         set({ isLoading: true });
         try {
-          const user = await authApi.me();
+          // noRefresh: on 401 the catch below runs the one refresh attempt
+          // itself — letting the client also refresh would mean two.
+          const user = await authApi.me({ noRefresh: true });
           set({ user, isAuthenticated: true, isLoading: false });
         } catch {
-          // Token stale — try refresh
-          const ok = await get().refreshToken();
-          if (!ok) set({ isLoading: false });
-          else set({ isLoading: false });
+          // Token stale — try refresh. Either way hydration is over: a
+          // failed refresh has cleared the token, and the route guards
+          // handle the redirect from there.
+          await get().refreshToken();
+          set({ isLoading: false });
         }
       },
     }),
