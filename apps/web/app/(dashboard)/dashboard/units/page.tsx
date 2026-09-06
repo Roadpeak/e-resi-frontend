@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatPrice, cn } from '../../../../lib/utils';
-import { BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, BedDouble, Bath, Maximize2, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
 import { unitsApi, type PortfolioUnit, type UnitStatus } from '../../../../lib/api/units';
 
 /**
@@ -183,6 +183,7 @@ export default function DashboardUnits() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Price</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Held by</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Status</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f3f4]">
@@ -207,6 +208,14 @@ export default function DashboardUnits() {
                     <td className="px-4 py-4 text-[15px] font-medium text-[#202124]">{formatPrice(u.price, u.currency)}</td>
                     <td className="px-4 py-4"><HolderCell unit={u} /></td>
                     <td className="px-4 py-4"><StatusCell unit={u} /></td>
+                    <td className="px-4 py-4 text-right">
+                      <Link
+                        href={`/dashboard/units/${u.id}`}
+                        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[#dadce0] px-4 py-1.5 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
+                      >
+                        View <ArrowRight size={13} />
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
