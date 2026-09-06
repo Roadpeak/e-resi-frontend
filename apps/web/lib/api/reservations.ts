@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import { referralPayload } from '../analytics/referral';
+import type { Document } from './documents';
 
 export type ReservationStage =
   | 'RESERVED'
@@ -24,6 +25,8 @@ export interface Reservation {
     currency: string;
     property: { slug: string; name: string; heroImageUrl: string };
   };
+  /** Purchase documents — originals with their signed copies. Not on the agent listing. */
+  documents?: Document[];
 }
 
 export interface ReservationsResponse {

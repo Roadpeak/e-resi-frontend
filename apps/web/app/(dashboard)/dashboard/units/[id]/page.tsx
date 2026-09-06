@@ -86,9 +86,12 @@ export default function UnitManagePage() {
     return <div className={cn(card, 'text-center text-[14px] text-[#5f6368]')}>Loading…</div>;
   }
 
-  // The pipeline owns the status while a live deal holds the unit — the
-  // dropdown would silently disagree with the deal, so it yields to a chip.
+  // The pipeline owns the status while a live deal or reservation holds the
+  // unit — or once a completed sale made someone its owner. The dropdown
+  // would silently disagree with those records (the API refuses it too), so
+  // it yields to a chip.
   const heldByDeal = unit.deals.some((d) => ['RESERVED', 'SPA_SIGNED', 'COMPLETED'].includes(d.stage));
+  const heldByPipeline = heldByDeal || unit.reservations.length > 0 || !!unit.ownership;
 
   return (
     <div className="max-w-7xl space-y-4">
@@ -108,9 +111,13 @@ export default function UnitManagePage() {
             {' · '}{formatPrice(unit.price, unit.currency)}
           </p>
         </div>
-        {heldByDeal ? (
+        {heldByPipeline ? (
           <span className={cn('rounded-full px-3.5 py-1.5 text-[13.5px] font-medium', STATUS_TONES[unit.status])}
-            title="Managed by its deal — move the deal to change it">
+            title={heldByDeal
+              ? 'Managed by its deal — move the deal to change it'
+              : unit.reservations.length > 0
+                ? 'Managed by its reservation — advance or cancel it from Reservations'
+                : 'This unit has a recorded owner — its status follows the completed sale'}>
             {unit.status.toLowerCase()}
           </span>
         ) : (

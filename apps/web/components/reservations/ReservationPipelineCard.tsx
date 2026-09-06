@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Mail, Phone, ArrowRight } from 'lucide-react';
 import { cn, formatDate, formatPrice } from '../../lib/utils';
+import { ReservationDocuments } from './ReservationDocuments';
 import {
   reservationsApi,
   type ManagedReservation,
@@ -147,6 +148,17 @@ export function ReservationPipelineCard({
       </div>
 
       {error && <p className="mt-3 text-[13px] text-[#d93025]">{error}</p>}
+
+      {/* Purchase paperwork — only where the listing carries it (the agent
+          view doesn't; theirs is a progress read, not a document channel). */}
+      {r.documents && (
+        <ReservationDocuments
+          reservationId={r.id}
+          documents={r.documents}
+          role="developer"
+          queryKey={queryKey}
+        />
+      )}
 
       {/* Advance / footer */}
       <div className="mt-5 flex items-center gap-3 border-t border-[#f1f3f4] pt-4">

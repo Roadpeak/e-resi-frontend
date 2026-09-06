@@ -56,16 +56,21 @@ function StatusCell({ unit }: { unit: PortfolioUnit }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['units-portfolio'] }),
   });
 
-  // A unit held by a live deal manages its own status — the pipeline moves
-  // it, and a manual flip would silently disagree with the deal that owns
-  // it. The dropdown appears only where a human is the source of truth.
-  if (unit.activeDeal) {
+  // A unit held by a live deal or reservation manages its own status — the
+  // pipeline moves it, and a manual flip would silently disagree with the
+  // record that owns it (the API refuses it too). The dropdown appears only
+  // where a human is the source of truth.
+  if (unit.activeDeal || unit.activeReservation) {
     const config = statusConfig[unit.status] ?? statusConfig.AVAILABLE;
     const Icon = config.icon;
     return (
       <span
         className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium', config.chip)}
-        title="Managed by its deal — move the deal to change it"
+        title={
+          unit.activeDeal
+            ? 'Managed by its deal — move the deal to change it'
+            : 'Managed by its reservation — advance or cancel it from Reservations'
+        }
       >
         <Icon size={12} /> {config.label}
       </span>

@@ -6,6 +6,7 @@ import { formatPrice, formatDate, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useMyReservations, useCancelReservation } from '../../../../lib/api/queries';
 import type { ReservationStage } from '../../../../lib/api/reservations';
+import { ReservationDocuments } from '../../../../components/reservations/ReservationDocuments';
 
 const PURCHASE_STEPS: { stage: ReservationStage; label: string }[] = [
   { stage: 'RESERVED', label: 'Unit Reserved' },
@@ -161,6 +162,17 @@ export default function AccountReservations() {
                     })}
                   </div>
                 </div>
+
+                {/* Purchase paperwork — download what the developer shared,
+                    sign and return whatever asks for it. */}
+                {r.documents && (
+                  <ReservationDocuments
+                    reservationId={r.id}
+                    documents={r.documents}
+                    role="buyer"
+                    queryKey={['reservations', 'mine']}
+                  />
+                )}
 
                 {/* Next step CTA */}
                 {nextStep && (
