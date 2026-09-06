@@ -66,6 +66,23 @@ export function AgentCard({ agent, compact = false }: { agent: Agent; compact?: 
           <div className="mt-1.5">
             <StarRating value={agent.ratingAverage} count={agent.ratingCount} />
           </div>
+          {/* Track record, not decoration: every badge here is a threshold
+              over deals the pipeline actually recorded, and closings are what
+              the directory now ranks on. */}
+          {((agent.badges?.length ?? 0) > 0 || agent.dealsCompleted > 0) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {agent.dealsCompleted > 0 && (
+                <span className="rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[11.5px] font-medium text-[#137333]">
+                  {agent.dealsCompleted} closing{agent.dealsCompleted === 1 ? '' : 's'}
+                </span>
+              )}
+              {(agent.badges ?? []).map((b) => (
+                <span key={b} className="rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11.5px] font-medium text-[#1967d2]">
+                  {b}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">

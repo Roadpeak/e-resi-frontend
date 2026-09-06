@@ -58,6 +58,11 @@ export interface Agent {
   socials: AgentSocials | null;
   ratingAverage: number;
   ratingCount: number;
+  /** Cached track record — completed deals and their summed sale values. */
+  dealsCompleted: number;
+  closedVolume: number;
+  /** Computed by the API from the track record: "Proven closer", "Highly rated"… */
+  badges: string[];
   createdAt: string;
 }
 

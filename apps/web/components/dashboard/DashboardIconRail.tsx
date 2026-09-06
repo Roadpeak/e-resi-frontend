@@ -16,6 +16,8 @@ const NAV = [
   { label: 'Rentals', href: '/dashboard/rentals', icon: 'home_work' },
   { label: 'Messages', href: '/dashboard/messages', icon: 'chat' },
   { label: 'Agent Partners', href: '/dashboard/partners', icon: 'handshake' },
+  { label: 'Agent Deals', href: '/dashboard/deals', icon: 'payments' },
+  { label: 'Mandates', href: '/dashboard/mandates', icon: 'campaign' },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: 'forum' },
   { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month' },
   { label: 'Performance', href: '/dashboard/performance', icon: 'query_stats' },
