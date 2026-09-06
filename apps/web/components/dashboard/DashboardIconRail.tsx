@@ -1,6 +1,7 @@
 'use client';
 
 import 'material-symbols/rounded.css';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
@@ -42,27 +43,42 @@ function RailItem({
   active?: boolean;
   badge?: number;
 }) {
+  // The tooltip is fixed-positioned from the hovered item's rect: the nav
+  // scrolls when the viewport is short, and an absolutely-positioned label
+  // hanging outside a scroll container would be clipped.
+  const [tipY, setTipY] = useState<number | null>(null);
+
   return (
     <Link
       href={href}
       aria-label={label}
+      onMouseEnter={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        setTipY(r.top + r.height / 2);
+      }}
+      onMouseLeave={() => setTipY(null)}
       className={cn(
-        'group relative flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+        'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
         active
           ? 'bg-[#d3e3fd] text-[#0b57d0]'
           : 'text-[#3c4043] hover:bg-[#f1f3f4] hover:text-[#202124]',
       )}
     >
-      <MaterialIcon name={icon} size={22} fill={active} weight={active ? 500 : 400} />
+      <MaterialIcon name={icon} size={20} fill={active} weight={active ? 500 : 400} />
       {!!badge && badge > 0 && (
         <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#ea4335] px-0.5 text-[8px] font-bold text-white">
           {badge > 9 ? '9+' : badge}
         </span>
       )}
       {/* Tooltip — page name on hover */}
-      <span className="pointer-events-none absolute left-full z-50 ml-3 whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium tracking-wide text-white opacity-0 shadow-md transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-1">
-        {label}
-      </span>
+      {tipY !== null && (
+        <span
+          className="pointer-events-none fixed left-14 z-50 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium tracking-wide text-white shadow-md"
+          style={{ top: tipY }}
+        >
+          {label}
+        </span>
+      )}
     </Link>
   );
 }
@@ -78,8 +94,10 @@ export function DashboardIconRail() {
   });
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between border-r border-[#f1f3f4] py-4 md:flex">
-      <nav className="flex flex-col items-center gap-1.5">
+    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-2 border-r border-[#f1f3f4] py-3 md:flex">
+      {/* The page list scrolls when the viewport is shorter than the rail,
+          so Settings and Visit Site below never fall off-screen. */}
+      <nav className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {NAV.map(({ label, href, icon }) => (
           <RailItem
             key={href}
@@ -95,7 +113,7 @@ export function DashboardIconRail() {
           />
         ))}
       </nav>
-      <nav className="flex flex-col items-center gap-1.5">
+      <nav className="flex shrink-0 flex-col items-center gap-1 border-t border-[#f1f3f4] pt-2">
         {BOTTOM.map(({ label, href, icon }) => (
           <RailItem key={href} label={label} href={href} icon={icon} active={pathname === href} />
         ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import 'material-symbols/rounded.css';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -33,26 +34,40 @@ function RailItem({
 }: {
   label: string; href: string; icon: string; active?: boolean; badge?: number;
 }) {
+  // Fixed-position tooltip, same reason as the developer rail: the list
+  // scrolls on short viewports, and absolute labels would be clipped.
+  const [tipY, setTipY] = useState<number | null>(null);
+
   return (
     <Link
       href={href}
       aria-label={label}
+      onMouseEnter={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        setTipY(r.top + r.height / 2);
+      }}
+      onMouseLeave={() => setTipY(null)}
       className={cn(
-        'group relative flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+        'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
         active
           ? 'bg-[#d3e3fd] text-[#0b57d0]'
           : 'text-[#3c4043] hover:bg-[#f1f3f4] hover:text-[#202124]',
       )}
     >
-      <MaterialIcon name={icon} size={22} fill={active} weight={active ? 500 : 400} />
+      <MaterialIcon name={icon} size={20} fill={active} weight={active ? 500 : 400} />
       {!!badge && badge > 0 && (
         <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#ea4335] px-0.5 text-[8px] font-bold text-white">
           {badge > 9 ? '9+' : badge}
         </span>
       )}
-      <span className="pointer-events-none absolute left-full z-50 ml-3 -translate-x-1 whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium tracking-wide text-white opacity-0 shadow-md transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
-        {label}
-      </span>
+      {tipY !== null && (
+        <span
+          className="pointer-events-none fixed left-14 z-50 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium tracking-wide text-white shadow-md"
+          style={{ top: tipY }}
+        >
+          {label}
+        </span>
+      )}
     </Link>
   );
 }
@@ -86,8 +101,10 @@ export function AgentIconRail() {
   }
 
   return (
-    <nav className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between border-r border-gray-100 py-4 sm:flex">
-      <div className="flex flex-col items-center gap-1.5">
+    <nav className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-2 border-r border-gray-100 py-3 sm:flex">
+      {/* Scrolls when the viewport is shorter than the rail, so the bottom
+          links never fall off-screen. */}
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {NAV.map((item) => (
           <RailItem
             key={item.href}
@@ -99,7 +116,7 @@ export function AgentIconRail() {
           />
         ))}
       </div>
-      <div className="flex flex-col items-center gap-1.5">
+      <div className="flex shrink-0 flex-col items-center gap-1 border-t border-[#f1f3f4] pt-2">
         {BOTTOM.map((item) => (
           <RailItem key={item.href} {...item} />
         ))}
