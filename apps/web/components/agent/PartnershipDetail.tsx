@@ -5,6 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
+import { useState as useStateReact } from 'react';
+import { propertiesApi } from '../../lib/api/properties';
+import { parseHumanNumber } from '../../lib/parse-number';
 import { partnershipsApi } from '../../lib/api/partnerships';
 import { ApiError } from '../../lib/api/client';
 import { formatPrice, cn } from '../../lib/utils';
@@ -63,6 +66,30 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
       setTimeout(() => setToast(''), 4000);
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not end the partnership'),
+  });
+
+  const [assignPropertyId, setAssignPropertyId] = useStateReact('');
+  const [assignPercent, setAssignPercent] = useStateReact('');
+  const myProperties = useQuery({
+    queryKey: ['my-properties-for-assign'],
+    queryFn: () => propertiesApi.myListings({ limit: 100 }),
+    enabled: side === 'developer',
+  });
+  const assign = useMutation({
+    mutationFn: () =>
+      partnershipsApi.assignProperty(partnershipId, {
+        propertyId: assignPropertyId,
+        commissionPercent: assignPercent ? parseHumanNumber(assignPercent) : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['partnership', partnershipId] });
+      setAssignPropertyId('');
+      setAssignPercent('');
+      setError('');
+      setToast('Property assigned — the agent can now work it');
+      setTimeout(() => setToast(''), 4000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not assign that property'),
   });
 
   const unassign = useMutation({
@@ -264,6 +291,42 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Assigning is what actually hands the agent the property — a
+              partnership alone is only the relationship. Deals, referral
+              chat routing and lead capture all check this assignment. */}
+          {side === 'developer' && p.status === 'ACTIVE' && (
+            <div className="mt-4 rounded-2xl bg-[#f8f9fa] p-3.5">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <select
+                  value={assignPropertyId}
+                  onChange={(e) => setAssignPropertyId(e.target.value)}
+                  className="h-10 rounded-xl border border-[#dadce0] bg-white px-3 text-[14px] text-[#202124] outline-none focus:border-[#1a73e8] sm:col-span-2"
+                >
+                  <option value="">Assign a property…</option>
+                  {(myProperties.data?.data ?? [])
+                    .filter((p) => !assignments.some((a) => a.property.id === p.id))
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                </select>
+                <input
+                  value={assignPercent}
+                  onChange={(e) => setAssignPercent(e.target.value)}
+                  placeholder="Commission % (optional)"
+                  inputMode="decimal"
+                  className="h-10 rounded-xl border border-[#dadce0] bg-white px-3 text-[14px] text-[#202124] outline-none focus:border-[#1a73e8]"
+                />
+              </div>
+              <button
+                onClick={() => assign.mutate()}
+                disabled={assign.isPending || !assignPropertyId}
+                className="mt-2 h-10 w-full cursor-pointer rounded-xl bg-[#1a73e8] text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-40"
+              >
+                {assign.isPending ? 'Assigning…' : 'Assign to this agent'}
+              </button>
+            </div>
           )}
         </section>
 

@@ -16,6 +16,7 @@ const tabs = [
   { label: 'Messages', href: '/account/messages', icon: 'forum' },
   { label: 'Inquiries', href: '/account/inquiries', icon: 'chat_bubble' },
   { label: 'Reservations', href: '/account/reservations', icon: 'vpn_key' },
+  { label: 'My Units', href: '/account/units', icon: 'apartment' },
 ];
 
 /**

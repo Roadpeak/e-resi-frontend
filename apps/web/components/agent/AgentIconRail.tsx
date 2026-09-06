@@ -18,6 +18,7 @@ const NAV = [
   { label: 'Viewings', href: '/agent/bookings', icon: 'calendar_month' },
   { label: 'Client Rooms', href: '/agent/clients', icon: 'collections_bookmark' },
   { label: 'Mandate Pool', href: '/agent/mandates', icon: 'storefront' },
+  { label: 'Lettings', href: '/agent/lettings', icon: 'real_estate_agent' },
   { label: 'Messages', href: '/agent/messages', icon: 'chat' },
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
