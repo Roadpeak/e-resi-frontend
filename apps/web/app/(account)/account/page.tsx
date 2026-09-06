@@ -5,14 +5,14 @@ import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Camera, CheckCircle2, AlertCircle, Pencil, Loader2, Heart, CalendarDays,
-  MessageCircle, KeyRound, ArrowRight, Building2, Home, Trash2,
+  MessageCircle, KeyRound, ArrowRight, Building2, Home, Search, Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '../../../lib/stores/auth.store';
 import { authApi } from '../../../lib/api/auth';
 import { uploadAvatar } from '../../../lib/api/media';
 import { ApiError } from '../../../lib/api/client';
 import { useMyBookings, useMyInquiries, useSavedProperties } from '../../../lib/api/queries';
-import { DirectoryCard, PillButton } from '../../../components/directory/DirectoryPrimitives';
+import { DirectoryCard, PillButton, PillLink } from '../../../components/directory/DirectoryPrimitives';
 import { cn } from '../../../lib/utils';
 
 const inputCls =
@@ -174,15 +174,21 @@ export default function AccountOverview() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-[#f1f1f3] px-3 py-1.5 text-[13px] font-medium text-[#5c5c63]">
                 {roleLabel}
               </span>
               {!editing && (
-                <PillButton onClick={startEditing}>
+                <button
+                  onClick={startEditing}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-5 py-2.5 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#f5f5f6] cursor-pointer"
+                >
                   <Pencil size={14} /> Edit profile
-                </PillButton>
+                </button>
               )}
+              <PillLink href="/properties">
+                <Search size={14} /> Find properties
+              </PillLink>
             </div>
           </div>
         </div>

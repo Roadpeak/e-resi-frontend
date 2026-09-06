@@ -28,6 +28,7 @@ export function AccountNav() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,11 +39,26 @@ export function AccountNav() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
+  // Navigating away is what closes the mobile menu — each item is a Link,
+  // so the pathname changing is the one reliable "done" signal.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '';
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#dadce0] bg-white/95 backdrop-blur-xl">
       <div className="flex h-16 w-full items-center gap-4 px-4 sm:px-6 lg:px-10 2xl:px-16">
+        {/* Mobile menu toggle — the tabs row below is desktop-only */}
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#5f6368] transition-colors hover:bg-[#f1f3f4] md:hidden"
+        >
+          <MaterialIcon name={mobileOpen ? 'close' : 'menu'} size={22} />
+        </button>
+
         {/* Brand */}
         <Link href="/" className="shrink-0" aria-label="e-resi home">
           <Logo markSize={28} textClassName="text-[#202124] text-[1.3rem]" />
@@ -99,8 +115,8 @@ export function AccountNav() {
         </div>
       </div>
 
-      {/* Section tabs — their own row, so nothing clips the last one */}
-      <nav className="border-t border-[#f1f3f4]">
+      {/* Section tabs — desktop row; the mobile menu below covers small screens */}
+      <nav className="hidden border-t border-[#f1f3f4] md:block">
         <div className="flex w-full items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-10 2xl:px-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => {
             const active = t.href === '/account' ? pathname === t.href : pathname.startsWith(t.href);
@@ -122,6 +138,41 @@ export function AccountNav() {
           })}
         </div>
       </nav>
+
+      {/* Mobile menu — drops over the page so nothing jumps underneath */}
+      {mobileOpen && (
+        <nav className="absolute inset-x-0 top-full border-b border-[#dadce0] bg-white shadow-lg md:hidden">
+          <div className="space-y-0.5 px-3 py-3">
+            {tabs.map((t) => {
+              const active = t.href === '/account' ? pathname === t.href : pathname.startsWith(t.href);
+              return (
+                <Link
+                  key={t.href}
+                  href={t.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium transition-colors',
+                    active
+                      ? 'bg-[#e8f0fe] text-[#1a73e8]'
+                      : 'text-[#3c4043] hover:bg-[#f1f3f4]',
+                  )}
+                >
+                  <MaterialIcon name={t.icon} size={20} fill={active} />
+                  {t.label}
+                </Link>
+              );
+            })}
+            <div className="mt-2 border-t border-[#f1f3f4] pt-2">
+              <Link
+                href="/properties"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff]"
+              >
+                <MaterialIcon name="search" size={20} />
+                Browse properties
+              </Link>
+            </div>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
