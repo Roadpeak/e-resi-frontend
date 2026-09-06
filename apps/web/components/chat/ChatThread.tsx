@@ -12,6 +12,67 @@ function timeOf(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * The "add as lead" bar shown to the business side of a property thread.
+ *
+ * A chat is where real interest shows itself — someone asking about pricing
+ * on a specific development is warmer than any form fill — but chats have no
+ * pipeline, so that interest used to evaporate when the thread went quiet.
+ * One tap files the person where the follow-up machinery lives: a Deal for
+ * an agent, an Inquiry for a developer.
+ */
+function CaptureLeadBar({ conversation }: { conversation: Conversation }) {
+  const me = useAuthStore((s) => s.user);
+  const [captured, setCaptured] = useState<'deal' | 'inquiry' | null>(
+    conversation.leadDealId ? 'deal' : conversation.leadInquiryId ? 'inquiry' : null,
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const iAmBusinessSide = me?.role === 'DEVELOPER' || me?.role === 'AGENT';
+  const otherIsCustomer = ['BUYER', 'INVESTOR', 'TENANT'].includes(
+    conversation.otherParty?.role ?? '',
+  );
+  if (!iAmBusinessSide || !otherIsCustomer || !conversation.propertyId) return null;
+
+  async function capture() {
+    setBusy(true);
+    setError('');
+    try {
+      const result = await chatApi.captureLead(conversation.id);
+      setCaptured(result.kind);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not capture the lead.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="border-b border-[#f1f3f4] bg-[#f8f9fa] px-4 py-2">
+      {captured ? (
+        <p className="text-[12.5px] text-[#137333]">
+          ✓ Captured as a lead — track them under {captured === 'deal' ? 'Deals' : 'Inquiries'}.
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[12.5px] text-[#5f6368]">
+            Talking to {conversation.otherParty?.firstName ?? 'a client'} about this property?
+          </p>
+          <button
+            onClick={capture}
+            disabled={busy}
+            className="cursor-pointer rounded-full bg-[#1a73e8] px-3 py-1 text-[12.5px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
+          >
+            {busy ? 'Adding…' : 'Add as lead'}
+          </button>
+        </div>
+      )}
+      {error && <p className="mt-1 text-[12px] text-[#c5221f]">{error}</p>}
+    </div>
+  );
+}
+
 /** Realtime message thread — shared by the dashboard and account chat views. */
 export function ChatThread({ conversation }: { conversation: Conversation }) {
   const me = useAuthStore((s) => s.user);
@@ -78,6 +139,7 @@ export function ChatThread({ conversation }: { conversation: Conversation }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <CaptureLeadBar conversation={conversation} />
       {/* messages */}
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {loading ? (

@@ -13,6 +13,7 @@ import {
 } from '../../lib/api/deals';
 import { CommissionChip, StageChip, money } from './DealsPanel';
 import { parseHumanNumber } from '../../lib/parse-number';
+import { unitsApi } from '../../lib/api/units';
 
 /**
  * One deal, in full — the page both sides settle against.
@@ -114,6 +115,17 @@ export function DealDetail({ id, side }: { id: string; side: 'agent' | 'develope
     mutationFn: () => dealsApi.addNote(id, note.trim()),
     onSuccess: () => { setNote(''); refresh(); },
   });
+  const unitMut = useMutation({
+    mutationFn: (unitId: string | null) => dealsApi.setUnit(id, unitId),
+    onSuccess: refresh,
+  });
+  // Units of the deal's property, so the client's unit can be pinned down —
+  // which is what arms the double-allocation guard when the deal reserves.
+  const unitsQuery = useQuery({
+    queryKey: ['deal-units', deal?.property.slug],
+    queryFn: () => unitsApi.forProperty(deal!.property.slug),
+    enabled: !!deal,
+  });
 
   if (isLoading || !deal) {
     return <div className={cn(card, 'p-8 text-center text-[14px] text-[#5f6368]')}>Loading…</div>;
@@ -178,6 +190,27 @@ export function DealDetail({ id, side }: { id: string; side: 'agent' | 'develope
         <div className="mt-3">
           <Stepper stage={deal.stage} busy={stageMut.isPending}
             onMove={(s) => stageMut.mutate({ stage: s })} />
+        </div>
+        {/* The unit this deal is about. Reserving without one still works,
+            but pinning it is what protects it from being sold twice. */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-[13px] text-[#5f6368]">Unit:</span>
+          <select
+            value={deal.unit?.id ?? ''}
+            disabled={unitMut.isPending || (deal.stage === 'COMPLETED' && cs === 'PAID')}
+            onChange={(e) => unitMut.mutate(e.target.value || null)}
+            className="h-9 rounded-xl border border-[#dadce0] bg-white px-3 text-[13.5px] text-[#202124] outline-none focus:border-[#1a73e8]"
+          >
+            <option value="">Not chosen yet</option>
+            {(unitsQuery.data ?? []).map((u) => (
+              <option key={u.id} value={u.id} disabled={u.status !== 'AVAILABLE' && u.id !== deal.unit?.id}>
+                {u.name} — {u.status === 'AVAILABLE' || u.id === deal.unit?.id ? `${u.currency} ${Math.round(u.price).toLocaleString()}` : u.status.toLowerCase()}
+              </option>
+            ))}
+          </select>
+          {unitMut.isError && (
+            <span className="text-[13px] text-[#c5221f]">{(unitMut.error as Error).message}</span>
+          )}
         </div>
         {deal.stage === 'LOST' && (
           <p className="mt-2 text-[13.5px] text-[#5f6368]">

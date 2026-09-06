@@ -13,6 +13,7 @@
  */
 
 import { getReferral } from './referral';
+import { useAuthStore } from '../stores/auth.store';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -83,11 +84,16 @@ export function track({ type, propertyId, metadata }: TrackInput): void {
   // referring agent. The developer's "this agent drove N views of this
   // property" report is a GROUP BY over exactly this field.
   const agentId = getReferral();
+  // And the signed-in visitor, when there is one: a registered investor
+  // quietly opening the same development four times is the warmest lead the
+  // platform can see, and without this line that interest is anonymous.
+  const userId = useAuthStore.getState().user?.id;
 
   const body = JSON.stringify({
     type,
     propertyId,
     ...(agentId && { agentId }),
+    ...(userId && { userId }),
     sessionId: sessionId(),
     source: sourceFromReferrer(),
     ...(metadata && { metadata }),

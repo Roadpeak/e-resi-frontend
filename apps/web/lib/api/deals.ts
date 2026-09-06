@@ -113,6 +113,10 @@ export const dealsApi = {
   setCommissionStatus: (id: string, status: CommissionStatus, reason?: string) =>
     apiClient.patch<Deal>(`/deals/${id}/commission/status`, { status, reason }),
 
+  /** Attach or clear the unit. The API refuses a unit someone else holds. */
+  setUnit: (id: string, unitId: string | null) =>
+    apiClient.patch<Deal>(`/deals/${id}/unit`, { unitId }),
+
   addNote: (id: string, note: string) =>
     apiClient.post<Deal & { events: DealEvent[] }>(`/deals/${id}/notes`, { note }),
 };

@@ -30,3 +30,24 @@ export const referralsApi = {
   forAgent: (days = 90) =>
     apiClient.get<ReferralReport>(`/analytics/referrals/agent?days=${days}`),
 };
+
+/** A signed-in customer seen browsing — the quiet-interest lead source. */
+export interface InterestedViewer {
+  userId: string;
+  propertyId: string;
+  views: number;
+  lastViewedAt: string | null;
+  alreadyLead: boolean;
+  user: { id: string; firstName: string; lastName: string; email: string; phone: string | null; role: string } | null;
+  property: { id: string; name: string; slug: string } | null;
+}
+
+export const viewersApi = {
+  list: (days = 30) =>
+    apiClient.get<{ days: number; rows: InterestedViewer[] }>(`/analytics/viewers?days=${days}`),
+  capture: (userId: string, propertyId: string) =>
+    apiClient.post<{ kind: 'deal' | 'inquiry'; id: string }>('/analytics/viewers/capture', {
+      userId,
+      propertyId,
+    }),
+};

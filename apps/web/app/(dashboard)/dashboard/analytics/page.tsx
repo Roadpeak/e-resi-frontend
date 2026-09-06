@@ -5,6 +5,7 @@ import { Eye, MessageSquare, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { StatCard } from '../../../../components/dashboard/StatCard';
 import { useDeveloperStats, useMyProperties, useDeveloperInquiries, useDeveloperEngagement } from '../../../../lib/api/queries';
 import { ReferralTrafficPanel } from '../../../../components/analytics/ReferralTrafficPanel';
+import { InterestedVisitorsPanel } from '../../../../components/analytics/InterestedVisitorsPanel';
 
 function BarChart({ data }: { data: { date: string; views: number }[] }) {
   const max = Math.max(...data.map((d) => d.views), 1);
@@ -171,6 +172,8 @@ export default function DashboardAnalytics() {
 
       {/* Which partner agents actually drive traffic and leads — per development. */}
       <ReferralTrafficPanel side="developer" />
+      {/* Signed-in customers quietly browsing — one tap files them as leads. */}
+      <InterestedVisitorsPanel side="developer" />
     </div>
   );
 }

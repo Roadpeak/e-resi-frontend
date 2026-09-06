@@ -34,6 +34,9 @@ export interface Conversation {
   rentListingId?: string | null;
   /** Set when the thread is with an agent rather than about a listing. */
   agentId?: string | null;
+  /** Set once the business side captured the other party as a lead. */
+  leadDealId?: string | null;
+  leadInquiryId?: string | null;
   /** Whoever opened the thread. */
   initiator: ChatUser;
   /** Whoever was contacted. */
@@ -50,6 +53,13 @@ export interface Conversation {
 }
 
 export const chatApi = {
+  /** Developer/agent: file the other party as a Deal or Inquiry. */
+  captureLead: (conversationId: string) =>
+    apiClient.post<{ kind: 'deal' | 'inquiry'; id: string }>(
+      `/chat/conversations/${conversationId}/lead`,
+      {},
+    ),
+
   start: (opts: { propertySlug?: string; rentListingSlug?: string; agentId?: string }) =>
     apiClient.post<Conversation>('/chat/conversations', opts),
   list: () => apiClient.get<Conversation[]>('/chat/conversations'),
