@@ -47,4 +47,59 @@ export const unitsApi = {
   /** Units of one property, for pickers. Public endpoint. */
   forProperty: (propertySlug: string) =>
     apiClient.get<PortfolioUnit[]>(`/properties/${propertySlug}/units`),
+
+  /** One unit's full management picture. */
+  manage: (unitId: string) => apiClient.get<ManagedUnit>(`/units/${unitId}/manage`),
+
+  addMedia: (unitId: string, body: { type: 'PHOTO' | 'VIDEO'; url: string; title?: string; sizeBytes?: number; mimeType?: string }) =>
+    apiClient.post<{ id: string }>(`/units/${unitId}/media`, body),
+
+  removeMedia: (unitId: string, mediaId: string) =>
+    apiClient.delete<{ message: string }>(`/units/${unitId}/media/${mediaId}`),
 };
+
+/** The manage endpoint's shape — everything a developer needs about one unit. */
+export interface ManagedUnit {
+  id: string;
+  name: string;
+  floor: number | null;
+  bedrooms: number;
+  bathrooms: number;
+  sqm: number | null;
+  price: number;
+  currency: string;
+  status: UnitStatus;
+  features: string[];
+  property: { id: string; slug: string; name: string; heroImageUrl: string | null; city: string; developerId: string };
+  ownership: {
+    id: string;
+    createdAt: string;
+    owner: { id: string; firstName: string; lastName: string; email: string; phone: string | null };
+    rentListing: {
+      id: string; slug: string; name: string; status: string; managerKind: string;
+      priceFrom: number | null; currency: string;
+      managingAgent: { id: string; displayName: string } | null;
+    } | null;
+  } | null;
+  deals: {
+    id: string;
+    stage: string;
+    clientName: string;
+    commissionStatus: string;
+    agent: { id: string; displayName: string; photoUrl: string | null; logoUrl: string | null };
+  }[];
+  reservations: {
+    id: string;
+    stage: string;
+    user: { firstName: string; lastName: string; email: string };
+  }[];
+  rentUnits: {
+    id: string;
+    rentListing: {
+      id: string; slug: string; name: string; status: string; managerKind: string;
+      ownerId: string | null;
+      managingAgent: { id: string; displayName: string } | null;
+    };
+  }[];
+  media: { id: string; type: 'PHOTO' | 'VIDEO'; url: string; title: string | null }[];
+}

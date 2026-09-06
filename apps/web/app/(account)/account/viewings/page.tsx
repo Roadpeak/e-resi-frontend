@@ -31,14 +31,19 @@ export default function AccountViewings() {
   }
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-[24px] font-normal text-[#202124]">Viewings</h1>
+        <p className="text-sm text-gray-500">Your booked property visits — virtual and in person.</p>
+      </div>
+
       {/* Upcoming */}
       <div>
         <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-gray-500">Upcoming Viewings</h3>
         {upcoming.length === 0 ? (
           <EmptyState label="No upcoming viewings" sub="Book a viewing from any property page." />
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3 items-start">
             {upcoming.map((b, i) => <ViewingCard key={b.id} booking={b} index={i} />)}
           </div>
         )}
@@ -48,7 +53,7 @@ export default function AccountViewings() {
       {past.length > 0 && (
         <div>
           <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-gray-500">Past Viewings</h3>
-          <div className="space-y-4 opacity-60">
+          <div className="grid grid-cols-1 gap-4 opacity-60 md:grid-cols-2 2xl:grid-cols-3 items-start">
             {past.map((b, i) => <ViewingCard key={b.id} booking={b} index={i} />)}
           </div>
         </div>

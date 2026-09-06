@@ -22,8 +22,13 @@ export default function AccountInquiries() {
   }
 
   return (
-    <div className="max-w-3xl space-y-4">
-      <p className="text-sm text-gray-500">{inquiries.length} inquiries sent</p>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-[24px] font-normal text-[#202124]">Inquiries</h1>
+        <p className="text-sm text-gray-500">
+          {inquiries.length} sent — replies land here and continue in Messages.
+        </p>
+      </div>
 
       {inquiries.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 py-20 text-center">
@@ -32,7 +37,10 @@ export default function AccountInquiries() {
           <p className="text-xs text-gray-400 mt-1">Submit an inquiry from any property page to get in touch with developers.</p>
         </div>
       ) : (
-        inquiries.map((inq, i) => <InquiryCard key={inq.id} inquiry={inq} index={i} />)
+        // items-start keeps an expanded card from stretching its row-mate.
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 items-start">
+          {inquiries.map((inq, i) => <InquiryCard key={inq.id} inquiry={inq} index={i} />)}
+        </div>
       )}
     </div>
   );

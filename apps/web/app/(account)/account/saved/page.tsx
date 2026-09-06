@@ -21,8 +21,13 @@ export default function AccountSaved() {
   const items = saved ?? [];
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <p className="text-sm text-gray-500">{items.length} saved properties</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-[24px] font-normal text-[#202124]">Saved properties</h1>
+        <p className="text-sm text-gray-500">
+          {items.length} propert{items.length === 1 ? 'y' : 'ies'} you&rsquo;ve saved to compare and come back to.
+        </p>
+      </div>
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 py-20 text-center">
@@ -34,14 +39,16 @@ export default function AccountSaved() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        /* Compact cards earn four columns on a big monitor — one long
+           left-hugging column was the old cap talking, not the content. */
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {items.map((item) => {
             const p = item.property;
             return (
               <div key={item.id} className="group overflow-hidden rounded-2xl border border-gray-200 bg-white hover:border-gray-300 transition-all">
                 {/* Image */}
                 <Link href={`/${p.slug}`} className="relative block overflow-hidden aspect-video">
-                  <Image src={p.heroImageUrl} alt={p.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 768px) 100vw, 50vw" />
+                  <Image src={p.heroImageUrl} alt={p.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1536px) 33vw, 25vw" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <span className={cn('absolute top-3 left-3 rounded-full px-2.5 py-1 text-xs font-medium', getStatusColor(p.status))}>
                     {getStatusLabel(p.status)}

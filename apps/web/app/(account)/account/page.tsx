@@ -125,7 +125,7 @@ export default function AccountOverview() {
   // page's content, without touching that shared layout or resorting to
   // fixed positioning (whose offset would depend on AccountNav's height).
   return (
-    <div className="-mx-4 -my-8 bg-[#f0f0f2] px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div className="-mx-4 -my-8 bg-[#f0f0f2] px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 2xl:-mx-16 2xl:px-16">
     <div className="space-y-5">
       {toast && (
         <div className="flex items-center gap-2 rounded-2xl bg-[#e3f5e9] px-4 py-3 text-[14px] text-[#1a7d43]">

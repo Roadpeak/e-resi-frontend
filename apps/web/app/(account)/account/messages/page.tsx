@@ -9,9 +9,9 @@ function AccountMessages() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
+        <h1 className="text-[24px] font-normal text-[#202124]">Messages</h1>
         <p className="mt-0.5 text-sm text-gray-500">
-          Your conversations with property developers.
+          Your conversations with developers, agents and unit owners.
         </p>
       </div>
       <ChatInbox perspective="customer" initialConversationId={searchParams.get('c')} />

@@ -44,8 +44,13 @@ export default function AccountReservations() {
   const active = reservations.filter((r) => r.stage !== 'CANCELLED');
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <p className="text-sm text-gray-500">{active.length} active reservation{active.length !== 1 ? 's' : ''}</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-[24px] font-normal text-[#202124]">Reservations</h1>
+        <p className="text-sm text-gray-500">
+          {active.length} active reservation{active.length !== 1 ? 's' : ''} — each tracked from deposit to keys.
+        </p>
+      </div>
 
       {active.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 py-20 text-center">
@@ -55,7 +60,8 @@ export default function AccountReservations() {
           <Button href="/properties" variant="outline" size="sm" className="mt-5">Browse Properties</Button>
         </div>
       ) : (
-        active.map((r) => {
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 items-start">
+        {active.map((r) => {
           const currentStepIndex = stageIndex(r.stage);
           const progress = STAGE_PROGRESS[r.stage];
           const nextStep = PURCHASE_STEPS[currentStepIndex + 1];
@@ -188,7 +194,8 @@ export default function AccountReservations() {
               </div>
             </div>
           );
-        })
+        })}
+        </div>
       )}
     </div>
   );

@@ -189,7 +189,11 @@ export default function DashboardUnits() {
                 {filtered.map((u) => (
                   <tr key={u.id} className="hover:bg-[#f8f9fa] transition-colors">
                     <td className="px-6 py-4">
-                      <p className="text-[15px] font-medium text-[#202124]">{u.name}</p>
+                      {/* The row's name opens per-unit management — status,
+                          owner, rentals, deals, and the unit's own media. */}
+                      <Link href={`/dashboard/units/${u.id}`} className="text-[15px] font-medium text-[#1a73e8] hover:underline">
+                        {u.name}
+                      </Link>
                       {u.floor != null && <p className="text-[13px] text-[#80868b]">Floor {u.floor}</p>}
                     </td>
                     <td className="px-4 py-4 text-[15px] text-[#5f6368]">{u.property.name}</td>
