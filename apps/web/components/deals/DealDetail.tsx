@@ -12,6 +12,7 @@ import {
   type DealStage,
 } from '../../lib/api/deals';
 import { CommissionChip, StageChip, money } from './DealsPanel';
+import { parseHumanNumber } from '../../lib/parse-number';
 
 /**
  * One deal, in full — the page both sides settle against.
@@ -94,11 +95,13 @@ export function DealDetail({ id, side }: { id: string; side: 'agent' | 'develope
       dealsApi.updateStage(id, stage, reason),
     onSuccess: refresh,
   });
+  // Tolerant of "18,500,000" and "3%" — see parseHumanNumber. Anything that
+  // still fails to parse is dropped rather than sent as NaN-turned-null.
   const commissionMut = useMutation({
     mutationFn: () =>
       dealsApi.setCommission(id, {
-        saleValue: saleValue ? Number(saleValue) : undefined,
-        commissionPercent: percent ? Number(percent) : undefined,
+        saleValue: saleValue ? parseHumanNumber(saleValue) : undefined,
+        commissionPercent: percent ? parseHumanNumber(percent) : undefined,
       }),
     onSuccess: () => { setSaleValue(''); setPercent(''); refresh(); },
   });

@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { mandatesApi, type Mandate } from '../../lib/api/mandates';
 import { propertiesApi } from '../../lib/api/properties';
+import { parseHumanNumber } from '../../lib/parse-number';
 
 /**
  * The mandate pool, from both chairs.
@@ -156,13 +157,21 @@ function PublishForm({ onDone }: { onDone: () => void }) {
     queryFn: () => propertiesApi.myListings({ limit: 50, status: 'ACTIVE' }),
   });
 
+  // Parsed tolerantly — "5%" and "4,5" are things people type, and a raw
+  // Number() of either is NaN, which serialises to null and comes back from
+  // the API as a wall of validator messages. Parse here, and hold the button
+  // until the value is a real percentage.
+  const percent = parseHumanNumber(form.percent);
+  const percentValid = percent !== undefined && percent >= 0 && percent <= 100;
+  const maxAgents = form.maxAgents ? parseHumanNumber(form.maxAgents) : undefined;
+
   const publish = useMutation({
     mutationFn: () =>
       mandatesApi.publish({
         propertyId: form.propertyId,
-        commissionPercent: Number(form.percent),
+        commissionPercent: percent as number,
         notes: form.notes.trim() || undefined,
-        maxAgents: form.maxAgents ? Number(form.maxAgents) : undefined,
+        maxAgents: maxAgents !== undefined ? Math.round(maxAgents) : undefined,
       }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['mandates-mine'] }); onDone(); },
   });
@@ -182,17 +191,23 @@ function PublishForm({ onDone }: { onDone: () => void }) {
           {(mine?.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <input value={form.percent} onChange={(e) => setForm({ ...form, percent: e.target.value })}
-          placeholder="Commission %" inputMode="decimal" className={field} />
+          placeholder="Commission %" inputMode="decimal"
+          className={cn(field, form.percent && !percentValid && 'border-[#c5221f]')} />
         <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
           placeholder="Terms — payment timing, marketing support… (optional)" maxLength={2000}
           className={cn(field, 'sm:col-span-2')} />
         <input value={form.maxAgents} onChange={(e) => setForm({ ...form, maxAgents: e.target.value })}
           placeholder="Max agents (optional)" inputMode="numeric" className={field} />
       </div>
+      {form.percent && !percentValid && (
+        <p className="mt-2 text-[13px] text-[#c5221f]">
+          Commission should be a number between 0 and 100 — e.g. 4 or 4.5.
+        </p>
+      )}
       {publish.isError && <p className="mt-2 text-[13px] text-[#c5221f]">{(publish.error as Error).message}</p>}
       <div className="mt-3 flex gap-2">
         <button onClick={() => publish.mutate()}
-          disabled={publish.isPending || !form.propertyId || !form.percent}
+          disabled={publish.isPending || !form.propertyId || !percentValid}
           className="h-10 cursor-pointer rounded-xl bg-[#1a73e8] px-4 text-[14px] font-medium text-white hover:bg-[#1765cc] disabled:opacity-40">
           {publish.isPending ? 'Publishing…' : 'Publish to agent network'}
         </button>
