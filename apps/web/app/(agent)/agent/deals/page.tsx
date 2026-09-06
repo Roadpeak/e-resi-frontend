@@ -1,6 +1,7 @@
 'use client';
 
 import { DealsPanel } from '../../../../components/deals/DealsPanel';
+import { ReferralTrafficPanel } from '../../../../components/analytics/ReferralTrafficPanel';
 
 export default function AgentDeals() {
   return (
@@ -13,6 +14,7 @@ export default function AgentDeals() {
         </p>
       </div>
       <DealsPanel side="agent" />
+      <ReferralTrafficPanel side="agent" />
     </div>
   );
 }

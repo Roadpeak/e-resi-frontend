@@ -12,6 +12,8 @@
  * starting, and a failed beacon is not worth surfacing to a visitor.
  */
 
+import { getReferral } from './referral';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export type AnalyticsEventType =
@@ -77,9 +79,15 @@ export interface TrackInput {
 export function track({ type, propertyId, metadata }: TrackInput): void {
   if (typeof window === 'undefined' || !propertyId) return;
 
+  // Attached centrally so every event — page views above all — carries the
+  // referring agent. The developer's "this agent drove N views of this
+  // property" report is a GROUP BY over exactly this field.
+  const agentId = getReferral();
+
   const body = JSON.stringify({
     type,
     propertyId,
+    ...(agentId && { agentId }),
     sessionId: sessionId(),
     source: sourceFromReferrer(),
     ...(metadata && { metadata }),

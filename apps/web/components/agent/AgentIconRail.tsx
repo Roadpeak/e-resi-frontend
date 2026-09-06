@@ -14,6 +14,8 @@ const NAV = [
   { label: 'My Listings', href: '/agent/properties', icon: 'apartment' },
   { label: 'Partners', href: '/agent/partners', icon: 'handshake' },
   { label: 'Deals', href: '/agent/deals', icon: 'payments' },
+  { label: 'Inquiries', href: '/agent/inquiries', icon: 'forum' },
+  { label: 'Viewings', href: '/agent/bookings', icon: 'calendar_month' },
   { label: 'Client Rooms', href: '/agent/clients', icon: 'collections_bookmark' },
   { label: 'Mandate Pool', href: '/agent/mandates', icon: 'storefront' },
   { label: 'Messages', href: '/agent/messages', icon: 'chat' },

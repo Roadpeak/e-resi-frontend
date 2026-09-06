@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { chatApi } from '../../lib/api/chat';
+import { getReferral } from '../../lib/analytics/referral';
 import { useAuthStore } from '../../lib/stores/auth.store';
 
 /**
@@ -52,7 +53,12 @@ export function ChatWithDeveloper({
     }
     setBusy(true);
     try {
-      const conversation = await chatApi.start({ propertySlug, rentListingSlug });
+      // A visitor who arrived through an agent's link chats with that agent,
+      // not the developer — the API routes the thread to whoever actually
+      // holds the relationship (and falls back to the developer when the
+      // referral has no active partnership behind it).
+      const agentId = propertySlug ? (getReferral() ?? undefined) : undefined;
+      const conversation = await chatApi.start({ propertySlug, rentListingSlug, agentId });
       router.push(`/account/messages?c=${conversation.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not start the chat.');

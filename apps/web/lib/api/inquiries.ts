@@ -28,6 +28,16 @@ export interface InquiriesResponse {
 }
 
 export const inquiriesApi = {
+  /** Agent: inquiries that arrived through my shared links — mine to answer. */
+  listForAgent: (params: { page?: number; limit?: number; status?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set('page', String(params.page));
+    if (params.limit) qs.set('limit', String(params.limit));
+    if (params.status) qs.set('status', params.status.toUpperCase());
+    const q = qs.toString();
+    return apiClient.get<InquiriesResponse>(`/inquiries/agent${q ? `?${q}` : ''}`);
+  },
+
   listForDeveloper: (params: { page?: number; limit?: number; status?: string } = {}) => {
     const qs = new URLSearchParams();
     if (params.page) qs.set('page', String(params.page));
@@ -44,6 +54,10 @@ export const inquiriesApi = {
     const q = qs.toString();
     return apiClient.get<InquiriesResponse>(`/inquiries/mine${q ? `?${q}` : ''}`);
   },
+
+  /** The API's actual reply contract: POST with { message }. */
+  sendReply: (id: string, message: string) =>
+    apiClient.post<{ id: string }>(`/inquiries/${id}/reply`, { message }),
 
   reply: (id: string, reply: string) =>
     apiClient.patch<Inquiry>(`/inquiries/${id}/reply`, { reply }),
