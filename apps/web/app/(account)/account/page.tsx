@@ -133,15 +133,14 @@ export default function AccountOverview() {
         </div>
       )}
 
-      {/* ── Identity banner ── */}
+      {/* ── Identity ── */}
       <DirectoryCard className="overflow-hidden border border-black/5">
-        <div className="h-20 bg-gradient-to-r from-[#111112] via-[#2a2a2c] to-[#4a4a4e]" />
-        <div className="px-6 pb-6 sm:px-8">
-          <div className="-mt-11 flex flex-wrap items-end gap-5">
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-wrap items-center gap-5">
             <div className="relative">
-              <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#111112] text-[28px] font-medium text-white">
+              <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[#111112] text-[26px] font-medium text-white">
                 {user.avatarUrl ? (
-                  <Image src={user.avatarUrl} alt="" fill className="object-cover" sizes="96px" />
+                  <Image src={user.avatarUrl} alt="" fill className="object-cover" sizes="80px" />
                 ) : (
                   initials
                 )}
@@ -157,7 +156,7 @@ export default function AccountOverview() {
               </button>
             </div>
 
-            <div className="min-w-0 flex-1 pb-1">
+            <div className="min-w-0 flex-1">
               <h1 className="truncate text-[24px] font-semibold text-[#111112]">
                 {user.firstName} {user.lastName}
               </h1>
@@ -175,7 +174,7 @@ export default function AccountOverview() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 pb-1">
+            <div className="flex items-center gap-2">
               <span className="rounded-full bg-[#f1f1f3] px-3 py-1.5 text-[13px] font-medium text-[#5c5c63]">
                 {roleLabel}
               </span>
