@@ -27,6 +27,7 @@ const PropertiesMapView = dynamic(
 import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
 import { BrowseBreadcrumbs } from './BrowseBreadcrumbs';
+import { NeighbourhoodsRail } from './NeighbourhoodsRail';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
@@ -233,11 +234,10 @@ export function PropertiesPage({
             whether or not anyone was using it. It is now summoned from the
             button at the bottom right, which gives each development the full
             width of the page. */}
-        {/* Constrained rather than full-bleed: a row spanning 1400px leaves
-            its detail column mostly empty whatever the image does, and a list
-            is read down rather than across. */}
-        <div className="mx-auto mt-8 max-w-5xl lg:mt-10">
-          <section className="min-w-0">
+        {/* The list keeps a readable column on the left; the freed right
+            side carries the neighbourhood rail instead of empty gutters. */}
+        <div className="mt-8 flex items-start gap-8 lg:mt-10">
+          <section className="min-w-0 max-w-5xl flex-1">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{heading ?? 'Best options'}</h2>
@@ -300,6 +300,8 @@ export function PropertiesPage({
               </>
             )}
           </section>
+
+          <NeighbourhoodsRail />
 
         </div>
       </div>

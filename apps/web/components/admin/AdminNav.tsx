@@ -19,6 +19,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Developers', href: '/admin/developers', icon: 'apartment' },
   { label: 'Agents', href: '/admin/agents', icon: 'support_agent' },
   { label: 'Properties', href: '/admin/properties', icon: 'domain' },
+  { label: 'Neighbourhoods', href: '/admin/neighbourhoods', icon: 'map' },
   { label: 'Operations', href: '/admin/rentals', icon: 'key' },
   { label: 'Production', href: '/admin/production', icon: 'movie' },
   { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
