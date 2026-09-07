@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
   ChevronDown,
@@ -187,7 +188,9 @@ export function PropertiesPage({
         <HeroBanner
           city={filters.city}
           cities={cities}
-          image={mapResults[0]?.heroImageUrl}
+          slides={mapResults
+            .filter((p) => p.heroImageUrl)
+            .map((p) => ({ image: p.heroImageUrl as string, name: p.name, slug: p.slug }))}
           onCityChange={(c) => {
             setFilter('city', c);
             setFilter('neighborhood', undefined);
@@ -373,14 +376,25 @@ export function PropertiesPage({
 function HeroBanner({
   city,
   cities,
-  image,
+  slides,
   onCityChange,
 }: {
   city?: string;
   cities: string[];
-  image?: string;
+  slides: { image: string; name: string; slug: string }[];
   onCityChange: (city?: string) => void;
 }) {
+  // The banner used to pin whichever property happened to sort first, which
+  // quietly gave one development the whole marquee. Every listed property now
+  // takes a turn, crossfading with its name on the frame.
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (slides.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 5000);
+    return () => clearInterval(t);
+  }, [slides.length]);
+  const slide = slides.length > 0 ? slides[idx % slides.length] : undefined;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -388,18 +402,39 @@ function HeroBanner({
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative h-[240px] overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 sm:h-[280px]"
     >
-      {/* Featured property image, right side (from live results) */}
-      {image && (
+      {/* Rotating property image, right side (from live results) */}
+      {slide && (
         <div className="absolute inset-y-0 right-0 w-[70%] sm:w-[60%]">
-          <Image
-            src={image}
-            alt="Featured property"
-            fill
-            priority
-            className="object-cover"
-            sizes="(max-width: 1024px) 70vw, 60vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-600/40 to-transparent" />
+          <AnimatePresence>
+            <motion.div
+              key={slide.slug}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.9, ease: 'easeInOut' }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={slide.image}
+                alt={slide.name}
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 1024px) 70vw, 60vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-600/40 to-transparent" />
+            </motion.div>
+          </AnimatePresence>
+          {/* The name rides the frame as a glass chip — enough to identify
+              the property without competing with the section's own heading. */}
+          {/* bottom-16, not bottom-4: the filter bar overlaps the banner's
+              lower edge, and the chip must sit above it. */}
+          <Link
+            href={`/${slide.slug}`}
+            className="absolute bottom-16 right-5 z-10 rounded-full bg-black/35 px-4 py-1.5 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-black/55"
+          >
+            {slide.name}
+          </Link>
         </div>
       )}
       {/* Soft brand wash over the left for legibility */}
