@@ -25,6 +25,8 @@ interface Props {
   side: 'developer' | 'agent';
   /** DeveloperProfile id, or AgentProfile id. */
   profileId: string;
+  /** Rendered inside a card: card-scale heading, no free-floating section. */
+  embedded?: boolean;
 }
 
 /**
@@ -38,7 +40,7 @@ interface Props {
  * Renders nothing at all when there are no partners: an empty "Partners"
  * heading reads as a platform with no traction.
  */
-export function PartnersStrip({ side, profileId }: Props) {
+export function PartnersStrip({ side, profileId, embedded }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ['public-partners', side, profileId],
     queryFn: () =>
@@ -54,8 +56,8 @@ export function PartnersStrip({ side, profileId }: Props) {
   const showingAgents = side === 'developer';
 
   return (
-    <section className="mt-10">
-      <h2 className="text-[20px] font-semibold text-gray-900">
+    <section className={embedded ? 'rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(17,17,18,0.04)] border border-black/5' : 'mt-10'}>
+      <h2 className={embedded ? 'text-[18px] font-semibold text-[#111112]' : 'text-[20px] font-semibold text-gray-900'}>
         {showingAgents ? 'Agents representing us' : 'Developers we work with'}
       </h2>
       <p className="mt-1 text-[14px] text-gray-500">
@@ -64,7 +66,7 @@ export function PartnersStrip({ side, profileId }: Props) {
           : 'Active partnerships with verified developers.'}
       </p>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={embedded ? 'mt-4 grid gap-3 sm:grid-cols-2' : 'mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3'}>
         {rows.map((r) => {
           if (showingAgents) {
             const a = r.agent;

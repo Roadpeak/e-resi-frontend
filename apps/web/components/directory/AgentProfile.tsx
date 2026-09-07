@@ -80,7 +80,7 @@ export function AgentProfile({ agentId }: { agentId: string }) {
 
   return (
     <DirectoryShell className="pt-16">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
           href="/agents"
           className="mb-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#6b6b70] transition-colors hover:text-[#111112]"
@@ -94,7 +94,7 @@ export function AgentProfile({ agentId }: { agentId: string }) {
           <AgentProperties agent={agent} properties={properties!} />
         )}
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             {agent.bio && (
               <DirectoryCard className="p-6">
@@ -110,7 +110,7 @@ export function AgentProfile({ agentId }: { agentId: string }) {
               {agent.specialties.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {agent.specialties.map((s) => (
-                    <Tag key={s} tone="blue">{SPECIALTY_LABELS[s]}</Tag>
+                    <Tag key={s} tone="gray">{SPECIALTY_LABELS[s]}</Tag>
                   ))}
                 </div>
               ) : (
@@ -128,16 +128,16 @@ export function AgentProfile({ agentId }: { agentId: string }) {
                 </>
               )}
             </DirectoryCard>
-          </div>
 
-          <div className="space-y-4">
-            <ContactCard agent={agent} />
-          </div>
-
-          <div className="lg:col-span-3">
             {/* Who they actually work with — the evidence behind the profile. */}
-            <PartnersStrip side="agent" profileId={agent.id} />
+            <PartnersStrip side="agent" profileId={agent.id} embedded />
             <AgentReviews agentId={agent.id} />
+          </div>
+
+          {/* Everything reads down the left rail; the contact card keeps the
+              right rail and stays in reach as the page scrolls. */}
+          <div className="space-y-4 lg:sticky lg:top-24">
+            <ContactCard agent={agent} />
           </div>
         </div>
       </div>
