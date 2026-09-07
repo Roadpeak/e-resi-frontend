@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Building2 } from 'lucide-react';
 import { developersApi } from '../../lib/api/developers';
 import { DeveloperCard } from './DeveloperCard';
-import { DirectoryCard, DirectoryShell, PillButton } from './DirectoryPrimitives';
+import { DirectoryShell, PillButton } from './DirectoryPrimitives';
 
 const PAGE_SIZE = 12;
 
@@ -23,32 +23,37 @@ export function DevelopersDirectory() {
 
   return (
     <DirectoryShell className="pt-16">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-[32px] font-semibold leading-tight text-[#111112] sm:text-[38px]">
-            Top property developers in Kenya
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* Set like a gallery opening: tracked gold overline, the title in
+            the display face, one quiet line beneath. */}
+        <div className="mb-10 pt-4">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.35em] text-gold-500">
+            The developers
+          </p>
+          <h1 className="mt-3 font-display text-[40px] font-light leading-[1.05] tracking-tight text-[#111112] sm:text-[52px]">
+            Kenya&apos;s finest, building now
           </h1>
-          <p className="mt-2 max-w-2xl text-[15px] text-[#6b6b70]">
-            Verified developers building across Kenya — browse their live developments,
-            reach them directly, or explore a full profile.
+          <p className="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-[#6b6b70]">
+            Verified developers with live developments you can walk through in
+            cinematic, 3D and VR — explore their portfolios and reach them directly.
           </p>
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <DirectoryCard key={i} className="h-[220px] animate-pulse bg-[#f0f0f2]" />
+              <div key={i} className="aspect-square animate-pulse bg-[#e4e4e7]" />
             ))}
           </div>
         ) : developers.length === 0 ? (
-          <DirectoryCard className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 border border-dashed border-black/10 bg-white py-24 text-center">
             <Building2 size={32} className="text-[#c4c4c8]" />
             <p className="text-[15px] text-[#6b6b70]">
               No developers to show yet — check back soon.
             </p>
-          </DirectoryCard>
+          </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {developers.map((dev) => (
               <DeveloperCard key={dev.id} developer={dev} />
             ))}

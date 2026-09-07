@@ -18,6 +18,8 @@ export interface DeveloperCard {
   whatsapp: string | null;
   establishedYear: number | null;
   completedProjects: number;
+  /** Hero of their newest live development — the card's cover. */
+  coverImageUrl: string | null;
   _count: { properties: number };
 }
 
