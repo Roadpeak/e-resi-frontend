@@ -96,7 +96,7 @@ export function RentPage({
   );
 
   return (
-    <div className="min-h-screen pt-16 pb-16">
+    <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         {/* ── Hero banner ── */}
         <HeroBanner
@@ -296,7 +296,7 @@ function FilterBar({
 
         {/* Bedrooms */}
         <div className="flex items-center gap-1.5 px-2.5">
-          <span className="text-sm text-gray-500">Room:</span>
+          <span className="text-sm font-semibold text-gray-700">Room:</span>
           {bedroomOptions.map((n) => (
             <button
               key={n}
@@ -419,7 +419,7 @@ function BarSelect({
 }) {
   return (
     <div className="relative flex items-center">
-      <span className="whitespace-nowrap px-2.5 text-sm font-medium text-gray-800">{label}</span>
+      <span className="whitespace-nowrap px-2.5 text-sm font-semibold text-gray-900">{label}</span>
       <ChevronDown size={14} className="pointer-events-none -ml-1 mr-1 text-gray-400" />
       <select
         aria-label={ariaLabel}

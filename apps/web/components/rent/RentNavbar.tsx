@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Search, User, X } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
 import { MarketplaceNavLinks } from '../marketplace/MarketplaceNavLinks';
+import { MarketplaceSearchPill } from '../marketplace/MarketplaceSearchPill';
 import { homePathFor, homeLabelFor } from '../../lib/auth/role-home';
 import { MarketplaceMobileMenu } from '../marketplace/MarketplaceMobileMenu';
 
@@ -54,38 +55,27 @@ export function RentNavbar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.08] bg-white">
-      <div className="flex h-full items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-full items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="shrink-0" aria-label="e-resi home">
           <Logo markSize={28} textClassName="text-gray-900 text-[1.3rem]" />
         </Link>
 
-        <span className="hidden lg:block h-6 w-px shrink-0 bg-gray-200" />
+        {/* Search — the heart of the rent nav, pill-first like the buy bar. */}
+        <div className="flex min-w-0 max-w-xl flex-1">
+          <MarketplaceSearchPill
+            value={query}
+            onChange={setQuery}
+            onSubmit={() => submitSearch({ preventDefault: () => undefined } as React.FormEvent)}
+            scope="rent"
+            placeholder="Search by area, building or listing…"
+          />
+        </div>
 
         {/* Section links */}
         <MarketplaceNavLinks />
 
-        {/* Search — the heart of the rent nav */}
-        <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center">
-          <Search size={18} className="pointer-events-none absolute left-4 text-gray-500" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by area, building or listing…"
-            aria-label="Search rentals"
-            className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 pl-11 pr-10 text-[15px] font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-500 outline-none transition-colors focus:border-gray-900 focus:bg-white focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              aria-label="Clear search"
-              className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </form>
+        <span className="ml-auto" />
 
         {/* Menu — below xl the section links are hidden, so this is the only
             way to reach Rent, Villas, Developers or Agents. */}

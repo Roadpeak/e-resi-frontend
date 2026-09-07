@@ -181,7 +181,7 @@ export function PropertiesPage({
   }, [showFullMap]);
 
   return (
-    <div className="min-h-screen pt-16 pb-16">
+    <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         {/* ── Hero banner ── */}
         <HeroBanner
@@ -484,7 +484,7 @@ function FilterBar({
 
         {/* Bedroom chips */}
         <div className="flex items-center gap-1.5 px-2">
-          <span className="text-xs font-medium text-gray-500">Room:</span>
+          <span className="text-[13px] font-semibold text-gray-700">Room:</span>
           {bedroomOptions.map((n) => {
             const active = filters.bedrooms === n;
             return (
@@ -538,7 +538,7 @@ function FilterBar({
         <button
           onClick={onToggleMore}
           className={cn(
-            'ml-auto flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors',
+            'ml-auto flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors',
             moreOpen
               ? 'bg-gray-900 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
@@ -649,7 +649,7 @@ function BarSelect({
 }) {
   return (
     <div className="relative flex cursor-pointer items-center gap-1 rounded-xl px-3 py-2 transition-colors hover:bg-gray-50">
-      <span className="whitespace-nowrap text-xs font-medium text-gray-700">{label}</span>
+      <span className="whitespace-nowrap text-[13px] font-semibold text-gray-900">{label}</span>
       <ChevronDown size={12} className="text-gray-400" />
       <select
         aria-label={ariaLabel}

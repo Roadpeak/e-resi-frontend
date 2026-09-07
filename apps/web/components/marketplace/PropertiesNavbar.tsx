@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogOut, Search, User, X } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useFiltersStore } from '../../lib/stores/filters.store';
 import { MarketplaceNavLinks } from './MarketplaceNavLinks';
+import { MarketplaceSearchPill } from './MarketplaceSearchPill';
 import { homePathFor, homeLabelFor } from '../../lib/auth/role-home';
 import { MarketplaceMobileMenu } from './MarketplaceMobileMenu';
 
@@ -46,38 +47,22 @@ export function PropertiesNavbar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.08] bg-white">
-      <div className="flex h-full items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-full items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="shrink-0" aria-label="e-resi home">
           <Logo markSize={28} textClassName="text-gray-900 text-[1.3rem]" />
         </Link>
 
-        <span className="hidden lg:block h-6 w-px shrink-0 bg-gray-200" />
+        {/* Search — the bar's dominant element, directly after the brand,
+            with the scope switch and search button inside the pill. */}
+        <div className="flex min-w-0 max-w-xl flex-1">
+          <MarketplaceSearchPill value={query} onChange={setQuery} scope="buy" />
+        </div>
 
-        {/* Section links */}
+        {/* Section links — after the search, Dribbble-style. */}
         <MarketplaceNavLinks />
 
-        {/* Search — kept intentionally narrower than the available space so it
-            reads as one tool among several, not the dominant element of the bar */}
-        <div className="relative ml-auto flex min-w-0 max-w-xs flex-1 items-center lg:max-w-sm">
-          <Search size={18} className="pointer-events-none absolute left-4 text-gray-500" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by area, development…"
-            aria-label="Search properties"
-            className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 pl-11 pr-10 text-[15px] font-medium text-gray-900 placeholder:font-normal placeholder:text-gray-500 outline-none transition-colors focus:border-gray-900 focus:bg-white focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              aria-label="Clear search"
-              className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        <span className="ml-auto" />
 
         {/* Menu — below xl the section links are hidden, so this is the only
             way to reach Rent, Villas, Developers or Agents. */}
