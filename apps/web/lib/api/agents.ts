@@ -160,7 +160,32 @@ interface Paged<T> {
   };
 }
 
+/** A property on an agent's public storefront — their assigned inventory. */
+export interface AgentProperty {
+  id: string;
+  slug: string;
+  name: string;
+  tagline?: string | null;
+  heroImageUrl?: string | null;
+  city: string;
+  neighborhood?: string | null;
+  category: string;
+  status: string;
+  priceFrom?: number | null;
+  priceTo?: number | null;
+  currency: string;
+  has3DTour: boolean;
+  hasVRTour: boolean;
+  hasCinematicTour: boolean;
+  developer: { id: string; companyName: string; logoUrl?: string | null };
+  _count: { units: number };
+  assignedAt: string;
+}
+
 export const agentsApi = {
+  /** Properties this agent is actively assigned to sell. Public. */
+  properties: (id: string) => apiClient.get<AgentProperty[]>(`/agents/${id}/properties`),
+
   /**
    * Verified, currently-listed agents, best-rated first. `specialty` is what
    * the "Need agent help?" picker filters on, `kind` splits its two tabs.
