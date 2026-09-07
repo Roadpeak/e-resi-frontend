@@ -6,7 +6,6 @@ import { Loader2, MessageSquare, Star } from 'lucide-react';
 import { agentsApi } from '../../lib/api/agents';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { ApiError } from '../../lib/api/client';
-import { DirectoryCard } from './DirectoryPrimitives';
 import { StarRating } from './StarRating';
 import { cn } from '../../lib/utils';
 
@@ -37,7 +36,7 @@ export function AgentReviews({ agentId }: { agentId: string }) {
   const reviews = data?.data ?? [];
 
   return (
-    <DirectoryCard className="p-6">
+    <section className="py-8">
       <h2 className="mb-4 text-[18px] font-semibold text-[#111112]">
         Reviews{data?.meta.total ? ` (${data.meta.total})` : ''}
       </h2>
@@ -87,7 +86,7 @@ export function AgentReviews({ agentId }: { agentId: string }) {
           ))}
         </ul>
       )}
-    </DirectoryCard>
+    </section>
   );
 }
 

@@ -56,7 +56,7 @@ export function PartnersStrip({ side, profileId, embedded }: Props) {
   const showingAgents = side === 'developer';
 
   return (
-    <section className={embedded ? 'rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(17,17,18,0.04)] border border-black/5' : 'mt-10'}>
+    <section className={embedded ? 'py-8' : 'mt-10'}>
       <h2 className={embedded ? 'text-[18px] font-semibold text-[#111112]' : 'text-[20px] font-semibold text-gray-900'}>
         {showingAgents ? 'Agents representing us' : 'Developers we work with'}
       </h2>
