@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, ChevronRight, Home, Loader2, MapPin } from 'lucide-react';
+import { Building2, ChevronRight, Home, Loader2, MapPin, TrendingUp, Users } from 'lucide-react';
+import { formatPrice } from '../../lib/utils';
+import { cn } from '../../lib/utils';
 import { neighborhoodsApi } from '../../lib/api/neighborhoods';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyListCard } from './PropertyListCard';
@@ -132,58 +135,147 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
           </div>
         </div>
 
-        {/* ── A look around ── */}
-        {gallery.length > 1 && (
-          <section className="mt-10">
-            <h2 className="text-[22px] font-bold text-gray-900">A look around {hood.name}</h2>
-            <div className="mt-4 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {gallery.map((url) => (
-                <div key={url} className="relative h-52 w-80 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
-                  <Image src={url} alt="" fill className="object-cover" sizes="320px" />
+        {/* ── Section tabs, PF-style: one row that follows the reader and
+            underlines whichever section is on screen. Only sections that
+            actually have content earn a tab. ── */}
+        <SectionTabs
+          sections={[
+            { id: 'neighborhood', label: 'Neighborhood', show: true },
+            { id: 'market', label: 'Market overview', show: (hood.market?.total ?? 0) > 0 },
+            { id: 'lifestyle', label: 'Lifestyle', show: !!hood.lifestyle },
+            { id: 'schools', label: 'Schools', show: !!hood.schools },
+            { id: 'transportation', label: 'Transportation', show: !!hood.transport },
+            { id: 'experts', label: 'Ask Local Experts', show: true },
+          ]}
+        />
+
+        {/* ── Neighborhood: the look-around gallery + the story ── */}
+        <section id="neighborhood" className="mt-10 scroll-mt-32">
+          {gallery.length > 0 && (
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+              <h2 className="text-[22px] font-bold text-gray-900">A look around {hood.name}</h2>
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {gallery.map((url) => (
+                  <div key={url} className="relative h-52 w-80 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
+                    <Image src={url} alt="" fill className="object-cover" sizes="320px" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hood.description && (
+            <div className="mt-6 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+              <h2 className="text-[22px] font-bold text-gray-900">
+                What you need to know about {hood.name}
+              </h2>
+              <p className="mt-3 max-w-3xl whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
+                {hood.description}
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ── Market overview, computed from live listings ── */}
+        {(hood.market?.total ?? 0) > 0 && (
+          <section id="market" className="mt-6 scroll-mt-32">
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
+                <TrendingUp size={20} className="text-brand-600" /> {hood.name} market insights
+              </h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl bg-gray-50 p-5">
+                  <p className="text-[13px] font-medium text-gray-500">Median price</p>
+                  <p className="mt-1 text-[22px] font-bold text-gray-900">
+                    {hood.market!.priceMedian ? formatPrice(hood.market!.priceMedian, 'KES') : 'On request'}
+                  </p>
                 </div>
-              ))}
+                <div className="rounded-2xl bg-gray-50 p-5">
+                  <p className="text-[13px] font-medium text-gray-500">Price range</p>
+                  <p className="mt-1 text-[22px] font-bold text-gray-900">
+                    {hood.market!.priceMin
+                      ? `${formatPrice(hood.market!.priceMin, 'KES')} – ${formatPrice(hood.market!.priceMax ?? hood.market!.priceMin, 'KES')}`
+                      : 'On request'}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-gray-50 p-5">
+                  <p className="text-[13px] font-medium text-gray-500">Active listings</p>
+                  <p className="mt-1 text-[22px] font-bold text-gray-900">{hood.market!.total}</p>
+                </div>
+              </div>
+              {Object.keys(hood.market!.byCategory).length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {Object.entries(hood.market!.byCategory).map(([cat, count]) => (
+                    <span key={cat} className="rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-medium capitalize text-brand-700">
+                      {count} {cat.toLowerCase().replace('_', ' ')}{count !== 1 ? 's' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
 
-        {/* ── About ── */}
-        {hood.description && (
-          <section className="mt-10 max-w-3xl">
-            <h2 className="text-[22px] font-bold text-gray-900">
-              What you need to know about {hood.name}
-            </h2>
-            <p className="mt-3 whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
-              {hood.description}
-            </p>
-          </section>
+        {/* ── Curated guide sections ── */}
+        {hood.lifestyle && (
+          <GuideSection id="lifestyle" title={`Lifestyle in ${hood.name}`} body={hood.lifestyle} />
+        )}
+        {hood.schools && (
+          <GuideSection id="schools" title="Schools nearby" body={hood.schools} />
+        )}
+        {hood.transport && (
+          <GuideSection id="transportation" title="Getting around" body={hood.transport} />
         )}
 
         {/* ── Location + street view ── */}
         {hasCoords && (
-          <section className="mt-10">
-            <h2 className="text-[22px] font-bold text-gray-900">Location &amp; street view</h2>
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="overflow-hidden rounded-2xl border border-gray-200">
-                <iframe
-                  title={`Map of ${hood.name}`}
-                  src={`https://maps.google.com/maps?q=${hood.latitude},${hood.longitude}&z=14&output=embed`}
-                  className="h-[320px] w-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-gray-200">
-                <iframe
-                  title={`Street view of ${hood.name}`}
-                  src={`https://www.google.com/maps?layer=c&cbll=${hood.latitude},${hood.longitude}&cbp=11,0,0,0,0&output=svembed`}
-                  className="h-[320px] w-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+          <section className="mt-6">
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+              <h2 className="text-[22px] font-bold text-gray-900">Location &amp; street view</h2>
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="overflow-hidden rounded-2xl border border-gray-200">
+                  <iframe
+                    title={`Map of ${hood.name}`}
+                    src={`https://maps.google.com/maps?q=${hood.latitude},${hood.longitude}&z=14&output=embed`}
+                    className="h-[320px] w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-gray-200">
+                  <iframe
+                    title={`Street view of ${hood.name}`}
+                    src={`https://www.google.com/maps?layer=c&cbll=${hood.latitude},${hood.longitude}&cbp=11,0,0,0,0&output=svembed`}
+                    className="h-[320px] w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
               </div>
             </div>
           </section>
         )}
+
+        {/* ── Ask local experts ── */}
+        <section id="experts" className="mt-6 scroll-mt-32">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+            <div>
+              <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
+                <Users size={20} className="text-brand-600" /> Ask local experts
+              </h2>
+              <p className="mt-1 max-w-xl text-[15px] text-gray-600">
+                Verified agents who work {hood.name} and the surrounding areas can answer
+                anything a page can&apos;t — pricing, availability, what it&apos;s really like to live here.
+              </p>
+            </div>
+            <Link
+              href="/agents"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-gray-700"
+            >
+              Find an agent
+            </Link>
+          </div>
+        </section>
 
         {/* ── Listings ── */}
         <section id="properties" className="mt-10 scroll-mt-24">
@@ -205,5 +297,67 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
         </section>
       </div>
     </div>
+  );
+}
+
+/** A curated text section of the guide — one card, one heading, the story. */
+function GuideSection({ id, title, body }: { id: string; title: string; body: string }) {
+  return (
+    <section id={id} className="mt-6 scroll-mt-32">
+      <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+        <h2 className="text-[22px] font-bold text-gray-900">{title}</h2>
+        <p className="mt-3 max-w-3xl whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
+          {body}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The PF-style section tab row: sticky under the navbar, underlining the
+ * section currently on screen. Plain anchors — the browser does the travel,
+ * an IntersectionObserver just moves the underline.
+ */
+function SectionTabs({ sections }: { sections: { id: string; label: string; show: boolean }[] }) {
+  const visible = useMemo(() => sections.filter((s) => s.show), [sections]);
+  const [active, setActive] = useState(visible[0]?.id);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setActive(e.target.id);
+        }
+      },
+      { rootMargin: '-30% 0px -60% 0px' },
+    );
+    for (const s of visible) {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <nav className="sticky top-16 z-30 -mx-4 mt-8 border-b border-gray-200 bg-gray-50/95 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {visible.map((s) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className={cn(
+              'relative whitespace-nowrap px-4 py-3.5 text-[14.5px] font-medium transition-colors',
+              'after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-full after:transition-all',
+              active === s.id
+                ? 'text-gray-900 after:bg-brand-600'
+                : 'text-gray-500 hover:text-gray-800 after:bg-transparent',
+            )}
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
+    </nav>
   );
 }

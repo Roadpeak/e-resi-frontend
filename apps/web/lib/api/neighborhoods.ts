@@ -7,11 +7,22 @@ export interface Neighborhood {
   name: string;
   city: string;
   description?: string | null;
+  lifestyle?: string | null;
+  schools?: string | null;
+  transport?: string | null;
   heroImageUrl?: string | null;
   photos: string[];
   latitude?: number | null;
   longitude?: number | null;
   propertyCount: number;
+  /** Present on the detail endpoint: live stats of what is listed there. */
+  market?: {
+    total: number;
+    priceMin: number | null;
+    priceMax: number | null;
+    priceMedian: number | null;
+    byCategory: Record<string, number>;
+  };
   createdAt: string;
 }
 
@@ -19,6 +30,9 @@ export interface NeighborhoodInput {
   name: string;
   city: string;
   description?: string;
+  lifestyle?: string;
+  schools?: string;
+  transport?: string;
   heroImageUrl?: string;
   photos?: string[];
   latitude?: number;
