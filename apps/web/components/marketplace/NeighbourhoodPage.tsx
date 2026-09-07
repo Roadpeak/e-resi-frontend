@@ -149,10 +149,12 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
           ]}
         />
 
-        {/* ── Neighborhood: the look-around gallery + the story ── */}
-        <section id="neighborhood" className="mt-10 scroll-mt-32">
+        {/* One flat surface from here down — hairline rules separate the
+            sections; cards are kept only where they carry data (listings). */}
+        <div className="divide-y divide-gray-200">
+        <section id="neighborhood" className="scroll-mt-32 py-10">
           {gallery.length > 0 && (
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+            <>
               <h2 className="text-[22px] font-bold text-gray-900">A look around {hood.name}</h2>
               <div className="mt-4 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {gallery.map((url) => (
@@ -161,11 +163,11 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
           {hood.description && (
-            <div className="mt-6 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+            <div className={gallery.length > 0 ? 'mt-8' : ''}>
               <h2 className="text-[22px] font-bold text-gray-900">
                 What you need to know about {hood.name}
               </h2>
@@ -178,41 +180,39 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
 
         {/* ── Market overview, computed from live listings ── */}
         {(hood.market?.total ?? 0) > 0 && (
-          <section id="market" className="mt-6 scroll-mt-32">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
-              <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
-                <TrendingUp size={20} className="text-brand-600" /> {hood.name} market insights
-              </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-gray-50 p-5">
-                  <p className="text-[13px] font-medium text-gray-500">Median price</p>
-                  <p className="mt-1 text-[22px] font-bold text-gray-900">
-                    {hood.market!.priceMedian ? formatPrice(hood.market!.priceMedian, 'KES') : 'On request'}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-5">
-                  <p className="text-[13px] font-medium text-gray-500">Price range</p>
-                  <p className="mt-1 text-[22px] font-bold text-gray-900">
-                    {hood.market!.priceMin
-                      ? `${formatPrice(hood.market!.priceMin, 'KES')} – ${formatPrice(hood.market!.priceMax ?? hood.market!.priceMin, 'KES')}`
-                      : 'On request'}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-5">
-                  <p className="text-[13px] font-medium text-gray-500">Active listings</p>
-                  <p className="mt-1 text-[22px] font-bold text-gray-900">{hood.market!.total}</p>
-                </div>
+          <section id="market" className="scroll-mt-32 py-10">
+            <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
+              <TrendingUp size={20} className="text-brand-600" /> {hood.name} market insights
+            </h2>
+            <div className="mt-5 grid gap-y-4 divide-gray-200 sm:grid-cols-3 sm:divide-x">
+              <div className="sm:pr-8">
+                <p className="text-[13px] font-medium text-gray-500">Median price</p>
+                <p className="mt-1 text-[24px] font-bold text-gray-900">
+                  {hood.market!.priceMedian ? formatPrice(hood.market!.priceMedian, 'KES') : 'On request'}
+                </p>
               </div>
-              {Object.keys(hood.market!.byCategory).length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {Object.entries(hood.market!.byCategory).map(([cat, count]) => (
-                    <span key={cat} className="rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-medium capitalize text-brand-700">
-                      {count} {cat.toLowerCase().replace('_', ' ')}{count !== 1 ? 's' : ''}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <div className="sm:px-8">
+                <p className="text-[13px] font-medium text-gray-500">Price range</p>
+                <p className="mt-1 text-[24px] font-bold text-gray-900">
+                  {hood.market!.priceMin
+                    ? `${formatPrice(hood.market!.priceMin, 'KES')} – ${formatPrice(hood.market!.priceMax ?? hood.market!.priceMin, 'KES')}`
+                    : 'On request'}
+                </p>
+              </div>
+              <div className="sm:px-8">
+                <p className="text-[13px] font-medium text-gray-500">Active listings</p>
+                <p className="mt-1 text-[24px] font-bold text-gray-900">{hood.market!.total}</p>
+              </div>
             </div>
+            {Object.keys(hood.market!.byCategory).length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {Object.entries(hood.market!.byCategory).map(([cat, count]) => (
+                  <span key={cat} className="rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-medium capitalize text-brand-700">
+                    {count} {cat.toLowerCase().replace('_', ' ')}{count !== 1 ? 's' : ''}
+                  </span>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -229,8 +229,7 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
 
         {/* ── Location + street view ── */}
         {hasCoords && (
-          <section className="mt-6">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+          <section className="py-10">
               <h2 className="text-[22px] font-bold text-gray-900">Location &amp; street view</h2>
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 <div className="overflow-hidden rounded-2xl border border-gray-200">
@@ -252,13 +251,12 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
                   />
                 </div>
               </div>
-            </div>
           </section>
         )}
 
         {/* ── Ask local experts ── */}
-        <section id="experts" className="mt-6 scroll-mt-32">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
+        <section id="experts" className="scroll-mt-32 py-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
                 <Users size={20} className="text-brand-600" /> Ask local experts
@@ -278,7 +276,7 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
         </section>
 
         {/* ── Listings ── */}
-        <section id="properties" className="mt-10 scroll-mt-24">
+        <section id="properties" className="scroll-mt-24 py-10">
           <h2 className="text-[22px] font-bold text-gray-900">
             Properties in {hood.name}
             <span className="ml-2 text-[15px] font-normal text-gray-500">{hood.propertyCount}</span>
@@ -295,6 +293,7 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
             </div>
           )}
         </section>
+        </div>
       </div>
     </div>
   );
@@ -303,13 +302,11 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
 /** A curated text section of the guide — one card, one heading, the story. */
 function GuideSection({ id, title, body }: { id: string; title: string; body: string }) {
   return (
-    <section id={id} className="mt-6 scroll-mt-32">
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
-        <h2 className="text-[22px] font-bold text-gray-900">{title}</h2>
-        <p className="mt-3 max-w-3xl whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
-          {body}
-        </p>
-      </div>
+    <section id={id} className="scroll-mt-32 py-10">
+      <h2 className="text-[22px] font-bold text-gray-900">{title}</h2>
+      <p className="mt-3 max-w-3xl whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
+        {body}
+      </p>
     </section>
   );
 }
