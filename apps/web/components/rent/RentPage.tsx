@@ -7,6 +7,7 @@ import { ChevronDown, Loader2, SlidersHorizontal } from 'lucide-react';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
 import { useRentListings } from '../../lib/api/queries';
 import { RentCard } from './RentCard';
+import { BrowseBreadcrumbs } from '../marketplace/BrowseBreadcrumbs';
 import { Pagination } from '../ui/Pagination';
 import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
@@ -98,6 +99,8 @@ export function RentPage({
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <BrowseBreadcrumbs group="rent" label={heading ?? 'Homes for rent in Kenya'} />
+
         {/* ── Hero banner ── */}
         <HeroBanner
           city={filters.city}

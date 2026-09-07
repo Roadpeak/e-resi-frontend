@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-property';
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
+import { BackToBrowse } from '../../../components/property/BackToBrowse';
 import { TrackPageView } from '../../../components/property/TrackPageView';
 import { AgentReferralBar } from '../../../components/property/AgentReferralBar';
 import { PropertyFooter } from '../../../components/property/PropertyFooter';
@@ -212,6 +213,7 @@ export default async function PropertyPage({ params }: Props) {
       >
         <TrackPageView propertyId={property.id} />
         <AgentReferralBar />
+      <BackToBrowse />
         {Rendered ? (
           <Rendered
             property={property}
@@ -253,6 +255,7 @@ export default async function PropertyPage({ params }: Props) {
     >
       <TrackPageView propertyId={property.id} />
         <AgentReferralBar />
+      <BackToBrowse />
       <PropertyTopbar
         property={property}
         ctaLabel={branding.ctaLabel}

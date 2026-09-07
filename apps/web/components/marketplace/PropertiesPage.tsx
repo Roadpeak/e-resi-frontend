@@ -26,6 +26,7 @@ const PropertiesMapView = dynamic(
 );
 import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
+import { BrowseBreadcrumbs } from './BrowseBreadcrumbs';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
@@ -184,6 +185,8 @@ export function PropertiesPage({
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <BrowseBreadcrumbs group="buy" label={heading ?? 'Properties for sale in Kenya'} />
+
         {/* ── Hero banner ── */}
         <HeroBanner
           city={filters.city}
