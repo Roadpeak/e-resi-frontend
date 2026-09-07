@@ -143,7 +143,7 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
 
           <div className="mt-12 flex flex-wrap items-end gap-5">
             {developer.logoUrl && (
-              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/95 p-1.5">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden bg-white p-1.5">
                 <Image
                   src={developer.logoUrl}
                   alt=""
@@ -154,7 +154,10 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
               </span>
             )}
             <div className="min-w-0">
-              <h1 className="text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-white sm:text-[52px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-300">
+                The developer
+              </p>
+              <h1 className="mt-2 font-display text-[38px] font-light leading-[1.05] tracking-tight text-white sm:text-[56px]">
                 {developer.companyName}
               </h1>
               {developer.location && (
@@ -191,25 +194,25 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
                     href={waLink(developer.whatsapp)}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brand-700"
+                    className="inline-flex items-center gap-2.5 bg-[#111112] px-6 py-3 text-[12.5px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-gold-400 hover:text-[#111112]"
                   >
-                    <WhatsAppIcon size={15} /> Message them
+                    <WhatsAppIcon size={14} /> Message
                   </a>
                 )}
                 {developer.phone && (
                   <a
                     href={telLink(developer.phone)}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                    className="inline-flex items-center gap-2.5 border border-black/20 px-6 py-3 text-[12.5px] font-semibold uppercase tracking-[0.15em] text-[#111112] transition-colors hover:border-[#111112]"
                   >
-                    <Phone size={15} /> Call
+                    <Phone size={14} /> Call
                   </a>
                 )}
                 {developer.email && (
                   <a
                     href={`mailto:${developer.email}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                    className="inline-flex items-center gap-2.5 border border-black/20 px-6 py-3 text-[12.5px] font-semibold uppercase tracking-[0.15em] text-[#111112] transition-colors hover:border-[#111112]"
                   >
-                    <Mail size={15} /> Email
+                    <Mail size={14} /> Email
                   </a>
                 )}
                 {developer.website && (
@@ -217,9 +220,9 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
                     href={developer.website}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] px-5 py-2.5 text-[14px] font-semibold text-[#111112] transition-colors hover:bg-[#f5f5f6]"
+                    className="inline-flex items-center gap-2.5 border border-black/20 px-6 py-3 text-[12.5px] font-semibold uppercase tracking-[0.15em] text-[#111112] transition-colors hover:border-[#111112]"
                   >
-                    <Globe size={15} /> Website
+                    <Globe size={14} /> Website
                   </a>
                 )}
               </div>
@@ -282,7 +285,10 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
       {/* ── Developments ── */}
       <section className="bg-white pb-4 pt-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-[28px] font-semibold tracking-[-0.01em] text-[#111112] sm:text-[36px]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-500">
+            The work
+          </p>
+          <h2 className="mt-2 font-display text-[32px] font-light tracking-tight text-[#111112] sm:text-[42px]">
             Latest developments
           </h2>
         </div>
@@ -310,12 +316,15 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
       {mapPlaces.length > 0 && (
         <section className="bg-white pb-14 pt-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <h2 className="mb-5 text-[22px] font-semibold text-[#111112]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-500">
+              The map
+            </p>
+            <h2 className="mb-5 mt-2 font-display text-[28px] font-light tracking-tight text-[#111112] sm:text-[34px]">
               Where they build
             </h2>
-            <DirectoryCard className="h-[420px] overflow-hidden">
-              <DirectoryMap places={mapPlaces} className="rounded-[28px]" />
-            </DirectoryCard>
+            <div className="h-[420px] overflow-hidden border border-black/10">
+              <DirectoryMap places={mapPlaces} />
+            </div>
           </div>
         </section>
       )}
@@ -380,7 +389,7 @@ function ProjectBand({
                 {where}
               </p>
             )}
-            <h3 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.01em] text-white sm:text-[34px]">
+            <h3 className="mt-2 font-display text-[30px] font-light leading-tight tracking-tight text-white sm:text-[40px]">
               {property.name}
             </h3>
             {!!property.priceFrom && property.priceFrom > 0 && (
@@ -390,8 +399,8 @@ function ProjectBand({
             )}
           </div>
 
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white group-hover:text-[#111112]">
-            View development <ArrowRight size={14} />
+          <span className="inline-flex shrink-0 items-center gap-2.5 border border-white/35 px-6 py-2.5 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 group-hover:border-gold-400 group-hover:bg-gold-400 group-hover:text-gray-900">
+            View development <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </span>
         </div>
       </div>
