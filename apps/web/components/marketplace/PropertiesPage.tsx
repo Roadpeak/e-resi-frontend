@@ -198,8 +198,10 @@ export function PropertiesPage({
             Sticks below the navbar once the hero scrolls away, so filters stay
             reachable through a long list rather than only at the top of it.
             `top-16` is the navbar's own height; the negative margin lifts it
-            onto the hero the way it did before. */}
-        <div className="sticky top-16 z-30 -mt-9 px-3 sm:px-6 lg:px-10">
+            onto the hero the way it did before. Desktop-only: on a phone the
+            bar wraps to several rows, and pinning that much chrome eats the
+            viewport — there it scrolls away like normal content. */}
+        <div className="static z-30 -mt-9 px-3 sm:px-6 md:sticky md:top-16 lg:px-10">
           <FilterBar
             moreOpen={moreOpen}
             onToggleMore={() => setMoreOpen((v) => !v)}
