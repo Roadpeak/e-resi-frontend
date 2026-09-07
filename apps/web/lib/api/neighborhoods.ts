@@ -15,15 +15,14 @@ export interface Neighborhood {
   latitude?: number | null;
   longitude?: number | null;
   propertyCount: number;
-  /** Present on the detail endpoint: live stats of what is listed there. */
-  market?: {
-    total: number;
-    priceMin: number | null;
-    priceMax: number | null;
-    priceMedian: number | null;
-    byCategory: Record<string, number>;
-  };
   createdAt: string;
+}
+
+/** Auto-detected surroundings, straight from OpenStreetMap. */
+export interface AreaAmenities {
+  total: number;
+  categories: { key: string; label: string; count: number; names: string[] }[];
+  unavailable?: boolean;
 }
 
 export interface NeighborhoodInput {
@@ -44,6 +43,8 @@ export const neighborhoodsApi = {
     apiClient.get<Neighborhood[]>(`/neighborhoods${city ? `?city=${encodeURIComponent(city)}` : ''}`),
 
   get: (slug: string) => apiClient.get<Neighborhood>(`/neighborhoods/${slug}`),
+
+  amenities: (slug: string) => apiClient.get<AreaAmenities>(`/neighborhoods/${slug}/amenities`),
 
   /** Admin only. */
   create: (body: NeighborhoodInput) => apiClient.post<Neighborhood>('/neighborhoods', body),

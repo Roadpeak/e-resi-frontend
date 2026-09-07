@@ -131,9 +131,6 @@ function NeighbourhoodForm({
           name: initial.name,
           city: initial.city,
           description: initial.description ?? undefined,
-          lifestyle: initial.lifestyle ?? undefined,
-          schools: initial.schools ?? undefined,
-          transport: initial.transport ?? undefined,
           heroImageUrl: initial.heroImageUrl ?? undefined,
           photos: initial.photos,
           latitude: initial.latitude ?? undefined,
@@ -203,36 +200,6 @@ function NeighbourhoodForm({
             onChange={(e) => set('description', e.target.value || undefined)}
             rows={4}
             placeholder="What should a buyer know about living here?"
-            className={cn(inputCls, 'resize-y')}
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={labelCls}>Lifestyle</label>
-          <textarea
-            value={form.lifestyle ?? ''}
-            onChange={(e) => set('lifestyle', e.target.value || undefined)}
-            rows={3}
-            placeholder="Cafés, parks, nightlife — who does this area suit?"
-            className={cn(inputCls, 'resize-y')}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Schools</label>
-          <textarea
-            value={form.schools ?? ''}
-            onChange={(e) => set('schools', e.target.value || undefined)}
-            rows={3}
-            placeholder="Schools and colleges in and around the area"
-            className={cn(inputCls, 'resize-y')}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>Transportation</label>
-          <textarea
-            value={form.transport ?? ''}
-            onChange={(e) => set('transport', e.target.value || undefined)}
-            rows={3}
-            placeholder="Roads, matatu routes, commute times"
             className={cn(inputCls, 'resize-y')}
           />
         </div>

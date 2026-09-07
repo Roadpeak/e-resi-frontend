@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, ChevronRight, Home, Loader2, MapPin, TrendingUp, Users } from 'lucide-react';
-import { formatPrice } from '../../lib/utils';
+import {
+  Banknote, Building2, ChevronRight, Church, Coffee, Dumbbell, Fuel,
+  GraduationCap, Home, Loader2, MapPin, Shield, ShoppingCart, Stethoscope, Users,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { neighborhoodsApi } from '../../lib/api/neighborhoods';
+import { neighborhoodsApi, type AreaAmenities } from '../../lib/api/neighborhoods';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyListCard } from './PropertyListCard';
 import type { Property } from '../../lib/types';
@@ -141,10 +143,7 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
         <SectionTabs
           sections={[
             { id: 'neighborhood', label: 'Neighborhood', show: true },
-            { id: 'market', label: 'Market overview', show: (hood.market?.total ?? 0) > 0 },
-            { id: 'lifestyle', label: 'Lifestyle', show: !!hood.lifestyle },
-            { id: 'schools', label: 'Schools', show: !!hood.schools },
-            { id: 'transportation', label: 'Transportation', show: !!hood.transport },
+            { id: 'amenities', label: 'Amenities', show: hasCoords },
             { id: 'experts', label: 'Ask Local Experts', show: true },
           ]}
         />
@@ -178,54 +177,9 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
           )}
         </section>
 
-        {/* ── Market overview, computed from live listings ── */}
-        {(hood.market?.total ?? 0) > 0 && (
-          <section id="market" className="scroll-mt-32 py-10">
-            <h2 className="flex items-center gap-2 text-[22px] font-bold text-gray-900">
-              <TrendingUp size={20} className="text-brand-600" /> {hood.name} market insights
-            </h2>
-            <div className="mt-5 grid gap-y-4 divide-gray-200 sm:grid-cols-3 sm:divide-x">
-              <div className="sm:pr-8">
-                <p className="text-[13px] font-medium text-gray-500">Median price</p>
-                <p className="mt-1 text-[24px] font-bold text-gray-900">
-                  {hood.market!.priceMedian ? formatPrice(hood.market!.priceMedian, 'KES') : 'On request'}
-                </p>
-              </div>
-              <div className="sm:px-8">
-                <p className="text-[13px] font-medium text-gray-500">Price range</p>
-                <p className="mt-1 text-[24px] font-bold text-gray-900">
-                  {hood.market!.priceMin
-                    ? `${formatPrice(hood.market!.priceMin, 'KES')} – ${formatPrice(hood.market!.priceMax ?? hood.market!.priceMin, 'KES')}`
-                    : 'On request'}
-                </p>
-              </div>
-              <div className="sm:px-8">
-                <p className="text-[13px] font-medium text-gray-500">Active listings</p>
-                <p className="mt-1 text-[24px] font-bold text-gray-900">{hood.market!.total}</p>
-              </div>
-            </div>
-            {Object.keys(hood.market!.byCategory).length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
-                {Object.entries(hood.market!.byCategory).map(([cat, count]) => (
-                  <span key={cat} className="rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-medium capitalize text-brand-700">
-                    {count} {cat.toLowerCase().replace('_', ' ')}{count !== 1 ? 's' : ''}
-                  </span>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ── Curated guide sections ── */}
-        {hood.lifestyle && (
-          <GuideSection id="lifestyle" title={`Lifestyle in ${hood.name}`} body={hood.lifestyle} />
-        )}
-        {hood.schools && (
-          <GuideSection id="schools" title="Schools nearby" body={hood.schools} />
-        )}
-        {hood.transport && (
-          <GuideSection id="transportation" title="Getting around" body={hood.transport} />
-        )}
+        {/* ── Amenities: auto-detected from OpenStreetMap around the pin —
+            nothing curated, the area fills its own scorecard. ── */}
+        {hasCoords && <AmenitiesSection slug={hood.slug} name={hood.name} />}
 
         {/* ── Location + street view ── */}
         {hasCoords && (
@@ -299,18 +253,6 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
   );
 }
 
-/** A curated text section of the guide — one card, one heading, the story. */
-function GuideSection({ id, title, body }: { id: string; title: string; body: string }) {
-  return (
-    <section id={id} className="scroll-mt-32 py-10">
-      <h2 className="text-[22px] font-bold text-gray-900">{title}</h2>
-      <p className="mt-3 max-w-3xl whitespace-pre-line text-[15.5px] leading-relaxed text-gray-600">
-        {body}
-      </p>
-    </section>
-  );
-}
-
 /**
  * The PF-style section tab row: sticky under the navbar, underlining the
  * section currently on screen. Plain anchors — the browser does the travel,
@@ -356,5 +298,68 @@ function SectionTabs({ sections }: { sections: { id: string; label: string; show
         ))}
       </div>
     </nav>
+  );
+}
+
+const AMENITY_ICONS: Record<string, React.ReactNode> = {
+  schools: <GraduationCap size={18} />,
+  health: <Stethoscope size={18} />,
+  dining: <Coffee size={18} />,
+  shopping: <ShoppingCart size={18} />,
+  banks: <Banknote size={18} />,
+  parks: <Dumbbell size={18} />,
+  fuel: <Fuel size={18} />,
+  police: <Shield size={18} />,
+  worship: <Church size={18} />,
+};
+
+/**
+ * The area's surroundings, detected rather than written: schools, clinics,
+ * supermarkets, cafés pulled live from OpenStreetMap around the pin and
+ * grouped into buckets, each with its count and a few recognisable names.
+ */
+function AmenitiesSection({ slug, name }: { slug: string; name: string }) {
+  const { data, isLoading } = useQuery<AreaAmenities>({
+    queryKey: ['neighborhood', slug, 'amenities'],
+    queryFn: () => neighborhoodsApi.amenities(slug),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  if (!isLoading && (!data || data.categories.length === 0)) return null;
+
+  return (
+    <section id="amenities" className="scroll-mt-32 py-10">
+      <h2 className="text-[22px] font-bold text-gray-900">Amenities around {name}</h2>
+      <p className="mt-1 text-[14px] text-gray-500">
+        {data ? `${data.total} places detected nearby` : 'Looking around the area…'} · from OpenStreetMap
+      </p>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-14">
+          <Loader2 size={22} className="animate-spin text-gray-400" />
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          {data!.categories.map((c) => (
+            <div key={c.key}>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+                  {AMENITY_ICONS[c.key] ?? <MapPin size={18} />}
+                </span>
+                <p className="text-[15.5px] font-semibold text-gray-900">
+                  {c.label}
+                  <span className="ml-1.5 text-[13.5px] font-normal text-gray-500">{c.count}</span>
+                </p>
+              </div>
+              {c.names.length > 0 && (
+                <p className="mt-2 pl-[46px] text-[13.5px] leading-relaxed text-gray-500">
+                  {c.names.join(' · ')}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
