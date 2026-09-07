@@ -11,7 +11,7 @@ import {
   type AgentSpecialty,
 } from '../../lib/api/agents';
 import { AgentCard } from './AgentCard';
-import { DirectoryCard, DirectoryShell, PillButton } from './DirectoryPrimitives';
+import { DirectoryShell, PillButton } from './DirectoryPrimitives';
 import { cn } from '../../lib/utils';
 
 const PAGE_SIZE = 12;
@@ -61,8 +61,10 @@ export function AgentsDirectory({
 
   return (
     <DirectoryShell className="pt-16">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          {/* The rating gold opens the page, same note as the browse page. */}
+          <span className="mb-2.5 block h-1 w-9 rounded-full bg-gold-400" />
           <h1 className="text-[32px] font-semibold leading-tight text-[#111112] sm:text-[38px]">
             Property agents in Kenya
           </h1>
@@ -72,17 +74,18 @@ export function AgentsDirectory({
           </p>
         </div>
 
-        {/* Kind tabs */}
-        <div className="mb-4 flex flex-wrap gap-1.5">
+        {/* Kind tabs — an underline row, not another set of pills. */}
+        <div className="mb-5 flex gap-1 border-b border-black/[0.08]">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                'rounded-full px-4 py-2 text-[14px] font-medium transition-colors cursor-pointer',
+                'relative cursor-pointer whitespace-nowrap px-4 py-3 text-[14.5px] font-medium transition-colors',
+                'after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-full after:transition-all',
                 tab === t.key
-                  ? 'bg-[#111112] text-white'
-                  : 'bg-white text-[#6b6b70] hover:bg-[#e8e8ea]',
+                  ? 'text-[#111112] after:bg-gold-400'
+                  : 'text-[#8a8a90] hover:text-[#111112] after:bg-transparent',
               )}
             >
               {t.label}
@@ -134,23 +137,31 @@ export function AgentsDirectory({
           )}
         </div>
 
+        {/* One sheet, hairline-divided rows — a directory reads down, and a
+            row gives each agent room for identity, record and actions. */}
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <DirectoryCard key={i} className="h-[220px] animate-pulse bg-[#f0f0f2]" />
+          <div className="divide-y divide-black/[0.06] overflow-hidden rounded-3xl border border-black/5 bg-white">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-5 px-7 py-6">
+                <div className="h-20 w-20 animate-pulse rounded-full bg-[#f0f0f2]" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-48 animate-pulse rounded bg-[#f0f0f2]" />
+                  <div className="h-3 w-72 animate-pulse rounded bg-[#f0f0f2]" />
+                </div>
+              </div>
             ))}
           </div>
         ) : agents.length === 0 ? (
-          <DirectoryCard className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-black/10 bg-white py-20 text-center">
             <Users size={32} className="text-[#c4c4c8]" />
             <p className="text-[15px] text-[#6b6b70]">
               {specialty || search || tab !== 'ALL'
                 ? 'No agents match these filters yet.'
                 : 'No agents listed yet — check back soon.'}
             </p>
-          </DirectoryCard>
+          </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="divide-y divide-black/[0.06] overflow-hidden rounded-3xl border border-black/5 bg-white">
             {agents.map((a) => (
               <AgentCard key={a.id} agent={a} />
             ))}

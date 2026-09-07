@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUpRight, Building2, MapPin, Phone, User } from 'lucide-react';
+import { Award, Building2, MapPin, Phone, User } from 'lucide-react';
 import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
-import { DirectoryCard, IconPillLink } from './DirectoryPrimitives';
+import { DirectoryCard } from './DirectoryPrimitives';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { SPECIALTY_LABELS, type Agent } from '../../lib/api/agents';
@@ -16,114 +16,136 @@ function telLink(phone: string) {
   return `tel:${phone.replace(/[^\d+]/g, '')}`;
 }
 
+const iconAction =
+  'flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-[#3c3c43] transition-colors hover:bg-[#f5f5f6]';
+
 /**
- * One agent in the directory or the "Need agent help?" picker.
- *
- * An individual leads with their photo and a company with its logo — buyers
- * choose a person differently from how they choose a firm.
+ * One agent, laid out as a directory row: identity left, the record in the
+ * middle, actions right. Everything reads as text on white — no coloured
+ * chip backgrounds; the one accent is the rating gold that badges borrow.
+ * `compact` keeps the self-contained card shape for the picker modal.
  */
 export function AgentCard({ agent, compact = false }: { agent: Agent; compact?: boolean }) {
   const isCompany = agent.kind === 'COMPANY';
   const avatar = isCompany ? agent.logoUrl : agent.photoUrl;
   const FallbackIcon = isCompany ? Building2 : User;
 
-  return (
-    <DirectoryCard className="flex flex-col p-5">
-      <div className="flex items-center gap-4">
-        <div
-          className={`flex shrink-0 items-center justify-center overflow-hidden bg-[#f0f0f2] ${
-            // A person reads as a person at a circle; a company as a mark in a tile.
-            isCompany ? 'h-20 w-20 rounded-2xl' : 'h-20 w-20 rounded-full'
-          }`}
-        >
-          {avatar ? (
-            <Image
-              src={avatar}
-              alt=""
-              width={80}
-              height={80}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <FallbackIcon size={28} className="text-[#8a8a90]" />
-          )}
-        </div>
+  const identity = (
+    <div
+      className={`flex shrink-0 items-center justify-center overflow-hidden bg-[#f0f0f2] ${
+        // A person reads as a person at a circle; a company as a mark in a tile.
+        isCompany ? 'rounded-2xl' : 'rounded-full'
+      } ${compact ? 'h-14 w-14' : 'h-20 w-20'}`}
+    >
+      {avatar ? (
+        <Image src={avatar} alt="" width={80} height={80} className="h-full w-full object-cover" unoptimized />
+      ) : (
+        <FallbackIcon size={compact ? 22 : 28} className="text-[#8a8a90]" />
+      )}
+    </div>
+  );
 
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[16px] font-semibold text-[#111112]">
-            {agent.displayName}
-          </h3>
-          <p className="mt-0.5 text-[13px] text-[#6b6b70]">
-            {isCompany ? 'Agency' : 'Individual agent'}
-            {agent.yearsExperience ? ` · ${agent.yearsExperience} yrs` : ''}
-          </p>
-          {agent.location && (
-            <p className="mt-1 flex items-center gap-1 truncate text-[13px] text-[#6b6b70]">
-              <MapPin size={12} className="shrink-0" />
-              {agent.location}
-            </p>
-          )}
-          <div className="mt-1.5">
-            <StarRating value={agent.ratingAverage} count={agent.ratingCount} />
-          </div>
-          {/* Track record, not decoration: every badge here is a threshold
-              over deals the pipeline actually recorded, and closings are what
-              the directory now ranks on. */}
-          {((agent.badges?.length ?? 0) > 0 || agent.dealsCompleted > 0) && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-1">
-              {agent.dealsCompleted > 0 && (
-                <span className="rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[11.5px] font-medium text-[#137333]">
-                  {agent.dealsCompleted} closing{agent.dealsCompleted === 1 ? '' : 's'}
-                </span>
-              )}
-              {(agent.badges ?? []).map((b) => (
-                <span key={b} className="rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11.5px] font-medium text-[#1967d2]">
-                  {b}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+  const facts = (
+    <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <h3 className="truncate text-[16.5px] font-semibold text-[#111112]">
+          {agent.displayName}
+        </h3>
+        {(agent.badges ?? []).map((b) => (
+          <span key={b} className="flex items-center gap-1 text-[12.5px] font-medium text-[#6b6b70]">
+            <Award size={13} className="text-gold-400" /> {b}
+          </span>
+        ))}
+      </div>
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          {agent.phone && (
-            <IconPillLink href={telLink(agent.phone)} label={`Call ${agent.displayName}`}>
-              <Phone size={15} />
-            </IconPillLink>
-          )}
-          {agent.whatsapp && (
-            <IconPillLink
-              href={waLink(agent.whatsapp)}
-              label={`WhatsApp ${agent.displayName}`}
-              tone="whatsapp"
-            >
-              <WhatsAppIcon size={15} />
-            </IconPillLink>
-          )}
-        </div>
+      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13.5px] text-[#6b6b70]">
+        <span>{isCompany ? 'Agency' : 'Individual agent'}</span>
+        {agent.yearsExperience ? <span>· {agent.yearsExperience} yrs experience</span> : null}
+        {agent.location && (
+          <span className="flex items-center gap-1">
+            · <MapPin size={12} className="shrink-0" /> {agent.location}
+          </span>
+        )}
+      </p>
+
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <StarRating value={agent.ratingAverage} count={agent.ratingCount} />
+        {agent.dealsCompleted > 0 && (
+          <span className="text-[13px] text-[#3c3c43]">
+            <span className="font-semibold text-[#111112]">{agent.dealsCompleted}</span>{' '}
+            closing{agent.dealsCompleted === 1 ? '' : 's'}
+          </span>
+        )}
       </div>
 
       {!compact && agent.specialties.length > 0 && (
-        <p className="mt-3 line-clamp-2 text-[13px] text-[#6b6b70]">
+        <p className="mt-1.5 line-clamp-1 text-[13px] text-[#8a8a90]">
           {agent.specialties.map((s) => SPECIALTY_LABELS[s]).join(' · ')}
         </p>
       )}
+    </div>
+  );
 
-      {/* Both routes the picker offers: look them over, or start talking. */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Link
-          href={`/agents/${agent.id}`}
-          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#4A80F5] transition-colors hover:text-[#3457E0]"
-        >
-          Visit agent
-          <ArrowUpRight size={16} />
-        </Link>
+  if (compact) {
+    return (
+      <DirectoryCard className="p-4">
+        <div className="flex items-center gap-4">
+          {identity}
+          {facts}
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <Link
+            href={`/agents/${agent.id}`}
+            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#111112] underline underline-offset-2 hover:text-[#6b6b70]"
+          >
+            View profile
+          </Link>
+          <ChatWithAgentButton
+            agentId={agent.id}
+            label="Chat"
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#f5f5f6] disabled:opacity-50"
+          />
+        </div>
+      </DirectoryCard>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-5 px-5 py-6 transition-colors hover:bg-[#fafafa] sm:px-7">
+      {identity}
+      {facts}
+
+      {/* Actions, one quiet rail: neutral icon pills, chat, then the single
+          filled control — the profile is the destination. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        {agent.phone && (
+          <a href={telLink(agent.phone)} aria-label={`Call ${agent.displayName}`} className={iconAction}>
+            <Phone size={15} />
+          </a>
+        )}
+        {agent.whatsapp && (
+          <a
+            href={waLink(agent.whatsapp)}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label={`WhatsApp ${agent.displayName}`}
+            className={iconAction}
+          >
+            <span className="text-[#1fa855]"><WhatsAppIcon size={15} /></span>
+          </a>
+        )}
         <ChatWithAgentButton
           agentId={agent.id}
           label="Chat"
-          className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#f5f5f6] px-3.5 py-1.5 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#eaeaec] cursor-pointer disabled:opacity-50"
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-black/10 bg-white px-4 text-[14px] font-medium text-[#111112] transition-colors hover:bg-[#f5f5f6] disabled:opacity-50"
         />
+        <Link
+          href={`/agents/${agent.id}`}
+          className="inline-flex h-10 items-center rounded-full bg-[#111112] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#2a2a2c]"
+        >
+          View profile
+        </Link>
       </div>
-    </DirectoryCard>
+    </div>
   );
 }
