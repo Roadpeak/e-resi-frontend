@@ -183,7 +183,7 @@ export function PropertiesPage({
   }, [showFullMap]);
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pt-20 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <BrowseBreadcrumbs group="buy" label={heading ?? 'Properties for sale in Kenya'} />
 

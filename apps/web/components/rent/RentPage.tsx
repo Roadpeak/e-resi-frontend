@@ -97,7 +97,7 @@ export function RentPage({
   );
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pt-20 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <BrowseBreadcrumbs group="rent" label={heading ?? 'Homes for rent in Kenya'} />
 
