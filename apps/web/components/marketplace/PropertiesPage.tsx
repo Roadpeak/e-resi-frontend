@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -190,7 +190,18 @@ export function PropertiesPage({
           cities={cities}
           slides={mapResults
             .filter((p) => p.heroImageUrl)
-            .map((p) => ({ image: p.heroImageUrl as string, name: p.name, slug: p.slug }))}
+            .map((p) => ({
+              name: p.name,
+              slug: p.slug,
+              // The hero leads, then up to two gallery interiors — enough of
+              // a tour to feel cinematic without hogging the marquee.
+              images: [
+                p.heroImageUrl as string,
+                ...(p.galleryImages ?? []).filter(
+                  (u) => u !== p.heroImageUrl && /\.(jpe?g|png|webp|avif)$/i.test(u),
+                ),
+              ].slice(0, 3),
+            }))}
           onCityChange={(c) => {
             setFilter('city', c);
             setFilter('neighborhood', undefined);
@@ -381,19 +392,32 @@ function HeroBanner({
 }: {
   city?: string;
   cities: string[];
-  slides: { image: string; name: string; slug: string }[];
+  slides: { name: string; slug: string; images: string[] }[];
   onCityChange: (city?: string) => void;
 }) {
   // The banner used to pin whichever property happened to sort first, which
   // quietly gave one development the whole marquee. Every listed property now
-  // takes a turn, crossfading with its name on the frame.
-  const [idx, setIdx] = useState(0);
+  // takes a turn — and each turn is a small tour: its hero and up to two
+  // gallery frames drift by Ken Burns-style before the next property enters.
+  const [pos, setPos] = useState({ p: 0, i: 0 });
+  const slidesRef = useRef(slides);
+  slidesRef.current = slides;
   useEffect(() => {
-    if (slides.length < 2) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 5000);
+    if (slides.length === 0) return;
+    const t = setInterval(() => {
+      setPos(({ p, i }) => {
+        const list = slidesRef.current;
+        if (list.length === 0) return { p: 0, i: 0 };
+        const prop = list[p % list.length];
+        if (i + 1 < prop.images.length) return { p, i: i + 1 };
+        return { p: (p + 1) % list.length, i: 0 };
+      });
+    }, 4000);
     return () => clearInterval(t);
   }, [slides.length]);
-  const slide = slides.length > 0 ? slides[idx % slides.length] : undefined;
+
+  const slide = slides.length > 0 ? slides[pos.p % slides.length] : undefined;
+  const image = slide?.images[pos.i % (slide?.images.length || 1)];
 
   return (
     <motion.div
@@ -402,26 +426,37 @@ function HeroBanner({
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative h-[240px] overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 sm:h-[280px]"
     >
-      {/* Rotating property image, right side (from live results) */}
-      {slide && (
-        <div className="absolute inset-y-0 right-0 w-[70%] sm:w-[60%]">
+      {/* Rotating property tour, right side (from live results) */}
+      {slide && image && (
+        <div className="absolute inset-y-0 right-0 w-[70%] overflow-hidden sm:w-[60%]">
           <AnimatePresence>
             <motion.div
-              key={slide.slug}
+              key={`${slide.slug}-${pos.i}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.9, ease: 'easeInOut' }}
+              transition={{ duration: 1, ease: 'easeInOut' }}
               className="absolute inset-0"
             >
-              <Image
-                src={slide.image}
-                alt={slide.name}
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 1024px) 70vw, 60vw"
-              />
+              {/* The drift runs a touch past the slide interval so the frame
+                  is still moving as the crossfade takes it. Alternating
+                  origins keep three frames from feeling like one loop. */}
+              <motion.div
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1.16 }}
+                transition={{ duration: 5.2, ease: 'linear' }}
+                style={{ transformOrigin: pos.i % 2 === 0 ? '30% 40%' : '70% 60%' }}
+                className="absolute inset-0"
+              >
+                <Image
+                  src={image}
+                  alt={slide.name}
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 70vw, 60vw"
+                />
+              </motion.div>
               <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-600/40 to-transparent" />
             </motion.div>
           </AnimatePresence>
