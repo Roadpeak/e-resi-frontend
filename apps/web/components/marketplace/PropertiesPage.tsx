@@ -193,6 +193,7 @@ export function PropertiesPage({
             .map((p) => ({
               name: p.name,
               slug: p.slug,
+              location: p.address.neighborhood || p.address.city,
               // The hero leads, then up to two gallery interiors — enough of
               // a tour to feel cinematic without hogging the marquee.
               images: [
@@ -392,7 +393,7 @@ function HeroBanner({
 }: {
   city?: string;
   cities: string[];
-  slides: { name: string; slug: string; images: string[] }[];
+  slides: { name: string; slug: string; location: string; images: string[] }[];
   onCityChange: (city?: string) => void;
 }) {
   // The banner used to pin whichever property happened to sort first, which
@@ -462,14 +463,36 @@ function HeroBanner({
           </AnimatePresence>
           {/* The name rides the frame as a glass chip — enough to identify
               the property without competing with the section's own heading. */}
-          {/* bottom-16, not bottom-4: the filter bar overlaps the banner's
-              lower edge, and the chip must sit above it. */}
-          <Link
-            href={`/${slide.slug}`}
-            className="absolute bottom-16 right-5 z-10 rounded-full bg-black/35 px-5 py-2 font-display text-[18px] font-light tracking-tight text-white backdrop-blur-md transition-colors hover:bg-black/55 sm:text-[20px]"
-          >
-            {slide.name}
-          </Link>
+          {/* Constant bottom vignette so the title reads on any frame —
+              part of the image treatment, not a box behind the text. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
+
+          {/* Title card, film-style: location overline, the name in the
+              display face, no background. Keyed by property so it rises in
+              once per sequence and holds through its frames. bottom-16
+              clears the filter bar overlapping the banner's lower edge. */}
+          <AnimatePresence>
+            <motion.div
+              key={`title-${slide.slug}`}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute bottom-16 right-6 z-10 text-right sm:right-10"
+            >
+              <Link href={`/${slide.slug}`} className="group block">
+                {slide.location && (
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-white/70 drop-shadow-sm">
+                    {slide.location}
+                  </p>
+                )}
+                <p className="mt-1 font-display text-3xl font-light leading-none tracking-tight text-white drop-shadow-md sm:text-4xl">
+                  {slide.name}
+                </p>
+                <span className="ml-auto mt-2 block h-px w-8 bg-white/50 transition-all duration-500 group-hover:w-full" />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
         </div>
       )}
       {/* Soft brand wash over the left for legibility */}
