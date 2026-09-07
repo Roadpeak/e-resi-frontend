@@ -240,6 +240,9 @@ export function PropertiesPage({
           <section className="min-w-0 max-w-5xl flex-1">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
+                {/* Same gold kicker as the neighbourhood rail — the two
+                    columns open with the same warm note. */}
+                <span className="mb-2 block h-1 w-9 rounded-full bg-gold-400" />
                 <h2 className="text-xl font-bold text-gray-900">{heading ?? 'Best options'}</h2>
                 <p className="mt-0.5 text-sm text-gray-500">
                   {isLoading ? 'Searching…' : `${total} properties found`}

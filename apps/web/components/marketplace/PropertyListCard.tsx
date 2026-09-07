@@ -6,10 +6,11 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   MapPin, Heart, MapPinned, ChevronLeft, ChevronRight, Ruler, BadgeCheck, Building2,
+  Box, Clapperboard, Headset,
 } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { formatPrice, getStatusLabel, cn } from '../../lib/utils';
-import { TourMark, type TourKind } from '../property/TourMarks';
+import type { TourKind } from '../property/TourMarks';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
 
@@ -32,11 +33,18 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 /** How long each image holds before the carousel advances. */
 const SLIDE_MS = 4200;
 
-/** Each tour's own colour, matching the tours section on a property page. */
+/** Each tour's own colour, matching the tours section on a property page.
+ * Static icons here — the animated marks belong on the tours section itself;
+ * in a list row they read as noise. */
 const TOUR_ACCENTS: Record<TourKind, string> = {
   cinematic: '#a8712f',
   '3d': '#1a73e8',
   vr: '#7c4dff',
+};
+const TOUR_ICONS: Record<TourKind, React.ReactNode> = {
+  cinematic: <Clapperboard size={12} />,
+  '3d': <Box size={12} />,
+  vr: <Headset size={12} />,
 };
 
 /** Up to four gallery stills, distinct from the hero. */
@@ -210,7 +218,7 @@ export function PropertyListCard({
             </span>
           )}
           {isNew(property) && (
-            <span className="rounded-md bg-white/95 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-900 backdrop-blur-sm">
+            <span className="rounded-md bg-gold-400 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-900">
               New
             </span>
           )}
@@ -294,7 +302,7 @@ export function PropertyListCard({
           {completion && <span>Ready {completion}</span>}
         </div>
 
-        <p className="mt-2 flex items-center gap-1.5 truncate text-[13.5px] text-gray-500">
+        <p className="mt-2 flex items-center gap-1.5 truncate text-[13.5px] font-semibold text-gray-700">
           <MapPin size={13} className="shrink-0" /> {location}
         </p>
 
@@ -308,7 +316,11 @@ export function PropertyListCard({
               <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-gray-100">
                 <Image src={property.developer.logoUrl} alt="" fill className="object-cover" sizes="28px" unoptimized />
               </span>
-            ) : null}
+            ) : (
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                <Building2 size={14} />
+              </span>
+            )}
             <span className="min-w-0">
               <span className="block truncate text-[13px] font-medium text-gray-900">
                 {property.developer?.name || 'e-resi'}
@@ -317,9 +329,7 @@ export function PropertyListCard({
                 <span className="mt-0.5 flex items-center gap-2">
                   {tours.map((t) => (
                     <span key={t.kind} className="flex items-center gap-1 text-[11.5px] text-gray-500">
-                      <span style={{ color: TOUR_ACCENTS[t.kind] }}>
-                        <TourMark kind={t.kind} size={13} />
-                      </span>
+                      <span style={{ color: TOUR_ACCENTS[t.kind] }}>{TOUR_ICONS[t.kind]}</span>
                       {t.label}
                     </span>
                   ))}
