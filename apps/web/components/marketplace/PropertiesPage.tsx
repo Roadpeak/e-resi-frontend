@@ -431,7 +431,7 @@ function HeroBanner({
               lower edge, and the chip must sit above it. */}
           <Link
             href={`/${slide.slug}`}
-            className="absolute bottom-16 right-5 z-10 rounded-full bg-black/35 px-4 py-1.5 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-black/55"
+            className="absolute bottom-16 right-5 z-10 rounded-full bg-black/35 px-5 py-2 font-display text-[18px] font-light tracking-tight text-white backdrop-blur-md transition-colors hover:bg-black/55 sm:text-[20px]"
           >
             {slide.name}
           </Link>
