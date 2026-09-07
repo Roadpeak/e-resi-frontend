@@ -24,6 +24,9 @@ export function NeighbourhoodsRail() {
 
   return (
     <aside className="sticky top-24 hidden w-[330px] shrink-0 xl:block">
+      {/* The gold kicker picks up the star-rating accent used across the
+          site, so the rail answers the brand blues with a warm note. */}
+      <span className="mb-2 block h-1 w-9 rounded-full bg-gold-400" />
       <h2 className="text-[17px] font-bold text-gray-900">Explore neighbourhoods</h2>
       <p className="mt-0.5 text-[13px] text-gray-500">
         Get to know the areas behind the listings.
@@ -56,12 +59,13 @@ export function NeighbourhoodsRail() {
               <div className="min-w-0">
                 <p className="truncate text-[16px] font-semibold text-white">{n.name}</p>
                 <p className="text-[13px] text-white/80">
-                  {n.propertyCount} propert{n.propertyCount === 1 ? 'y' : 'ies'}
+                  <span className="font-semibold text-gold-300">{n.propertyCount}</span>{' '}
+                  propert{n.propertyCount === 1 ? 'y' : 'ies'}
                 </p>
               </div>
               <span
                 aria-hidden
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors group-hover:bg-white group-hover:text-gray-900"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors group-hover:bg-gold-400 group-hover:text-gray-900"
               >
                 <ArrowRight size={16} />
               </span>
