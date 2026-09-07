@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Home, Loader2, MapPin } from 'lucide-react';
+import { Building2, ChevronRight, Home, Loader2, MapPin } from 'lucide-react';
 import { neighborhoodsApi } from '../../lib/api/neighborhoods';
 import { useProperties } from '../../lib/api/queries';
 import { PropertyListCard } from './PropertyListCard';
@@ -64,33 +64,70 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
           <span className="font-medium text-[#111112]">{hood.name}</span>
         </nav>
 
-        {/* ── Hero: title card over the area photo ── */}
-        <div className="relative overflow-hidden rounded-3xl bg-gray-200">
-          <div className="relative h-[300px] sm:h-[340px]">
+        {/* ── Hero, after PropertyFinder's area-insights pages: the area
+            photo as a slanted panel on the right, and a solid white card
+            floating over its left edge with the facts and actions. ── */}
+        <div className="relative sm:min-h-[400px]">
+          <div
+            className="relative ml-auto h-[240px] w-full overflow-hidden sm:h-[400px] sm:w-[64%] sm:[clip-path:polygon(9%_0%,100%_0%,91%_100%,0%_100%)]"
+          >
             {gallery[0] ? (
-              <Image src={gallery[0]} alt={hood.name} fill priority className="object-cover" sizes="100vw" />
+              <Image src={gallery[0]} alt={hood.name} fill priority className="object-cover" sizes="(max-width: 640px) 100vw, 60vw" />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-brand-700 to-brand-500" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
           </div>
-          <div className="absolute inset-y-0 left-0 flex items-center p-6 sm:p-10">
-            <div className="max-w-md rounded-3xl bg-white/95 p-6 shadow-lg backdrop-blur sm:p-8">
-              <p className="flex items-center gap-1.5 text-[13px] font-medium uppercase tracking-wide text-gray-500">
-                <MapPin size={13} /> {hood.city}
-              </p>
-              <h1 className="mt-1 text-[30px] font-bold leading-tight text-gray-900 sm:text-[36px]">
+
+          <div className="relative -mt-10 px-2 sm:absolute sm:left-0 sm:top-1/2 sm:mt-0 sm:w-[46%] sm:-translate-y-1/2 sm:px-0">
+            <div className="rounded-2xl bg-white p-6 shadow-[0_12px_45px_rgba(20,20,43,0.10)] sm:p-8">
+              <h1 className="text-[30px] font-bold leading-tight text-gray-900 sm:text-[34px]">
                 {hood.name}
               </h1>
-              <p className="mt-2 text-[14.5px] text-gray-600">
-                {hood.propertyCount} propert{hood.propertyCount === 1 ? 'y' : 'ies'} currently listed
-              </p>
-              <Link
-                href="#properties"
-                className="mt-4 inline-flex rounded-full bg-gray-900 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-gray-700"
-              >
-                View properties
-              </Link>
+
+              {/* Trait chips with hairline dividers, PF-style */}
+              <div className="mt-3 flex flex-wrap items-center text-[15px] font-semibold text-gray-800">
+                <span className="flex items-center gap-1.5 pr-4">
+                  <MapPin size={15} className="text-gray-500" /> {hood.city}
+                </span>
+                <span className="flex items-center gap-1.5 border-l border-gray-200 px-4">
+                  <Building2 size={15} className="text-gray-500" /> Residential guide
+                </span>
+              </div>
+
+              {/* The number row — where PF shows the rating, we show the
+                  live inventory: the count is the area's pulse here. */}
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-[32px] font-bold leading-none text-gray-900">
+                  {hood.propertyCount}
+                </span>
+                <span className="text-[15px] text-gray-600">
+                  <Link href="#properties" className="font-semibold text-gray-900 underline underline-offset-2 hover:text-brand-600">
+                    Propert{hood.propertyCount === 1 ? 'y' : 'ies'} listed
+                  </Link>
+                  <span className="block text-[13.5px] text-gray-500">
+                    Currently available in {hood.name}
+                  </span>
+                </span>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="#properties"
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-brand-700"
+                >
+                  View properties
+                </Link>
+                {hasCoords && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${hood.latitude},${hood.longitude}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 py-3 text-[15px] font-semibold text-gray-800 transition-colors hover:border-gray-400 hover:bg-gray-50"
+                  >
+                    <MapPin size={15} /> Get directions
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
