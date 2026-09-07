@@ -4,9 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowLeft, BadgeCheck, Box, Building2, Clapperboard, Headset,
-  Loader2, MapPin, User,
+  ArrowLeft, BadgeCheck, Box, Building2, ChevronRight, Clapperboard, Headset,
+  Home, Loader2, MapPin, User,
 } from 'lucide-react';
+import { apiClient } from '../../lib/api/client';
 import { agentsApi, SPECIALTY_LABELS, type Agent, type AgentProperty } from '../../lib/api/agents';
 import { formatPrice } from '../../lib/utils';
 import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimitives';
@@ -36,6 +37,17 @@ export function AgentProfile({ agentId }: { agentId: string }) {
     queryFn: () => agentsApi.properties(agentId),
     retry: false,
   });
+  // Same key as PartnersStrip below, so the two share one fetch. The lead
+  // partner becomes the brokerage-style crumb in the trail.
+  const { data: partners } = useQuery({
+    queryKey: ['public-partners', 'agent', agentId],
+    queryFn: () =>
+      apiClient.get<{ id: string; developer: { id: string; companyName: string } }[]>(
+        `/agents/${agentId}/partners`,
+      ),
+    enabled: !!agentId,
+  });
+  const leadPartner = partners?.[0]?.developer;
 
   if (isLoading) {
     return (
@@ -68,12 +80,37 @@ export function AgentProfile({ agentId }: { agentId: string }) {
   return (
     <DirectoryShell className="pt-16">
       <div className="mx-auto max-w-[1360px] px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          href="/agents"
-          className="mb-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#6b6b70] transition-colors hover:text-[#111112]"
-        >
-          <ArrowLeft size={15} /> All agents
-        </Link>
+        {/* Breadcrumb trail, PropertyFinder-style: a way back on the left,
+            and the path that locates this agent on the platform. */}
+        <nav aria-label="Breadcrumb" className="mb-5 flex flex-wrap items-center gap-2 text-[13.5px] text-[#6b6b70]">
+          <Link
+            href="/agents"
+            className="inline-flex items-center gap-1.5 font-medium text-[#111112] transition-colors hover:text-[#6b6b70]"
+          >
+            <ArrowLeft size={14} /> Back to Search
+          </Link>
+          <span className="mx-2 hidden h-4 w-px bg-black/15 sm:block" />
+          <Link href="/" aria-label="Home" className="hidden transition-colors hover:text-[#111112] sm:block">
+            <Home size={14} />
+          </Link>
+          <ChevronRight size={13} className="hidden text-[#b9b9be] sm:block" />
+          <Link href="/agents" className="hidden transition-colors hover:text-[#111112] sm:block">
+            Find Agent
+          </Link>
+          {leadPartner && (
+            <>
+              <ChevronRight size={13} className="hidden text-[#b9b9be] sm:block" />
+              <Link
+                href={`/developers/${leadPartner.id}`}
+                className="hidden transition-colors hover:text-[#111112] sm:block"
+              >
+                {leadPartner.companyName}
+              </Link>
+            </>
+          )}
+          <ChevronRight size={13} className="hidden text-[#b9b9be] sm:block" />
+          <span className="hidden font-medium text-[#111112] sm:block">{agent.displayName}</span>
+        </nav>
 
         <AgentHeader agent={agent} propertyCount={properties?.length ?? 0} />
 
