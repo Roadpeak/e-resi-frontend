@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { MapPinned } from 'lucide-react';
+import { ArrowRight, MapPinned } from 'lucide-react';
 import { neighborhoodsApi } from '../../lib/api/neighborhoods';
 
 /**
@@ -31,32 +31,40 @@ export function NeighbourhoodsRail() {
 
       <div className="mt-4 flex max-h-[calc(100vh-12rem)] flex-col gap-3 overflow-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {rows.map((n) => (
+          /* Sharp-edged photo tiles: the image is the card, and a bottom
+             gradient carries the name, the live count and the way in. */
           <Link
             key={n.id}
             href={`/neighbourhoods/${n.slug}`}
-            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all hover:border-gray-300 hover:shadow-md"
+            className="group relative block h-44 w-full overflow-hidden"
           >
-            <div className="relative h-32 w-full overflow-hidden bg-gray-100">
-              {n.heroImageUrl ? (
-                <Image
-                  src={n.heroImageUrl}
-                  alt={n.name}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="330px"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <MapPinned size={26} className="text-gray-300" />
-                </div>
-              )}
-              <span className="absolute bottom-2 right-2 rounded-full bg-black/45 px-2.5 py-1 text-[11.5px] font-medium text-white backdrop-blur-sm">
-                {n.propertyCount} propert{n.propertyCount === 1 ? 'y' : 'ies'}
+            {n.heroImageUrl ? (
+              <Image
+                src={n.heroImageUrl}
+                alt={n.name}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="330px"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+                <MapPinned size={26} className="text-white/40" />
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="truncate text-[16px] font-semibold text-white">{n.name}</p>
+                <p className="text-[13px] text-white/80">
+                  {n.propertyCount} propert{n.propertyCount === 1 ? 'y' : 'ies'}
+                </p>
+              </div>
+              <span
+                aria-hidden
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors group-hover:bg-white group-hover:text-gray-900"
+              >
+                <ArrowRight size={16} />
               </span>
-            </div>
-            <div className="px-4 py-3">
-              <p className="truncate text-[15px] font-semibold text-gray-900">{n.name}</p>
-              <p className="text-[13px] text-gray-500">{n.city}</p>
             </div>
           </Link>
         ))}
