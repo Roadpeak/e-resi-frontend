@@ -266,6 +266,23 @@ export const agentsApi = {
   /** My listing-fee history and what the next charge will be. */
   billing: () => apiClient.get<AgentBilling>('/billing/agent-fees/mine'),
 
+  /** Retry a failed listing-fee charge on the linked card. */
+  retryFee: (period: string) =>
+    apiClient.post<{ paid: boolean; period: string; amount: number; currency: string }>(
+      `/billing/agent-fees/${period}/retry`,
+    ),
+
+  /** Pay one unpaid listing-fee period via M-Pesa STK push. */
+  payFeeMpesa: (period: string, phone: string) =>
+    apiClient.post<{
+      paymentId: string;
+      status: 'PENDING' | 'COMPLETED';
+      amountKes: number;
+      period: string;
+      checkoutRequestId: string;
+      sandbox?: boolean;
+    }>(`/billing/agent-fees/${period}/pay-mpesa`, { phone }),
+
   submitKyc: (body: {
     documents: { type: string; url: string; label?: string }[];
     registrationNumber?: string;
