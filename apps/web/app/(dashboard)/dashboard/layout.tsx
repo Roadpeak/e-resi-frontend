@@ -1,6 +1,7 @@
 import { DashboardTopnav } from '../../../components/dashboard/DashboardTopnav';
 import { DashboardIconRail } from '../../../components/dashboard/DashboardIconRail';
 import { RequireAuth } from '../../../components/auth/RequireAuth';
+import { StaffPageGuard } from '../../../components/dashboard/StaffPageGuard';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex flex-1">
           <DashboardIconRail />
           <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6">
-            {children}
+            <StaffPageGuard>{children}</StaffPageGuard>
           </main>
         </div>
       </div>

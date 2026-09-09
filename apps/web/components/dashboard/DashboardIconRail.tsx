@@ -8,6 +8,7 @@ import { cn } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '../../lib/api/chat';
 import { useDeveloperInquiries } from '../../lib/api/queries';
+import { useAuthStore } from '../../lib/stores/auth.store';
 import { MaterialIcon } from './MaterialIcon';
 
 const NAV = [
@@ -27,6 +28,7 @@ const NAV = [
   { label: 'Documents', href: '/dashboard/documents', icon: 'description' },
   { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card' },
   { label: 'Company Profile', href: '/dashboard/profile', icon: 'verified' },
+  { label: 'Team', href: '/dashboard/team', icon: 'group' },
 ];
 
 const BOTTOM = [
@@ -86,6 +88,17 @@ function RailItem({
 /** Icon-only left rail — Google Material Symbols, page names on hover. */
 export function DashboardIconRail() {
   const pathname = usePathname();
+  const user = useAuthStore((st) => st.user);
+
+  // A staff member sees only what their employer ticked. Overview always
+  // shows — a dashboard with no landing page reads as broken.
+  const nav = user?.isStaff
+    ? NAV.filter((item) => {
+        const key = item.href.split('/')[2] ?? '';
+        return key === '' || (user.staffPages ?? []).includes(key);
+      })
+    : NAV;
+  const bottom = user?.isStaff ? BOTTOM.filter((b) => b.href === '/') : BOTTOM;
   const { data: newInquiries } = useDeveloperInquiries({ status: 'NEW', limit: 1 });
   const { data: chatUnread } = useQuery({
     queryKey: ['chat', 'unread'],
@@ -98,7 +111,7 @@ export function DashboardIconRail() {
       {/* The page list scrolls when the viewport is shorter than the rail,
           so Settings and Visit Site below never fall off-screen. */}
       <nav className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {NAV.map(({ label, href, icon }) => (
+        {nav.map(({ label, href, icon }) => (
           <RailItem
             key={href}
             label={label}
@@ -114,7 +127,7 @@ export function DashboardIconRail() {
         ))}
       </nav>
       <nav className="flex shrink-0 flex-col items-center gap-1 border-t border-[#f1f3f4] pt-2">
-        {BOTTOM.map(({ label, href, icon }) => (
+        {bottom.map(({ label, href, icon }) => (
           <RailItem key={href} label={label} href={href} icon={icon} active={pathname === href} />
         ))}
       </nav>

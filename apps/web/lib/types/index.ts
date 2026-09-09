@@ -378,6 +378,10 @@ export interface User {
   role: UserRole;
   emailVerified?: boolean;
   isActive?: boolean;
+  /** Present when this login is a developer's staff member. */
+  isStaff?: boolean;
+  /** Dashboard page keys a staff member may open. */
+  staffPages?: string[];
   createdAt: string;
 }
 
