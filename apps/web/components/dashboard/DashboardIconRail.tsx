@@ -107,10 +107,10 @@ export function DashboardIconRail() {
   });
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-2 border-r border-[#f1f3f4] py-3 md:flex">
+    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-1.5 border-r border-[#f1f3f4] py-2 md:flex">
       {/* The page list scrolls when the viewport is shorter than the rail,
           so Settings and Visit Site below never fall off-screen. */}
-      <nav className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="flex min-h-0 flex-1 flex-col items-center gap-0.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {nav.map(({ label, href, icon }) => (
           <RailItem
             key={href}
@@ -126,7 +126,7 @@ export function DashboardIconRail() {
           />
         ))}
       </nav>
-      <nav className="flex shrink-0 flex-col items-center gap-1 border-t border-[#f1f3f4] pt-2">
+      <nav className="flex shrink-0 flex-col items-center gap-0.5 border-t border-[#f1f3f4] pt-1.5">
         {bottom.map(({ label, href, icon }) => (
           <RailItem key={href} label={label} href={href} icon={icon} active={pathname === href} />
         ))}
