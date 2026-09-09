@@ -130,6 +130,8 @@ export interface AgentFeeRun {
   chargedAt: string | null;
   /** When an unpaid fee stops being tolerated and the profile is hidden. */
   graceEndsAt: string | null;
+  /** The invoice this run raised, once invoicing existed. */
+  invoice?: { number: string } | null;
 }
 
 export interface AgentBilling {

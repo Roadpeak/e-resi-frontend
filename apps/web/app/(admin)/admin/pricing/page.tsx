@@ -470,18 +470,36 @@ function ListingFeeTab({ onSaved }: { onSaved: (m: string) => void }) {
           onSaved(m);
         }}
       />
-      {/* platform_currency has its own card — editing it as free text would
-          relabel prices without converting them. */}
-      {settings.filter((s) => s.key !== 'platform_currency').map((s) => (
-        <SettingRow
-          key={s.key}
-          setting={s}
-          onSaved={(m) => {
-            queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-            onSaved(m);
-          }}
-        />
-      ))}
+      {/* platform_currency has its own card, and internal caches (fx rates)
+          are not settings a person should edit. The rest read far better
+          grouped: a developer section, an agent section, then general. */}
+      {(
+        [
+          ['Developer listing fees', (k: string) => k.startsWith('listing_fee')],
+          ['Agent listing fees', (k: string) => k.startsWith('agent_fee')],
+          ['General', (k: string) =>
+            !k.startsWith('listing_fee') && !k.startsWith('agent_fee')
+            && k !== 'platform_currency' && !k.endsWith('_cache')],
+        ] as const
+      ).map(([title, match]) => {
+        const rows = settings.filter((s) => match(s.key) && s.key !== 'platform_currency' && !s.key.endsWith('_cache'));
+        if (rows.length === 0) return null;
+        return (
+          <div key={title} className="space-y-3">
+            <h3 className="pt-2 text-[15px] font-medium text-[#202124]">{title}</h3>
+            {rows.map((s) => (
+              <SettingRow
+                key={s.key}
+                setting={s}
+                onSaved={(m) => {
+                  queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+                  onSaved(m);
+                }}
+              />
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }

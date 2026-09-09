@@ -115,7 +115,50 @@ export const billingApi = {
   /** Admin: collect listing fees for a period. Idempotent. */
   runListingFees: (period: string) =>
     apiClient.post<ListingFeeRunSummary>(`/billing/listing-fees/${period}/run`),
+
+  /** Admin: what an agent-fee period collected. Period is YYYY-MM. */
+  agentFeeReport: (period: string) =>
+    apiClient.get<AgentFeeReport>(`/billing/agent-fees/report/${period}`),
+
+  /** Admin: collect agent listing fees for a period. Idempotent. */
+  runAgentFees: (period: string) =>
+    apiClient.post<AgentFeeRunSummary>(`/billing/agent-fees/${period}/run`),
 };
+
+export interface AgentFeeRunSummary {
+  period: string;
+  agentsConsidered: number;
+  charged: number;
+  failed: number;
+  skipped: number;
+  alreadyDone: number;
+  totalCollected: number;
+  currency: string;
+}
+
+export interface AdminAgentFeeRun {
+  id: string;
+  period: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'SKIPPED';
+  reference?: string | null;
+  failureText?: string | null;
+  attempts: number;
+  chargedAt?: string | null;
+  graceEndsAt?: string | null;
+  agent: { id: string; displayName: string; kind: 'COMPANY' | 'INDIVIDUAL' };
+  invoice?: { number: string } | null;
+}
+
+export interface AgentFeeReport {
+  period: string;
+  totals: {
+    collected: number; currency: string;
+    paid: number; failed: number; pending: number; skipped: number;
+  };
+  runs: AdminAgentFeeRun[];
+}
 
 export interface InvoiceLine {
   description: string;

@@ -159,7 +159,11 @@ export default function AgentBilling() {
                       Charged {new Date(r.chargedAt).toLocaleDateString('en-KE', {
                         day: 'numeric', month: 'short', year: 'numeric',
                       })}
+                      {r.invoice?.number ? ` · ${r.invoice.number}` : ''}
                     </p>
+                  )}
+                  {r.status !== 'PAID' && r.invoice?.number && (
+                    <p className="text-[13px] text-[#80868b]">{r.invoice.number} — sent to your email</p>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
