@@ -126,6 +126,11 @@ export default function DashboardOverview() {
     queryFn: () => propertiesApi.myListings({ limit: 50 }),
   });
 
+  // Staff see only the cards for pages they were granted — the overview must
+  // not leak billing or pipeline numbers to someone hired for inquiries.
+  const isStaff = !!user?.isStaff;
+  const can = (page: string) => !isStaff || (user?.staffPages ?? []).includes(page);
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const today = new Date().toLocaleDateString('en-KE', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -196,13 +201,18 @@ export default function DashboardOverview() {
               animate={{ opacity: 1, y: 0 }}
               className="text-4xl font-medium leading-tight text-[#202124] sm:text-[2.75rem]"
             >
-              {greeting},<br />{profile?.companyName ?? user?.firstName ?? 'there'}!
+              {greeting},<br />
+              {isStaff ? user?.firstName : profile?.companyName ?? user?.firstName ?? 'there'}!
             </motion.h1>
             <p className="mt-4 text-base text-[#3c4043]">
-              Everything you need lives in the cards below. <span className="font-medium">{today}</span>
+              {isStaff ? (
+                <>Signed in as staff at <span className="font-medium">{profile?.companyName}</span> · {today}</>
+              ) : (
+                <>Everything you need lives in the cards below. <span className="font-medium">{today}</span></>
+              )}
             </p>
           </div>
-          <StatusCard profile={profile} />
+          {!isStaff && <StatusCard profile={profile} />}
         </div>
       </section>
 
@@ -210,7 +220,7 @@ export default function DashboardOverview() {
       <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
 
         {/* Getting started — shown until every step is complete */}
-        {showChecklist && (
+        {!isStaff && showChecklist && (
           <Card className="border-transparent bg-[#e8f0fe]" delay={0}>
             <CardLabel icon={<ListChecks size={12} />}>Getting started</CardLabel>
             <CardTitle>Set up your developer account</CardTitle>
@@ -245,6 +255,7 @@ export default function DashboardOverview() {
         )}
 
         {/* Properties — image card */}
+        {can('properties') && (
         <Card className="border-transparent bg-[#131314] p-0 overflow-hidden" delay={0}>
           <div className="relative h-44 bg-[#202124]">
             {coverImage ? (
@@ -276,8 +287,10 @@ export default function DashboardOverview() {
             </Link>
           </div>
         </Card>
+        )}
 
         {/* Analytics — sparkline card */}
+        {can('analytics') && (
         <Card className="border-transparent bg-[#131314]" delay={0.05}>
           <CardLabel dark icon={<BarChart3 size={12} />}>Analytics</CardLabel>
           <CardTitle dark>How buyers found you this week</CardTitle>
@@ -315,8 +328,10 @@ export default function DashboardOverview() {
             Open analytics <ArrowUpRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Inquiries — inbox card */}
+        {can('inquiries') && (
         <Card className="border-[#dadce0] bg-white" delay={0.1}>
           <CardLabel icon={<MessageSquare size={12} />}>Inquiries</CardLabel>
           <CardTitle>Buyer questions, answered from one inbox</CardTitle>
@@ -345,8 +360,10 @@ export default function DashboardOverview() {
             {newInquiries > 0 ? 'Reply now' : 'Open inbox'} <ArrowRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Sales pipeline — reservations */}
+        {can('reservations') && (
         <Card className="border-[#dadce0] bg-white" delay={0.12}>
           <CardLabel icon={<Landmark size={12} />}>Sales pipeline</CardLabel>
           <CardTitle>Reservations on their way to sales</CardTitle>
@@ -381,8 +398,10 @@ export default function DashboardOverview() {
             Track inventory <ArrowRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Bookings — schedule card */}
+        {can('bookings') && (
         <Card className="border-transparent bg-[#f8f9fa]" delay={0.15}>
           <CardLabel icon={<CalendarDays size={12} />}>Bookings</CardLabel>
           <CardTitle>Viewings, confirmed without the back-and-forth</CardTitle>
@@ -417,8 +436,10 @@ export default function DashboardOverview() {
             Review bookings <ArrowRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Units — inventory card */}
+        {can('units') && (
         <Card className="border-[#dadce0] bg-white" delay={0.2}>
           <CardLabel icon={<DoorOpen size={12} />}>Units</CardLabel>
           <CardTitle>Inventory at a glance</CardTitle>
@@ -439,8 +460,10 @@ export default function DashboardOverview() {
             View inventory <ArrowRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Profile — verification card */}
+        {can('profile') && (
         <Card className="border-transparent bg-[#f8f9fa]" delay={0.25}>
           <CardLabel icon={<BadgeCheck size={12} />}>Company profile</CardLabel>
           <CardTitle>{profile?.companyName ?? '—'}</CardTitle>
@@ -467,8 +490,10 @@ export default function DashboardOverview() {
             </Link>
           )}
         </Card>
+        )}
 
         {/* Billing snapshot */}
+        {can('billing') && (
         <Card className="border-[#dadce0] bg-white" delay={0.28}>
           <CardLabel icon={<Receipt size={12} />}>Billing</CardLabel>
           <CardTitle>{fmtUsd(monthlyFees)} <span className="text-[15px] text-[#5f6368]">/month</span></CardTitle>
@@ -488,8 +513,10 @@ export default function DashboardOverview() {
             View billing <ArrowRight size={14} />
           </Link>
         </Card>
+        )}
 
         {/* Rentals — compact */}
+        {can('rentals') && (
         <Card className="border-[#dadce0] bg-white" delay={0.3}>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -510,8 +537,10 @@ export default function DashboardOverview() {
             </Link>
           </div>
         </Card>
+        )}
 
         {/* Documents — compact */}
+        {can('documents') && (
         <Card className="border-gray-100 bg-gray-50" delay={0.35}>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -529,6 +558,7 @@ export default function DashboardOverview() {
             </Link>
           </div>
         </Card>
+        )}
       </div>
     </div>
   );
