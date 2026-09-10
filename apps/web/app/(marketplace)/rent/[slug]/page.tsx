@@ -6,9 +6,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Building2,
-  MapPin, BedDouble, Maximize2, Users, Calendar, Film, Box,
-  ArrowLeft, CheckCircle2, Loader2, X, Images
+  Building2, MapPin, BedDouble, Bath, Maximize2, Calendar, Film, Box,
+  ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Home, Loader2, Sofa,
+  X, Images, KeyRound, CalendarClock, DoorOpen,
 } from 'lucide-react';
 import { RentNavbar } from '../../../../components/rent/RentNavbar';
 import { UnitSectionNav } from '../../../../components/property/UnitSectionNav';
@@ -16,7 +16,7 @@ import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listing
 import { floorPlansApi } from '../../../../lib/api/floor-plans';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { RentEnquiryModal } from '../../../../components/rent/RentEnquiryModal';
-import { formatPrice } from '../../../../lib/utils';
+import { formatPrice, cn } from '../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
 import { referralPayload } from '../../../../lib/analytics/referral';
@@ -24,29 +24,29 @@ import type { RentUnit } from '../../../../lib/types';
 
 const FURNISHING_LABELS: Record<string, string> = {
   furnished: 'Furnished',
-  semi_furnished: 'Semi-Furnished',
+  semi_furnished: 'Semi-furnished',
   unfurnished: 'Unfurnished',
   FURNISHED: 'Furnished',
-  SEMI_FURNISHED: 'Semi-Furnished',
+  SEMI_FURNISHED: 'Semi-furnished',
   UNFURNISHED: 'Unfurnished',
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  available: 'bg-green-100 text-green-700',
-  partially_available: 'bg-orange-100 text-orange-600',
+  available: 'bg-[#e6f4ea] text-[#188038]',
+  partially_available: 'bg-[#fef7e0] text-[#b06000]',
   fully_let: 'bg-gray-100 text-gray-500',
-  AVAILABLE: 'bg-green-100 text-green-700',
-  PARTIALLY_AVAILABLE: 'bg-orange-100 text-orange-600',
+  AVAILABLE: 'bg-[#e6f4ea] text-[#188038]',
+  PARTIALLY_AVAILABLE: 'bg-[#fef7e0] text-[#b06000]',
   FULLY_LET: 'bg-gray-100 text-gray-500',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  available: 'Available',
-  partially_available: 'Partially Available',
-  fully_let: 'Fully Let',
-  AVAILABLE: 'Available',
-  PARTIALLY_AVAILABLE: 'Partially Available',
-  FULLY_LET: 'Fully Let',
+  available: 'Available now',
+  partially_available: 'Partially available',
+  fully_let: 'Fully let',
+  AVAILABLE: 'Available now',
+  PARTIALLY_AVAILABLE: 'Partially available',
+  FULLY_LET: 'Fully let',
 };
 
 /** 10 -> "10th floor"; 0 -> "ground floor". */
@@ -77,23 +77,24 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
   const listing = raw ? toRentListing(raw as any) : null;
 
-  /** Full-size image opened from the gallery. */
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  /** Index into `photos`, or null when closed. */
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const [modal, setModal] = useState<'VIEWING' | 'ENQUIRY' | null>(null);
 
   /**
-   * Gallery images. A rental is units inside a building, so when the listing
-   * has no photography of its own the development's is the right imagery to
-   * fall back to rather than showing a lone hero.
+   * Photography. A rental is units inside a building, so when the listing has
+   * no gallery of its own the development's imagery is the right fallback.
+   * The hero leads and everything is deduped into one ordered set — the
+   * lightbox pages through exactly what the mosaic shows.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const propertyMedia: string[] = (((raw as any)?.property?.media ?? []) as any[])
     .filter((m) => m?.url && m?.title !== '__logo__')
     .map((m) => m.url as string);
-  const gallery = [...(listing?.galleryImages ?? []), ...propertyMedia]
-    .filter((u, i, arr) => u && u !== listing?.heroImageUrl && arr.indexOf(u) === i);
+  const photos = [listing?.heroImageUrl, ...(listing?.galleryImages ?? []), ...propertyMedia]
+    .filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i);
 
-  // Aggregates for the key-facts strip.
+  // Aggregates for the facts strip.
   const units = listing?.units ?? [];
   const totalAvailable = units.reduce((a, u) => a + (u.available ?? 0), 0);
   const totalUnits = units.reduce((a, u) => a + (u.total ?? 0), 0);
@@ -104,45 +105,35 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       ? (bedroomCounts[0] === 0 ? 'Studio' : `${bedroomCounts[0]} bed`)
       : `${bedroomCounts[0] === 0 ? 'Studio' : bedroomCounts[0]}–${bedroomCounts[bedroomCounts.length - 1]} bed`;
 
-  /**
-   * Layouts, from the development the units sit in.
-   *
-   * A rent listing has no floor plans of its own — the drawings a tenant asks
-   * for are the same ones the sales side publishes for the building, so they
-   * are fetched from the parent property when there is one.
-   */
   const { data: floorPlans = [] } = useQuery({
     queryKey: ['floor-plans', listing?.propertySlug],
     queryFn: () => floorPlansApi.list(listing!.propertySlug),
     enabled: !!listing?.propertySlug,
   });
 
-  /**
-   * The rail, built from the sections this listing actually has.
-   *
-   * Listing one that scrolls nowhere is worse than having no rail at all.
-   */
   const sections = [
     { id: 'overview', label: 'Overview' },
-    ...(listing?.description ? [{ id: 'about', label: 'About' }] : []),
     ...(units.length ? [{ id: 'units', label: 'Units' }] : []),
     ...(floorPlans.length ? [{ id: 'floorplans', label: 'Floor plans' }] : []),
   ];
 
-  /** Nearby landmarks come from the development, not the rent listing. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const amenities: { id?: string; name: string; distance?: string }[] =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ((raw as any)?.property?.amenities ?? []) as any[];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const developer = (raw as any)?.developer as
+    | { companyName: string; logoUrl?: string | null; establishedYear?: number | null; description?: string | null }
+    | undefined;
+
+  const stepLightbox = (by: number) => {
+    if (lightbox === null || photos.length === 0) return;
+    setLightbox((lightbox + by + photos.length) % photos.length);
+  };
+
   return (
-    <div
-      className="min-h-screen pt-16 font-listing text-[16px]"
-      style={{
-        background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-screen bg-[#f8f9fa] pt-16 font-listing text-[16px]">
       <RentNavbar />
 
       {isLoading && (
@@ -162,211 +153,224 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
       {listing && (
         <>
-        {/* Gallery mosaic, ahead of the rail — the same shape a tenant sees on
-            a unit page, so the two pages read as one product. */}
-        <div className="px-4 pt-4">
-          <Link href="/rent" className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
-            <ArrowLeft size={14} /> All rentals
-          </Link>
+        <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
+          {/* ── Trail ── */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13.5px] text-[#6b6b70]">
+            <Link href="/" aria-label="Home" className="transition-colors hover:text-[#111112]"><Home size={14} /></Link>
+            <ChevronRight size={13} className="text-[#b9b9be]" />
+            <Link href="/rent" className="transition-colors hover:text-[#111112]">Rent</Link>
+            <ChevronRight size={13} className="text-[#b9b9be]" />
+            <span className="text-[#6b6b70]">{listing.address.city}</span>
+            <ChevronRight size={13} className="text-[#b9b9be]" />
+            <span className="max-w-[40vw] truncate font-medium text-[#111112]">{listing.name}</span>
+          </nav>
 
-          {/* Runs almost to the page edge, the way a listing site frames its
-              photography — the content below stays readable at max-w-7xl. */}
-          <div className="grid h-[300px] gap-2 overflow-hidden bg-gray-100 sm:h-[411px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
-              <button
-                type="button"
-                onClick={() => listing.heroImageUrl && setLightbox(listing.heroImageUrl)}
-                className="relative h-full w-full cursor-pointer sm:row-span-2"
-              >
-                {listing.heroImageUrl ? (
-                  <Image src={listing.heroImageUrl} alt={listing.name} fill className="object-cover" sizes="(max-width:1024px) 100vw, 66vw" priority />
-                ) : (
-                  <div className="h-full w-full bg-gray-200" />
-                )}
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[listing.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                    {STATUS_LABELS[listing.status] ?? listing.status}
+          {/* ── Masthead ──
+              The name, where it is, and what it costs — before a single
+              photo. A tenant should never have to hunt the sidebar to learn
+              the rent. */}
+          <header className="mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={cn(
+                  'rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-wide',
+                  STATUS_STYLES[listing.status] ?? 'bg-gray-100 text-gray-500',
+                )}>
+                  {STATUS_LABELS[listing.status] ?? listing.status}
+                </span>
+                {listing.isFeatured && (
+                  <span className="rounded-full bg-gold-400 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-gray-900">
+                    Featured
                   </span>
-                  {listing.isFeatured && (
-                    <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">Featured</span>
-                  )}
-                </div>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  {listing.showCinematicTour && (
-                    <span className="flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] text-white backdrop-blur-sm">
-                      <Film size={10} /> Cinematic
-                    </span>
-                  )}
-                  {listing.show3DTour && (
-                    <span className="flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] text-white backdrop-blur-sm">
-                      <Box size={10} /> 3D Tour
-                    </span>
-                  )}
-                </div>
-              </button>
+                )}
+                {listing.showCinematicTour && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] font-medium text-[#a8712f]">
+                    <Film size={11} /> Cinematic
+                  </span>
+                )}
+                {listing.show3DTour && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] font-medium text-brand-600">
+                    <Box size={11} /> 3D tour
+                  </span>
+                )}
+              </div>
 
-              {/* Two stacked stills. Hidden on a phone, where each would be a
-                  thumbnail of a thumbnail. */}
-              {[0, 1].map((i) => (
-                <button
-                  key={gallery[i] ?? `empty-${i}`}
-                  type="button"
-                  onClick={() => gallery[i] && setLightbox(gallery[i])}
-                  className="relative hidden cursor-pointer sm:block"
-                >
-                  {gallery[i] ? (
-                    <Image src={gallery[i]} alt={`${listing.name} — photo ${i + 2}`} fill className="object-cover" sizes="33vw" />
-                  ) : (
-                    <span className="absolute inset-0 bg-gray-100" />
-                  )}
-                  {i === 1 && gallery.length > 2 && (
-                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[13px] font-semibold text-gray-900 shadow-sm">
-                      <Images size={13} /> {gallery.length + 1} photos
-                    </span>
-                  )}
-                </button>
-              ))}
+              <h1 className="mt-3 font-display text-[32px] font-light leading-[1.1] tracking-tight text-gray-900 sm:text-[42px]">
+                {listing.name}
+              </h1>
+              <p className="mt-2 flex items-center gap-1.5 text-[15px] font-medium text-gray-600">
+                <MapPin size={15} className="shrink-0 text-gray-400" />
+                {listing.address.neighborhood}, {listing.address.city}
+                {listing.tagline && (
+                  <span className="hidden font-normal text-gray-400 sm:inline">· {listing.tagline}</span>
+                )}
+              </p>
+            </div>
+
+            <div className="shrink-0 text-right">
+              <p className="text-[12px] font-medium uppercase tracking-wide text-gray-400">From</p>
+              <p className="text-[30px] font-bold leading-tight text-gray-900 sm:text-[34px]">
+                {formatPrice(listing.priceFrom, listing.currency)}
+                <span className="text-[16px] font-normal text-gray-400">/mo</span>
+              </p>
+              {listing.priceTo > listing.priceFrom && (
+                <p className="text-[13.5px] text-gray-500">
+                  up to {formatPrice(listing.priceTo, listing.currency)}/mo
+                </p>
+              )}
+            </div>
+          </header>
+
+          {/* ── Gallery ──
+              Adaptive: with three or more photos it is the classic hero + two
+              stack; with fewer, the hero takes the whole band. No mosaic cell
+              is ever left as dead gray space. */}
+          <div className={cn(
+            'mt-5 grid h-[320px] gap-2 overflow-hidden rounded-3xl sm:h-[440px]',
+            photos.length >= 3 ? 'sm:grid-cols-[2fr_1fr] sm:grid-rows-2' : photos.length === 2 ? 'sm:grid-cols-2' : '',
+          )}>
+            <button
+              type="button"
+              onClick={() => photos.length > 0 && setLightbox(0)}
+              className={cn(
+                'group relative h-full w-full cursor-pointer overflow-hidden',
+                photos.length >= 3 && 'sm:row-span-2',
+              )}
+            >
+              {photos[0] ? (
+                <Image
+                  src={photos[0]}
+                  alt={listing.name}
+                  fill
+                  priority
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  sizes="(max-width:1024px) 100vw, 66vw"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                  <Building2 size={40} strokeWidth={1.2} className="text-gray-400" />
+                </div>
+              )}
+              {photos.length > 0 && (
+                <span className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-[13px] font-semibold text-gray-900 shadow-sm backdrop-blur-sm transition-colors group-hover:bg-white sm:bottom-5 sm:right-5">
+                  <Images size={14} /> {photos.length} photo{photos.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </button>
+
+            {photos.length >= 2 && (
+              [1, 2].slice(0, photos.length >= 3 ? 2 : 1).map((i) => (
+                photos[i] && (
+                  <button
+                    key={photos[i]}
+                    type="button"
+                    onClick={() => setLightbox(i)}
+                    className="group relative hidden cursor-pointer overflow-hidden sm:block"
+                  >
+                    <Image
+                      src={photos[i]}
+                      alt={`${listing.name} — photo ${i + 1}`}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      sizes="33vw"
+                    />
+                  </button>
+                )
+              ))
+            )}
           </div>
         </div>
 
-        <UnitSectionNav sections={sections} />
+        <div className="mt-6">
+          <UnitSectionNav sections={sections} />
+        </div>
 
-        <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-            {/* Left col */}
-            <div className="min-w-0 space-y-4">
-              {/* ── Overview ── */}
-              <section id="overview" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-1">
-                  <MapPin size={13} />
-                  <span>{listing.address.neighborhood}, {listing.address.city}</span>
-                </div>
-                <h1 className="text-[28px] font-bold leading-[1.2] text-gray-900">{listing.name}</h1>
-                {listing.tagline && <p className="mt-1 text-gray-500">{listing.tagline}</p>}
-
-                {/* Rent, on mobile only. The sidebar price card is the same
-                    information, but on a phone the sidebar renders after the
-                    gallery, units and tags — so a tenant had to scroll the
-                    whole page to find out what it costs. */}
-                <div className="mt-3 flex items-baseline gap-2 lg:hidden">
-                  <span className="text-2xl font-bold text-gray-900">
-                    {formatPrice(listing.priceFrom, listing.currency)}
-                  </span>
-                  <span className="text-sm text-gray-400">/month</span>
-                  {listing.priceTo > listing.priceFrom && (
-                    <span className="text-sm text-gray-400">
-                      — {formatPrice(listing.priceTo, listing.currency)}
-                    </span>
-                  )}
+        <div className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
+            {/* ── Left: one flat sheet, hairline-partitioned ── */}
+            <div className="min-w-0">
+              {/* Facts strip */}
+              <section id="overview" className="scroll-mt-36">
+                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-4">
+                  {[
+                    { icon: BedDouble, label: 'Bedrooms', value: bedroomRange },
+                    { icon: DoorOpen, label: 'Units free', value: `${totalAvailable} of ${totalUnits}` },
+                    { icon: Sofa, label: 'Furnishing', value: FURNISHING_LABELS[listing.furnishing] ?? listing.furnishing },
+                    { icon: CalendarClock, label: 'Min. lease', value: `${listing.minLeaseTerm} months` },
+                  ].map((f) => (
+                    <div key={f.label} className="flex items-center gap-3 bg-white px-5 py-4">
+                      <f.icon size={19} strokeWidth={1.7} className="shrink-0 text-gray-400" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{f.label}</p>
+                        <p className="truncate text-[15px] font-semibold text-gray-900">{f.value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-              {/* Key facts — the things a tenant scans for before reading
-                  anything. Previously these were split between the sidebar
-                  and the unit rows, so a phone visitor had to scroll past the
-                  whole page to find the bedroom range. */}
-              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6 sm:grid-cols-4">
-                {[
-                  {
-                    label: 'Bedrooms',
-                    value: bedroomRange,
-                  },
-                  {
-                    label: 'Units free',
-                    value: `${totalAvailable} of ${totalUnits}`,
-                  },
-                  {
-                    label: 'Furnishing',
-                    value: FURNISHING_LABELS[listing.furnishing] ?? listing.furnishing,
-                  },
-                  {
-                    label: 'Min. lease',
-                    value: `${listing.minLeaseTerm} months`,
-                  },
-                ].map((f) => (
-                  <div key={f.label} className="rounded-2xl bg-[#faf9f7] p-4">
-                    <p className="text-[11px] uppercase tracking-wider text-gray-400">{f.label}</p>
-                    <p className="mt-1 text-[15px] font-semibold text-gray-900">{f.value}</p>
+                {listing.description && (
+                  <p className="mt-7 max-w-3xl text-[15.5px] leading-relaxed text-gray-600">
+                    {listing.description}
+                  </p>
+                )}
+
+                {listing.tags.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {listing.tags.map((tag) => (
+                      <span key={tag} className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[12.5px] font-medium capitalize text-gray-600">
+                        {tag.replace(/-/g, ' ')}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
               </section>
 
-              {/* Description */}
-              {listing.description && (
-                <section id="about" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-3 text-[23px] font-bold leading-[1.25] text-gray-900">About</h2>
-                  <p className="text-[15px] leading-relaxed text-gray-700">{listing.description}</p>
-                </section>
-              )}
+              {/* ── Units ── */}
+              {units.length > 0 && (
+                <section id="units" className="mt-10 scroll-mt-36 border-t border-gray-200 pt-10">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <h2 className="font-display text-[26px] font-light tracking-tight text-gray-900 sm:text-[30px]">
+                      Choose your unit
+                    </h2>
+                    <p className="text-[13.5px] text-gray-500">
+                      {totalAvailable} of {totalUnits} available
+                    </p>
+                  </div>
 
-              {/* Units */}
-              {listing.units.length > 0 && (
-                <section id="units" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-4 text-[23px] font-bold leading-[1.25] text-gray-900">Available units</h2>
-                  <div className="space-y-3">
+                  <div className="mt-5 space-y-4">
                     {listing.units.map((unit) => (
-                      <div key={unit.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 gap-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">
-                            {unit.label}
-                            {unit.floor != null && (
-                              <span className="font-normal text-gray-500">, {ordinalFloor(unit.floor)}</span>
-                            )}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <BedDouble size={11} />
-                              {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}
-                            </span>
-                            {unit.sqm > 0 && (
-                              <span className="flex items-center gap-1"><Maximize2 size={11} /> {unit.sqm} m²</span>
-                            )}
-                            <span className="flex items-center gap-1"><Users size={11} /> {unit.available}/{unit.total} available</span>
-                          </div>
-                          {unit.features && unit.features.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {unit.features.map((f) => (
-                                <span key={f} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500 capitalize">{f.replace(/-/g, ' ')}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-[18px] font-bold leading-[1.25] text-gray-900">{formatPrice(unit.pricePerMonth, unit.currency)}</p>
-                          <p className="text-[13px] text-gray-400">/month</p>
-                          <ReserveUnitButton
-                            unit={unit}
-                            propertySlug={listing.propertySlug}
-                          />
-                        </div>
-                      </div>
+                      <UnitRow key={unit.id} unit={unit} propertySlug={listing.propertySlug} />
                     ))}
                   </div>
                 </section>
               )}
 
-              {/* ── Floor plans ──
-                  Borrowed from the development the units sit in: a rent
-                  listing has no layouts of its own, and the drawings a tenant
-                  wants are the same ones the sales side publishes. */}
+              {/* ── Floor plans ── */}
               {floorPlans.length > 0 && (
-                <section id="floorplans" className="scroll-mt-32 rounded-3xl border border-gray-200 bg-white p-6 sm:p-7">
-                  <h2 className="mb-1 text-[23px] font-bold leading-[1.25] text-gray-900">Floor plans</h2>
-                  <p className="mb-5 text-[14px] text-gray-500">
-                    The layouts in this development.
-                  </p>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <section id="floorplans" className="mt-10 scroll-mt-36 border-t border-gray-200 pt-10">
+                  <h2 className="font-display text-[26px] font-light tracking-tight text-gray-900 sm:text-[30px]">
+                    Floor plans
+                  </h2>
+                  <p className="mt-1 text-[14px] text-gray-500">The layouts in this development.</p>
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {floorPlans.map((fp) => (
                       <button
                         key={fp.id}
                         type="button"
-                        onClick={() => setLightbox(fp.imageUrl)}
-                        className="overflow-hidden rounded-2xl border border-gray-200 text-left transition-colors hover:border-gray-300 cursor-pointer"
+                        onClick={() => {
+                          const idx = photos.indexOf(fp.imageUrl);
+                          // Plans open in the same lightbox; ones not in the
+                          // photo set are shown standalone via a temp index.
+                          if (idx >= 0) setLightbox(idx);
+                          else window.open(fp.imageUrl, '_blank', 'noopener');
+                        }}
+                        className="group overflow-hidden rounded-2xl border border-gray-200 bg-white text-left transition-all hover:border-gray-300 hover:shadow-sm cursor-pointer"
                       >
-                        <div className="relative h-40 bg-[#faf9f7]">
-                          <Image src={fp.imageUrl} alt={fp.name} fill className="object-contain p-3" sizes="320px" unoptimized />
+                        <div className="relative h-44 bg-[#fafafa]">
+                          <Image src={fp.imageUrl} alt={fp.name} fill className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.03]" sizes="320px" unoptimized />
                         </div>
                         <div className="border-t border-gray-100 px-4 py-3">
-                          <p className="truncate text-[14px] font-medium text-gray-900">{fp.name}</p>
+                          <p className="truncate text-[14px] font-semibold text-gray-900">{fp.name}</p>
                           <p className="mt-0.5 text-[12.5px] text-gray-500">
                             {[
                               fp.bedrooms == null ? null : fp.bedrooms === 0 ? 'Studio' : `${fp.bedrooms} bed`,
@@ -380,108 +384,113 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   </div>
                 </section>
               )}
-
-              {/* Tags */}
-              {listing.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {listing.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-gray-200 bg-white/60 px-3 py-1 text-xs text-gray-500 capitalize">{tag.replace(/-/g, ' ')}</span>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Right col — sticky summary.
-                Pinned below the section rail so the way to enquire, chat or
-                reserve is on screen at every point of the page. */}
-            <div className="space-y-4">
-              <div className="sticky top-32 space-y-4">
-                {/* Price card */}
-                <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <p className="text-xs text-gray-400 mb-1">Starting from</p>
-                  <p className="text-[23px] font-bold leading-[1.25] text-gray-900">{formatPrice(listing.priceFrom, listing.currency)}<span className="text-[14px] font-normal text-gray-400">/mo</span></p>
-                  {listing.priceTo > listing.priceFrom && (
-                    <p className="text-sm text-gray-400">up to {formatPrice(listing.priceTo, listing.currency)}/mo</p>
-                  )}
-
-                  <div className="mt-4 space-y-2 border-t border-gray-100 pt-4 text-sm text-gray-600">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Furnishing</span>
-                      <span>{FURNISHING_LABELS[listing.furnishing] ?? listing.furnishing}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Min. lease</span>
-                      <span>{listing.minLeaseTerm} months</span>
-                    </div>
-                    {listing.availableFrom && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Available from</span>
-                        <span className="flex items-center gap-1">
-                          <Calendar size={11} />
-                          {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
-                        </span>
+            {/* ── Right: sticky action rail ── */}
+            <div>
+              <div className="sticky top-36 space-y-4">
+                <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_8px_30px_rgba(17,17,18,0.06)]">
+                  <div className="border-b border-gray-100 p-6">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <div>
+                        <p className="text-[12px] font-medium uppercase tracking-wide text-gray-400">Monthly rent</p>
+                        <p className="mt-1 text-[26px] font-bold leading-tight text-gray-900">
+                          {formatPrice(listing.priceFrom, listing.currency)}
+                          {listing.priceTo > listing.priceFrom && (
+                            <span className="text-[15px] font-normal text-gray-400"> – {formatPrice(listing.priceTo, listing.currency)}</span>
+                          )}
+                        </p>
                       </div>
-                    )}
-                  </div>
+                      <span className={cn(
+                        'shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-semibold',
+                        STATUS_STYLES[listing.status] ?? 'bg-gray-100 text-gray-500',
+                      )}>
+                        {totalAvailable} free
+                      </span>
+                    </div>
 
-                  <button
-                    onClick={() => setModal('VIEWING')}
-                    className="mt-5 w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer"
-                  >
-                    Book a Viewing
-                  </button>
-                  <button
-                    onClick={() => setModal('ENQUIRY')}
-                    className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    Send Enquiry
-                  </button>
-                  <ChatWithDeveloper rentListingSlug={listing.slug} className="mt-2 w-full" />
-                  {listing.propertySlug && (
-                    <Link
-                      href={`/${listing.propertySlug}`}
-                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
-                    >
-                      <Building2 size={15} /> View the property
-                    </Link>
-                  )}
-                </div>
-
-                {/* Developer card */}
-                {(raw as any)?.developer && (
-                  <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Listed by</p>
-                    <div className="flex items-center gap-3">
-                      {(raw as any).developer.logoUrl && (
-                        <div className="relative h-10 w-10 overflow-hidden rounded-xl shrink-0">
-                          <Image src={(raw as any).developer.logoUrl} alt={(raw as any).developer.companyName} fill className="object-cover" sizes="40px" />
+                    <dl className="mt-4 space-y-2 text-[13.5px]">
+                      <div className="flex items-center justify-between">
+                        <dt className="text-gray-500">Furnishing</dt>
+                        <dd className="font-medium text-gray-900">{FURNISHING_LABELS[listing.furnishing] ?? listing.furnishing}</dd>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <dt className="text-gray-500">Minimum lease</dt>
+                        <dd className="font-medium text-gray-900">{listing.minLeaseTerm} months</dd>
+                      </div>
+                      {listing.availableFrom && (
+                        <div className="flex items-center justify-between">
+                          <dt className="text-gray-500">Available from</dt>
+                          <dd className="flex items-center gap-1.5 font-medium text-gray-900">
+                            <Calendar size={12} className="text-gray-400" />
+                            {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
+                          </dd>
                         </div>
                       )}
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{(raw as any).developer.companyName}</p>
-                        {(raw as any).developer.establishedYear && (
-                          <p className="text-xs text-gray-400">Est. {(raw as any).developer.establishedYear}</p>
+                    </dl>
+                  </div>
+
+                  <div className="space-y-2 p-6">
+                    <button
+                      onClick={() => setModal('VIEWING')}
+                      className="w-full cursor-pointer rounded-xl bg-gray-900 py-3.5 text-[14.5px] font-semibold text-white transition-colors hover:bg-gray-700"
+                    >
+                      Book a viewing
+                    </button>
+                    <button
+                      onClick={() => setModal('ENQUIRY')}
+                      className="w-full cursor-pointer rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-gray-800 transition-colors hover:border-gray-400"
+                    >
+                      Send enquiry
+                    </button>
+                    <ChatWithDeveloper rentListingSlug={listing.slug} className="w-full" />
+                    {listing.propertySlug && (
+                      <Link
+                        href={`/${listing.propertySlug}`}
+                        className="flex w-full items-center justify-center gap-2 py-2 text-[13.5px] font-medium text-brand-600 transition-colors hover:text-brand-700"
+                      >
+                        <Building2 size={14} /> View the development <ArrowRight size={13} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* Listed by */}
+                {developer && (
+                  <div className="rounded-3xl border border-gray-200 bg-white p-6">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">Listed by</p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
+                        {developer.logoUrl ? (
+                          <Image src={developer.logoUrl} alt={developer.companyName} fill className="object-cover" sizes="44px" unoptimized />
+                        ) : (
+                          <Building2 size={18} className="text-gray-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[14.5px] font-semibold text-gray-900">{developer.companyName}</p>
+                        {developer.establishedYear && (
+                          <p className="text-[12.5px] text-gray-400">Est. {developer.establishedYear}</p>
                         )}
                       </div>
                     </div>
-                    {(raw as any).developer.description && (
-                      <p className="mt-3 text-xs text-gray-500 leading-relaxed line-clamp-3">{(raw as any).developer.description}</p>
+                    {developer.description && (
+                      <p className="mt-3 text-[12.5px] leading-relaxed text-gray-500 line-clamp-3">{developer.description}</p>
                     )}
                   </div>
                 )}
 
-                {/* Amenities — the listing has none of its own, so these come
-                    from the development the units sit in. */}
+                {/* Nearby */}
                 {amenities.length > 0 && (
-                  <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Amenities</p>
-                    <ul className="space-y-1.5">
+                  <div className="rounded-3xl border border-gray-200 bg-white p-6">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">What&apos;s nearby</p>
+                    <ul className="space-y-2">
                       {amenities.map((a) => (
-                        <li key={a.id ?? a.name} className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircle2 size={13} className="text-green-500 shrink-0" />
-                          <span className="min-w-0 flex-1">{a.name}</span>
+                        <li key={a.id ?? a.name} className="flex items-center gap-2.5 text-[13.5px] text-gray-700">
+                          <CheckCircle2 size={13} className="shrink-0 text-[#188038]" />
+                          <span className="min-w-0 flex-1 truncate">{a.name}</span>
                           {a.distance && (
-                            <span className="shrink-0 text-xs text-gray-400">{a.distance}</span>
+                            <span className="shrink-0 text-[12px] tabular-nums text-gray-400">{a.distance}</span>
                           )}
                         </li>
                       ))}
@@ -495,22 +504,43 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         </>
       )}
 
-      {/* Full-size image from the gallery */}
-      {lightbox && (
+      {/* ── Lightbox with paging ── */}
+      {lightbox !== null && photos[lightbox] && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setLightbox(null)}
         >
           <button
             onClick={() => setLightbox(null)}
             aria-label="Close image"
-            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
+            className="absolute right-5 top-5 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
           >
             <X size={18} />
           </button>
+          {photos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); stepLightbox(-1); }}
+                aria-label="Previous photo"
+                className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); stepLightbox(1); }}
+                aria-label="Next photo"
+                className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <ArrowRight size={18} />
+              </button>
+              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-white">
+                {lightbox + 1} / {photos.length}
+              </span>
+            </>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded host */}
           <img
-            src={lightbox}
+            src={photos[lightbox]}
             alt=""
             className="max-h-[88vh] max-w-[92vw] rounded-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
@@ -527,6 +557,82 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           onClose={() => setModal(null)}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * One unit type as a bookable row: identity and specs on the left, live
+ * availability in the middle, the price and the reserve action on the right.
+ */
+function UnitRow({ unit, propertySlug }: { unit: RentUnit; propertySlug?: string }) {
+  const soldOut = unit.available < 1;
+  const pct = unit.total > 0 ? Math.round((unit.available / unit.total) * 100) : 0;
+
+  return (
+    <div className={cn(
+      'rounded-2xl border bg-white p-5 transition-shadow sm:p-6',
+      soldOut ? 'border-gray-200 opacity-70' : 'border-gray-200 hover:shadow-[0_6px_24px_rgba(17,17,18,0.06)]',
+    )}>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-[17px] font-semibold text-gray-900">
+            {unit.label}
+            {unit.floor != null && (
+              <span className="font-normal text-gray-400"> · {ordinalFloor(unit.floor)}</span>
+            )}
+          </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13.5px] text-gray-600">
+            <span className="flex items-center gap-1.5">
+              <BedDouble size={14} className="text-gray-400" />
+              {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}
+            </span>
+            {(unit as { bathrooms?: number }).bathrooms ? (
+              <span className="flex items-center gap-1.5">
+                <Bath size={14} className="text-gray-400" />
+                {(unit as { bathrooms?: number }).bathrooms} bath
+              </span>
+            ) : null}
+            {unit.sqm > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Maximize2 size={14} className="text-gray-400" /> {unit.sqm} m²
+              </span>
+            )}
+          </div>
+
+          {/* Availability, as a number a tenant can trust plus a glanceable bar. */}
+          <div className="mt-3 flex items-center gap-3">
+            <div className="h-1.5 w-32 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className={cn('h-full rounded-full', soldOut ? 'bg-gray-300' : pct <= 34 ? 'bg-[#b06000]' : 'bg-[#188038]')}
+                style={{ width: `${Math.max(pct, 4)}%` }}
+              />
+            </div>
+            <span className={cn('text-[12.5px] font-medium', soldOut ? 'text-gray-400' : 'text-gray-600')}>
+              {soldOut ? 'Fully let' : `${unit.available} of ${unit.total} available`}
+            </span>
+          </div>
+
+          {unit.features && unit.features.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {unit.features.map((f) => (
+                <span key={f} className="rounded-full bg-gray-50 px-2.5 py-1 text-[11.5px] capitalize text-gray-500">
+                  {f.replace(/-/g, ' ')}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 text-right">
+          <p className="text-[22px] font-bold leading-tight text-gray-900">
+            {formatPrice(unit.pricePerMonth, unit.currency)}
+            <span className="text-[13px] font-normal text-gray-400">/mo</span>
+          </p>
+          <ReserveUnitButton unit={unit} propertySlug={propertySlug} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -551,10 +657,10 @@ function ReserveUnitButton({
   const soldOut = unit.available < 1;
 
   const tours = [
-    unit.showCinematicTour && { href: `/${propertySlug}/tour/cinematic`, label: 'Cinematic' },
-    unit.show3DTour && { href: `/${propertySlug}/tour/3d`, label: '3D' },
-    unit.showVRTour && { href: `/${propertySlug}/tour/vr`, label: 'VR' },
-  ].filter(Boolean) as { href: string; label: string }[];
+    unit.showCinematicTour && { href: `/${propertySlug}/tour/cinematic`, label: 'Cinematic', icon: Film },
+    unit.show3DTour && { href: `/${propertySlug}/tour/3d`, label: '3D', icon: Box },
+    unit.showVRTour && { href: `/${propertySlug}/tour/vr`, label: 'VR', icon: Box },
+  ].filter(Boolean) as { href: string; label: string; icon: typeof Film }[];
 
   async function reserve() {
     if (!isAuthenticated) {
@@ -576,34 +682,34 @@ function ReserveUnitButton({
   }
 
   return (
-    <div className="mt-2 flex flex-col items-end gap-1.5">
+    <div className="mt-3 flex flex-col items-end gap-2">
       {tours.length > 0 && propertySlug && (
         <div className="flex gap-1.5">
           {tours.map((t) => (
             <Link
               key={t.label}
               href={t.href}
-              className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-900"
+              className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11.5px] font-medium text-gray-600 transition-colors hover:border-gray-900 hover:text-gray-900"
             >
-              {t.label}
+              <t.icon size={10} /> {t.label}
             </Link>
           ))}
         </div>
       )}
       {done ? (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
-          <CheckCircle2 size={12} /> Reserved
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e6f4ea] px-3.5 py-2 text-[12.5px] font-semibold text-[#188038]">
+          <CheckCircle2 size={13} /> Reserved
         </span>
       ) : (
         <button
           onClick={reserve}
           disabled={busy || soldOut}
-          className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-900 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy ? 'Reserving…' : soldOut ? 'Fully let' : 'Reserve'}
+          {busy ? 'Reserving…' : soldOut ? 'Fully let' : (<><KeyRound size={13} /> Reserve</>)}
         </button>
       )}
-      {error && <span className="text-[11px] text-red-600">{error}</span>}
+      {error && <span className="text-[11.5px] text-red-600">{error}</span>}
     </div>
   );
 }
