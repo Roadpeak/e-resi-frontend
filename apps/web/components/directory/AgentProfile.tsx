@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -47,6 +48,12 @@ export function AgentProfile({ agentId }: { agentId: string }) {
   });
   const saleProperties = (properties ?? []).filter((p) => p.kind !== 'RENT');
   const rentProperties = (properties ?? []).filter((p) => p.kind === 'RENT');
+  const rentTotal = rentProperties.length + (rentals?.length ?? 0);
+  // Two inventories, one at a time — a tab bar keeps the storefront focused.
+  const [inventoryTab, setInventoryTab] = useState<'sale' | 'rent'>('sale');
+  const activeTab = inventoryTab === 'sale' && saleProperties.length === 0 && rentTotal > 0
+    ? 'rent'
+    : inventoryTab;
   // Same key as PartnersStrip below, so the two share one fetch. The lead
   // partner becomes the brokerage-style crumb in the trail.
   const { data: partners } = useQuery({
@@ -128,16 +135,43 @@ export function AgentProfile({ agentId }: { agentId: string }) {
           rentCount={rentProperties.length + (rentals?.length ?? 0)}
         />
 
-        {saleProperties.length > 0 && (
+        {(saleProperties.length > 0 || rentTotal > 0) && (
+          <div className="mt-8 flex gap-1 border-b border-black/[0.08]">
+            {([
+              ['sale', `Properties for sale`, saleProperties.length],
+              ['rent', `Units for rent`, rentTotal],
+            ] as const).map(([key, label, count]) => (
+              <button
+                key={key}
+                onClick={() => setInventoryTab(key)}
+                className={
+                  'relative cursor-pointer whitespace-nowrap px-4 py-3 text-[15px] font-semibold transition-colors '
+                  + 'after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-full after:transition-all '
+                  + (activeTab === key
+                    ? 'text-[#111112] after:bg-gold-400'
+                    : 'text-[#8a8a90] hover:text-[#111112] after:bg-transparent')
+                }
+              >
+                {label}
+                <span className="ml-1.5 text-[13px] font-normal text-[#8a8a90]">{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'sale' && saleProperties.length > 0 && (
           <AgentProperties agent={agent} properties={saleProperties} title="Properties for sale by" />
         )}
 
-        {rentProperties.length > 0 && (
-          <AgentProperties agent={agent} properties={rentProperties} title="Properties for rent with" />
-        )}
-
-        {(rentals?.length ?? 0) > 0 && (
-          <AgentRentUnits agent={agent} rentals={rentals!} />
+        {activeTab === 'rent' && (
+          <>
+            {rentProperties.length > 0 && (
+              <AgentProperties agent={agent} properties={rentProperties} title="Properties for rent with" />
+            )}
+            {(rentals?.length ?? 0) > 0 && (
+              <AgentRentUnits agent={agent} rentals={rentals!} />
+            )}
+          </>
         )}
 
         {/* One flat sheet, partitioned by hairlines — the storefront above
