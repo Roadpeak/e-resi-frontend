@@ -69,6 +69,7 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
   });
 
   const [assignPropertyId, setAssignPropertyId] = useStateReact('');
+  const [assignKind, setAssignKind] = useStateReact<'SALE' | 'RENT'>('SALE');
   const [assignPercent, setAssignPercent] = useStateReact('');
   const myProperties = useQuery({
     queryKey: ['my-properties-for-assign'],
@@ -79,6 +80,7 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
     mutationFn: () =>
       partnershipsApi.assignProperty(partnershipId, {
         propertyId: assignPropertyId,
+        kind: assignKind,
         commissionPercent: assignPercent ? parseHumanNumber(assignPercent) : undefined,
       }),
     onSuccess: () => {
@@ -93,7 +95,8 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
   });
 
   const unassign = useMutation({
-    mutationFn: (propertyId: string) => partnershipsApi.unassignProperty(partnershipId, propertyId),
+    mutationFn: (a: { propertyId: string; kind: 'SALE' | 'RENT' }) =>
+      partnershipsApi.unassignProperty(partnershipId, a.propertyId, a.kind),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partnership', partnershipId] });
       setError('');
@@ -270,7 +273,12 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
                     >
                       {a.property.name}
                     </Link>
-                    <p className="text-[12px] text-[#5f6368]">
+                    <p className="flex items-center gap-1.5 text-[12px] text-[#5f6368]">
+                      <span className={a.kind === 'RENT'
+                        ? 'rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[11px] font-medium text-[#188038]'
+                        : 'rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11px] font-medium text-[#1967d2]'}>
+                        {a.kind === 'RENT' ? 'For rent' : 'For sale'}
+                      </span>
                       {a.property.city}
                       {a.property.priceFrom
                         ? ` · from ${formatPrice(a.property.priceFrom, a.property.currency)}`
@@ -280,7 +288,7 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
                   {side === 'developer' && (
                     <button
                       type="button"
-                      onClick={() => { setError(''); unassign.mutate(a.property.id); }}
+                      onClick={() => { setError(''); unassign.mutate({ propertyId: a.property.id, kind: a.kind }); }}
                       disabled={unassign.isPending}
                       title={`Remove ${a.property.name}`}
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f6368] transition-colors hover:bg-[#fce8e6] hover:text-[#c5221f] disabled:opacity-40 cursor-pointer"
@@ -306,10 +314,20 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
                 >
                   <option value="">Assign a property…</option>
                   {(myProperties.data?.data ?? [])
-                    .filter((p) => !assignments.some((a) => a.property.id === p.id))
+                    .filter((p) => !assignments.some((a) => a.property.id === p.id && a.kind === assignKind))
                     .map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
+                </select>
+                {/* Selling and letting are different engagements — the agent
+                    is hired for one job at a time, each with its own rate. */}
+                <select
+                  value={assignKind}
+                  onChange={(e) => setAssignKind(e.target.value as 'SALE' | 'RENT')}
+                  className="h-10 rounded-xl border border-[#dadce0] bg-white px-3 text-[14px] text-[#202124] outline-none focus:border-[#1a73e8]"
+                >
+                  <option value="SALE">To sell — find buyers</option>
+                  <option value="RENT">To let — find tenants</option>
                 </select>
                 <input
                   value={assignPercent}
@@ -324,7 +342,9 @@ export function PartnershipDetail({ partnershipId, side }: Props) {
                 disabled={assign.isPending || !assignPropertyId}
                 className="mt-2 h-10 w-full cursor-pointer rounded-xl bg-[#1a73e8] text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-40"
               >
-                {assign.isPending ? 'Assigning…' : 'Assign to this agent'}
+                {assign.isPending
+                  ? 'Assigning…'
+                  : assignKind === 'RENT' ? 'Engage agent to find tenants' : 'Assign to this agent'}
               </button>
             </div>
           )}

@@ -64,6 +64,8 @@ export interface AssignedProperty {
   commissionPercent: number | null;
   notes: string | null;
   assignedAt: string;
+  /** SALE — selling units; RENT — finding tenants. */
+  kind: 'SALE' | 'RENT';
   /** The assignment's own rate, falling back to the partnership default. */
   effectiveCommission: number | null;
   property: {
@@ -116,11 +118,11 @@ export const partnershipsApi = {
 
   assignProperty: (
     id: string,
-    body: { propertyId: string; commissionPercent?: number; notes?: string },
+    body: { propertyId: string; commissionPercent?: number; notes?: string; kind?: 'SALE' | 'RENT' },
   ) => apiClient.post<unknown>(`/partnerships/${id}/properties`, body),
 
-  unassignProperty: (id: string, propertyId: string) =>
-    apiClient.delete<unknown>(`/partnerships/${id}/properties/${propertyId}`),
+  unassignProperty: (id: string, propertyId: string, kind: 'SALE' | 'RENT' = 'SALE') =>
+    apiClient.delete<unknown>(`/partnerships/${id}/properties/${propertyId}?kind=${kind}`),
 
   /** Agent: properties assigned to me across all active partnerships. */
   myAssignments: (params: { page?: number; limit?: number } = {}) => {

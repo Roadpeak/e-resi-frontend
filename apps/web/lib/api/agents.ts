@@ -182,11 +182,43 @@ export interface AgentProperty {
   developer: { id: string; companyName: string; logoUrl?: string | null };
   _count: { units: number };
   assignedAt: string;
+  /** SALE — they sell it; RENT — they find tenants for it. */
+  kind: 'SALE' | 'RENT';
+}
+
+/** A rent listing this agent manages — their letting inventory. */
+export interface AgentRentListing {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  managerKind: string;
+  priceFrom?: number | null;
+  priceTo?: number | null;
+  currency: string;
+  heroImageUrl?: string | null;
+  createdAt: string;
+  property: { name: string; city: string; neighborhood?: string | null };
+  rentUnits: {
+    id: string;
+    label: string;
+    unitType?: string | null;
+    bedrooms: number;
+    bathrooms: number;
+    pricePerMonth: number;
+    currency: string;
+    available: number;
+    total: number;
+    furnishing: string;
+  }[];
 }
 
 export const agentsApi = {
-  /** Properties this agent is actively assigned to sell. Public. */
+  /** Properties this agent is actively assigned to (sale and rent). Public. */
   properties: (id: string) => apiClient.get<AgentProperty[]>(`/agents/${id}/properties`),
+
+  /** Rent listings and units this agent manages for letting. Public. */
+  rentals: (id: string) => apiClient.get<AgentRentListing[]>(`/agents/${id}/rentals`),
 
   /**
    * Verified, currently-listed agents, best-rated first. `specialty` is what

@@ -8,7 +8,10 @@ import {
   Home, Loader2, MapPin, User,
 } from 'lucide-react';
 import { apiClient } from '../../lib/api/client';
-import { agentsApi, SPECIALTY_LABELS, type Agent, type AgentProperty } from '../../lib/api/agents';
+import {
+  agentsApi, SPECIALTY_LABELS,
+  type Agent, type AgentProperty, type AgentRentListing,
+} from '../../lib/api/agents';
 import { formatPrice } from '../../lib/utils';
 import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimitives';
 import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
@@ -37,6 +40,13 @@ export function AgentProfile({ agentId }: { agentId: string }) {
     queryFn: () => agentsApi.properties(agentId),
     retry: false,
   });
+  const { data: rentals } = useQuery({
+    queryKey: ['agent', agentId, 'rentals'],
+    queryFn: () => agentsApi.rentals(agentId),
+    retry: false,
+  });
+  const saleProperties = (properties ?? []).filter((p) => p.kind !== 'RENT');
+  const rentProperties = (properties ?? []).filter((p) => p.kind === 'RENT');
   // Same key as PartnersStrip below, so the two share one fetch. The lead
   // partner becomes the brokerage-style crumb in the trail.
   const { data: partners } = useQuery({
@@ -112,10 +122,22 @@ export function AgentProfile({ agentId }: { agentId: string }) {
           <span className="hidden font-medium text-[#111112] sm:block">{agent.displayName}</span>
         </nav>
 
-        <AgentHeader agent={agent} propertyCount={properties?.length ?? 0} />
+        <AgentHeader
+          agent={agent}
+          propertyCount={saleProperties.length}
+          rentCount={rentProperties.length + (rentals?.length ?? 0)}
+        />
 
-        {(properties?.length ?? 0) > 0 && (
-          <AgentProperties agent={agent} properties={properties!} />
+        {saleProperties.length > 0 && (
+          <AgentProperties agent={agent} properties={saleProperties} title="Properties for sale by" />
+        )}
+
+        {rentProperties.length > 0 && (
+          <AgentProperties agent={agent} properties={rentProperties} title="Properties for rent with" />
+        )}
+
+        {(rentals?.length ?? 0) > 0 && (
+          <AgentRentUnits agent={agent} rentals={rentals!} />
         )}
 
         {/* One flat sheet, partitioned by hairlines — the storefront above
@@ -165,7 +187,9 @@ export function AgentProfile({ agentId }: { agentId: string }) {
   );
 }
 
-function AgentHeader({ agent, propertyCount }: { agent: Agent; propertyCount: number }) {
+function AgentHeader({
+  agent, propertyCount, rentCount,
+}: { agent: Agent; propertyCount: number; rentCount: number }) {
   const isCompany = agent.kind === 'COMPANY';
   const avatar = isCompany ? agent.logoUrl : agent.photoUrl;
   const FallbackIcon = isCompany ? Building2 : User;
@@ -224,9 +248,9 @@ function AgentHeader({ agent, propertyCount }: { agent: Agent; propertyCount: nu
       <div className="grid grid-cols-2 divide-white/10 border-t border-white/10 bg-white/[0.04] sm:grid-cols-4 sm:divide-x">
         {[
           { value: propertyCount, label: 'Properties for sale' },
+          { value: rentCount, label: 'For rent' },
           { value: agent.yearsExperience ? `${agent.yearsExperience}+` : '—', label: 'Years of experience' },
           { value: agent.ratingAverage ? agent.ratingAverage.toFixed(1) : '—', label: 'Rating' },
-          { value: agent.ratingCount, label: 'Reviews' },
         ].map((st) => (
           <div key={st.label} className="px-6 py-5 text-center">
             <p className="text-[26px] font-semibold leading-tight">{st.value}</p>
@@ -244,11 +268,13 @@ function AgentHeader({ agent, propertyCount }: { agent: Agent; propertyCount: nu
  * clicks through tours, books and reserves as this agent's client, and the
  * attribution flows to their deals and traffic reports.
  */
-function AgentProperties({ agent, properties }: { agent: Agent; properties: AgentProperty[] }) {
+function AgentProperties({
+  agent, properties, title,
+}: { agent: Agent; properties: AgentProperty[]; title: string }) {
   return (
     <section className="mt-4">
       <h2 className="mb-3 mt-6 text-[20px] font-semibold text-[#111112]">
-        Properties by {agent.displayName}
+        {title} {agent.displayName}
         <span className="ml-2 text-[15px] font-normal text-[#8a8a90]">{properties.length}</span>
       </h2>
       <div className="space-y-4">
@@ -327,6 +353,69 @@ function AgentProperties({ agent, properties }: { agent: Agent; properties: Agen
             </DirectoryCard>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The letting inventory: rent listings the agent manages, with the unit
+ * types behind each — rent is let unit by unit, so the units are the story.
+ * Cards link through the agent's referral link like the sale rows.
+ */
+function AgentRentUnits({ agent, rentals }: { agent: Agent; rentals: AgentRentListing[] }) {
+  return (
+    <section className="mt-4">
+      <h2 className="mb-3 mt-6 text-[20px] font-semibold text-[#111112]">
+        Units for rent with {agent.displayName}
+        <span className="ml-2 text-[15px] font-normal text-[#8a8a90]">
+          {rentals.reduce((n, r) => n + r.rentUnits.length, 0)}
+        </span>
+      </h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        {rentals.map((r) => (
+          <DirectoryCard key={r.id} className="overflow-hidden border border-black/5 p-0">
+            <Link href={`/rent/${r.slug}?ref=${agent.id}`} className="block">
+              <div className="relative h-40 w-full overflow-hidden bg-[#f0f0f2]">
+                {r.heroImageUrl ? (
+                  <Image
+                    src={r.heroImageUrl}
+                    alt={r.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <Building2 size={28} className="text-[#c4c4c8]" />
+                  </div>
+                )}
+                <span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-[#188038]">
+                  For rent
+                </span>
+              </div>
+              <div className="p-5">
+                <p className="truncate text-[16px] font-medium text-[#111112]">{r.name}</p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-[13.5px] text-[#6b6b70]">
+                  <MapPin size={13} className="shrink-0" />
+                  {[r.property.neighborhood, r.property.city].filter(Boolean).join(', ')}
+                </p>
+                <ul className="mt-3 space-y-1.5 border-t border-black/5 pt-3">
+                  {r.rentUnits.map((u) => (
+                    <li key={u.id} className="flex items-center justify-between gap-3 text-[13.5px]">
+                      <span className="min-w-0 truncate text-[#3c3c43]">
+                        {u.unitType ?? u.label} · {u.bedrooms === 0 ? 'Studio' : `${u.bedrooms} bed`} · {u.furnishing.toLowerCase()}
+                      </span>
+                      <span className="shrink-0 font-semibold text-[#111112]">
+                        {formatPrice(u.pricePerMonth, u.currency)}<span className="font-normal text-[#8a8a90]">/mo</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Link>
+          </DirectoryCard>
+        ))}
       </div>
     </section>
   );
