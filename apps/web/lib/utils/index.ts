@@ -76,7 +76,7 @@ export function getStatusLabel(status: string): string {
     OFF_PLAN: 'Off Plan',
     ACTIVE: 'Ready to Move',
     SOLD_OUT: 'Sold Out',
-    DRAFT: 'In Review',
+    DRAFT: 'Pending review',
     ARCHIVED: 'Archived',
     // The read path used to lowercase status before it reached here; tolerate
     // both so an older cached payload still renders a label rather than a raw

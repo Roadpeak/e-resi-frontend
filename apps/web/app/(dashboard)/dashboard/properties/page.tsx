@@ -4,23 +4,35 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, Eye, Pencil, Box, Headset, Building2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Plus, Eye, Pencil, Box, Headset, Building2, MoreHorizontal, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { formatPrice, getStatusLabel, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useMyProperties } from '../../../../lib/api/queries';
+import { REVIEW_CHIP, reviewStateOf } from '../../../../components/dashboard/ReviewStatus';
 
 /** Google-tonal status chips (replaces the old brand/gold/emerald palette). */
+// Keyed by the API's UPPER_SNAKE status. The old lowercase keys never matched
+// anything the API sends, so every chip fell through to plain grey. DRAFT is
+// handled separately via REVIEW_CHIP, which tells pending and rejected apart.
 const STATUS_CHIPS: Record<string, string> = {
-  off_plan: 'bg-[#e8f0fe] text-[#1967d2]',
-  under_construction: 'bg-[#fef7e0] text-[#b06000]',
-  ready: 'bg-[#e6f4ea] text-[#188038]',
-  sold_out: 'bg-[#fce8e6] text-[#c5221f]',
+  OFF_PLAN: 'bg-[#e8f0fe] text-[#1967d2]',
+  ACTIVE: 'bg-[#e6f4ea] text-[#188038]',
+  SOLD_OUT: 'bg-[#fce8e6] text-[#c5221f]',
+  ARCHIVED: 'bg-[#f1f3f4] text-[#5f6368]',
 };
+
+function fmtShortDate(iso?: string) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
 
 export default function DashboardProperties() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const { data, isLoading } = useMyProperties({ limit: 50 });
   const properties = data?.items ?? [];
+  const pendingCount = properties.filter((p) => reviewStateOf(p) === 'pending').length;
+  const changesCount = properties.filter((p) => reviewStateOf(p) === 'changes').length;
 
   if (isLoading) {
     return (
@@ -51,7 +63,7 @@ export default function DashboardProperties() {
         <div className="rounded-3xl border border-dashed border-[#dadce0] bg-white p-16 text-center">
           <Building2 size={32} className="mx-auto mb-3 text-[#dadce0]" />
           <p className="text-base font-medium text-[#202124]">No properties yet</p>
-          <p className="text-base text-[#5f6368] mt-1">List a property and start receiving inquiries within minutes.</p>
+          <p className="text-base text-[#5f6368] mt-1">Submit a development. Once our team approves it, buyers can find it and send inquiries.</p>
           <Button
             href="/dashboard/developments/new"
             className="mt-5 rounded-full bg-[#1a73e8] hover:bg-[#1765cc] text-[15px] font-medium shadow-none"
@@ -62,6 +74,36 @@ export default function DashboardProperties() {
         </div>
       ) : (
         <>
+          {/* Review summary — a submitted development is not public yet, and
+              without this the developer has no signal that it is waiting on us. */}
+          {pendingCount > 0 && (
+            <div className="flex gap-3 rounded-3xl border border-[#fde293] bg-[#fffbeb] p-5">
+              <Clock size={20} className="mt-0.5 shrink-0 text-[#b06000]" />
+              <div>
+                <p className="text-[15px] font-medium text-[#202124]">
+                  {pendingCount === 1 ? '1 development is' : `${pendingCount} developments are`} pending review
+                </p>
+                <p className="mt-1 text-[14px] leading-relaxed text-[#5f6368]">
+                  Our team checks every submission before it goes live on the marketplace. We&apos;ll email you as
+                  soon as it&apos;s approved. You can keep adding units, media and details meanwhile.
+                </p>
+              </div>
+            </div>
+          )}
+          {changesCount > 0 && (
+            <div className="flex gap-3 rounded-3xl border border-[#f5c6c4] bg-[#fef7f6] p-5">
+              <AlertCircle size={20} className="mt-0.5 shrink-0 text-[#c5221f]" />
+              <div>
+                <p className="text-[15px] font-medium text-[#202124]">
+                  {changesCount === 1 ? '1 development needs' : `${changesCount} developments need`} changes
+                </p>
+                <p className="mt-1 text-[14px] leading-relaxed text-[#5f6368]">
+                  Open it to see the reviewer&apos;s note and update the details.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Table */}
           <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
             <div className="overflow-x-auto">
@@ -104,9 +146,28 @@ export default function DashboardProperties() {
 
                       {/* Status */}
                       <td className="px-4 py-4">
-                        <span className={cn('rounded-full px-3 py-1 text-[13px] font-medium', STATUS_CHIPS[p.status] ?? 'bg-[#f1f3f4] text-[#5f6368]')}>
-                          {getStatusLabel(p.status)}
-                        </span>
+                        {(() => {
+                          const review = reviewStateOf(p);
+                          if (review) {
+                            return (
+                              <>
+                                <span className={cn('whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-medium', REVIEW_CHIP[review].cls)}>
+                                  {REVIEW_CHIP[review].label}
+                                </span>
+                                <p className="mt-1.5 text-[12px] text-[#80868b]">
+                                  {review === 'pending'
+                                    ? `Submitted ${fmtShortDate(p.createdAt)}`
+                                    : 'See reviewer note'}
+                                </p>
+                              </>
+                            );
+                          }
+                          return (
+                            <span className={cn('whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-medium', STATUS_CHIPS[p.status] ?? 'bg-[#f1f3f4] text-[#5f6368]')}>
+                              {getStatusLabel(p.status)}
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       {/* Units */}
@@ -198,7 +259,7 @@ export default function DashboardProperties() {
           <div className="rounded-3xl border border-dashed border-[#dadce0] bg-white p-10 text-center">
             <Building2 size={32} className="mx-auto mb-3 text-[#dadce0]" />
             <p className="text-base font-medium text-[#202124]">Ready to add your next development?</p>
-            <p className="text-base text-[#5f6368] mt-1">List a property and start receiving inquiries within minutes.</p>
+            <p className="text-base text-[#5f6368] mt-1">Submit a development. Once our team approves it, buyers can find it and send inquiries.</p>
             <Button
               href="/dashboard/developments/new"
               className="mt-5 rounded-full bg-[#1a73e8] hover:bg-[#1765cc] text-[15px] font-medium shadow-none"

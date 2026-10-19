@@ -18,6 +18,7 @@ import { NearbyPlacesManager } from '../../../../../components/dashboard/NearbyP
 import { floorPlansApi } from '../../../../../lib/api/floor-plans';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
+import { REVIEW_CHIP, ReviewStatusBanner, reviewStateOf } from '../../../../../components/dashboard/ReviewStatus';
 
 interface DashProperty {
   id: string;
@@ -27,6 +28,9 @@ interface DashProperty {
   description?: string | null;
   category: string;
   status: 'DRAFT' | 'ACTIVE' | 'OFF_PLAN' | 'SOLD_OUT' | 'ARCHIVED';
+  /** Set when an admin has reviewed it; a DRAFT with this set was sent back. */
+  reviewedAt?: string | null;
+  reviewNotes?: string | null;
   neighborhood?: string | null;
   city?: string | null;
   latitude?: number | null;
@@ -58,7 +62,7 @@ interface DashProperty {
 
 const STATUS_CHIPS: Record<string, { label: string; cls: string }> = {
   ACTIVE: { label: 'Live', cls: 'bg-[#e6f4ea] text-[#188038]' },
-  DRAFT: { label: 'In review', cls: 'bg-[#fef7e0] text-[#b06000]' },
+  DRAFT: { label: 'Pending review', cls: 'bg-[#fef7e0] text-[#b06000]' },
   OFF_PLAN: { label: 'Off plan', cls: 'bg-[#e8f0fe] text-[#1967d2]' },
   SOLD_OUT: { label: 'Sold out', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
   ARCHIVED: { label: 'Archived', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
@@ -283,7 +287,8 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
     );
   }
 
-  const chip = STATUS_CHIPS[property.status] ?? STATUS_CHIPS.DRAFT;
+  const review = reviewStateOf(property);
+  const chip = review ? REVIEW_CHIP[review] : STATUS_CHIPS[property.status] ?? STATUS_CHIPS.DRAFT;
   const dev = property.submissionData?.development as Record<string, unknown> | undefined;
 
   return (
@@ -370,6 +375,13 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           </div>
         </div>
       </div>
+
+      <ReviewStatusBanner
+        status={property.status}
+        createdAt={property.createdAt}
+        reviewedAt={property.reviewedAt}
+        reviewNotes={property.reviewNotes}
+      />
 
       {/* ── Quick stats ── */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Pencil } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, ArrowRight, Bell, Check, CheckCircle2, Clock, Globe, Loader2, Pencil } from 'lucide-react';
 import { cn } from '../../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { useDevelopmentStore } from '../../../../../lib/stores/development.store';
@@ -39,6 +40,7 @@ export default function NewDevelopmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const billing = computeBilling(Object.keys(media.services));
   const isReview = step === 2;
@@ -120,6 +122,10 @@ export default function NewDevelopmentPage() {
 
       setCreatedSlug(slug);
       reset();
+      // The properties list and dashboard counters are cached for a minute, so
+      // without this the developer could land on "Your properties" and not see
+      // what they just submitted — and assume it was never created.
+      void queryClient.invalidateQueries();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Submission failed. Please try again.');
     } finally {
@@ -129,15 +135,34 @@ export default function NewDevelopmentPage() {
 
   // ── Success state ──
   if (createdSlug !== null) {
+    const nextSteps = [
+      {
+        icon: Clock,
+        title: 'Our team reviews it',
+        body: `We check the details${billing.oneTimeTotal > 0 ? ' and schedule your production services' : ''} before anything goes public.`,
+      },
+      {
+        icon: Bell,
+        title: "You'll hear from us",
+        body: "We'll email you and post a notification as soon as it's approved, or if anything needs changing.",
+      },
+      {
+        icon: Globe,
+        title: 'It goes live',
+        body: `Buyers can find it on e-resi. The ${fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee starts only then.`,
+      },
+    ];
     return (
       <div className="mx-auto max-w-2xl py-10 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#e6f4ea]">
           <CheckCircle2 size={32} className="text-[#188038]" />
         </div>
         <h1 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Development submitted</h1>
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#fef7e0] px-3 py-1 text-[13px] font-medium text-[#b06000]">
+          <Clock size={13} /> Pending review
+        </span>
         <p className="mx-auto mt-3 max-w-md text-base text-[#5f6368]">
-          It&apos;s saved as a draft while our team reviews the details{billing.oneTimeTotal > 0 ? ' and schedules your production services' : ''}.
-          The {fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee starts only when it goes live.
+          It&apos;s saved to your account but not public yet. You&apos;ll find it under Your properties, marked Pending review.
         </p>
         {/* Set when the development saved but a follow-up write (the nearby
             list) did not — the submission succeeded, so this is a warning
@@ -147,13 +172,34 @@ export default function NewDevelopmentPage() {
             {error}
           </p>
         )}
-        <div className="mt-8 flex items-center justify-center gap-3">
+        <ol className="mx-auto mt-8 max-w-md space-y-4 rounded-3xl border border-[#dadce0] bg-white p-6 text-left">
+          {nextSteps.map((step) => (
+            <li key={step.title} className="flex gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1967d2]">
+                <step.icon size={15} />
+              </span>
+              <div>
+                <p className="text-[15px] font-medium text-[#202124]">{step.title}</p>
+                <p className="text-[14px] text-[#5f6368]">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/dashboard/properties"
             className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors"
           >
             View my developments <ArrowRight size={15} />
           </Link>
+          {createdSlug && (
+            <Link
+              href={`/dashboard/properties/${createdSlug}`}
+              className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
+            >
+              Add units &amp; media
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setCreatedSlug(null)}
