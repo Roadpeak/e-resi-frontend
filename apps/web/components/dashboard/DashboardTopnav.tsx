@@ -159,7 +159,7 @@ export function DashboardTopnav() {
 
         {/* Help */}
         <a
-          href="mailto:support@e-resi.co.ke"
+          href="mailto:info@e-resi.com"
           className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors"
           aria-label="Contact support"
         >

@@ -19,12 +19,12 @@ const ROUTES = [
   {
     who: 'Developers',
     what: 'Listing a development, production services, verification or billing.',
-    email: 'developers@e-resi.com',
+    email: 'info@e-resi.com',
   },
   {
     who: 'Buyers & tenants',
     what: 'A question about a property, a viewing, or a reservation you have made.',
-    email: 'support@e-resi.com',
+    email: 'info@e-resi.com',
   },
   {
     who: 'Press & partnerships',
@@ -83,10 +83,10 @@ export default function ContactPage() {
           We work across the country and with buyers worldwide. If you would rather speak
           to someone about listing a development, mail{' '}
           <a
-            href="mailto:developers@e-resi.com"
+            href="mailto:info@e-resi.com"
             className="font-medium text-resi-600 transition-colors hover:text-resi-800"
           >
-            developers@e-resi.com
+            info@e-resi.com
           </a>{' '}
           and we will arrange a call.
         </p>

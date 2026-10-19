@@ -301,7 +301,7 @@ export default function AccountOverview() {
           Deleting your account removes your saved properties, viewings and inquiries. This can&apos;t be undone.
         </p>
         <a
-          href="mailto:support@e-resi.com?subject=Delete%20my%20account"
+          href="mailto:info@e-resi.com?subject=Delete%20my%20account"
           className="mt-5 inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-[14px] font-medium text-[#b0282e] transition-colors hover:bg-[#fbe4e4]"
         >
           <Trash2 size={15} /> Request account deletion
