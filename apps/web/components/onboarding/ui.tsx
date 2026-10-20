@@ -35,7 +35,7 @@ export function FieldGrid({ cols = 2, children }: { cols?: 2 | 3; children: Reac
   );
 }
 
-const inputBase =
+export const inputBase =
   'w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4A80F5] focus:border-transparent transition-shadow';
 
 export function Field({

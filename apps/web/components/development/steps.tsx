@@ -13,6 +13,7 @@ import {
 } from '../onboarding/ui';
 import { ImageUpload } from '../dashboard/ImageUpload';
 import { DetectLocationButton } from '../dashboard/DetectLocationButton';
+import { AreaSearchInput } from '../dashboard/AreaSearchInput';
 
 // ── Development creation · Step 1: Development details ───────────────────────
 
@@ -321,7 +322,22 @@ export function StepDevelopment() {
             <TextInput value={dev.city} onChange={(e) => patch({ city: e.target.value })} />
           </Field>
           <Field label="Area / neighbourhood" required>
-            <TextInput value={dev.area} onChange={(e) => patch({ area: e.target.value })} placeholder="Westlands" />
+            <AreaSearchInput
+              value={dev.area}
+              onChange={(area) => patch({ area })}
+              placeholder="Search e.g. Westlands, Kilimani"
+              onPick={(a) => {
+                const coords = `${a.latitude.toFixed(6)}, ${a.longitude.toFixed(6)}`;
+                patch({
+                  ...(a.city ? { city: a.city } : {}),
+                  ...(a.county ? { county: a.county } : {}),
+                  ...(a.country ? { country: a.country } : {}),
+                  // Area-level, so it never replaces a pin the developer set.
+                  ...(dev.gpsCoordinates ? {} : { gpsCoordinates: coords }),
+                  ...(dev.mapsPin ? {} : { mapsPin: `https://www.google.com/maps?q=${a.latitude},${a.longitude}` }),
+                });
+              }}
+            />
           </Field>
           <Field label="Google Maps pin" hint="Paste a share link">
             <TextInput type="url" value={dev.mapsPin} onChange={(e) => patch({ mapsPin: e.target.value })} placeholder="https://maps.app.goo.gl/…" />
