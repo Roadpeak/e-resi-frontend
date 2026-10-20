@@ -86,15 +86,14 @@ export function AreaSearchInput({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(-1);
-  // Set after a pick, so filling the field doesn't immediately search again.
-  const skipNext = useRef(false);
+  // Only keystrokes search — not a pick, nor a saved value loading into an
+  // edit form, which would otherwise pop the list open on page load.
+  const typed = useRef(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (skipNext.current) {
-      skipNext.current = false;
-      return;
-    }
+    if (!typed.current) return;
+    typed.current = false;
     const q = value.trim();
     if (q.length < 2) {
       setResults([]);
@@ -130,7 +129,6 @@ export function AreaSearchInput({
   }, []);
 
   function pick(s: Suggestion) {
-    skipNext.current = true;
     setOpen(false);
     onChange(s.name);
     onPick(s);
@@ -156,7 +154,10 @@ export function AreaSearchInput({
     <div ref={boxRef} className="relative">
       <input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          typed.current = true;
+          onChange(e.target.value);
+        }}
         onFocus={() => results.length && setOpen(true)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}

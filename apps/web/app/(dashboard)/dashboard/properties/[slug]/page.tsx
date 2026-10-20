@@ -18,6 +18,7 @@ import { NearbyPlacesManager } from '../../../../../components/dashboard/NearbyP
 import { floorPlansApi } from '../../../../../lib/api/floor-plans';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
+import { AreaSearchInput } from '../../../../../components/dashboard/AreaSearchInput';
 import { REVIEW_CHIP, ReviewStatusBanner, reviewStateOf } from '../../../../../components/dashboard/ReviewStatus';
 
 interface DashProperty {
@@ -528,7 +529,23 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className={labelCls}>Neighborhood</label>
-            <input value={form.neighborhood} onChange={(e) => setForm((f) => ({ ...f, neighborhood: e.target.value }))} className={inputCls} />
+            <AreaSearchInput
+              value={form.neighborhood}
+              onChange={(neighborhood) => setForm((f) => ({ ...f, neighborhood }))}
+              placeholder="Search e.g. Westlands, Kilimani"
+              inputClassName={inputCls}
+              onPick={(a) =>
+                setForm((f) => ({
+                  ...f,
+                  city: a.city ?? f.city,
+                  county: a.county ?? f.county,
+                  // Area-level, so it never replaces a pin already set.
+                  coordinates: f.coordinates.trim()
+                    ? f.coordinates
+                    : `${a.latitude.toFixed(6)}, ${a.longitude.toFixed(6)}`,
+                }))
+              }
+            />
           </div>
           <div>
             <label className={labelCls}>City</label>
