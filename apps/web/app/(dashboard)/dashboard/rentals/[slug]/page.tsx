@@ -10,6 +10,7 @@ import {
 import { rentListingsApi } from '../../../../../lib/api/rent-listings';
 import { ApiError } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
+import { AreaSearchInput } from '../../../../../components/dashboard/AreaSearchInput';
 
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
@@ -204,10 +205,12 @@ export default function EditRentalPage() {
               </div>
               <div>
                 <label className={labelCls}>Neighbourhood</label>
-                <input
+                <AreaSearchInput
                   value={form.neighborhood}
-                  onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
-                  className={inputCls}
+                  onChange={(neighborhood) => setForm((f) => ({ ...f, neighborhood }))}
+                  placeholder="Search e.g. Westlands, Kilimani"
+                  inputClassName={inputCls}
+                  onPick={(a) => setForm((f) => ({ ...f, city: a.city ?? f.city }))}
                 />
               </div>
               <div>
