@@ -73,11 +73,14 @@ export function AreaSearchInput({
   onChange,
   onPick,
   placeholder,
+  inputClassName,
 }: {
   value: string;
   onChange: (value: string) => void;
   onPick: (area: PickedArea) => void;
   placeholder?: string;
+  /** Replaces the default input styling, for forms with their own look. */
+  inputClassName?: string;
 }) {
   const [results, setResults] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -161,7 +164,7 @@ export function AreaSearchInput({
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className={cn(inputBase, 'pr-9')}
+        className={cn(inputClassName ?? inputBase, 'pr-9')}
       />
       {loading && (
         <Loader2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-gray-400" />

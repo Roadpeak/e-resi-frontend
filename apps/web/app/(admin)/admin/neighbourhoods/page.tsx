@@ -12,6 +12,7 @@ import {
 } from '../../../../lib/api/neighborhoods';
 import { uploadFile } from '../../../../lib/api/media';
 import { cn } from '../../../../lib/utils';
+import { AreaSearchInput } from '../../../../components/dashboard/AreaSearchInput';
 
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-3.5 py-2.5 text-[14px] text-[#202124] outline-none transition-colors focus:border-[#1a73e8]';
@@ -22,8 +23,8 @@ const EMPTY: NeighborhoodInput = { name: '', city: 'Nairobi' };
 /**
  * Curate the area guides shown on the browse rail and their public pages:
  * name, city, the story, coordinates for map + street view, and the photo
- * gallery. Property counts are live matches on the neighbourhood name, so
- * the name here should match what developers type on their listings.
+ * gallery. Properties are matched to a guide loosely on the typed area —
+ * see areasMatch() in the API's neighborhoods.service.
  */
 export default function AdminNeighbourhoods() {
   const qc = useQueryClient();
@@ -44,8 +45,9 @@ export default function AdminNeighbourhoods() {
         <div>
           <h1 className="text-[26px] font-normal text-[#202124]">Neighbourhoods</h1>
           <p className="text-[14px] text-[#5f6368]">
-            Area guides for the marketplace. The name must match what listings use —
-            that match is what powers the live property counts.
+            Area guides for the marketplace. Search for the area so the name and pin
+            match listings — a guide picks up every property whose area starts with its
+            name, e.g. &ldquo;Kilimani&rdquo; includes &ldquo;Kilimani Estate, Nairobi&rdquo;.
           </p>
         </div>
         <button
@@ -187,7 +189,20 @@ function NeighbourhoodForm({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <label className={labelCls}>Name</label>
-          <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Westlands" className={inputCls} />
+          <AreaSearchInput
+            value={form.name}
+            onChange={(name) => set('name', name)}
+            placeholder="Search e.g. Westlands, Kilimani"
+            inputClassName={inputCls}
+            onPick={(a) =>
+              setForm((f) => ({
+                ...f,
+                ...(a.city ? { city: a.city } : {}),
+                latitude: Number(a.latitude.toFixed(6)),
+                longitude: Number(a.longitude.toFixed(6)),
+              }))
+            }
+          />
         </div>
         <div>
           <label className={labelCls}>City</label>

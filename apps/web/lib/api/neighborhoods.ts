@@ -44,6 +44,12 @@ export const neighborhoodsApi = {
 
   get: (slug: string) => apiClient.get<Neighborhood>(`/neighborhoods/${slug}`),
 
+  /** Properties in the area, matched loosely on the typed neighbourhood. */
+  properties: (slug: string, limit = 12) =>
+    apiClient.get<{ data: unknown[]; meta: { total: number } }>(
+      `/neighborhoods/${slug}/properties?limit=${limit}`,
+    ),
+
   amenities: (slug: string) => apiClient.get<AreaAmenities>(`/neighborhoods/${slug}/amenities`),
 
   /** Admin only. */

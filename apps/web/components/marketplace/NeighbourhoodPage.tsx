@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { neighborhoodsApi, type AreaAmenities } from '../../lib/api/neighborhoods';
-import { useProperties } from '../../lib/api/queries';
+import { useNeighborhoodProperties } from '../../lib/api/queries';
 import { PropertyListCard } from './PropertyListCard';
 import type { Property } from '../../lib/types';
 
@@ -26,9 +26,7 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
     retry: false,
   });
 
-  const { data: props } = useProperties(
-    hood ? { neighborhood: hood.name, limit: 12 } : { limit: 0 },
-  );
+  const { data: props } = useNeighborhoodProperties(hood ? slug : undefined);
   const properties: Property[] = hood ? ((props?.items as unknown as Property[]) ?? []) : [];
 
   if (isLoading) {

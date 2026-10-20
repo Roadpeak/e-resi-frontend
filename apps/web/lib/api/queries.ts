@@ -4,6 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import { propertiesApi, type PropertiesQuery } from './properties';
+import { neighborhoodsApi } from './neighborhoods';
 import { authApi } from './auth';
 import { inquiriesApi } from './inquiries';
 import { bookingsListApi } from './bookings-api';
@@ -65,6 +66,18 @@ export function useProperties(query: PropertiesQuery = {}) {
     queryKey: ['properties', query],
     queryFn: async () => {
       const res = await propertiesApi.list(query);
+      return { items: (res.data ?? []).map(toProperty), total: res.meta?.total ?? 0 };
+    },
+  });
+}
+
+/** Properties in an area guide — the same set its property count describes. */
+export function useNeighborhoodProperties(slug: string | undefined, limit = 12) {
+  return useQuery({
+    queryKey: ['neighborhood', slug, 'properties', limit],
+    enabled: Boolean(slug),
+    queryFn: async () => {
+      const res = await neighborhoodsApi.properties(slug as string, limit);
       return { items: (res.data ?? []).map(toProperty), total: res.meta?.total ?? 0 };
     },
   });
