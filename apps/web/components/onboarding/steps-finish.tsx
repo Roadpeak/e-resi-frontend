@@ -1,5 +1,6 @@
 'use client';
 
+import { verificationStatus } from './steps-intro';
 import Link from 'next/link';
 import {
   BadgeCheck, Building2, CheckCircle2, ChevronRight, FileCheck2, Pencil, PlusCircle,
@@ -107,8 +108,9 @@ function ReviewBlock({
 }
 
 export function StepReview() {
-  const { company, verificationDocs, preferences: prefs } = useOnboardingStore();
-  const docCount = Object.values(verificationDocs).filter(Boolean).length;
+  const state = useOnboardingStore();
+  const { company, verificationMethod, preferences: prefs } = state;
+  const verification = verificationStatus(state);
 
   return (
     <div className="grid gap-4">
@@ -127,9 +129,12 @@ export function StepReview() {
         ]}
       />
       <ReviewBlock
-        title="Verification documents"
+        title="Verification"
         step={3}
-        items={[['Documents uploaded', docCount ? `${docCount} of 6` : '']]}
+        items={[
+          ['Method', verificationMethod === 'links' ? 'Website & social links' : 'Legal documents'],
+          ['Status', verification.message],
+        ]}
       />
       <ReviewBlock
         title="Listing preferences"

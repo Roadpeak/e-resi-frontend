@@ -10,7 +10,7 @@ import { ApiError } from '../../lib/api/client';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { TOTAL_STEPS, useOnboardingStore } from '../../lib/stores/onboarding.store';
 import { StepAccount } from '../../components/onboarding/step-account';
-import { StepCompany, StepVerification, StepWelcome } from '../../components/onboarding/steps-intro';
+import { StepCompany, StepVerification, StepWelcome, verificationStatus } from '../../components/onboarding/steps-intro';
 import { StepPreferences } from '../../components/onboarding/steps-middle';
 import { StepBilling, StepReview, StepSubmitted } from '../../components/onboarding/steps-finish';
 
@@ -65,8 +65,15 @@ export default function OnboardingPage() {
     setSubmitError('');
     setSubmitting(true);
     try {
-      const { company, verificationDocs, preferences } = useOnboardingStore.getState();
-      await onboardingApi.submit({ company, verificationDocs, preferences });
+      const { company, verificationMethod, verificationDocs, verificationLinks, preferences } =
+        useOnboardingStore.getState();
+      await onboardingApi.submit({
+        company,
+        verificationDocs: verificationMethod === 'links'
+          ? { method: 'links', links: verificationLinks }
+          : { method: 'documents', documents: verificationDocs },
+        preferences,
+      });
       markSubmitted();
       next();
     } catch (err) {
@@ -78,8 +85,12 @@ export default function OnboardingPage() {
     }
   }
 
-  // Continue is blocked on the Account step until the visitor is a developer
-  const continueDisabled = submitting || (isAccount && !isDeveloper);
+  // Continue is blocked on the Account step until the visitor is a developer,
+  // and on Verification until the chosen method is complete.
+  const verification = verificationStatus(useOnboardingStore());
+  const continueDisabled = submitting
+    || (isAccount && !isDeveloper)
+    || (step === 3 && !verification.ready);
 
   function renderStep() {
     switch (step) {

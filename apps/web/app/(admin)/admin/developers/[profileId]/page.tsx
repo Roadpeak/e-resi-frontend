@@ -23,6 +23,17 @@ const KYB_STYLES: Record<string, string> = {
   NOT_SUBMITTED: 'bg-[#f1f3f4] text-[#5f6368]',
 };
 
+const LINK_LABELS: Record<string, string> = {
+  website: 'Website',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+  x: 'X (Twitter)',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  other: 'Other link',
+};
+
 const DOC_LABELS: Record<string, string> = {
   registrationCert: 'Certificate of registration',
   taxCert: 'Tax certificate (KRA PIN)',
@@ -129,11 +140,10 @@ export default function AdminDeveloperDetail() {
   }
 
   const owner = dev.user;
-  const onboarding = (dev.onboarding ?? {}) as Record<string, unknown>;
+  // Verification has its own section below; listing it here too would show raw storage keys.
+  const { verificationDocs: _verification, ...onboarding } = (dev.onboarding ?? {}) as Record<string, unknown>;
   const onboardingFields = flattenOnboarding(onboarding);
-  // Empty strings mean "not uploaded" — the field exists but no file was given.
-  const documents = Object.entries(dev.kybDocuments ?? {}).filter(([, v]) => v);
-  const missingDocs = Object.entries(dev.kybDocuments ?? {}).filter(([, v]) => !v);
+  const verification = dev.verification;
 
   return (
     <div className="space-y-5">
@@ -294,89 +304,102 @@ export default function AdminDeveloperDetail() {
             )}
           </section>
 
-          {/* Documents */}
+          {/* Verification */}
           <section className={cardCls}>
-            <h2 className="mb-4 text-[16px] font-medium text-[#202124]">KYB documents</h2>
-            {documents.length === 0 ? (
-              <p className="text-[14px] text-[#5f6368]">No documents uploaded.</p>
-            ) : (
-              <ul className="space-y-2">
-                {documents.map(([key, value]) => {
-                  const label = DOC_LABELS[key] ?? humanise(key);
-                  return (
-                    <li key={key} className="rounded-2xl border border-[#dadce0] p-3">
-                      <div className="flex items-start gap-3">
-                        <MaterialIcon
-                          name={isImage(value) ? 'image' : 'description'}
-                          className="mt-0.5 text-[20px] text-[#5f6368]"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-medium text-[#202124]">{label}</p>
-                          <p className="truncate text-[12px] text-[#5f6368]" title={value}>
-                            {value}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1.5">
-                          <a
-                            href={value}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f1f3f4]"
-                          >
-                            Open
-                          </a>
-                          <a
-                            href={value}
-                            // The file lives on an upload host, so `download`
-                            // is only a hint the browser may ignore
-                            // cross-origin — it still saves rather than
-                            // navigating in the common case, and "Open"
-                            // above covers the rest.
-                            download
-                            className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4]"
-                          >
-                            Download
-                          </a>
-                        </div>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-[16px] font-medium text-[#202124]">Verification</h2>
+              {verification?.method && (
+                <span className="rounded-full bg-[#e8f0fe] px-3 py-1 text-[12px] font-medium text-[#1967d2]">
+                  {verification.method === 'links' ? 'Website & social links' : verification.method === 'documents' ? 'Legal documents' : 'Older submission'}
+                </span>
+              )}
+            </div>
+
+            {!verification?.method ? (
+              <p className="text-[14px] text-[#5f6368]">Nothing submitted yet.</p>
+            ) : verification.method === 'links' ? (
+              <>
+                <p className="mb-3 text-[13px] text-[#5f6368]">
+                  Open each link and check it belongs to {dev.companyName}: a real website, active pages, projects that match.
+                </p>
+                <ul className="space-y-2">
+                  {Object.entries(verification.links).map(([k, url]) => (
+                    <li key={k} className="flex items-center gap-3 rounded-2xl border border-[#dadce0] p-3">
+                      <MaterialIcon name={k === 'website' ? 'language' : 'link'} className="text-[20px] text-[#5f6368]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-medium text-[#202124]">{LINK_LABELS[k] ?? humanise(k)}</p>
+                        <p className="truncate text-[12px] text-[#5f6368]" title={url}>{url}</p>
                       </div>
-
-                      {/* Inline preview, so a certificate or an ID photo can be
-                          checked without leaving the review screen — this page
-                          exists to make exactly that judgement. */}
-                      {isImage(value) && (
-                        <a href={value} target="_blank" rel="noreferrer noopener" className="mt-3 block">
-                          {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded host */}
-                          <img
-                            src={value}
-                            alt={label}
-                            className="max-h-72 w-full rounded-xl bg-[#f8f9fa] object-contain"
-                          />
-                        </a>
-                      )}
-
-                      {/* A PDF is the usual format for a certificate, and it
-                          previews perfectly well inline. */}
-                      {isPdf(value) && (
-                        <object
-                          data={value}
-                          type="application/pdf"
-                          className="mt-3 h-72 w-full rounded-xl bg-[#f8f9fa]"
-                          aria-label={label}
-                        >
-                          <p className="p-3 text-[12px] text-[#5f6368]">
-                            Preview unavailable — use Open or Download above.
-                          </p>
-                        </object>
-                      )}
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="shrink-0 rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f1f3f4]"
+                      >
+                        Open
+                      </a>
                     </li>
-                  );
-                })}
-              </ul>
-            )}
-            {missingDocs.length > 0 && (
-              <p className="mt-3 border-t border-[#f1f3f4] pt-3 text-[12px] text-[#b06000]">
-                Missing: {missingDocs.map(([k]) => (DOC_LABELS[k] ?? humanise(k)).toLowerCase()).join(', ')}
-              </p>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                {verification.method === 'documents' && (
+                  <p className="mb-3 text-[13px] text-[#5f6368]">
+                    Stored privately. Links expire after 10 minutes. Reload the page for fresh ones.
+                  </p>
+                )}
+                <ul className="space-y-2">
+                  {verification.documents.map((d) => {
+                    const label = DOC_LABELS[d.type] ?? humanise(d.type);
+                    return (
+                      <li key={d.type} className="rounded-2xl border border-[#dadce0] p-3">
+                        <div className="flex items-start gap-3">
+                          <MaterialIcon
+                            name={isImage(d.name) ? 'image' : 'description'}
+                            className="mt-0.5 text-[20px] text-[#5f6368]"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] font-medium text-[#202124]">{label}</p>
+                            <p className="truncate text-[12px] text-[#5f6368]" title={d.name}>{d.name}</p>
+                          </div>
+                          {d.url ? (
+                            <a
+                              href={d.url}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className="shrink-0 rounded-full border border-[#dadce0] px-3 py-1.5 text-[12px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f1f3f4]"
+                            >
+                              Open
+                            </a>
+                          ) : (
+                            <span className="shrink-0 text-[12px] text-[#b06000]">
+                              {verification.method === 'legacy' ? 'File name only' : 'Unavailable'}
+                            </span>
+                          )}
+                        </div>
+                        {/* Inline preview, so a certificate or an ID photo can be
+                            checked without leaving the review screen. */}
+                        {d.url && isImage(d.name) && (
+                          // eslint-disable-next-line @next/next/no-img-element -- signed, short-lived URL
+                          <img src={d.url} alt={label} className="mt-3 max-h-72 w-full rounded-xl bg-[#f8f9fa] object-contain" />
+                        )}
+                        {d.url && isPdf(d.name) && (
+                          <object data={d.url} type="application/pdf" className="mt-3 h-72 w-full rounded-xl bg-[#f8f9fa]" aria-label={label}>
+                            <p className="p-3 text-[12px] text-[#5f6368]">Preview unavailable. Use Open above.</p>
+                          </object>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {verification.method === 'legacy' && (
+                  <p className="mt-3 border-t border-[#f1f3f4] pt-3 text-[12px] text-[#b06000]">
+                    This developer submitted before documents were actually uploaded, so only file names were
+                    saved. Ask them to verify again with documents or links.
+                  </p>
+                )}
+              </>
             )}
           </section>
 

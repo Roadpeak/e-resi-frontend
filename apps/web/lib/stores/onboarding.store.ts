@@ -43,6 +43,19 @@ export type VerificationDocKey =
   | 'companyLogo'
   | 'brandAssets';
 
+/** A document stored privately by the API — key is opaque, never a URL. */
+export interface UploadedDoc {
+  key: string;
+  name: string;
+  size?: number;
+}
+
+/** Prove the company exists with legal documents, or with public links. */
+export type VerificationMethod = 'documents' | 'links';
+
+export type VerificationLinkKey =
+  | 'website' | 'facebook' | 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'youtube' | 'other';
+
 export interface PreferencesState {
   visibility: 'public' | 'private' | 'invite_only';
   leadChannels: string[];
@@ -62,7 +75,9 @@ export const TOTAL_STEPS = 8;
 interface OnboardingState {
   step: number; // 0-indexed, 0..7
   company: CompanyInfo;
-  verificationDocs: Record<VerificationDocKey, string>; // file names
+  verificationMethod: VerificationMethod;
+  verificationDocs: Partial<Record<VerificationDocKey, UploadedDoc>>;
+  verificationLinks: Partial<Record<VerificationLinkKey, string>>;
   preferences: PreferencesState;
   submitted: boolean;
 
@@ -70,7 +85,9 @@ interface OnboardingState {
   next: () => void;
   back: () => void;
   patchCompany: (patch: Partial<CompanyInfo>) => void;
-  setVerificationDoc: (key: VerificationDocKey, fileName: string) => void;
+  setVerificationMethod: (method: VerificationMethod) => void;
+  setVerificationDoc: (key: VerificationDocKey, doc: UploadedDoc | null) => void;
+  setVerificationLink: (key: VerificationLinkKey, url: string) => void;
   patchPreferences: (patch: Partial<PreferencesState>) => void;
   markSubmitted: () => void;
   reset: () => void;
@@ -85,10 +102,6 @@ const emptyCompany: CompanyInfo = {
   projectsCompleted: '', projectsUnderDevelopment: '', awards: '',
 };
 
-const emptyDocs: Record<VerificationDocKey, string> = {
-  registrationCert: '', taxCert: '', directorId: '',
-  proofOfAddress: '', companyLogo: '', brandAssets: '',
-};
 
 const emptyPreferences: PreferencesState = {
   visibility: 'public',
@@ -106,7 +119,9 @@ export const useOnboardingStore = create<OnboardingState>()(
     (set, get) => ({
       step: 0,
       company: emptyCompany,
-      verificationDocs: emptyDocs,
+      verificationMethod: 'documents',
+      verificationDocs: {},
+      verificationLinks: {},
       preferences: emptyPreferences,
       submitted: false,
 
@@ -114,18 +129,35 @@ export const useOnboardingStore = create<OnboardingState>()(
       next: () => get().setStep(get().step + 1),
       back: () => get().setStep(get().step - 1),
       patchCompany: (patch) => set({ company: { ...get().company, ...patch } }),
-      setVerificationDoc: (key, fileName) =>
-        set({ verificationDocs: { ...get().verificationDocs, [key]: fileName } }),
+      setVerificationMethod: (verificationMethod) => set({ verificationMethod }),
+      setVerificationDoc: (key, doc) => {
+        const docs = { ...get().verificationDocs };
+        if (doc) docs[key] = doc;
+        else delete docs[key];
+        set({ verificationDocs: docs });
+      },
+      setVerificationLink: (key, url) =>
+        set({ verificationLinks: { ...get().verificationLinks, [key]: url } }),
       patchPreferences: (patch) => set({ preferences: { ...get().preferences, ...patch } }),
       markSubmitted: () => set({ submitted: true }),
       reset: () =>
         set({
-          step: 0, company: emptyCompany, verificationDocs: emptyDocs,
+          step: 0, company: emptyCompany, verificationMethod: 'documents',
+          verificationDocs: {}, verificationLinks: {},
           preferences: emptyPreferences, submitted: false,
         }),
     }),
     // v2: developer-signup flow — new key so stale drafts from the old
     // 9-step wizard (with development/media steps) don't corrupt state
-    { name: 'e-resi-onboarding-v2' },
+    {
+      name: 'e-resi-onboarding-v2',
+      // v1 kept only file names for documents — nothing was ever uploaded —
+      // so those entries are dropped and the developer picks the files again.
+      version: 1,
+      migrate: (persisted) => {
+        const p = (persisted ?? {}) as Record<string, unknown>;
+        return { ...p, verificationMethod: 'documents', verificationDocs: {}, verificationLinks: {} } as unknown as OnboardingState;
+      },
+    },
   ),
 );

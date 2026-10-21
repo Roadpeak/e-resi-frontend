@@ -193,7 +193,16 @@ export interface AdminDeveloperDetail extends AdminDeveloper {
   onboarding?: Record<string, unknown> | null;
   onboardingSubmittedAt?: string | null;
   /** Uploaded document references, keyed by document type. */
-  kybDocuments?: Record<string, string> | null;
+  kybDocuments?: Record<string, unknown> | null;
+  /**
+   * How the developer proved the company exists. Documents carry a link that
+   * expires in ten minutes; "legacy" submissions only ever stored file names.
+   */
+  verification?: {
+    method: 'links' | 'documents' | 'legacy' | null;
+    links: Record<string, string>;
+    documents: { type: string; name: string; size: number | null; url: string | null }[];
+  };
   reviewNotes?: string | null;
   user?: {
     id: string; email: string; firstName?: string; lastName?: string;
