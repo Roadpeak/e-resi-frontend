@@ -28,6 +28,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Listing fees', href: '/admin/billing/listing-fees', icon: 'payments' },
   { label: 'Agent fees', href: '/admin/billing/agent-fees', icon: 'support_agent' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
+  { label: 'Traffic', href: '/admin/traffic', icon: 'travel_explore' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
   { label: 'Notifications', href: '/admin/notifications', icon: 'notifications' },
   { label: 'System', href: '/admin/system', icon: 'settings' },

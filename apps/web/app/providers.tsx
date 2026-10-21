@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { SmoothScroll } from '../components/layout/SmoothScroll';
 import { PageTransition } from '../components/layout/PageTransition';
 import { useAuthStore } from '../lib/stores/auth.store';
+import { SiteTracker } from '../components/analytics/SiteTracker';
 
 function AuthHydrator() {
   useEffect(() => {
@@ -26,6 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthHydrator />
+      <SiteTracker />
       <SmoothScroll>
         <PageTransition>
           {children}
