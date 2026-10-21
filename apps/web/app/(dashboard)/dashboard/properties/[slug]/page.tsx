@@ -9,7 +9,7 @@ import {
   Loader2, MessageSquare, Plus, RotateCcw, Bookmark, Trash2, X, Palette, BarChart3 } from 'lucide-react';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { propertiesApi } from '../../../../../lib/api/properties';
-import { fmtUsd, LISTING_FEE_MONTHLY } from '../../../../../lib/onboarding/catalog';
+import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
 import { ProductionServicesPanel } from '../../../../../components/dashboard/ProductionServicesPanel';
 import { formatPrice } from '../../../../../lib/utils';
 import { ImageUpload } from '../../../../../components/dashboard/ImageUpload';
@@ -90,6 +90,8 @@ function parseCoordinates(raw?: string): { latitude?: number; longitude?: number
 export default function DashboardPropertyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
+  // Live listing fee from the admin catalogue (the built-in fallback is not what admin charges).
+  const catalog = useCatalog();
   const queryClient = useQueryClient();
 
   const { data: property, isLoading, isError } = useQuery({
@@ -392,7 +394,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           { icon: <Bookmark size={15} />, label: 'Saves', value: property._count?.savedBy ?? 0 },
           {
             icon: <Building2 size={15} />, label: 'Listing fee',
-            value: property.status === 'ACTIVE' ? `${fmtUsd(LISTING_FEE_MONTHLY)}/mo` : '—',
+            value: property.status === 'ACTIVE' ? `${catalog.fmt(catalog.listingFeeMonthly)}/mo` : '—',
           },
         ].map((s) => (
           <div key={s.label} className="rounded-3xl border border-[#dadce0] bg-white p-5">

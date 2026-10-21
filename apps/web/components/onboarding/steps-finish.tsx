@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   BadgeCheck, Building2, CheckCircle2, ChevronRight, FileCheck2, Pencil, PlusCircle,
 } from 'lucide-react';
-import { LISTING_FEE_MONTHLY, fmtUsd } from '../../lib/onboarding/catalog';
+import { useCatalog } from '../../lib/onboarding/useCatalog';
 import { useOnboardingStore } from '../../lib/stores/onboarding.store';
 import { PrimaryButton, SectionCard } from './ui';
 
@@ -15,7 +15,23 @@ import { PrimaryButton, SectionCard } from './ui';
 // development inside the development-creation flow — the only recurring
 // platform cost is the flat listing fee for each development you list.
 
+/** Live listing-fee terms. Never the built-in fallback: it showed 49 while admin charged 1,500. */
+function useListingFee() {
+  const { listingFeeMonthly, fmt, freeMonths, taxRatePercent, isLoading } = useCatalog();
+  return {
+    loading: isLoading,
+    fee: isLoading ? '…' : fmt(listingFeeMonthly),
+    double: isLoading ? '…' : fmt(listingFeeMonthly * 2),
+    freeMonths,
+    taxRatePercent,
+  };
+}
+
 export function StepBilling() {
+  const { fee, double, freeMonths, taxRatePercent } = useListingFee();
+  const freeLine = freeMonths > 0
+    ? `Your first ${freeMonths === 1 ? 'month' : `${freeMonths} months`} after joining ${freeMonths === 1 ? 'is' : 'are'} free`
+    : null;
   return (
     <div className="grid gap-6">
       <SectionCard
@@ -29,12 +45,13 @@ export function StepBilling() {
               <p className="mt-1 text-xs text-gray-500">per development, per month — starts when it goes live</p>
             </div>
             <p className="text-3xl font-semibold text-gray-900 tabular-nums">
-              {fmtUsd(LISTING_FEE_MONTHLY)}
+              {fee}
               <span className="text-sm font-normal text-gray-500"> /mo</span>
             </p>
           </div>
           <div className="mt-5 border-t border-gray-200 pt-4 grid gap-2.5">
             {[
+              ...(freeLine ? [freeLine] : []),
               'Dedicated branded page for each development',
               'Hosting, analytics, inquiry & booking management',
               'Unlimited units and floor plans per development',
@@ -52,8 +69,8 @@ export function StepBilling() {
           <Building2 size={16} className="mt-0.5 shrink-0 text-brand-600" />
           <p className="text-[13px] leading-relaxed text-gray-600">
             You&apos;ll add developments from your dashboard after verification. Each development
-            you list adds one {fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee — list two developments,
-            pay {fmtUsd(LISTING_FEE_MONTHLY * 2)}/month. Media production services (photography,
+            you list adds one {fee}/month listing fee — list two developments,
+            pay {double}/month. Media production services (photography,
             cinematic video, 3D & VR tours) are optional one-time costs chosen per development
             when you create it.
           </p>
@@ -61,7 +78,7 @@ export function StepBilling() {
 
         <p className="text-[13px] leading-relaxed text-gray-500">
           Nothing is charged today. The listing fee for a development starts only when it is
-          approved and published. All prices exclude VAT.
+          approved and published. All prices exclude VAT{taxRatePercent ? ` (${taxRatePercent}%)` : ''}.
         </p>
       </SectionCard>
     </div>
@@ -108,6 +125,7 @@ function ReviewBlock({
 }
 
 export function StepReview() {
+  const { fee, freeMonths } = useListingFee();
   const state = useOnboardingStore();
   const { company, verificationMethod, preferences: prefs } = state;
   const verification = verificationStatus(state);
@@ -152,7 +170,8 @@ export function StepReview() {
         title="Billing"
         step={5}
         items={[
-          ['Listing fee', `${fmtUsd(LISTING_FEE_MONTHLY)} / month per development`],
+          ['Listing fee', `${fee} / month per development`],
+          ...(freeMonths > 0 ? [['Free period', `First ${freeMonths === 1 ? 'month' : `${freeMonths} months`} after joining`] as [string, string]] : []),
           ['Charged today', 'Nothing'],
         ]}
       />
