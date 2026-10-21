@@ -220,7 +220,7 @@ export function PropertiesPage({
             onto the hero the way it did before. Desktop-only: on a phone the
             bar wraps to several rows, and pinning that much chrome eats the
             viewport — there it scrolls away like normal content. */}
-        <div className="static z-30 -mt-9 px-3 sm:px-6 md:sticky md:top-16 lg:px-10">
+        <div className="relative z-30 -mt-9 px-3 sm:px-6 md:sticky md:top-16 lg:px-10">
           <FilterBar
             moreOpen={moreOpen}
             onToggleMore={() => setMoreOpen((v) => !v)}
@@ -486,7 +486,7 @@ function HeroBanner({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute bottom-16 right-6 z-10 text-right sm:right-10"
+              className="absolute bottom-16 right-6 z-10 hidden text-right sm:right-10 sm:block"
             >
               <Link href={`/${slide.slug}`} className="group block">
                 {slide.location && (
@@ -504,7 +504,7 @@ function HeroBanner({
         </div>
       )}
       {/* Soft brand wash over the left for legibility */}
-      <div className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-brand-700/90 via-brand-600/70 to-transparent" />
+      <div className="absolute inset-y-0 left-0 w-[85%] bg-gradient-to-r sm:w-[55%] from-brand-700/90 via-brand-600/70 to-transparent" />
 
       <div className="relative z-10 flex h-full flex-col justify-center px-7 pb-8 sm:px-12">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Search in</h1>

@@ -51,14 +51,14 @@ export function MarketplaceSearchPill({
         e.preventDefault();
         onSubmit?.();
       }}
-      className="flex h-12 min-w-0 flex-1 items-center rounded-full bg-gray-100 pl-5 pr-1.5 transition-colors focus-within:bg-gray-50 focus-within:ring-1 focus-within:ring-gray-300"
+      className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-gray-100 pl-4 pr-1 sm:h-12 sm:pl-5 sm:pr-1.5 transition-colors focus-within:bg-gray-50 focus-within:ring-1 focus-within:ring-gray-300"
     >
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label="Search properties"
-        className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-500 outline-none focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
+        className="h-full min-w-0 flex-1 truncate bg-transparent text-[14px] text-gray-900 placeholder:text-ellipsis sm:text-[15px] placeholder:text-gray-500 outline-none focus:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
       />
 
       {value && (
