@@ -28,7 +28,8 @@ const STEPS = [
 ];
 
 export default function OnboardingPage() {
-  const { step, setStep, next, back, submitted, markSubmitted } = useOnboardingStore();
+  const onboarding = useOnboardingStore();
+  const { step, setStep, next, back, submitted, markSubmitted } = onboarding;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -87,7 +88,9 @@ export default function OnboardingPage() {
 
   // Continue is blocked on the Account step until the visitor is a developer,
   // and on Verification until the chosen method is complete.
-  const verification = verificationStatus(useOnboardingStore());
+  // From the store read at the top: a hook here would sit below the
+  // `if (!hydrated) return null` above and break React's hook order.
+  const verification = verificationStatus(onboarding);
   const continueDisabled = submitting
     || (isAccount && !isDeveloper)
     || (step === 3 && !verification.ready);
