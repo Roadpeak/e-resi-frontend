@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const UPDATED = '2 August 2026';
+const UPDATED = '21 October 2026';
 
 const CONTENTS = [
   { id: 'who-we-are', label: 'Who we are' },
@@ -66,6 +66,17 @@ export default function PrivacyPage() {
             see interest in their listings and we can understand what is working.
           </p>
           <p>
+            <Term>Visit analytics.</Term> When you visit e-resi, whether or not you are signed
+            in, we record each page you view, the time you spend on it, the site or campaign
+            that referred you, your IP address and the approximate location derived from it
+            (country, region and city), and your device type, operating system, browser,
+            screen size and language. Your browser stores a random identifier so we can tell
+            repeat visits apart. If you are signed in, the visit is linked to your account.
+            We use this to understand and improve how the platform is used, to measure where
+            our visitors come from, and to detect abuse. It is visible only to e-resi
+            administrators and is never sold or used for advertising.
+          </p>
+          <p>
             <Term>Payment data.</Term> Handled by our payment providers. Card numbers are
             never stored on our systems — we keep only a token, the last four digits and
             the card type.
@@ -104,7 +115,8 @@ export default function PrivacyPage() {
             Account data for as long as your account is open, and for a period afterwards
             where we are required to retain records. Verification documents for as long as
             the developer is active, plus any statutory retention period. Transaction
-            records for seven years, as tax law requires.
+            records for seven years, as tax law requires. Visit analytics for up to 24 months,
+            after which individual visit records are deleted.
           </p>
         </Clause>
 
@@ -133,8 +145,10 @@ export default function PrivacyPage() {
         <Clause id="cookies" title="Cookies">
           <p>
             We use cookies that are necessary to keep you signed in and to remember your
-            preferences, plus analytics to understand how the platform is used. We do not
-            use advertising cookies.
+            preferences, plus analytics to understand how the platform is used, including a
+            random visitor identifier kept in your browser&apos;s storage (see Visit analytics
+            above). You can clear it at any time by clearing your browser&apos;s site data. We
+            do not use advertising cookies.
           </p>
         </Clause>
 
