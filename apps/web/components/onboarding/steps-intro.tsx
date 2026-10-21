@@ -10,10 +10,11 @@ import {
   useOnboardingStore, type VerificationDocKey, type VerificationLinkKey, type VerificationMethod,
 } from '../../lib/stores/onboarding.store';
 import { onboardingApi } from '../../lib/api/onboarding';
+import { uploadFile } from '../../lib/api/media';
 import { cn } from '../../lib/utils';
 import { apiClient } from '../../lib/api/client';
 import {
-  Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
+  Field, FieldGrid, SectionCard, Select, TextArea, TextInput,
 } from './ui';
 
 // ── Step 1: Welcome ──────────────────────────────────────────────────────────
@@ -90,12 +91,15 @@ export function StepCompany() {
   // No repeat data collection: company name comes from account creation and
   // contact details default to the account holder (still editable).
   useEffect(() => {
-    if (!company.companyName) {
+    if (!company.companyName || !company.logoUrl) {
       apiClient
-        .get<{ success: boolean; data: { companyName?: string } }>('/users/developers/me')
+        .get<{ success: boolean; data: { companyName?: string; logoUrl?: string | null } }>('/users/developers/me')
         .then((res) => {
-          const name = res?.data?.companyName;
-          if (name) patchCompany({ companyName: name });
+          const { companyName: name, logoUrl } = res?.data ?? {};
+          const now = useOnboardingStore.getState().company;
+          if (name && !now.companyName) patchCompany({ companyName: name });
+          // A logo saved earlier (here or from the dashboard) shows up again.
+          if (logoUrl && !now.logoUrl) patchCompany({ logoUrl, logoName: '' });
         })
         .catch(() => {});
     }
@@ -132,9 +136,11 @@ export function StepCompany() {
             <TextInput type="url" value={company.website} onChange={(e) => patchCompany({ website: e.target.value })} placeholder="https://" />
           </Field>
         </FieldGrid>
-        <Field label="Company logo" hint="PNG or SVG, at least 512×512">
-          <FilePicker accept="image/*" value={company.logoName} onChange={(logoName) => patchCompany({ logoName })} />
-        </Field>
+        <LogoUpload
+          url={company.logoUrl}
+          name={company.logoName}
+          onChange={(logoUrl, logoName) => patchCompany({ logoUrl, logoName })}
+        />
       </SectionCard>
 
       <SectionCard title="Primary contact" subtitle="Who should buyers and the e-resi team reach out to?">
@@ -193,6 +199,78 @@ export function StepCompany() {
           <TextArea rows={2} value={company.awards} onChange={(e) => patchCompany({ awards: e.target.value })} placeholder="One per line" />
         </Field>
       </SectionCard>
+    </div>
+  );
+}
+
+/** The company logo — uploaded straight away and shown whole, never cropped. */
+function LogoUpload({
+  url, name, onChange,
+}: { url: string; name: string; onChange: (url: string, name: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function onFile(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return setError('Choose an image: PNG, JPG, SVG or WebP.');
+    if (file.size > 10 * 1024 * 1024) return setError('Logos must be under 10 MB.');
+    setError('');
+    setBusy(true);
+    try {
+      const uploaded = await uploadFile(file, 'logos');
+      onChange(uploaded.url, file.name);
+      // Saved to the profile now, not only on final submit, so the logo is on
+      // the dashboard even if the developer leaves the wizard part-way.
+      await apiClient.patch('/users/developers/me', { logoUrl: uploaded.url }).catch(() => undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+    } finally {
+      setBusy(false);
+      if (ref.current) ref.current.value = '';
+    }
+  }
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-[13px] font-medium text-gray-700">Company logo</span>
+      <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+          {busy ? (
+            <Loader2 size={20} className="animate-spin text-[#4A80F5]" />
+          ) : url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- uploaded host
+            <img src={url} alt="Company logo" className="h-full w-full object-contain p-2" />
+          ) : (
+            <Building2 size={22} className="text-gray-300" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => ref.current?.click()}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait"
+            >
+              <Upload size={14} /> {url ? 'Replace' : busy ? 'Uploading…' : 'Upload logo'}
+            </button>
+            {url && !busy && (
+              <button
+                type="button"
+                onClick={() => onChange('', '')}
+                className="cursor-pointer rounded-full px-3 py-2 text-[13px] font-medium text-[#c5221f] transition-colors hover:bg-[#fce8e6]"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <p className={cn('mt-1.5 truncate text-xs', error ? 'text-[#F0594C]' : 'text-gray-400')}>
+            {error || (url && name ? name : 'PNG or SVG, at least 512×512. Shown on your profile and listings.')}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

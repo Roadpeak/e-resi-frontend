@@ -51,7 +51,7 @@ export function DashboardTopnav() {
   // KYB status chip
   const { data: profile } = useQuery({
     queryKey: ['developer-profile'],
-    queryFn: () => apiClient.get<{ companyName: string; kybStatus: string }>('/users/developers/me'),
+    queryFn: () => apiClient.get<{ companyName: string; kybStatus: string; logoUrl?: string | null }>('/users/developers/me'),
   });
 
   // Notifications feed (only fetched while the panel is open)
@@ -238,10 +238,18 @@ export function DashboardTopnav() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700 hover:ring-2 hover:ring-brand-200 transition-all cursor-pointer"
+            className={cn(
+              'flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-xs font-semibold hover:ring-2 hover:ring-brand-200 transition-all cursor-pointer',
+              profile?.logoUrl ? 'border border-gray-200 bg-white' : 'bg-brand-100 text-brand-700',
+            )}
             aria-label="Account menu"
           >
-            {initials || '·'}
+            {profile?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- uploaded host
+              <img src={profile.logoUrl} alt={profile.companyName} className="h-full w-full object-contain p-1" />
+            ) : (
+              initials || '·'
+            )}
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-11 z-50 w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">

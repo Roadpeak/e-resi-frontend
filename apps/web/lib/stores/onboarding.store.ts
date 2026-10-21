@@ -18,7 +18,9 @@ export interface CompanyInfo {
   yearEstablished: string;
   companyType: string;
   website: string;
-  logoName: string; // file name only — binary uploaded on submit
+  logoName: string;
+  /** Public URL of the uploaded logo — becomes the developer's profile logo. */
+  logoUrl: string;
   contactName: string;
   contactTitle: string;
   contactEmail: string;
@@ -95,7 +97,7 @@ interface OnboardingState {
 
 const emptyCompany: CompanyInfo = {
   companyName: '', registrationNumber: '', taxPin: '', yearEstablished: '',
-  companyType: '', website: '', logoName: '',
+  companyType: '', website: '', logoName: '', logoUrl: '',
   contactName: '', contactTitle: '', contactEmail: '', contactPhone: '', contactWhatsapp: '',
   country: 'Kenya', city: '', address: '', mapsUrl: '',
   shortDescription: '', longDescription: '',
@@ -153,10 +155,19 @@ export const useOnboardingStore = create<OnboardingState>()(
       name: 'e-resi-onboarding-v2',
       // v1 kept only file names for documents — nothing was ever uploaded —
       // so those entries are dropped and the developer picks the files again.
-      version: 1,
-      migrate: (persisted) => {
-        const p = (persisted ?? {}) as Record<string, unknown>;
-        return { ...p, verificationMethod: 'documents', verificationDocs: {}, verificationLinks: {} } as unknown as OnboardingState;
+      // v2 does the same for the company logo, which was also name-only.
+      version: 2,
+      migrate: (persisted, version) => {
+        const p = { ...((persisted ?? {}) as Record<string, unknown>) };
+        if (version < 1) {
+          Object.assign(p, { verificationMethod: 'documents', verificationDocs: {}, verificationLinks: {} });
+        }
+        if (version < 2) {
+          const company = { ...((p.company ?? {}) as Record<string, unknown>) };
+          if (!company.logoUrl) Object.assign(company, { logoName: '', logoUrl: '' });
+          p.company = company;
+        }
+        return p as unknown as OnboardingState;
       },
     },
   ),

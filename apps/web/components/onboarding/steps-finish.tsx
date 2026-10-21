@@ -122,6 +122,7 @@ export function StepReview() {
           ['Registration no.', company.registrationNumber],
           ['Tax PIN', company.taxPin],
           ['Type', company.companyType],
+          ['Logo', company.logoUrl ? 'Uploaded' : ''],
           ['Contact', [company.contactName, company.contactTitle].filter(Boolean).join(' — ')],
           ['Email', company.contactEmail],
           ['Phone', company.contactPhone],
