@@ -11,6 +11,7 @@ import {
 import { UnitTopbar } from '../../../../../components/property/UnitTopbar';
 import { UnitSectionNav } from '../../../../../components/property/UnitSectionNav';
 import { ChatWithDeveloper } from '../../../../../components/chat/ChatWithDeveloper';
+import { FloatingChat } from '../../../../../components/chat/FloatingChat';
 import { apiClient } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
 import { unitCurrency } from '../../../../../lib/units/unit-types';
@@ -167,6 +168,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-16 font-listing text-[16px]">
+      <FloatingChat propertySlug={slug} />
       <UnitTopbar
         propertySlug={unit.property.slug}
         propertyName={unit.property.name}

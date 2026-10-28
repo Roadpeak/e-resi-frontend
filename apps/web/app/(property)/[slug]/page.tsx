@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { FloatingChat } from '../../../components/chat/FloatingChat';
 import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-property';
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
 import { BackToBrowse } from '../../../components/property/BackToBrowse';
@@ -217,6 +218,7 @@ export default async function PropertyPage({ params }: Props) {
       >
         <TrackPageView propertyId={property.id} />
         <AgentReferralBar />
+        <FloatingChat propertySlug={property.slug} />
       <BackToBrowse />
         {Rendered ? (
           <Rendered
@@ -259,6 +261,7 @@ export default async function PropertyPage({ params }: Props) {
     >
       <TrackPageView propertyId={property.id} />
         <AgentReferralBar />
+        <FloatingChat propertySlug={property.slug} />
       <BackToBrowse />
       <PropertyTopbar
         property={property}

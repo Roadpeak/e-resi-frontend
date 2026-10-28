@@ -42,12 +42,29 @@ export function ChatWithDeveloper({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // developers talk through their dashboard, not to themselves
-  if (isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN')) return null;
+  // Developers and admins see the button too — hiding it made it look
+  // missing when they previewed a page — but for them it opens the inbox
+  // where buyers' chats arrive rather than starting a chat with themselves.
+  const staff = isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN');
 
   async function start() {
     setError('');
+    if (staff) {
+      router.push(user?.role === 'DEVELOPER' ? '/dashboard/messages' : '/admin');
+      return;
+    }
     if (!isAuthenticated) {
+      // On a development's own domain or e-resi address there is no e-resi
+      // session (sign-in lives on e-resi.com), so sign in there and come back
+      // to this development's e-resi page, where the chat opens.
+      const host = window.location.hostname;
+      const onEresi = /^((www|app)\.)?e-resi\.com$|^localhost$/.test(host);
+      if (!onEresi) {
+        const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://e-resi.com';
+        const back = propertySlug ? `/${propertySlug}` : '/';
+        window.location.href = `${site}/login?redirect=${encodeURIComponent(back)}`;
+        return;
+      }
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
