@@ -4,11 +4,12 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, Eye, Pencil, Box, Headset, Building2, MoreHorizontal, Loader2, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Eye, Pencil, Box, Headset, Building2, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { formatPrice, getStatusLabel, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useMyProperties } from '../../../../lib/api/queries';
 import { REVIEW_CHIP, reviewStateOf } from '../../../../components/dashboard/ReviewStatus';
+import { PropertyActionsMenu } from '../../../../components/dashboard/PropertyActionsMenu';
 
 /** Google-tonal status chips (replaces the old brand/gold/emerald palette). */
 // Keyed by the API's UPPER_SNAKE status. The old lowercase keys never matched
@@ -28,7 +29,7 @@ function fmtShortDate(iso?: string) {
 }
 
 export default function DashboardProperties() {
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
   const { data, isLoading } = useMyProperties({ limit: 50 });
   const properties = data?.items ?? [];
   const pendingCount = properties.filter((p) => reviewStateOf(p) === 'pending').length;
@@ -44,6 +45,10 @@ export default function DashboardProperties() {
 
   return (
     <div className="space-y-6 max-w-7xl">
+      {actionError && (
+        <p className="rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{actionError}</p>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -219,33 +224,7 @@ export default function DashboardProperties() {
                           >
                             <Pencil size={14} />
                           </Link>
-                          <div className="relative">
-                            <button
-                              onClick={() => setMenuOpen(menuOpen === p.id ? null : p.id)}
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors cursor-pointer"
-                            >
-                              <MoreHorizontal size={14} />
-                            </button>
-                            {menuOpen === p.id && (
-                              <div className="absolute right-0 top-9 z-20 w-48 overflow-hidden rounded-2xl border border-[#dadce0] bg-white py-1 shadow-lg">
-                                {[
-                                  { label: 'View & edit details', href: `/dashboard/properties/${p.slug}` },
-                                  { label: 'Manage units', href: '/dashboard/units' },
-                                  { label: 'View analytics', href: '/dashboard/analytics' },
-                                  { label: 'Billing for this listing', href: '/dashboard/billing' },
-                                ].map((action) => (
-                                  <Link
-                                    key={action.label}
-                                    href={action.href}
-                                    onClick={() => setMenuOpen(null)}
-                                    className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors"
-                                  >
-                                    {action.label}
-                                  </Link>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <PropertyActionsMenu property={p} onError={setActionError} />
                         </div>
                       </td>
                     </motion.tr>

@@ -4,6 +4,8 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Custom domains — a development served on its own host, e.g.
  * herisresidence.co.ke, as a standalone site.
  *
+ * Also serves each development's free address, <subdomain>.e-resi.com.
+ *
  * Requests for e-resi's own hosts pass straight through. Any other host is
  * looked up against the API; a registered one is mapped onto that
  * development's pages with clean URLs, so herisresidence.co.ke/tour/vr serves
@@ -19,10 +21,13 @@ const SITE_HOST = new URL(SITE_URL).hostname;
 /** Sections of a development's site that live under /<slug>/. */
 const SITE_SECTIONS = ['/tour', '/units', '/opengraph-image'];
 
+/** e-resi's own subdomains; any other <name>.e-resi.com is a development. */
+const OWN_SUBDOMAINS = new Set(['www', 'app', 'api']);
+
 function isOwnHost(host: string) {
-  return host === SITE_HOST || host.endsWith(`.${SITE_HOST}`)
-    || host === 'e-resi.com' || host.endsWith('.e-resi.com')
-    || host === 'localhost' || host.endsWith('.localhost')
+  const zone = [SITE_HOST, 'e-resi.com'].find((z) => host === z || host.endsWith(`.${z}`));
+  if (zone) return host === zone || OWN_SUBDOMAINS.has(host.slice(0, -(zone.length + 1)));
+  return host === 'localhost' || host.endsWith('.localhost')
     || /^\d+(\.\d+){3}$/.test(host) || host.startsWith('[');
 }
 
