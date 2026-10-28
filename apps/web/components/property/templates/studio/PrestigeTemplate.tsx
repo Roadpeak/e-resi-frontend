@@ -245,14 +245,14 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
             <p className="line-clamp-3 max-w-xl text-[16px] leading-relaxed text-white/85">{heroLede(property)}</p>
           </div>
           {facts.length > 0 && (
-            <div className="mt-8 grid gap-2 rounded-xl p-2 backdrop-blur-md sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))_auto]" style={{ background: 'rgba(1,29,65,0.55)' }}>
+            <div className="mt-8 flex flex-col gap-1 rounded-xl p-2 backdrop-blur-md sm:flex-row sm:items-stretch" style={{ background: 'rgba(1,29,65,0.55)' }}>
               {facts.map((f) => (
-                <div key={f.label} className="rounded-lg px-4 py-3 text-white sm:border-r sm:border-white/10">
+                <div key={f.label} className="min-w-0 flex-1 rounded-lg px-4 py-3 text-white sm:border-r sm:border-white/10">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-white/55">{f.label}</p>
                   <p className="mt-1 text-[15px]">{f.value}</p>
                 </div>
               ))}
-              <a href="#units" className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-6 py-3 text-[14px] font-medium text-neutral-900">
+              <a href="#units" className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-white px-6 py-3 text-[14px] font-medium text-neutral-900">
                 See available homes <ArrowUpRight size={15} />
               </a>
             </div>
