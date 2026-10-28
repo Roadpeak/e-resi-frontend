@@ -93,13 +93,13 @@ export const propertiesApi = {
     }>,
   ) => apiClient.patch<Property>(`/properties/${slug}/branding`, body),
 
-  /** Whether the custom domain reaches the development yet (checked live by the API). */
+  /** Custom-domain connection state, plus a live reachability check of both addresses. */
   domainStatus: (slug: string) =>
-    apiClient.get<{
-      domain: string | null; live: boolean;
-      subdomain?: string | null; subdomainHost?: string | null; subdomainLive?: boolean;
-      published?: boolean;
-    }>(`/properties/${slug}/domain-status`),
+    apiClient.get<DomainStatus>(`/properties/${slug}/domain-status`),
+
+  /** "Check now": retries a failed connection or re-asks Cloudflare. */
+  domainCheck: (slug: string) =>
+    apiClient.post<DomainStatus>(`/properties/${slug}/domain-check`, {}),
 
   // Every lead carries the referring agent when there is one, attached here
   // rather than at each call site so no submission path can forget it.
@@ -163,3 +163,22 @@ export const propertiesApi = {
     return apiClient.post<unknown>(`/properties/${slug}/amenities/bulk`, amenities);
   },
 };
+
+export interface DomainStatus {
+  domain: string | null;
+  /** The domain opens this development right now. */
+  live: boolean;
+  /** Cloudflare automation is configured on the server. */
+  automated?: boolean;
+  method?: 'nameservers' | 'cname' | 'manual';
+  state?: 'PENDING' | 'ACTIVE' | 'ERROR' | 'MANUAL' | null;
+  nameservers?: string[];
+  cnameTarget?: string | null;
+  error?: string | null;
+  verifiedAt?: string | null;
+  checkedAt?: string | null;
+  subdomain?: string | null;
+  subdomainHost?: string | null;
+  subdomainLive?: boolean;
+  published?: boolean;
+}

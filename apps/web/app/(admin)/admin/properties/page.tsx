@@ -343,6 +343,12 @@ function DomainPanel({
   // A subdomain (tours.dev.co.ke) can be CNAMEd; a whole domain
   // (herisresidence.co.ke) needs its nameservers moved to Cloudflare.
   const isApex = isApexDomain(domain);
+  const status = useQuery({
+    queryKey: ['domain-status', property.slug, property.customDomain],
+    queryFn: () => propertiesApi.domainStatus(property.slug),
+    enabled: !!property.customDomain,
+  });
+  const auto = status.data?.automated && domain === property.customDomain;
   const live = property.status !== 'DRAFT' && property.status !== 'ARCHIVED';
 
   return (
@@ -379,7 +385,25 @@ function DomainPanel({
         )}
       </div>
 
-      {domain && (
+      {auto && status.data && (
+        <div className="mt-4 space-y-1.5 text-[13px] leading-relaxed text-[#5f6368]">
+          <p>
+            <span className="font-medium text-[#202124]">Connected automatically</span> ·{' '}
+            {status.data.live ? 'live' : (status.data.state ?? 'pending').toLowerCase()}
+            {status.data.method === 'nameservers' && ' · nameserver switch'}
+            {status.data.method === 'cname' && ' · CNAME'}
+          </p>
+          {!status.data.live && status.data.nameservers?.length ? (
+            <p>Developer must set nameservers: <code>{status.data.nameservers.join(', ')}</code></p>
+          ) : null}
+          {status.data.method === 'cname' && !status.data.live && (
+            <p>Developer must add <code>CNAME {domain} → {status.data.cnameTarget}</code></p>
+          )}
+          {status.data.error && <p className="text-[#c5221f]">{status.data.error}</p>}
+        </div>
+      )}
+
+      {domain && !auto && (
         <div className="mt-4 space-y-2 text-[13px] leading-relaxed text-[#5f6368]">
           <p className="font-medium text-[#202124]">To put it live</p>
           {isApex ? (
