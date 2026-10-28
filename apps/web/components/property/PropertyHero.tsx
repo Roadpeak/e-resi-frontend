@@ -106,7 +106,7 @@ function StatusChips({ property, onDark = true }: { property: Property; onDark?:
           getStatusColor(property.status),
         )}
       >
-        {getStatusLabel(property.status)}
+        {getStatusLabel(property.status, property.completionDate)}
       </span>
     );
   }
@@ -117,7 +117,7 @@ function StatusChips({ property, onDark = true }: { property: Property; onDark?:
         aria-hidden
         className="h-1.5 w-1.5 rounded-full bg-white"
       />
-      {getStatusLabel(property.status)}
+      {getStatusLabel(property.status, property.completionDate)}
     </span>
   );
 }

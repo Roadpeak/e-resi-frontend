@@ -26,7 +26,7 @@ import {
   type SectionCopy,
 } from '../../../../../../lib/branding/theme';
 import {
-  MINI_SITE_TEMPLATES,
+  PICKER_TEMPLATES,
   DEFAULT_TEMPLATE,
   templateFor,
 } from '../../../../../../lib/branding/templates';
@@ -296,7 +296,7 @@ export default function CustomiseMiniSite() {
               eight of them in a column made the choice effectively blind.
             */}
             <div className="grid grid-cols-2 gap-2.5">
-              {MINI_SITE_TEMPLATES.map((t) => {
+              {PICKER_TEMPLATES.map((t) => {
                 const active = draft.templateKey === t.key;
                 return (
                   <button
@@ -320,6 +320,11 @@ export default function CustomiseMiniSite() {
                       <span className="truncate text-[13px] font-medium text-[#202124]">
                         {t.label}
                       </span>
+                      {t.isNew && (
+                        <span className="shrink-0 rounded-full bg-[#e6f4ea] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#188038]">
+                          New
+                        </span>
+                      )}
                       {t.surface === 'DARK' && (
                         <span className="shrink-0 rounded-full bg-[#f1f3f4] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[#5f6368]">
                           Dark

@@ -29,6 +29,8 @@ export interface MiniSiteTemplate {
    * own it; the plainer ones defer to the developer's heroStyle choice.
    */
   ownsHero: boolean;
+  /** Newly added — listed first in the picker with a "New" badge. */
+  isNew?: boolean;
   /** Alternate section grounds, giving a long page rhythm. */
   banded: boolean;
   /** Print a small caps label above each section. */
@@ -208,6 +210,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'FRAME',
+    isNew: true,
     label: 'Frame',
     note: 'Framed hero with a crossfading slideshow or film, and your highlights sliding across it.',
     surface: 'LIGHT',
@@ -226,6 +229,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'PRESTIGE',
+    isNew: true,
     label: 'Prestige',
     note: 'Deep navy and soft white with a serif face. Film hero with a glass facts bar.',
     surface: 'LIGHT',
@@ -244,6 +248,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'GALLERY',
+    isNew: true,
     label: 'Gallery',
     note: 'Soft rounded sheets on pale grey, a huge centred name and champagne-gold accents.',
     surface: 'LIGHT',
@@ -262,6 +267,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'ATELIER',
+    isNew: true,
     label: 'Atelier',
     note: 'Monochrome and gallery-like. Serif with italic accents, pinned quotes, black-and-white film.',
     surface: 'LIGHT',
@@ -280,6 +286,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'HORIZON',
+    isNew: true,
     label: 'Horizon',
     note: 'Bright and airy. Rounded hero, words that light up as you scroll, an expanding list of home types.',
     surface: 'LIGHT',
@@ -298,6 +305,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'SKYLINE',
+    isNew: true,
     label: 'Skyline',
     note: 'Crisp and modern. Film hero with an availability card, dark how-it-works band, annotated photo.',
     surface: 'LIGHT',
@@ -316,6 +324,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'NOIR',
+    isNew: true,
     label: 'Noir',
     note: 'Black and white with heavy type, two-way marquees and a giant italic wordmark.',
     surface: 'LIGHT',
@@ -335,6 +344,12 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
 ];
 
 export const DEFAULT_TEMPLATE = 'CLASSIC';
+
+/** Picker order: the newest designs first, the established ones after. */
+export const PICKER_TEMPLATES: MiniSiteTemplate[] = [
+  ...MINI_SITE_TEMPLATES.filter((t) => t.isNew),
+  ...MINI_SITE_TEMPLATES.filter((t) => !t.isNew),
+];
 
 export function templateFor(key?: string | null): MiniSiteTemplate {
   return MINI_SITE_TEMPLATES.find((t) => t.key === key) ?? MINI_SITE_TEMPLATES[0];

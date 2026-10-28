@@ -85,22 +85,19 @@ export function LuxeOverview({ property, copy }: { property: Property; copy?: Se
   const availableNow = (property.units ?? []).filter(
     (u) => String(u.status ?? '').toLowerCase() === 'available',
   ).length;
+  const total = property.totalUnits || unitCount;
+  const available = property.availableUnits || availableNow;
   const stats = [
-    { value: String(property.totalUnits || unitCount || '—'), label: 'Total residences' },
-    { value: String(property.availableUnits ?? availableNow ?? 0), label: 'Available now' },
-    {
-      value: property.completionDate ? formatCompletionDate(property.completionDate) : 'Ready',
-      label: 'Completion',
-    },
-    {
-      value: property.priceFrom ? formatPrice(property.priceFrom, property.currency) : '—',
-      label: 'Priced from',
-    },
-  ];
+    total ? { value: String(total), label: 'Total residences' } : null,
+    available ? { value: String(available), label: 'Available now' } : null,
+    { value: property.completionDate ? formatCompletionDate(property.completionDate) : 'Ready', label: 'Completion' },
+    property.priceFrom ? { value: formatPrice(property.priceFrom, property.currency), label: 'Starting from' } : null,
+    property.address?.city ? { value: property.address.city, label: 'City' } : null,
+  ].filter(Boolean).slice(0, 4) as { value: string; label: string }[]
 
   return (
     <div>
-      <Heading index="01" eyebrow="The development" title={property.tagline || property.name} copy={copy} />
+      <Heading index="01" eyebrow="The development" title={property.tagline && property.tagline.length <= 80 ? property.tagline : `About ${property.name}`} copy={copy} />
 
       <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
         <Reveal>

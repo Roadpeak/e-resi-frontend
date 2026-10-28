@@ -156,18 +156,25 @@ export function KitOverview({ property, style, copy }: { property: Property; sty
   const availableCount = (property.units ?? []).filter(
     (u) => String(u.status ?? '').toLowerCase() === 'available',
   ).length;
+  // Only figures the development actually has: "—" and "0 available" on a
+  // development whose units are not loaded yet read as a broken page.
+  const total = property.totalUnits || unitCount;
+  const available = property.availableUnits || availableCount;
   const stats = [
-    { value: String(property.totalUnits || unitCount || '—'), label: 'Total units' },
-    { value: String(property.availableUnits ?? availableCount ?? 0), label: 'Available' },
+    total ? { value: String(total), label: 'Total units' } : null,
+    available ? { value: String(available), label: 'Available' } : null,
     {
       value: property.completionDate ? formatCompletionDate(property.completionDate) : 'Ready',
       label: 'Completion',
     },
-    {
-      value: property.priceFrom ? formatPrice(property.priceFrom, property.currency) : '—',
-      label: 'From',
-    },
-  ];
+    property.priceFrom ? { value: formatPrice(property.priceFrom, property.currency), label: 'From' } : null,
+    property.category ? { value: String(property.category).replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase()), label: 'Type' } : null,
+    property.address?.city ? { value: property.address.city, label: 'City' } : null,
+  ].filter(Boolean).slice(0, 4) as { value: string; label: string }[];
+  const [expanded, setExpanded] = useState(false);
+  const longText = (property.description ?? '').length > 520;
+  // A paragraph-long tagline is body copy, not a headline.
+  const headline = property.tagline && property.tagline.length <= 80 ? property.tagline : `About ${property.name}`;
 
   return (
     <div>
@@ -175,13 +182,22 @@ export function KitOverview({ property, style, copy }: { property: Property; sty
         style={style}
         index="01"
         eyebrow="The development"
-        title={property.tagline || property.name}
+        title={headline}
         copy={copy}
       />
 
       <div className="grid gap-14 lg:grid-cols-[1.15fr_1fr]">
         <Reveal>
-          <p className={`text-[17px] leading-[1.8] ${t.body}`}>{property.description}</p>
+          <p className={`text-[17px] leading-[1.8] ${t.body} ${longText && !expanded ? 'line-clamp-[9]' : ''}`}>{property.description}</p>
+          {longText && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className={`mt-3 cursor-pointer text-[14px] font-medium underline underline-offset-4 ${t.heading}`}
+            >
+              {expanded ? 'Show less' : 'Read more'}
+            </button>
+          )}
 
           {/* The tours have their own section now — this keeps the way to
               reach the developer, which every template still needs here. */}
@@ -254,6 +270,10 @@ export function KitGallery({
   if (!images?.length) return null;
 
   const shown = images.slice(0, style.galleryAs === 'strip' ? 6 : 8);
+  // With three or fewer photographs the mosaic leaves ragged gaps; these get a
+  // composed arrangement instead — one wide, two side by side, or a large
+  // lead image with two stacked beside it.
+  const few = shown.length <= 3;
 
   return (
     <div>
@@ -262,13 +282,15 @@ export function KitGallery({
 
       <div
         className={
-          style.galleryAs === 'strip'
+          style.galleryAs === 'strip' && shown.length > 3
             ? 'flex snap-x gap-4 overflow-x-auto pb-4'
-            : `grid gap-3 sm:gap-4 ${style.galleryAs === 'mosaic' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`
+            : few
+              ? `grid gap-3 sm:gap-4 ${shown.length === 1 ? 'grid-cols-1' : shown.length === 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3 lg:grid-rows-2'}`
+              : `grid gap-3 sm:gap-4 ${style.galleryAs === 'mosaic' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`
         }
       >
         {shown.map((src, i) => {
-          const wide = style.galleryAs === 'mosaic' && (i === 0 || i === 5);
+          const wide = !few && style.galleryAs === 'mosaic' && (i === 0 || i === 5);
           return (
             <motion.button
               key={src + i}
@@ -279,7 +301,15 @@ export function KitGallery({
               viewport={{ once: true, amount: 0 }}
               transition={{ duration: 0.65, delay: (i % 4) * 0.06, ease: EASE }}
               className={`group relative cursor-pointer overflow-hidden ${style.radius} ${
-                style.galleryAs === 'strip'
+                few
+                  ? shown.length === 1
+                    ? 'aspect-[16/8]'
+                    : shown.length === 2
+                      ? 'aspect-[4/3]'
+                      : i === 0
+                        ? 'col-span-2 aspect-[16/10] lg:col-span-2 lg:row-span-2 lg:aspect-auto'
+                        : 'aspect-[4/3]'
+                  : style.galleryAs === 'strip'
                   ? 'aspect-[4/3] w-[78vw] shrink-0 snap-start sm:w-[380px]'
                   : wide
                     ? 'col-span-2 aspect-[16/10]'
@@ -531,11 +561,14 @@ export function KitLocation({
   amenities,
   style,
   copy,
+  image,
 }: {
   address: Property['address'];
   amenities: Amenity[];
   style: KitStyle;
   copy?: SectionCopy;
+  /** Shown beside the address when there are no nearby places to list. */
+  image?: string;
 }) {
   const t = tone(style);
   return (
@@ -560,6 +593,13 @@ export function KitLocation({
             <MapPin size={15} /> View on Google Maps <ArrowUpRight size={14} />
           </a>
         </Reveal>
+        {!amenities?.length && image && (
+          <Reveal delay={0.08}>
+            <div className={`relative aspect-[16/10] overflow-hidden ${style.radius}`}>
+              <Image src={image} alt="" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+            </div>
+          </Reveal>
+        )}
         {amenities?.length > 0 && (
           <Reveal delay={0.08}>
             <p className={`mb-5 text-[11px] uppercase tracking-[0.18em] ${t.faint}`}>Nearby</p>

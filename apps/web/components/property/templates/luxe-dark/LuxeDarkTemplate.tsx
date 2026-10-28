@@ -100,7 +100,7 @@ export function LuxeDarkTemplate({
   // returns null from its own component, so the section simply does not appear.
   const blocks: Record<string, React.ReactNode> = {
     overview: <LuxeOverview property={property} copy={copy('overview')} />,
-    gallery: (
+    gallery: property.galleryImages?.length ? (
       <div className="space-y-5">
         <LuxeGallery images={property.galleryImages} name={property.name} copy={copy('gallery')} />
         <StreetViewButtons
@@ -113,7 +113,7 @@ export function LuxeDarkTemplate({
           tone="dark"
         />
       </div>
-    ),
+    ) : null,
     tours: (
       <PropertyTours
         propertySlug={property.slug}
@@ -129,7 +129,7 @@ export function LuxeDarkTemplate({
         address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
-    units: (
+    units: property.units?.length ? (
       <LuxeUnits
         units={property.units}
         currency={property.currency}
@@ -137,13 +137,17 @@ export function LuxeDarkTemplate({
         copy={copy('units')}
         priceDisplay={unitPriceDisplay}
       />
-    ),
-    floorplans: <LuxeFloorPlans floorPlans={property.floorPlans} copy={copy('floorplans')} />,
+    ) : null,
+    floorplans: property.floorPlans?.length
+      ? <LuxeFloorPlans floorPlans={property.floorPlans} copy={copy('floorplans')} />
+      : null,
     location: (
       <LuxeLocation address={property.address} amenities={property.amenities} copy={copy('location')} />
     ),
     insights: <PropertyInsights property={property as never} tone="dark" />,
-    construction: <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />,
+    construction: property.constructionUpdates?.length
+      ? <LuxeConstruction updates={property.constructionUpdates} copy={copy('construction')} />
+      : null,
     rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <LuxeBooking property={property} copy={copy('booking')} />,
   };

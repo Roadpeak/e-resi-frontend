@@ -38,7 +38,7 @@ export function standardBlocks(
   const copy = (id: string) => p.sectionCopy?.[id] ?? {};
   const where = [property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ');
   const base: Record<string, ReactNode> = {
-    gallery: (
+    gallery: property.galleryImages?.length ? (
       <div className="space-y-5">
         <KitGallery images={property.galleryImages} name={property.name} style={style} copy={copy('gallery')} />
         <StreetViewButtons
@@ -51,7 +51,7 @@ export function standardBlocks(
           tone={style.onDark ? 'dark' : 'light'}
         />
       </div>
-    ),
+    ) : null,
     tours: (
       <PropertyTours
         propertySlug={property.slug}
@@ -67,7 +67,7 @@ export function standardBlocks(
         address={where}
       />
     ),
-    units: (
+    units: property.units?.length ? (
       <KitUnits
         units={property.units}
         currency={property.currency}
@@ -76,9 +76,19 @@ export function standardBlocks(
         copy={copy('units')}
         priceDisplay={p.unitPriceDisplay}
       />
+    ) : null,
+    floorplans: property.floorPlans?.length
+      ? <KitFloorPlans floorPlans={property.floorPlans} style={style} copy={copy('floorplans')} />
+      : null,
+    location: (
+      <KitLocation
+        address={property.address}
+        amenities={property.amenities}
+        style={style}
+        copy={copy('location')}
+        image={property.areaPhotos?.[0]?.url ?? property.galleryImages?.[1] ?? property.heroImageUrl}
+      />
     ),
-    floorplans: <KitFloorPlans floorPlans={property.floorPlans} style={style} copy={copy('floorplans')} />,
-    location: <KitLocation address={property.address} amenities={property.amenities} style={style} copy={copy('location')} />,
     insights: <PropertyInsights property={property as never} tone={style.onDark ? 'dark' : 'light'} />,
     construction: property.constructionUpdates?.length
       ? <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />

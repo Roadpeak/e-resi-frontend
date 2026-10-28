@@ -71,7 +71,13 @@ export function pluralize(count: number, singular: string, plural = `${singular}
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
-export function getStatusLabel(status: string): string {
+export function getStatusLabel(status: string, completionDate?: string | null): string {
+  // "Active" only means published. A published development whose handover is
+  // still ahead is selling off-plan, not ready to move into.
+  if (String(status).toUpperCase() === 'ACTIVE' && completionDate) {
+    const d = new Date(completionDate);
+    if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now()) return 'Selling off-plan';
+  }
   const map: Record<string, string> = {
     OFF_PLAN: 'Off Plan',
     ACTIVE: 'Ready to Move',

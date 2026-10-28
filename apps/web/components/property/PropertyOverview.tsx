@@ -129,8 +129,8 @@ export function PropertyOverview({ property }: Props) {
       value: property.completionDate ? `${new Date(property.completionDate).getFullYear()}` : 'Ready',
       label: 'Completion',
     },
-    { icon: Building2, value: `${total}`, label: 'Total Units' },
-    { icon: CheckCircle2, value: `${available}`, label: 'Available' },
+    ...(total ? [{ icon: Building2, value: `${total}`, label: 'Total Units' }] : []),
+    ...(available ? [{ icon: CheckCircle2, value: `${available}`, label: 'Available' }] : []),
     ...(bedLabel ? [{ icon: BedDouble, value: bedLabel, label: 'Bedrooms' }] : []),
     ...(sqmLabel ? [{ icon: Maximize2, value: sqmLabel, label: 'Size (sqm)' }] : []),
   ].slice(0, 5);

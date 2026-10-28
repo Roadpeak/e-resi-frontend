@@ -86,7 +86,7 @@ function EditorialHero({ property, ctaLabel, overlay = true }: HeroProps) {
 
         {property.tagline && (
           <HeroReveal delay={0.5} as="p"
-            className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-white/75"
+            className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]"
           >
             {property.tagline}
           </HeroReveal>
@@ -161,7 +161,7 @@ function ConfidentHero({ property, ctaLabel, overlay = true }: HeroProps) {
               </h1>
               {property.tagline && (
                 <HeroReveal delay={0.45} as="p"
-                  className="mt-6 max-w-lg text-[17px] leading-relaxed text-white/75"
+                  className="mt-6 max-w-lg text-[17px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]"
                 >
                   {property.tagline}
                 </HeroReveal>
@@ -285,7 +285,7 @@ function StatementHero({ property, ctaLabel, overlay = true }: HeroProps) {
           <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6">
             <div className="max-w-md">
               {property.tagline && (
-                <p className="text-[16px] leading-relaxed text-white/75">{property.tagline}</p>
+                <p className="text-[16px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]">{property.tagline}</p>
               )}
               {/* The tours a development actually has, stated rather than
                   badged. These were 12px pills the same weight as a filter
@@ -376,7 +376,7 @@ function LuxeDarkHero({ property, ctaLabel, overlay = true }: HeroProps) {
         <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-12 sm:px-10">
           <div className="mx-auto max-w-7xl">
             {property.tagline && (
-              <p className="max-w-md text-[16px] leading-relaxed text-white/70">{property.tagline}</p>
+              <p className="max-w-md text-[16px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]">{property.tagline}</p>
             )}
             {/* Squared, hairline buttons rather than the shared pill row — the
                 pills read as a product UI against this template's typography. */}
@@ -450,7 +450,7 @@ function ShowcaseHero({ property, ctaLabel, overlay = true }: HeroProps) {
               </h1>
               {property.tagline && (
                 <HeroReveal delay={0.45} as="p"
-                  className="mt-5 text-[16px] leading-relaxed text-white/75"
+                  className="mt-5 text-[16px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]"
                 >
                   {property.tagline}
                 </HeroReveal>
@@ -578,7 +578,7 @@ function ArchitecturalHero({ property, ctaLabel, overlay = true }: HeroProps) {
           </h1>
           {property.tagline && (
             <HeroReveal delay={0.45} as="p"
-              className="mt-5 max-w-lg text-[16px] leading-relaxed text-white/70"
+              className="mt-5 max-w-lg text-[16px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]"
             >
               {property.tagline}
             </HeroReveal>
@@ -635,7 +635,7 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
               className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/5 px-3.5 py-1.5 text-[12px] font-medium tracking-wide text-white backdrop-blur-sm"
             >
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-white" />
-              {getStatusLabel(property.status)}
+              {getStatusLabel(property.status, property.completionDate)}
             </motion.span>
 
             <h1 className="max-w-xl text-[36px] leading-[1.1] tracking-tight text-white sm:text-[54px]" style={{fontFamily:'var(--tpl-font-heading)',fontWeight:'var(--tpl-heading-weight)' as unknown as number}}>
@@ -643,7 +643,7 @@ function WarmLuxeHero({ property, ctaLabel, overlay = true }: HeroProps) {
             </h1>
             {property.tagline && (
               <HeroReveal delay={0.45} as="p"
-                className="mt-5 max-w-md text-[16px] leading-relaxed text-white/75"
+                className="mt-5 max-w-md text-[16px] leading-relaxed line-clamp-3 text-white/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)]"
               >
                 {property.tagline}
               </HeroReveal>

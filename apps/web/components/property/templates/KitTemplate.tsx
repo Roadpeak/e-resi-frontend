@@ -462,7 +462,7 @@ export function KitTemplate({
 
   const blocks: Record<string, React.ReactNode> = {
     overview: <KitOverview property={property} style={style} copy={copy('overview')} />,
-    gallery: (
+    gallery: property.galleryImages?.length ? (
       <div className="space-y-5">
         <KitGallery
           images={property.galleryImages}
@@ -482,7 +482,7 @@ export function KitTemplate({
           tone={style.onDark ? 'dark' : 'light'}
         />
       </div>
-    ),
+    ) : null,
     tours: (
       <PropertyTours
         propertySlug={property.slug}
@@ -498,7 +498,7 @@ export function KitTemplate({
         address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
-    units: (
+    units: property.units?.length ? (
       <KitUnits
         units={property.units}
         currency={property.currency}
@@ -507,25 +507,26 @@ export function KitTemplate({
         copy={copy('units')}
         priceDisplay={unitPriceDisplay}
       />
-    ),
-    floorplans: (
+    ) : null,
+    floorplans: property.floorPlans?.length ? (
       <KitFloorPlans floorPlans={property.floorPlans} style={style} copy={copy('floorplans')} />
-    ),
+    ) : null,
     location: (
       <KitLocation
         address={property.address}
         amenities={property.amenities}
         style={style}
         copy={copy('location')}
+        image={property.areaPhotos?.[0]?.url ?? property.galleryImages?.[1] ?? property.heroImageUrl}
       />
     ),
     // tone is load-bearing on the dark templates. Without it this renders its
     // default near-black text, which on Statement's #0b0b0c ground is
     // invisible — an entire reference section a buyer simply could not read.
     insights: <PropertyInsights property={property as never} tone={style.onDark ? 'dark' : 'light'} />,
-    construction: (
+    construction: property.constructionUpdates?.length ? (
       <KitConstruction updates={property.constructionUpdates} style={style} copy={copy('construction')} />
-    ),
+    ) : null,
     rentals: rentListings?.length ? <PropertyRentListings listings={rentListings} /> : null,
     booking: <KitBooking property={property} style={style} copy={copy('booking')} />,
   };
