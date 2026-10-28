@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowRight, Plus, X } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
 import { PropertyMonogram } from '../../PropertyMonogram';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, Marquee, MediaFill, Rise, ScrollLitText, Wordmark,
@@ -24,7 +23,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-2xl', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
-const TEMPLATE = templateFor('HORIZON');
 const INK = '#111111';
 
 function Head({ eyebrow, title }: { eyebrow: string; title: string }) {
@@ -214,10 +212,10 @@ export function HorizonTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen bg-white" style={{ color: INK }}>
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground="#ffffff" />
+      <StudioNav variant="horizon" property={property} ctaLabel={cta} />
 
-      <header className="px-3 pb-3 pt-[84px]">
-        <div className="relative flex h-[calc(100svh-96px)] min-h-[560px] items-center overflow-hidden rounded-[24px] bg-neutral-800">
+      <header className="px-3 pb-3 pt-3">
+        <div className="relative flex h-[calc(100svh-24px)] min-h-[560px] items-center overflow-hidden rounded-[24px] bg-neutral-800">
           <MediaFill video={videos[0]} image={property.heroImageUrl} priority />
           {p.overlay !== false && <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/10 to-transparent" />}
           <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10">

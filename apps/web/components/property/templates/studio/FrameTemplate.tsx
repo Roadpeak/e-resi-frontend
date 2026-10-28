@@ -1,10 +1,9 @@
 'use client';
 
 import { ArrowUpRight } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
 import { PropertyMonogram } from '../../PropertyMonogram';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, FooterColumns, HeroSlides, Marquee, MediaFill, Rise, StickySteps, Wordmark,
@@ -22,7 +21,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-none', headingKind: 'plain',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
-const TEMPLATE = templateFor('FRAME');
 const GROUND = '#f3f4f1';
 const INK = '#1d1d1b';
 const DARK = '#2d2a29';
@@ -175,11 +173,11 @@ export function FrameTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen" style={{ background: GROUND, color: INK }}>
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground="#ffffff" />
+      <StudioNav variant="frame" property={property} ctaLabel={cta} />
 
       {/* Framed hero */}
-      <header className="px-3 pb-3 pt-[84px] sm:px-5">
-        <div className="relative h-[calc(100svh-100px)] min-h-[560px] overflow-hidden rounded-[24px] bg-black">
+      <header className="px-3 pb-3 pt-[58px] sm:px-5">
+        <div className="relative h-[calc(100svh-74px)] min-h-[560px] overflow-hidden rounded-[24px] bg-black">
           <HeroSlides property={property} />
           {p.overlay !== false && <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />}
           {words.length > 0 && (

@@ -1,10 +1,9 @@
 'use client';
 
 import { ArrowUpRight, BedDouble, Building2, Check, Compass, Handshake, KeyRound, MapPin, Sparkles, Star } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
 import { heroFacts, tourBadges } from '../shared';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, FooterColumns, MediaFill, Rise, VideoModalButton,
@@ -21,7 +20,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-xl', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
-const TEMPLATE = templateFor('PRESTIGE');
 const NAVY = '#011d41';
 const GROUND = '#f5f5f5';
 
@@ -227,7 +225,7 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen" style={{ background: GROUND, color: '#0f1b2d' }}>
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground="#ffffff" />
+      <StudioNav variant="prestige" property={property} ctaLabel={cta} />
 
       <header className="relative flex min-h-[100svh] items-end overflow-hidden pb-10 pt-28">
         <MediaFill video={videos[0]} image={property.heroImageUrl} priority />

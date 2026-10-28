@@ -1,9 +1,8 @@
 'use client';
 
 import { Gem, Home, ShieldCheck } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   FooterColumns, Marquee, MediaFill, ParallaxImage, Rise,
@@ -21,7 +20,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-none', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'mosaic', outlined: true,
 };
-const TEMPLATE = templateFor('ATELIER');
 const GROUND = '#fafafa';
 const serif = { fontFamily: 'var(--tpl-font-heading)' } as const;
 
@@ -213,14 +211,14 @@ export function AtelierTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen" style={{ background: GROUND }}>
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground="#ffffff" />
+      <StudioNav variant="atelier" property={property} ctaLabel={cta} />
 
-      <header className="relative min-h-[100svh] overflow-hidden bg-white pt-20">
+      <header className="relative min-h-[100svh] overflow-hidden bg-white pt-16">
         <div className="absolute inset-y-0 right-0 w-full lg:w-[66%]">
           <MediaFill video={videos[0]} image={property.heroImageUrl} priority />
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent lg:via-white/10" />
         </div>
-        <div className="relative mx-auto flex min-h-[calc(100svh-80px)] max-w-[1400px] items-center px-6 sm:px-10">
+        <div className="relative mx-auto flex min-h-[calc(100svh-64px)] max-w-[1400px] items-center px-6 sm:px-10">
           <Rise className="max-w-xl">
             <Label>{kind} · {placeOf(property) || 'Curated living'}</Label>
             <h1 className="mt-6 text-[48px] leading-[1.08] text-neutral-900 sm:text-[72px]">

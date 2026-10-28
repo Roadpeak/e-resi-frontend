@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, Bath, BedDouble, Building2, ChevronDown, Home, MapPin, MessageCircle, Ruler, Star } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
 import { formatPrice } from '../../../../lib/utils';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   CountUp, EASE, FooterColumns, Hotspots, MediaFill, Rise,
@@ -24,7 +23,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-md', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: true,
 };
-const TEMPLATE = templateFor('SKYLINE');
 const ORANGE = '#e5793a';
 
 function Eyebrow({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
@@ -236,10 +234,10 @@ export function SkylineTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground="#ffffff" />
+      <StudioNav variant="skyline" property={property} ctaLabel={cta} />
 
-      <header className="px-3 pb-3 pt-[84px] sm:px-4">
-        <div className="relative flex h-[calc(100svh-100px)] min-h-[560px] items-end overflow-hidden rounded-[14px] bg-neutral-800">
+      <header className="px-3 pb-3 pt-[68px] sm:px-4">
+        <div className="relative flex h-[calc(100svh-84px)] min-h-[560px] items-end overflow-hidden rounded-[14px] bg-neutral-800">
           <MediaFill video={videos[0]} image={property.heroImageUrl} priority />
           {p.overlay !== false && <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />}
           <div className="relative flex w-full flex-wrap items-end justify-between gap-6 p-6 sm:p-10">

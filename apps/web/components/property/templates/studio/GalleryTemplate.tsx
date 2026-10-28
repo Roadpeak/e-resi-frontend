@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
 import { KitBooking } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
 import { formatPrice } from '../../../../lib/utils';
 import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, HeroSlides, Marquee, MediaFill, Rise,
@@ -26,7 +25,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-2xl', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
-const TEMPLATE = templateFor('GALLERY');
 const GROUND = '#f2f2f2';
 const GOLD = '#c4a46d';
 
@@ -201,10 +199,10 @@ export function GalleryTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen" style={{ background: GROUND }}>
-      <KitNav property={property} ctaLabel={cta} style={STYLE} template={TEMPLATE} ground={GROUND} />
+      <StudioNav variant="gallery" property={property} ctaLabel={cta} ground={GROUND} />
 
-      <header className="px-2 pb-2 pt-[84px] sm:px-3">
-        <div className="relative h-[calc(100svh-96px)] min-h-[600px] overflow-hidden rounded-[28px] bg-black">
+      <header className="px-2 pb-2 pt-2 sm:px-3">
+        <div className="relative h-[calc(100svh-16px)] min-h-[600px] overflow-hidden rounded-[28px] bg-black">
           <HeroSlides property={property} />
           {p.overlay !== false && <div className="absolute inset-0 bg-black/35" />}
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">

@@ -2,9 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { KitNav } from '../KitTemplate';
 import type { KitStyle } from '../kit';
-import { templateFor } from '../../../../lib/branding/templates';
+import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, Marquee, MediaFill, ParallaxImage, Rise, Wordmark,
@@ -22,8 +21,6 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-none', headingKind: 'plain',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
-const NAV_STYLE: KitStyle = { ...STYLE, onDark: true };
-const TEMPLATE = templateFor('NOIR');
 
 function H2({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <h2 className={`text-[36px] font-medium leading-[1.08] tracking-[-0.03em] sm:text-[48px] ${className}`}>{children}</h2>;
@@ -139,7 +136,7 @@ export function NoirTemplate(p: StudioTemplateProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <KitNav property={property} ctaLabel={cta} style={NAV_STYLE} template={TEMPLATE} ground="#0a0a0a" />
+      <StudioNav variant="noir" property={property} ctaLabel={cta} />
 
       <header className="relative flex min-h-[100svh] items-end overflow-hidden bg-black">
         <MediaFill video={videos[0]} image={property.heroImageUrl} priority />
