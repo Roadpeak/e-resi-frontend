@@ -8,11 +8,13 @@ export interface AppNotification {
     | 'RESERVATION_UPDATED' | 'RESERVATION_EXPIRING' | 'PAYMENT_RECEIVED'
     | 'INVOICE_ISSUED' | 'INVOICE_REMINDER' | 'RECEIPT_ISSUED' | 'PAYMENT_METHOD_UPDATED'
     | 'KYB_APPROVED' | 'KYB_REJECTED' | 'PROPERTY_PUBLISHED'
-    | 'UNIT_OWNERSHIP_GRANTED' | 'DOCUMENT_SHARED' | 'DEAL_UPDATED' | 'GENERAL';
+    | 'UNIT_OWNERSHIP_GRANTED' | 'DOCUMENT_SHARED' | 'DEAL_UPDATED' | 'MANDATE_UPDATED' | 'GENERAL';
   title: string;
   body: string;
   read: boolean;
   resourceId?: string | null;
+  /** Page this opens for the signed-in reader, resolved by the API for their portal. */
+  link?: string | null;
   resourceType?: string | null;
   createdAt: string;
 }

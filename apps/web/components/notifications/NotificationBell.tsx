@@ -88,7 +88,7 @@ export function NotificationBell({ size = 40 }: { size?: number }) {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
     setOpen(false);
-    const to = destination(user?.role, n);
+    const to = n.link ?? destination(user?.role, n);
     if (to) router.push(to);
   }
 

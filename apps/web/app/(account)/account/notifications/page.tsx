@@ -66,7 +66,7 @@ export default function AccountNotifications() {
       await notificationsApi.markRead(n.id).catch(() => {});
       qc.invalidateQueries({ queryKey: ['notifications'] });
     }
-    const to = destination(n);
+    const to = n.link ?? destination(n);
     if (to) router.push(to);
   }
 

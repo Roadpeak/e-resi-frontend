@@ -3,50 +3,25 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Bell, BellOff, CalendarDays, CheckCheck, Clock3, Globe, HelpCircle, Loader2,
-  LogOut, MessageSquare, Plus, Search, Settings, ShieldCheck, Sparkles,
+  Clock3, Globe, HelpCircle, LogOut, Plus, Search, Settings, ShieldCheck,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
 import { apiClient } from '../../lib/api/client';
-import { notificationsApi, type AppNotification } from '../../lib/api/notifications';
 import { useAuthStore } from '../../lib/stores/auth.store';
-import { useUnreadNotificationCount } from '../../lib/api/queries';
 import { CommandPalette } from './CommandPalette';
-
-function timeAgo(iso: string): string {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
-const NOTIF_ICONS: Partial<Record<AppNotification['type'], React.ReactNode>> = {
-  INQUIRY_RECEIVED: <MessageSquare size={13} />,
-  BOOKING_CONFIRMED: <CalendarDays size={13} />,
-  BOOKING_CANCELLED: <CalendarDays size={13} />,
-  KYB_APPROVED: <ShieldCheck size={13} />,
-  KYB_REJECTED: <ShieldCheck size={13} />,
-  PROPERTY_PUBLISHED: <Sparkles size={13} />,
-};
+import { NotificationBell } from '../notifications/NotificationBell';
 
 export function DashboardTopnav() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const queryClient = useQueryClient();
-  const { data: unread } = useUnreadNotificationCount();
-  const unreadCount = unread?.count ?? 0;
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [bellOpen, setBellOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const bellRef = useRef<HTMLDivElement>(null);
 
   // KYB status chip
   const { data: profile } = useQuery({
@@ -54,17 +29,10 @@ export function DashboardTopnav() {
     queryFn: () => apiClient.get<{ companyName: string; kybStatus: string; logoUrl?: string | null }>('/users/developers/me'),
   });
 
-  // Notifications feed (only fetched while the panel is open)
-  const { data: feed, isLoading: feedLoading } = useQuery({
-    queryKey: ['notifications', 'feed'],
-    queryFn: () => notificationsApi.list(8),
-    enabled: bellOpen,
-  });
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false);
     }
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
@@ -82,22 +50,7 @@ export function DashboardTopnav() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  async function markAllRead() {
-    await notificationsApi.markAllRead().catch(() => {});
-    queryClient.invalidateQueries({ queryKey: ['notifications'] });
-  }
 
-  async function openNotification(n: AppNotification) {
-    if (!n.read) {
-      await notificationsApi.markRead(n.id).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-    setBellOpen(false);
-    if (n.type.startsWith('INQUIRY')) router.push('/dashboard/inquiries');
-    else if (n.type.startsWith('BOOKING')) router.push('/dashboard/bookings');
-    else if (n.type.startsWith('KYB')) router.push('/dashboard/profile');
-    else if (n.type === 'PROPERTY_PUBLISHED') router.push('/dashboard/properties');
-  }
 
   const section = pathname === '/dashboard' ? 'Overview' : pathname.split('/')[2]?.replace('-', ' ');
   const initials = user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : '';
@@ -166,73 +119,8 @@ export function DashboardTopnav() {
           <HelpCircle size={15} />
         </a>
 
-        {/* Notifications */}
-        <div className="relative" ref={bellRef}>
-          <button
-            onClick={() => setBellOpen((v) => !v)}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
-          >
-            <Bell size={15} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-bold text-white">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-
-          {bellOpen && (
-            <div className="absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
-                <p className="text-sm font-semibold text-gray-900">Notifications</p>
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllRead}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 cursor-pointer"
-                  >
-                    <CheckCheck size={12} /> Mark all read
-                  </button>
-                )}
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {feedLoading ? (
-                  <div className="flex h-24 items-center justify-center">
-                    <Loader2 size={18} className="animate-spin text-gray-300" />
-                  </div>
-                ) : (feed?.data ?? []).length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                    <BellOff size={18} className="text-gray-300" />
-                    <p className="text-sm text-gray-400">Nothing yet — inquiries, bookings and verification updates land here.</p>
-                  </div>
-                ) : (
-                  (feed?.data ?? []).map((n) => (
-                    <button
-                      key={n.id}
-                      onClick={() => openNotification(n)}
-                      className={cn(
-                        'flex w-full items-start gap-3 border-b border-gray-50 px-4 py-3 text-left transition-colors hover:bg-gray-50 cursor-pointer',
-                        !n.read && 'bg-brand-50/40',
-                      )}
-                    >
-                      <span className={cn(
-                        'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-                        n.read ? 'bg-gray-100 text-gray-400' : 'bg-brand-100 text-brand-700',
-                      )}>
-                        {NOTIF_ICONS[n.type] ?? <Bell size={13} />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-gray-900">{n.title}</span>
-                        <span className="block text-xs leading-relaxed text-gray-500 line-clamp-2">{n.body}</span>
-                        <span className="mt-0.5 block text-[11px] text-gray-400">{timeAgo(n.createdAt)}</span>
-                      </span>
-                      {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Notifications — links resolve to this portal's own pages */}
+        <NotificationBell size={36} />
 
         {/* Account menu */}
         <div className="relative" ref={menuRef}>

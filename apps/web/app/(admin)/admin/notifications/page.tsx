@@ -161,7 +161,7 @@ export default function AdminNotifications() {
           <ul className="divide-y divide-[#f1f3f4]">
             {rows.map((n) => {
               const look = LOOK[n.type] ?? LOOK.GENERAL;
-              const href = linkFor(n);
+              const href = n.link ?? linkFor(n);
 
               const body = (
                 <div className="flex gap-3.5">
