@@ -116,9 +116,12 @@ export function SiteTracker() {
         sessionId: session.id,
         // On a development's own domain every path is that development's, so
         // keep the host — "/" there is not e-resi's home page.
-        path: /(^|\.)e-resi\.com$|^localhost$/.test(window.location.hostname)
+        // name.e-resi.com is a development's address too, not e-resi itself.
+        path: /^((www|app)\.)?e-resi\.com$|^localhost$/.test(window.location.hostname)
           ? pathname
           : `//${window.location.hostname}${pathname}`,
+        // Lets the API attribute the view to the development this host serves.
+        host: window.location.hostname,
         // Only the landing page has an outside referrer worth keeping.
         referrer: session.isNew ? document.referrer || undefined : undefined,
         utmSource: params.get('utm_source') ?? undefined,

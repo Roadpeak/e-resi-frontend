@@ -28,6 +28,8 @@ export interface TrafficOverview {
   devices: TrafficRow[];
   os: TrafficRow[];
   browsers: TrafficRow[];
+  /** Developments drawing the traffic, across all their addresses. */
+  properties?: (TrafficRow & { slug: string })[];
 }
 
 export interface TrafficUser {
@@ -105,7 +107,37 @@ function qs(params: Record<string, unknown>) {
 }
 
 /** Admin only. */
+/** One development's visitors, for its developer. Visitors are never named. */
+export interface PropertyTraffic {
+  property: { slug: string; name: string; customDomain: string | null; subdomain: string | null };
+  days: number;
+  totals: {
+    views: number; visitors: number;
+    signedInViews: number; guestViews: number;
+    signedInVisitors: number; guestVisitors: number;
+    returningVisitors: number; newVisitors: number;
+    sessions: number; bounceRate: number; avgTimeOnPageMs: number | null;
+  };
+  series: { t: string; views: number; visitors: number }[];
+  countries: TrafficRow[];
+  cities: (TrafficRow & { country: string | null })[];
+  devices: TrafficRow[];
+  browsers: TrafficRow[];
+  os: TrafficRow[];
+  sources: TrafficRow[];
+  addresses: TrafficRow[];
+  pages: TrafficRow[];
+  recent: {
+    at: string; page: string; address: string;
+    country: string | null; region: string | null; city: string | null;
+    deviceType: string | null; os: string | null; browser: string | null;
+    source: string | null; durationMs: number | null; signedIn: boolean;
+  }[];
+}
+
 export const trafficApi = {
+  property: (slug: string, days: number) =>
+    apiClient.get<PropertyTraffic>(`/traffic/properties/${slug}?days=${days}`),
   overview: (days: number) => apiClient.get<TrafficOverview>(`/admin/traffic/overview?days=${days}`),
   live: () => apiClient.get<{ visitors: number; rows: LiveVisitor[] }>('/admin/traffic/live'),
   visits: (f: VisitFilters) =>

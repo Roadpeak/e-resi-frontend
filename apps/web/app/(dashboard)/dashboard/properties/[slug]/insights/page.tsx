@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../../../components/dashboard/MaterialIcon';
 import { analyticsApi, type MiniSiteReport } from '../../../../../../lib/api/analytics';
 import { cn } from '../../../../../../lib/utils';
+import { PropertyTrafficSection } from '../../../../../../components/analytics/PropertyTrafficSection';
+import { PropertySectionNav } from '../../../../../../components/dashboard/PropertySubpage';
 
 const cardCls = 'rounded-3xl border border-[#dadce0] bg-white p-5';
 
@@ -67,7 +69,7 @@ export default function MiniSiteInsights() {
             {report.property.name} — insights
           </h1>
           <p className="text-[14px] text-[#5f6368]">
-            How buyers are engaging with the page you share with them.
+            Who visits this development, where from, on what — and how they engage.
           </p>
         </div>
 
@@ -87,6 +89,16 @@ export default function MiniSiteInsights() {
             </button>
           ))}
         </div>
+      </div>
+
+      <PropertySectionNav slug={slug} />
+
+      {/* Who visits — every address, guests included. */}
+      <PropertyTrafficSection slug={slug} days={days} />
+
+      <div className="pt-2">
+        <h2 className="text-[20px] font-normal text-[#202124]">Engagement</h2>
+        <p className="text-[14px] text-[#5f6368]">Tours, leads and what buyers did on the page.</p>
       </div>
 
       {empty ? (
