@@ -7,7 +7,7 @@ import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, FooterColumns, HeroSlides, Marquee, MediaFill, Rise, StickySteps, Wordmark,
-  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, studioStats, videoPool,
+  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, statement, studioStats, videoPool,
 } from './primitives';
 
 /**
@@ -60,7 +60,7 @@ export function FrameTemplate(p: StudioTemplateProps) {
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <Rise className="flex flex-col justify-between gap-10">
           <p className="text-[22px] font-medium leading-[1.4] text-neutral-900 sm:text-[26px]">
-            {property.description}
+            {statement(property)}
           </p>
           <div>
             {property.developer?.name && (

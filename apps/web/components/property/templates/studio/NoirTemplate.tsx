@@ -7,7 +7,7 @@ import { StudioNav } from './StudioNav';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, Marquee, MediaFill, ParallaxImage, Rise, Wordmark,
-  buyerSteps, imagePool, pick, propertyFaq, heroLede, studioStats, unitTypes, videoPool,
+  buyerSteps, imagePool, pick, propertyFaq, heroLede, statement, studioStats, unitTypes, videoPool,
 } from './primitives';
 
 /**
@@ -40,7 +40,7 @@ export function NoirTemplate(p: StudioTemplateProps) {
     <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
       <Rise>
         <p className="text-[24px] font-medium leading-[1.4] tracking-[-0.01em] text-neutral-900 sm:text-[30px]">
-          {copy('overview').heading?.trim() || property.description}
+          {copy('overview').heading?.trim() || statement(property)}
         </p>
         <a href="#units" className="mt-10 inline-block bg-black px-6 py-3 text-[13px] text-white">See the residences</a>
       </Rise>

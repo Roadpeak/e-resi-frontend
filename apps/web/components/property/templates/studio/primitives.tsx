@@ -204,6 +204,12 @@ export function heroLede(property: Property): string {
   return property.tagline?.trim() || (property.description || '').split(/(?<=[.!?])\s/)[0] || '';
 }
 
+/** The opening of the description — a statement, not the whole brochure. */
+export function statement(property: Property, sentences = 2): string {
+  const parts = (property.description || '').split(/(?<=[.!?])\s+/).filter(Boolean);
+  return parts.slice(0, sentences).join(' ');
+}
+
 export function placeOf(property: Property) {
   return [property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ');
 }
