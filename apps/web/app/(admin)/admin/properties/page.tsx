@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ConfirmDelete } from '../../../../components/admin/ConfirmDelete';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { adminPropertiesApi, type AdminProperty } from '../../../../lib/api/admin';
+import { propertiesApi } from '../../../../lib/api/properties';
 import { ApiError } from '../../../../lib/api/client';
 import { cn } from '../../../../lib/utils';
 
@@ -76,6 +77,16 @@ export default function AdminProperties() {
       refresh();
       setDeleting(null);
       flash(r.message);
+    },
+    onError,
+  });
+
+  const domain = useMutation({
+    mutationFn: ({ slug, customDomain, whiteLabel }: { slug: string; customDomain: string; whiteLabel: boolean }) =>
+      propertiesApi.updateBranding(slug, { customDomain, whiteLabel }),
+    onSuccess: (p, v) => {
+      refresh();
+      flash(v.customDomain ? `${p.name} will answer on ${v.customDomain}` : `Custom domain removed from ${p.name}`);
     },
     onError,
   });
@@ -151,6 +162,8 @@ export default function AdminProperties() {
               onReview={(decision, notes) => review.mutate({ slug: p.slug, decision, notes })}
               onFeature={(on) => feature.mutate({ slug: p.slug, on })}
               onDelete={() => { setError(''); setDeleting(p); }}
+              onDomain={(customDomain, whiteLabel) => domain.mutate({ slug: p.slug, customDomain, whiteLabel })}
+              domainBusy={domain.isPending}
             />
           ))}
         </div>
@@ -183,14 +196,19 @@ function PropertyRow({
   onReview,
   onFeature,
   onDelete,
+  onDomain,
+  domainBusy,
 }: {
   property: AdminProperty;
   busy: boolean;
   onReview: (decision: 'APPROVE' | 'REJECT', notes?: string) => void;
   onFeature: (on: boolean) => void;
   onDelete: () => void;
+  onDomain: (customDomain: string, whiteLabel: boolean) => void;
+  domainBusy: boolean;
 }) {
   const isDraft = property.status === 'DRAFT';
+  const [domainOpen, setDomainOpen] = useState(false);
 
   return (
     <div className="rounded-3xl border border-[#dadce0] bg-white p-4">
@@ -242,6 +260,16 @@ function PropertyRow({
           >
             Media
           </Link>
+          <button
+            onClick={() => setDomainOpen((o) => !o)}
+            className={cn(
+              'rounded-full border border-[#dadce0] px-3.5 py-2 text-[13px] font-medium transition-colors hover:bg-[#f1f3f4] cursor-pointer',
+              property.customDomain ? 'text-[#188038]' : 'text-[#5f6368]',
+            )}
+            title={property.customDomain ?? 'Serve this development on its own domain'}
+          >
+            {property.customDomain ? 'Domain' : 'Add domain'}
+          </button>
           {isDraft ? (
             <>
               <button
@@ -288,6 +316,98 @@ function PropertyRow({
           </button>
         </div>
       </div>
+      {domainOpen && (
+        <DomainPanel
+          property={property}
+          busy={domainBusy}
+          onSave={(d, w) => onDomain(d, w)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Cleans what an admin pastes ("https://www.Heris.co.ke/") down to the stored form. */
+function cleanDomain(input: string) {
+  return input.trim().toLowerCase()
+    .replace(/^[a-z]+:\/\//, '').replace(/[/?#].*$/, '').replace(/\.$/, '').replace(/^www\./, '');
+}
+
+function DomainPanel({
+  property,
+  busy,
+  onSave,
+}: {
+  property: AdminProperty;
+  busy: boolean;
+  onSave: (customDomain: string, whiteLabel: boolean) => void;
+}) {
+  const [value, setValue] = useState(property.customDomain ?? '');
+  const [whiteLabel, setWhiteLabel] = useState(!!property.whiteLabel);
+  const domain = cleanDomain(value);
+  // A subdomain (tours.dev.co.ke) can be CNAMEd; a whole domain
+  // (herisresidence.co.ke) needs its nameservers moved to Cloudflare.
+  const isApex = domain.split('.').length <= (/\.(co|or|ac|go|ne|sc|me)\.ke$/.test(domain) ? 3 : 2);
+  const live = property.status !== 'DRAFT' && property.status !== 'ARCHIVED';
+
+  return (
+    <div className="mt-4 rounded-2xl border border-[#e8eaed] bg-[#f8f9fa] p-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="min-w-[240px] flex-1">
+          <span className="text-[12px] font-medium text-[#5f6368]">Custom domain</span>
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="herisresidence.co.ke"
+            className="mt-1 h-10 w-full rounded-xl border border-[#dadce0] bg-white px-3 text-[14px] outline-none focus:border-[#1a73e8]"
+          />
+        </label>
+        <label className="flex h-10 items-center gap-2 text-[13px] text-[#3c4043]">
+          <input type="checkbox" checked={whiteLabel} onChange={(e) => setWhiteLabel(e.target.checked)} />
+          Hide e-resi branding
+        </label>
+        <button
+          onClick={() => onSave(domain, whiteLabel)}
+          disabled={busy}
+          className="h-10 rounded-full bg-[#1a73e8] px-5 text-[13px] font-medium text-white hover:bg-[#1765cc] disabled:opacity-50 cursor-pointer"
+        >
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        {property.customDomain && (
+          <button
+            onClick={() => { setValue(''); onSave('', whiteLabel); }}
+            disabled={busy}
+            className="h-10 rounded-full border border-[#dadce0] px-4 text-[13px] font-medium text-[#c5221f] hover:bg-[#fce8e6] disabled:opacity-50 cursor-pointer"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+
+      {domain && (
+        <div className="mt-4 space-y-2 text-[13px] leading-relaxed text-[#5f6368]">
+          <p className="font-medium text-[#202124]">To put it live</p>
+          {isApex ? (
+            <ol className="list-decimal space-y-1 pl-5">
+              <li>In Cloudflare, add <b>{domain}</b> as a site in the e-resi account (Free plan).</li>
+              <li>Have the domain&apos;s registrar point its nameservers to the two Cloudflare gives you.</li>
+              <li>
+                In that site&apos;s DNS, add proxied (orange cloud) records: <code>A {domain} → 167.99.81.98</code> and{' '}
+                <code>CNAME www → {domain}</code>. Set SSL/TLS to <b>Full</b>.
+              </li>
+            </ol>
+          ) : (
+            <ol className="list-decimal space-y-1 pl-5">
+              <li>In Cloudflare (e-resi.com → Custom Hostnames), add <b>{domain}</b>.</li>
+              <li>The developer adds <code>CNAME {domain} → domains.e-resi.com</code> at their DNS provider.</li>
+            </ol>
+          )}
+          <p>
+            Once DNS is active, <b>https://{domain}</b> shows this development, with tours at /tour and units at /units.
+            {!live && ' It goes live only once the development is approved.'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -259,6 +259,8 @@ export interface AdminProperty {
   neighborhood?: string | null;
   heroImageUrl?: string | null;
   isFeatured: boolean;
+  customDomain?: string | null;
+  whiteLabel?: boolean;
   priceFrom?: number | null;
   currency: string;
   latitude?: number | null;

@@ -96,15 +96,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // (…/opengraph-image-1t04xb) that it injects automatically. Hardcoding
   // "/<slug>/opengraph-image" produced a 404 — and a broken share preview is
   // invisible until someone actually pastes the link into WhatsApp.
+  // On its own domain the development's site is the original and e-resi's
+  // copy the duplicate, so search engines are pointed there.
+  const customDomain = (property as { customDomain?: string | null }).customDomain;
+  const canonical = customDomain ? `https://${customDomain}/` : `/${slug}`;
   return {
     title: { absolute: `${property.name}${city ? ` — ${city}` : ''}` },
     description,
-    alternates: { canonical: `/${slug}` },
+    alternates: { canonical },
     openGraph: {
       siteName: developerName || 'E-resi',
       title: property.name,
       description,
-      url: `/${slug}`,
+      url: canonical,
       type: 'website',
     },
     twitter: {
