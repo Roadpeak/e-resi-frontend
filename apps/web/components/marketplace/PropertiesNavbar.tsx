@@ -1,5 +1,6 @@
 'use client';
 
+import { NotificationBell } from '../notifications/NotificationBell';
 import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -67,6 +68,9 @@ export function PropertiesNavbar() {
         {/* Menu — below xl the section links are hidden, so this is the only
             way to reach Rent, Villas, Developers or Agents. */}
         <MarketplaceMobileMenu />
+
+        {/* Notifications — signed-in accounts only */}
+        <NotificationBell />
 
         {/* Account */}
         <div className="relative shrink-0" ref={menuRef}>
