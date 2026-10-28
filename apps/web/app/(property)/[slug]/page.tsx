@@ -22,6 +22,7 @@ import { surfaceTokens, surfaceVars, templateFontVars } from '../../../lib/brand
 import { TemplateHero } from '../../../components/property/templates/TemplateHero';
 import { LuxeDarkTemplate } from '../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
 import { KitTemplate } from '../../../components/property/templates/KitTemplate';
+import { STUDIO_TEMPLATES } from '../../../components/property/templates/studio';
 import { TemplateSection } from '../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../lib/types';
@@ -205,7 +206,7 @@ export default async function PropertyPage({ params }: Props) {
   // footer — the shared sections are built for a white ground and are
   // unreadable on this one, so they are replaced rather than re-skinned.
   if (template.key !== 'CLASSIC') {
-    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : null;
+    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : STUDIO_TEMPLATES[template.key] ?? null;
     return (
       <main
         style={{

@@ -21,6 +21,7 @@ import { surfaceTokens, surfaceVars, templateFontVars } from '../../../../lib/br
 import { TemplateHero } from '../../../../components/property/templates/TemplateHero';
 import { LuxeDarkTemplate } from '../../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
 import { KitTemplate } from '../../../../components/property/templates/KitTemplate';
+import { STUDIO_TEMPLATES } from '../../../../components/property/templates/studio';
 import { TemplateSection } from '../../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../../lib/types';
@@ -170,7 +171,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
   // Mirrors the public page — a preview that arranged the page differently
   // would be worse than no preview.
   if (template.key !== 'CLASSIC') {
-    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : null;
+    const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : STUDIO_TEMPLATES[template.key] ?? null;
     return (
       <main
         style={{

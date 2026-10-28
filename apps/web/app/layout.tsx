@@ -8,6 +8,8 @@ import {
   Playfair_Display,
   Inter,
   Archivo,
+  Marcellus,
+  Manrope,
 } from 'next/font/google';
 import './global.css';
 import { Providers } from './providers';
@@ -65,6 +67,20 @@ const inter = Inter({
 const archivo = Archivo({
   subsets: ['latin'],
   variable: '--font-archivo',
+  display: 'swap',
+});
+
+// Template faces for the Prestige and Skyline mini-site templates.
+const marcellus = Marcellus({
+  subsets: ['latin'],
+  variable: '--font-marcellus',
+  weight: '400',
+  display: 'swap',
+});
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
   display: 'swap',
 });
 
@@ -177,7 +193,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable} ${marcellus.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
         <link

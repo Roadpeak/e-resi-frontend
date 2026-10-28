@@ -32,6 +32,10 @@ function palette(t: MiniSiteTemplate, key: string) {
     WARM_LUXE: '#f3efe9',
     STATEMENT: '#0b0b0c',
     LUXE_DARK: '#0b0b0c',
+    FRAME: '#f3f4f1',
+    GALLERY: '#f2f2f2',
+    PRESTIGE: '#f5f5f5',
+    ATELIER: '#fafafa',
   };
   return {
     dark,
@@ -79,6 +83,73 @@ export function TemplatePreviewCard({
 
   /** The hero, per template. This is where they genuinely differ. */
   const hero = (() => {
+    // Inset rounded heroes of the studio templates.
+    if (k === 'FRAME' || k === 'GALLERY' || k === 'HORIZON' || k === 'SKYLINE') {
+      const centred = k === 'GALLERY';
+      return (
+        <div className="p-1.5">
+          <div
+            className={cn('relative flex h-[50px] flex-col gap-1 rounded-[5px] px-2.5', centred ? 'items-center justify-center' : 'justify-end pb-2')}
+            style={{ background: 'rgba(24,25,26,0.55)' }}
+          >
+            {k === 'FRAME' && <Line w="80%" h={6} color="rgba(255,255,255,0.35)" className="absolute left-2 top-3" />}
+            <Line w={centred ? '64%' : '50%'} h={centred ? 8 : 5} color="rgba(255,255,255,0.92)" />
+            <Line w="32%" color="rgba(255,255,255,0.45)" />
+            {k === 'GALLERY' && <span className="absolute bottom-1 left-1/2 block h-[10px] w-[34px] -translate-x-1/2 rounded-[2px] bg-white" />}
+            {k === 'SKYLINE' && <span className="absolute bottom-1.5 right-1.5 block h-[10px] w-[22px] rounded-[2px] bg-white" />}
+            {(k === 'FRAME' || k === 'HORIZON') && (
+              <span className="absolute bottom-2 right-2 block h-[7px] w-[20px] rounded-full bg-white" />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Navy film hero with a glass facts bar — Prestige.
+    if (k === 'PRESTIGE') {
+      return (
+        <div className="relative flex h-[56px] flex-col justify-end gap-1 px-2.5 pb-2" style={{ background: '#1b3358' }}>
+          <Line w="54%" h={6} color="rgba(255,255,255,0.92)" />
+          <div className="mt-1 flex gap-[2px] rounded-[2px] p-[2px]" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            {[0, 1, 2].map((i) => <span key={i} className="block h-[6px] flex-1 rounded-[1px] bg-white/30" />)}
+            <span className="block h-[6px] w-[14px] rounded-[1px] bg-white" />
+          </div>
+        </div>
+      );
+    }
+
+    // Photograph fading into a white text column — Atelier.
+    if (k === 'ATELIER') {
+      return (
+        <div className="relative flex h-[56px] items-center px-2.5" style={{ background: 'linear-gradient(90deg,#fff 30%,rgba(24,25,26,0.25))' }}>
+          <div className="flex flex-col gap-1">
+            <Line w="40px" h={5} color={p.ink} />
+            <Line w="28px" h={5} color={p.muted} />
+            <div className="mt-0.5 flex gap-1">
+              <span className="block h-[6px] w-[14px] border" style={{ borderColor: p.ink }} />
+              <span className="block h-[6px] w-[14px] border" style={{ borderColor: p.ink }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Dark full-bleed interior with heavy type — Noir.
+    if (k === 'NOIR') {
+      return (
+        <div className="relative flex h-[56px] items-end justify-between px-2.5 pb-2" style={{ background: '#151515' }}>
+          <div className="flex flex-col gap-1">
+            <Line w="46px" h={7} color="rgba(255,255,255,0.95)" />
+            <Line w="34px" h={7} color="rgba(255,255,255,0.95)" />
+          </div>
+          <div className="flex gap-1">
+            <span className="block h-[7px] w-[14px] border border-white/80" />
+            <span className="block h-[7px] w-[14px] bg-white" />
+          </div>
+        </div>
+      );
+    }
+
     // Inset, rounded, on a tinted ground — Showcase and Warm Luxe.
     if (k === 'SHOWCASE' || k === 'WARM_LUXE') {
       return (
