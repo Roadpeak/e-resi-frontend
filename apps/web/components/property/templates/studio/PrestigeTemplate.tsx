@@ -8,7 +8,7 @@ import { heroFacts, tourBadges } from '../shared';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, FooterColumns, MediaFill, Rise, VideoModalButton,
-  buyerSteps, imagePool, pick, placeOf, propertyFaq, studioStats, unitTypes, videoPool,
+  buyerSteps, imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, studioStats, unitTypes, videoPool,
 } from './primitives';
 
 /**
@@ -68,7 +68,7 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
 
   const overview = (
     <div>
-      <Title center eyebrow={`About ${property.name}`} title={copy('overview').heading?.trim() || property.tagline || property.name} />
+      <Title center eyebrow={`About ${property.name}`} title={copy('overview').heading?.trim() || shortLine(property) || `Life at ${property.name}`} />
       <div className="mt-14 grid items-start gap-8 lg:grid-cols-[1fr_1.2fr_1fr]">
         <Rise className="relative hidden aspect-[3/4] overflow-hidden rounded-xl lg:block"><MediaFill image={pick(pool, 1)} /></Rise>
         <Rise delay={0.08}>
@@ -238,11 +238,11 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
               <span key={b} className={`rounded-full px-3 py-1 text-[12px] ${i === 0 ? 'bg-white text-neutral-900' : 'border border-white/30 text-white'}`}>{b}</span>
             ))}
           </div>
-          <h1 className="mt-6 max-w-3xl text-[48px] leading-[1.02] text-white sm:text-[76px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>
-            {property.tagline || property.name}
+          <h1 className="mt-6 max-w-3xl text-[44px] leading-[1.04] text-white sm:text-[70px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>
+            {property.name}
           </h1>
           <div className="mt-10 border-t border-white/20 pt-6">
-            <p className="max-w-lg text-[16px] leading-relaxed text-white/85">{property.description?.split(/(?<=\.)\s/).slice(0, 2).join(' ')}</p>
+            <p className="line-clamp-3 max-w-xl text-[16px] leading-relaxed text-white/85">{heroLede(property)}</p>
           </div>
           {facts.length > 0 && (
             <div className="mt-8 grid gap-2 rounded-xl p-2 backdrop-blur-md sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))_auto]" style={{ background: 'rgba(1,29,65,0.55)' }}>

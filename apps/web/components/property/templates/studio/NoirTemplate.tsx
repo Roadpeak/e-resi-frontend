@@ -8,7 +8,7 @@ import { templateFor } from '../../../../lib/branding/templates';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, Marquee, MediaFill, ParallaxImage, Rise, Wordmark,
-  buyerSteps, imagePool, pick, propertyFaq, studioStats, unitTypes, videoPool,
+  buyerSteps, imagePool, pick, propertyFaq, heroLede, studioStats, unitTypes, videoPool,
 } from './primitives';
 
 /**
@@ -146,8 +146,8 @@ export function NoirTemplate(p: StudioTemplateProps) {
         {p.overlay !== false && <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/30" />}
         <div className="relative mx-auto flex w-full max-w-[1400px] flex-wrap items-end justify-between gap-8 px-5 pb-10 sm:px-10">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: EASE }}>
-            <h1 className="max-w-3xl text-[48px] font-bold leading-[1] tracking-[-0.04em] text-white sm:text-[80px]">{property.tagline || property.name}</h1>
-            <p className="mt-6 max-w-lg text-[16px] text-white/85">{(property.description || '').split(/(?<=\.)\s/)[0]}</p>
+            <h1 className="max-w-3xl text-[48px] font-bold leading-[1] tracking-[-0.04em] text-white sm:text-[80px]">{property.name}</h1>
+            <p className="mt-6 line-clamp-3 max-w-xl text-[16px] text-white/85">{heroLede(property)}</p>
           </motion.div>
           <div className="flex gap-2">
             <a href="#booking" className="border border-white px-5 py-3 text-[13px] text-white hover:bg-white hover:text-black">{cta}</a>

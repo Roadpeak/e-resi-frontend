@@ -12,7 +12,7 @@ import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, HeroSlides, Marquee, MediaFill, Rise,
-  imagePool, pick, placeOf, propertyFaq, studioStats, videoPool,
+  imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, studioStats, videoPool,
 } from './primitives';
 
 /**
@@ -65,7 +65,7 @@ export function GalleryTemplate(p: StudioTemplateProps) {
     <div className="grid items-center gap-12 lg:grid-cols-2">
       <Rise>
         <p className="text-[34px] leading-[1.15] tracking-[-0.02em] text-neutral-900 sm:text-[44px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>
-          “{copy('overview').heading?.trim() || property.tagline || property.name}”
+          “{copy('overview').heading?.trim() || shortLine(property, 120) || `A new way to live in ${placeOf(property) || 'the city'}`}”
         </p>
         <p className="mt-8 max-w-lg text-[15px] leading-relaxed text-neutral-500">{property.description}</p>
         <div className="mt-8 flex flex-wrap items-center gap-5">
@@ -210,11 +210,11 @@ export function GalleryTemplate(p: StudioTemplateProps) {
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
             <motion.h1
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: EASE }}
-              className="text-[14vw] leading-[0.95] tracking-[-0.04em] sm:text-[9vw]" style={{ fontFamily: 'var(--tpl-font-heading)' }}
+              className="max-w-[92vw] text-[clamp(40px,8vw,120px)] leading-[0.98] tracking-[-0.04em]" style={{ fontFamily: 'var(--tpl-font-heading)' }}
             >
               {property.name}
             </motion.h1>
-            {property.tagline && <p className="mt-4 text-[17px] text-white/85 sm:text-[20px]">{property.tagline}</p>}
+            {heroLede(property) && <p className="mx-auto mt-4 line-clamp-2 max-w-2xl text-[16px] text-white/85 sm:text-[19px]">{heroLede(property)}</p>}
           </div>
           {featured && (
             <motion.div

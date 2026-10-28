@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, MapPin } from 'lucide-react';
+import { googleMapsUrl } from '../../../../lib/maps/google';
 import type { Property, Unit, FloorPlan, Amenity, ConstructionUpdate } from '../../../../lib/types';
 import { formatPrice, formatCompletionDate } from '../../../../lib/utils';
 import { useBooking, useLightbox, useUnits, unitStatus } from '../hooks';
@@ -402,26 +403,14 @@ export function LuxeLocation({
             </span>
           </p>
 
-          {!!address?.coordinates?.lat && !!address?.coordinates?.lng && (
-            <div className="mt-6 overflow-hidden border border-white/12">
-              <iframe
-                title="Location map"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="h-[280px] w-full"
-                // The dark templates get a dimmed map: a bright white tile
-                // sheet in the middle of a near-black page reads as a hole.
-                style={{ filter: 'invert(0.92) hue-rotate(180deg) saturate(0.6)' }}
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-                  address.coordinates.lng - 0.012
-                }%2C${address.coordinates.lat - 0.008}%2C${
-                  address.coordinates.lng + 0.012
-                }%2C${address.coordinates.lat + 0.008}&layer=mapnik&marker=${
-                  address.coordinates.lat
-                }%2C${address.coordinates.lng}`}
-              />
-            </div>
-          )}
+          <a
+            href={googleMapsUrl(address)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className={"mt-6 inline-flex items-center gap-2 border border-white/25 px-5 py-2.5 text-[13px] text-white transition-colors hover:bg-white/10"}
+          >
+            <MapPin size={15} /> View on Google Maps <ArrowUpRight size={14} />
+          </a>
         </Reveal>
 
         {amenities?.length > 0 && (

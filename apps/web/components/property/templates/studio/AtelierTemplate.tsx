@@ -7,7 +7,7 @@ import { templateFor } from '../../../../lib/branding/templates';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   FooterColumns, Marquee, MediaFill, ParallaxImage, Rise,
-  imagePool, pick, placeOf, videoPool,
+  imagePool, pick, placeOf, videoPool, shortLine, heroLede,
 } from './primitives';
 
 /**
@@ -52,8 +52,8 @@ export function AtelierTemplate(p: StudioTemplateProps) {
   const pool = imagePool(property);
   const videos = videoPool(property);
   const lines = sentences(property.description);
-  const quoteA = property.tagline || lines[0] || property.name;
-  const quoteB = lines[1] || lines[0] || property.tagline || '';
+  const quoteA = shortLine(property, 180) || lines[0] || property.name;
+  const quoteB = lines[1] || '';
   const kind = property.category ? String(property.category).replace(/_/g, ' ').toLowerCase() : 'residences';
 
   const cards = (property.features ?? []).slice(0, 3).map((f, i) => ({
@@ -224,9 +224,9 @@ export function AtelierTemplate(p: StudioTemplateProps) {
           <Rise className="max-w-xl">
             <Label>{kind} · {placeOf(property) || 'Curated living'}</Label>
             <h1 className="mt-6 text-[48px] leading-[1.08] text-neutral-900 sm:text-[72px]">
-              <Turn text={property.tagline || property.name} />
+              <Turn text={property.name} />
             </h1>
-            <p className="mt-6 max-w-md text-[12px] uppercase leading-[1.9] tracking-[0.1em] text-neutral-600">{lines[0] ?? ''}</p>
+            <p className="mt-6 line-clamp-4 max-w-md text-[12px] uppercase leading-[1.9] tracking-[0.1em] text-neutral-600">{heroLede(property)}</p>
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#booking" className="border border-neutral-900 px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white">{cta}</a>
               <a href="#units" className="border border-neutral-900 px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white">Residences</a>

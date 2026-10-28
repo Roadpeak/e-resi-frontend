@@ -193,6 +193,17 @@ export function unitTypes(property: Property) {
     }));
 }
 
+/** The tagline only when it is short enough to set as a headline. */
+export function shortLine(property: Property, max = 70): string | undefined {
+  const t = property.tagline?.trim();
+  return t && t.length <= max ? t : undefined;
+}
+
+/** The line under a hero headline: the tagline, else the opening sentence. */
+export function heroLede(property: Property): string {
+  return property.tagline?.trim() || (property.description || '').split(/(?<=[.!?])\s/)[0] || '';
+}
+
 export function placeOf(property: Property) {
   return [property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ');
 }

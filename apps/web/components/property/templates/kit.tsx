@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, MapPin } from 'lucide-react';
+import { googleMapsUrl } from '../../../lib/maps/google';
 import type {
   Property, Unit, FloorPlan, Amenity, ConstructionUpdate,
 } from '../../../lib/types';
@@ -548,25 +549,16 @@ export function KitLocation({
             <span>{[address?.street, address?.neighborhood, address?.city, address?.county].filter(Boolean).join(', ')}</span>
           </p>
 
-          {/* An address without a map is a fact a buyer cannot act on. Only
-              rendered when the development actually has coordinates. */}
-          {!!address?.coordinates?.lat && !!address?.coordinates?.lng && (
-            <div className={`mt-6 overflow-hidden ${style.radius} border ${t.border}`}>
-              <iframe
-                title="Location map"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="h-[280px] w-full"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-                  address.coordinates.lng - 0.012
-                }%2C${address.coordinates.lat - 0.008}%2C${
-                  address.coordinates.lng + 0.012
-                }%2C${address.coordinates.lat + 0.008}&layer=mapnik&marker=${
-                  address.coordinates.lat
-                }%2C${address.coordinates.lng}`}
-              />
-            </div>
-          )}
+          {/* A link out to Google Maps rather than an embedded map: the
+              embedded tiles clashed with every template around them. */}
+          <a
+            href={googleMapsUrl(address)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className={`mt-6 inline-flex items-center gap-2 ${style.radius} border ${t.borderStrong} px-5 py-2.5 text-[13px] ${t.text} transition-opacity hover:opacity-70`}
+          >
+            <MapPin size={15} /> View on Google Maps <ArrowUpRight size={14} />
+          </a>
         </Reveal>
         {amenities?.length > 0 && (
           <Reveal delay={0.08}>

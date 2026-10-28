@@ -10,7 +10,7 @@ import { PropertyMonogram } from '../../PropertyMonogram';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, EASE, FooterColumns, Marquee, MediaFill, Rise, ScrollLitText, Wordmark,
-  featureWords, imagePool, pick, propertyFaq, studioStats, unitTypes, videoPool,
+  featureWords, imagePool, pick, propertyFaq, shortLine, heroLede, studioStats, unitTypes, videoPool,
 } from './primitives';
 
 /**
@@ -58,7 +58,7 @@ export function HorizonTemplate(p: StudioTemplateProps) {
         <div className="flex items-center gap-4">
           {property.developer?.name && <PropertyMonogram name={property.developer.name} logoUrl={property.developer.logoUrl} size={48} />}
           <p className="max-w-md text-[14px] leading-relaxed text-neutral-500">
-            {property.developer?.name ? `By ${property.developer.name}. ` : ''}{property.tagline}
+            {property.developer?.name ? `By ${property.developer.name}.` : ''} {shortLine(property, 140) ?? ''}
           </p>
         </div>
         <a href="#units" className="inline-flex items-center gap-2 rounded-full border border-neutral-900 px-5 py-2.5 text-[14px] text-neutral-900 hover:bg-neutral-900 hover:text-white">
@@ -153,7 +153,7 @@ export function HorizonTemplate(p: StudioTemplateProps) {
         <div className="absolute inset-0 bg-black/25" />
         <Rise className="relative">
           <h2 className="mx-auto max-w-3xl text-[32px] font-medium leading-[1.2] text-white sm:text-[48px]">
-            {property.tagline || `Experience ${property.name}`}
+            {shortLine(property) || `Experience ${property.name}`}
           </h2>
           <a href="#booking" className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/15 px-6 py-3 text-[14px] text-white backdrop-blur-md hover:bg-white/25">
             Book an appointment <ArrowRight size={15} />
@@ -223,11 +223,11 @@ export function HorizonTemplate(p: StudioTemplateProps) {
           <div className="relative mx-auto w-full max-w-[1240px] px-6 sm:px-10">
             <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }}
               className="max-w-2xl text-[46px] font-medium leading-[1.08] tracking-[-0.02em] text-white sm:text-[68px]">
-              {property.tagline || property.name}
+              {property.name}
             </motion.h1>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}
-              className="mt-5 max-w-md text-[16px] leading-relaxed text-white/85">
-              {(property.description || '').split(/(?<=\.)\s/)[0]}
+              className="mt-5 line-clamp-3 max-w-lg text-[16px] leading-relaxed text-white/85">
+              {heroLede(property)}
             </motion.p>
             <div className="mt-9 flex flex-wrap gap-3">
               <a href="#booking" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[14px] font-medium text-neutral-900">{cta} <ArrowRight size={15} /></a>

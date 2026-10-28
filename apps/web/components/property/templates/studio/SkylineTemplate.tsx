@@ -10,7 +10,7 @@ import { formatPrice } from '../../../../lib/utils';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   CountUp, EASE, FooterColumns, Hotspots, MediaFill, Rise,
-  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, studioStats, unitTypes, videoPool,
+  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, studioStats, unitTypes, videoPool,
 } from './primitives';
 
 /**
@@ -62,7 +62,7 @@ export function SkylineTemplate(p: StudioTemplateProps) {
         <div className="flex flex-col p-6 sm:p-8">
           <p className="flex items-center gap-1.5 text-[13px] text-neutral-500"><MapPin size={14} />{placeOf(property)}</p>
           <h3 className="mt-3 text-[26px] font-semibold leading-tight text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>
-            {copy('overview').heading?.trim() || property.tagline || property.name}
+            {copy('overview').heading?.trim() || shortLine(property) || property.name}
           </h3>
           <p className="mt-3 line-clamp-4 text-[15px] leading-relaxed text-neutral-500">{property.description}</p>
           <div className="mt-auto flex items-end justify-between pt-8">
@@ -245,9 +245,9 @@ export function SkylineTemplate(p: StudioTemplateProps) {
           <div className="relative flex w-full flex-wrap items-end justify-between gap-6 p-6 sm:p-10">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }} className="max-w-2xl">
               <h1 className="text-[40px] font-bold leading-[1.08] tracking-[-0.02em] text-white sm:text-[60px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>
-                {property.tagline || property.name}
+                {property.name}
               </h1>
-              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/85">{(property.description || '').split(/(?<=\.)\s/)[0]}</p>
+              <p className="mt-4 line-clamp-3 max-w-lg text-[15px] leading-relaxed text-white/85">{heroLede(property)}</p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <a href="#units" className="inline-flex items-center gap-3 rounded-sm bg-white py-1 pl-4 pr-1 text-[13px] text-neutral-900">
                   View homes <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-neutral-900 text-white"><ArrowUpRight size={14} /></span>

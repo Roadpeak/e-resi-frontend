@@ -8,7 +8,7 @@ import { PropertyMonogram } from '../../PropertyMonogram';
 import { standardBlocks, StudioSections, type StudioTemplateProps } from './blocks';
 import {
   Accordion, CountUp, FooterColumns, HeroSlides, Marquee, MediaFill, Rise, StickySteps, Wordmark,
-  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, studioStats, videoPool,
+  buyerSteps, featureWords, imagePool, pick, placeOf, propertyFaq, shortLine, heroLede, studioStats, videoPool,
 } from './primitives';
 
 /**
@@ -51,12 +51,12 @@ export function FrameTemplate(p: StudioTemplateProps) {
   const stats = studioStats(property).slice(0, 3);
   const faq = propertyFaq(property);
   const steps = buyerSteps(property).slice(0, 3);
-  const intro = (property.description || '').split(/(?<=\.)\s/)[0] || property.tagline;
+  const intro = heroLede(property);
 
   const overview = (
     <div>
       <Heading
-        title={copy('overview').heading?.trim() || property.tagline || property.name}
+        title={copy('overview').heading?.trim() || shortLine(property) || `Welcome to ${property.name}`}
         sub={copy('overview').body?.trim() || placeOf(property)}
       />
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
@@ -183,7 +183,7 @@ export function FrameTemplate(p: StudioTemplateProps) {
           <HeroSlides property={property} />
           {p.overlay !== false && <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />}
           {words.length > 0 && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-[22%] mix-blend-difference">
+            <div className="pointer-events-none absolute inset-x-0 top-[26%] mix-blend-difference sm:top-[30%]">
               <Marquee
                 items={words}
                 speed={36}
@@ -198,8 +198,8 @@ export function FrameTemplate(p: StudioTemplateProps) {
           )}
           <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-6 p-6 sm:p-10">
             <div className="max-w-xl">
-              <p className="text-[13px] uppercase tracking-[0.2em] text-white/70">{property.name}</p>
-              <p className="mt-2 text-[22px] font-medium leading-snug text-white sm:text-[30px]">{intro}</p>
+              <h1 className="text-[30px] font-bold uppercase leading-[1.05] tracking-[-0.02em] text-white sm:text-[44px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{property.name}</h1>
+              {intro && <p className="mt-3 line-clamp-2 text-[16px] leading-snug text-white/85 sm:text-[19px]">{intro}</p>}
             </div>
             <a href="#booking" className="rounded-full bg-white px-6 py-3 text-[14px] font-medium text-neutral-900 transition-transform hover:scale-[1.03]">
               {cta}
