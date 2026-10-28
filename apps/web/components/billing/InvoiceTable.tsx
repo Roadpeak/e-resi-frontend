@@ -108,7 +108,7 @@ export function InvoiceTable({
                 </td>
               )}
               <td className="py-3 pr-4 text-[#5f6368]">
-                {inv.lineItems?.[0]?.description ?? (inv.kind === 'SUBSCRIPTION' ? 'Listing fee' : 'Production')}
+                {inv.lineItems?.[0]?.description ?? (inv.kind === 'SUBSCRIPTION' ? 'Listing fee' : inv.kind === 'DOMAIN' ? 'Domain' : 'Production')}
               </td>
               <td className="py-3 pr-4 text-[#5f6368]">
                 {shortDate(inv.dueAt)}

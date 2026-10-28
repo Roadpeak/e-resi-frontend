@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Clock, Copy, Globe, Loader2, RefreshCw } from 'lucide-react';
-import { propertiesApi, type DomainStatus } from '../../lib/api/properties';
+import Link from 'next/link';
+import { fmtMoney, propertiesApi, type DomainStatus } from '../../lib/api/properties';
 import { ApiError } from '../../lib/api/client';
 
 /** Cleans what someone pastes ("https://www.Heris.co.ke/") down to the stored form. */
@@ -49,7 +50,7 @@ export function CustomDomainCard({
   const status = useQuery({
     queryKey: ['domain-status', slug, current],
     queryFn: () => propertiesApi.domainStatus(slug),
-    enabled: !!current && !editing,
+    // Always on: before a domain is added it still supplies the price.
     staleTime: 60_000,
     // While waiting on the developer's DNS change, keep the page current.
     refetchInterval: (q) => (q.state.data?.live ? false : 60_000),
@@ -133,6 +134,7 @@ export function CustomDomainCard({
           {value && !valid && (
             <p className="text-[13px] text-[#c5221f]">Enter just the domain, like yourdevelopment.co.ke</p>
           )}
+          <PriceNote status={status.data} />
           <p className="text-[13px] leading-relaxed text-[#5f6368]">
             Use a domain you already own. Don&apos;t have one yet? Buy it from any registrar
             (for .co.ke, a KENIC-accredited one) first, then add it here.
@@ -151,7 +153,7 @@ export function CustomDomainCard({
             </a>
             <StateChip status={status.data} loading={status.isLoading || checking} published={published} />
             <div className="ml-auto flex flex-wrap gap-2">
-              {!live && (
+              {!live && status.data?.state !== 'AWAITING_PAYMENT' && status.data?.state !== 'SUSPENDED' && (
                 <button
                   type="button"
                   onClick={checkNow}
@@ -183,6 +185,13 @@ export function CustomDomainCard({
           </div>
 
           {!live && status.data && <NextSteps domain={current!} status={status.data} published={published} />}
+          {status.data?.billing?.mode === 'MONTHLY' && status.data.billing.paidThrough && status.data.state !== 'AWAITING_PAYMENT' && (
+            <p className="text-[13px] text-[#5f6368]">
+              {fmtMoney(status.data.billing.fee ?? 0, status.data.prices?.currency ?? 'KES')}/month · paid until{' '}
+              {new Date(status.data.billing.paidThrough).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+              We invoice the next month a few days before.
+            </p>
+          )}
           {status.data?.checkedAt && !live && (
             <p className="text-[12px] text-[#80868b]">
               Checked {timeAgo(status.data.checkedAt)}. We keep checking every 10 minutes and email you once it&apos;s live.
@@ -211,6 +220,12 @@ function StateChip({ status, loading, published }: { status?: DomainStatus; load
   }
   if (status?.live) {
     return <span className={`${base} bg-[#e6f4ea] text-[#188038]`}><CheckCircle2 size={12} /> Live</span>;
+  }
+  if (status?.state === 'AWAITING_PAYMENT') {
+    return <span className={`${base} bg-[#fef7e0] text-[#b06000]`}><Clock size={12} /> Awaiting payment</span>;
+  }
+  if (status?.state === 'SUSPENDED') {
+    return <span className={`${base} bg-[#fce8e6] text-[#c5221f]`}><AlertCircle size={12} /> Paused — unpaid</span>;
   }
   if (status?.state === 'ERROR') {
     return <span className={`${base} bg-[#fce8e6] text-[#c5221f]`}><AlertCircle size={12} /> Needs attention</span>;
@@ -252,6 +267,32 @@ function CopyValue({ value }: { value: string }) {
 /** What the developer has to do now, for whichever way the domain is connected. */
 function NextSteps({ domain, status, published }: { domain: string; status: DomainStatus; published: boolean }) {
   const box = 'rounded-2xl bg-[#f8f9fa] p-4 text-[14px] leading-relaxed text-[#3c4043]';
+
+  if (status.state === 'AWAITING_PAYMENT' || status.state === 'SUSPENDED') {
+    const inv = status.billing?.invoice;
+    const monthly = status.billing?.mode === 'MONTHLY';
+    return (
+      <div className={box}>
+        <p className="font-medium text-[#202124]">
+          {status.state === 'SUSPENDED' ? `${domain} is paused until the monthly fee is paid` : `Pay to connect ${domain}`}
+        </p>
+        <p className="mt-1">
+          {inv ? (
+            <>Invoice {inv.number} for <b>{fmtMoney(inv.total, inv.currency)}</b> (incl. VAT){monthly ? ', billed monthly' : ', one-time'}. </>
+          ) : null}
+          {status.state === 'SUSPENDED'
+            ? 'It comes back the moment it is paid.'
+            : 'As soon as it is paid we set the domain up and show you the next step here.'}
+        </p>
+        <Link
+          href="/dashboard/billing"
+          className="mt-3 inline-flex items-center rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]"
+        >
+          Pay now
+        </Link>
+      </div>
+    );
+  }
 
   if (status.state === 'ERROR') {
     return (
@@ -319,5 +360,24 @@ function NextSteps({ domain, status, published }: { domain: string; status: Doma
         <li>Once the change spreads, this shows <b>Live</b>.</li>
       </ol>
     </div>
+  );
+}
+
+/** What connecting a domain costs, shown before the developer commits. */
+function PriceNote({ status }: { status?: DomainStatus }) {
+  const price = status?.prices?.custom;
+  if (!price || !status?.prices) return null;
+  const b = status.billing;
+  const entitled = !!b && !b.invoice && status.state !== 'AWAITING_PAYMENT' && (
+    (b.mode === 'ONE_TIME' && b.fee !== null)
+    || (b.mode === 'MONTHLY' && !!b.paidThrough && new Date(b.paidThrough) > new Date()));
+  if (entitled) return <p className="text-[13px] text-[#188038]">Already paid for this development — no new charge.</p>;
+  if (price.amount <= 0) return <p className="text-[13px] text-[#188038]">Free — no charge.</p>;
+  return (
+    <p className="text-[13px] text-[#3c4043]">
+      <b>{fmtMoney(price.amount, status.prices.currency)}</b>
+      {price.mode === 'MONTHLY' ? ' per month' : ' one-time'} + VAT. We invoice you when you connect, and the domain
+      goes live once it&apos;s paid.
+    </p>
   );
 }

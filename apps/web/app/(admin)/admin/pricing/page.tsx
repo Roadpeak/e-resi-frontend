@@ -477,8 +477,9 @@ function ListingFeeTab({ onSaved }: { onSaved: (m: string) => void }) {
         [
           ['Developer listing fees', (k: string) => k.startsWith('listing_fee')],
           ['Agent listing fees', (k: string) => k.startsWith('agent_fee')],
+          ['Domains', (k: string) => k.startsWith('domain_')],
           ['General', (k: string) =>
-            !k.startsWith('listing_fee') && !k.startsWith('agent_fee')
+            !k.startsWith('listing_fee') && !k.startsWith('agent_fee') && !k.startsWith('domain_')
             && k !== 'platform_currency' && !k.endsWith('_cache')],
         ] as const
       ).map(([title, match]) => {
@@ -674,7 +675,7 @@ function SettingRow({
   setting,
   onSaved,
 }: {
-  setting: { key: string; value: string; label: string; description?: string | null };
+  setting: { key: string; value: string; label: string; description?: string | null; valueType?: string };
   onSaved: (m: string) => void;
 }) {
   const [value, setValue] = useState(setting.value);
@@ -694,12 +695,27 @@ function SettingRow({
         )}
         <p className="text-[12px] text-[#80868b]">{setting.key}</p>
       </div>
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className={cn(inputCls, 'w-40 text-right')}
-        aria-label={setting.label}
-      />
+      {setting.valueType?.startsWith('choice:') ? (
+        // "choice:ONE_TIME|MONTHLY" — a fixed set, so a typo cannot store an
+        // unknown mode.
+        <select
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={cn(inputCls, 'w-40')}
+          aria-label={setting.label}
+        >
+          {setting.valueType.slice('choice:'.length).split('|').map((o) => (
+            <option key={o} value={o}>{o === 'ONE_TIME' ? 'One-time' : o === 'MONTHLY' ? 'Monthly' : o}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={cn(inputCls, 'w-40 text-right')}
+          aria-label={setting.label}
+        />
+      )}
       <button
         onClick={() => save.mutate()}
         disabled={!dirty || save.isPending}

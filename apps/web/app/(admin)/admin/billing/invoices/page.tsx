@@ -21,6 +21,7 @@ const KINDS = [
   { key: '', label: 'Every kind' },
   { key: 'SUBSCRIPTION', label: 'Listing fees' },
   { key: 'PRODUCTION', label: 'Production' },
+  { key: 'DOMAIN', label: 'Domains' },
 ];
 
 export default function AdminInvoices() {

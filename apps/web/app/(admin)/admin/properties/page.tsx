@@ -346,7 +346,6 @@ function DomainPanel({
   const status = useQuery({
     queryKey: ['domain-status', property.slug, property.customDomain],
     queryFn: () => propertiesApi.domainStatus(property.slug),
-    enabled: !!property.customDomain,
   });
   const auto = status.data?.automated && domain === property.customDomain;
   const live = property.status !== 'DRAFT' && property.status !== 'ARCHIVED';
@@ -381,6 +380,25 @@ function DomainPanel({
             className="h-10 rounded-full border border-[#dadce0] px-4 text-[13px] font-medium text-[#c5221f] hover:bg-[#fce8e6] disabled:opacity-50 cursor-pointer"
           >
             Remove
+          </button>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px] text-[#5f6368]">
+        <span>
+          e-resi address:{' '}
+          {status.data?.subdomainHost ?? `${property.slug}.e-resi.com`} ·{' '}
+          {status.data?.subdomainActive ? 'active' : status.data?.subdomainInvoice ? 'awaiting payment' : 'not active'}
+        </span>
+        {status.data && !status.data.subdomainActive && (
+          <button
+            onClick={async () => {
+              await propertiesApi.activateSubdomain(property.slug);
+              await status.refetch();
+            }}
+            className="rounded-full border border-[#dadce0] px-3 py-1 text-[12px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] cursor-pointer"
+          >
+            Activate free
           </button>
         )}
       </div>

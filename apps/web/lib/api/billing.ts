@@ -170,7 +170,7 @@ export interface InvoiceLine {
 export interface Invoice {
   id: string;
   number: string;
-  kind: 'SUBSCRIPTION' | 'PRODUCTION';
+  kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN';
   status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
   billedToName: string;
   billedToEmail: string;

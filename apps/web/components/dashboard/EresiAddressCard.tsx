@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock, Copy, Link2, Loader2 } from 'lucide-react';
-import { propertiesApi } from '../../lib/api/properties';
+import Link from 'next/link';
+import { fmtMoney, propertiesApi } from '../../lib/api/properties';
 import { ApiError } from '../../lib/api/client';
 
 const RESERVED = new Set([
@@ -48,7 +49,7 @@ export function EresiAddressCard({
   const status = useQuery({
     queryKey: ['domain-status', slug, 'sub', current],
     queryFn: () => propertiesApi.domainStatus(slug),
-    enabled: !!current && !editing && published,
+    enabled: !!current,
     staleTime: 60_000,
   });
 
@@ -82,6 +83,24 @@ export function EresiAddressCard({
   }
 
   const live = status.data?.subdomainLive;
+  const active = status.data?.subdomainActive;
+  const openInvoice = status.data?.subdomainInvoice;
+  const fee = status.data?.prices?.subdomain.amount ?? 0;
+  const currency = status.data?.prices?.currency ?? 'KES';
+  const [activating, setActivating] = useState(false);
+
+  async function activate() {
+    setActivating(true);
+    setError('');
+    try {
+      await propertiesApi.activateSubdomain(slug);
+      await queryClient.invalidateQueries({ queryKey: ['domain-status', slug] });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not activate the address');
+    } finally {
+      setActivating(false);
+    }
+  }
 
   return (
     <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
@@ -90,7 +109,7 @@ export function EresiAddressCard({
         <div className="min-w-0 flex-1">
           <h3 className="text-[18px] font-normal text-[#202124]">e-resi address</h3>
           <p className="text-sm text-[#5f6368]">
-            A free address for this development that works straight away — share it with buyers and agents.
+            A short address for this development on e-resi — easy to share with buyers and agents.
           </p>
         </div>
       </div>
@@ -139,7 +158,11 @@ export function EresiAddressCard({
           <a href={`https://${host}`} target="_blank" rel="noreferrer" className="text-[16px] font-medium text-[#1a73e8] hover:underline">
             {host}
           </a>
-          {!published ? (
+          {status.data && !active ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f1f3f4] px-3 py-1 text-[12px] font-medium text-[#5f6368]">
+              {openInvoice ? 'Awaiting payment' : 'Not active'}
+            </span>
+          ) : !published ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fef7e0] px-3 py-1 text-[12px] font-medium text-[#b06000]">
               <Clock size={12} /> Opens once approved
             </span>
@@ -172,6 +195,38 @@ export function EresiAddressCard({
               Change
             </button>
           </div>
+        </div>
+      )}
+
+      {!editing && current && status.data && !active && (
+        <div className="mt-4 rounded-2xl bg-[#f8f9fa] p-4 text-[14px] leading-relaxed text-[#3c4043]">
+          {openInvoice ? (
+            <>
+              <p>
+                Invoice {openInvoice.number} for <b>{fmtMoney(openInvoice.total, openInvoice.currency)}</b> (incl. VAT)
+                is waiting. {host} switches on as soon as it&apos;s paid.
+              </p>
+              <Link href="/dashboard/billing" className="mt-3 inline-flex rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">
+                Pay now
+              </Link>
+            </>
+          ) : (
+            <>
+              <p>
+                Get {host} for this development
+                {fee > 0 ? <> — <b>{fmtMoney(fee, currency)}</b> one-time + VAT.</> : ' — free.'}
+              </p>
+              <button
+                type="button"
+                onClick={activate}
+                disabled={activating}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc] disabled:opacity-50 cursor-pointer"
+              >
+                {activating && <Loader2 size={14} className="animate-spin" />}
+                {fee > 0 ? 'Get this address' : 'Activate address'}
+              </button>
+            </>
+          )}
         </div>
       )}
 

@@ -97,6 +97,10 @@ export const propertiesApi = {
   domainStatus: (slug: string) =>
     apiClient.get<DomainStatus>(`/properties/${slug}/domain-status`),
 
+  /** Activate <subdomain>.e-resi.com: at once when free, otherwise returns the invoice to pay. */
+  activateSubdomain: (slug: string) =>
+    apiClient.post<{ activated: boolean; invoice?: DomainInvoice }>(`/properties/${slug}/subdomain/activate`, {}),
+
   /** "Check now": retries a failed connection or re-asks Cloudflare. */
   domainCheck: (slug: string) =>
     apiClient.post<DomainStatus>(`/properties/${slug}/domain-check`, {}),
@@ -171,7 +175,7 @@ export interface DomainStatus {
   /** Cloudflare automation is configured on the server. */
   automated?: boolean;
   method?: 'nameservers' | 'cname' | 'manual';
-  state?: 'PENDING' | 'ACTIVE' | 'ERROR' | 'MANUAL' | null;
+  state?: 'PENDING' | 'ACTIVE' | 'ERROR' | 'MANUAL' | 'AWAITING_PAYMENT' | 'SUSPENDED' | null;
   nameservers?: string[];
   cnameTarget?: string | null;
   error?: string | null;
@@ -180,5 +184,32 @@ export interface DomainStatus {
   subdomain?: string | null;
   subdomainHost?: string | null;
   subdomainLive?: boolean;
+  /** The e-resi address is paid for / granted and routes. */
+  subdomainActive?: boolean;
+  subdomainInvoice?: DomainInvoice | null;
+  billing?: {
+    mode: 'ONE_TIME' | 'MONTHLY' | null;
+    fee: number | null;
+    paidThrough: string | null;
+    invoice: DomainInvoice | null;
+  };
+  /** What anything new costs right now (admin-set). */
+  prices?: {
+    currency: string;
+    custom: { mode: 'ONE_TIME' | 'MONTHLY'; amount: number };
+    subdomain: { amount: number };
+  };
   published?: boolean;
+}
+
+export interface DomainInvoice {
+  id: string;
+  number: string;
+  total: number;
+  currency: string;
+  dueAt?: string;
+}
+
+export function fmtMoney(amount: number, currency: string) {
+  return `${currency} ${amount.toLocaleString('en-KE', { maximumFractionDigits: 2 })}`;
 }
