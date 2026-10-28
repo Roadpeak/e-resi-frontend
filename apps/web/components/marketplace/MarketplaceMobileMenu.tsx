@@ -1,5 +1,6 @@
 'use client';
 
+import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
@@ -7,8 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight, Building2, ChevronRight, HardHat, Home, KeyRound, LayoutGrid, LogOut,
-  Map, Menu, Store, Users, X, type LucideIcon,
-} from 'lucide-react';
+  Map, Menu, Store, Users, X, type LucideIcon, Briefcase, Building } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
@@ -48,6 +48,13 @@ const SECTIONS: { heading: string; links: { href: string; label: string; icon: L
       { href: '/developers', label: 'Developers', icon: HardHat },
       { href: '/agents', label: 'Agents', icon: Users },
       { href: '/map/locations', label: 'Map', icon: Map },
+    ],
+  },
+  {
+    heading: 'Sell on e-resi',
+    links: [
+      { href: '/list-agency', label: 'List agency', icon: Briefcase },
+      { href: '/list-development', label: 'List development', icon: Building },
     ],
   },
 ];
@@ -133,9 +140,7 @@ export function MarketplaceMobileMenu() {
                     href={homePathFor(user.role)}
                     className="mb-5 flex items-center gap-3 rounded-2xl border border-gray-200 p-3 transition-colors hover:bg-gray-50"
                   >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[14px] font-semibold text-white">
-                      {`${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()}
-                    </span>
+                    <UserAvatar user={user} size={44} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-semibold text-gray-900">
                         {user.firstName} {user.lastName}

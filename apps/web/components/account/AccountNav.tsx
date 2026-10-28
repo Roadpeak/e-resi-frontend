@@ -1,8 +1,8 @@
 'use client';
 
+import { UserAvatar } from './UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { notificationsApi } from '../../lib/api/notifications';
@@ -54,7 +54,6 @@ export function AccountNav() {
     setMobileOpen(false);
   }, [pathname]);
 
-  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '';
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#dadce0] bg-white/95 backdrop-blur-xl">
@@ -103,13 +102,9 @@ export function AccountNav() {
             <button
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Account menu"
-              className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#1a73e8] text-[13px] font-medium text-white transition-transform hover:scale-105 cursor-pointer"
+              className="rounded-full transition-transform hover:scale-105 cursor-pointer"
             >
-              {user?.avatarUrl ? (
-                <Image src={user.avatarUrl} alt="" fill className="object-cover" sizes="36px" />
-              ) : (
-                initials
-              )}
+              {user ? <UserAvatar user={user} size={36} /> : null}
             </button>
 
             {menuOpen && (

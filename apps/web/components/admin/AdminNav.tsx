@@ -1,5 +1,6 @@
 'use client';
 
+import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -51,7 +52,6 @@ export function AdminNav() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '';
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#3c4043] bg-[#202124]">
@@ -90,9 +90,9 @@ export function AdminNav() {
             <button
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Account menu"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8ab4f8] text-[13px] font-medium text-[#202124] transition-transform hover:scale-105 cursor-pointer"
+              className="rounded-full transition-transform hover:scale-105 cursor-pointer"
             >
-              {initials}
+              {user ? <UserAvatar user={user} size={36} /> : null}
             </button>
             {menuOpen && (
               <div className="absolute right-0 top-12 w-60 overflow-hidden rounded-2xl border border-[#3c4043] bg-[#292a2d] py-2 shadow-xl">

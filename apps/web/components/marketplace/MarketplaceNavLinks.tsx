@@ -97,6 +97,12 @@ function NavDropdown({ label, links }: { label: string; links: { href: string; l
   );
 }
 
+/** Calls to action for the two audiences who sell on e-resi. */
+export const JOIN_LINKS = [
+  { href: '/list-agency', label: 'List agency' },
+  { href: '/list-development', label: 'List development' },
+];
+
 export function MarketplaceNavLinks() {
   const pathname = usePathname();
 
@@ -110,6 +116,20 @@ export function MarketplaceNavLinks() {
           key={l.href}
           href={l.href}
           className={itemClass(pathname === l.href || pathname.startsWith(`${l.href}/`))}
+        >
+          {l.label}
+        </Link>
+      ))}
+      {JOIN_LINKS.map((l) => (
+        <Link
+          key={l.href}
+          href={l.href}
+          className={cn(
+            'ml-1 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[14px] font-semibold transition-colors',
+            pathname === l.href
+              ? 'border-gray-900 bg-gray-900 text-white'
+              : 'border-gray-300 text-gray-900 hover:border-gray-900',
+          )}
         >
           {l.label}
         </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -89,6 +89,17 @@ export function RegisterForm() {
   });
   // Agent-only. The API requires a kind and at least one specialty, since an
   // agent with neither matches no search and would appear nowhere.
+  // /register?role=developer|agent (from the "List development" and "List
+  // agency" pages) skips the account-type step. Read from the URL after
+  // mount rather than useSearchParams, which would need a Suspense boundary.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('role');
+    if (wanted && ROLES.some((r) => r.id === wanted)) {
+      setRole(wanted as Role);
+      setStep(1);
+    }
+  }, []);
+
   const [agentKind, setAgentKind] = useState<'COMPANY' | 'INDIVIDUAL'>('INDIVIDUAL');
   const [specialties, setSpecialties] = useState<AgentSpecialty[]>([]);
 

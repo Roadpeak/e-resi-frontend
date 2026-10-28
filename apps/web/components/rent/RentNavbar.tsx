@@ -1,5 +1,6 @@
 'use client';
 
+import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -51,7 +52,6 @@ export function RentNavbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const initials = user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : '';
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/[0.08] bg-white">
@@ -88,9 +88,9 @@ export function RentNavbar() {
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Account menu"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white transition-transform hover:scale-105 cursor-pointer"
+                className="rounded-full transition-transform hover:scale-105 cursor-pointer"
               >
-                {initials}
+                <UserAvatar user={user} size={40} />
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-12 w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">

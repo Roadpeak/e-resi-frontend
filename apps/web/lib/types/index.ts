@@ -378,6 +378,8 @@ export interface User {
   email: string;
   phone?: string;
   avatarUrl?: string;
+  /** Photo, or company/agency logo — what navbars show for this account. */
+  profileImageUrl?: string | null;
   role: UserRole;
   emailVerified?: boolean;
   isActive?: boolean;
