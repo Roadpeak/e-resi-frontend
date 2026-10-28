@@ -19,12 +19,14 @@ import { floorPlansApi } from '../../../../../lib/api/floor-plans';
 import { PropertyMediaManager } from '../../../../../components/dashboard/PropertyMediaManager';
 import { DetectLocationButton } from '../../../../../components/dashboard/DetectLocationButton';
 import { AreaSearchInput } from '../../../../../components/dashboard/AreaSearchInput';
+import { CustomDomainCard } from '../../../../../components/dashboard/CustomDomainCard';
 import { REVIEW_CHIP, ReviewStatusBanner, reviewStateOf } from '../../../../../components/dashboard/ReviewStatus';
 
 interface DashProperty {
   id: string;
   slug: string;
   name: string;
+  customDomain?: string | null;
   tagline?: string | null;
   description?: string | null;
   category: string;
@@ -607,6 +609,13 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           </button>
         </div>
       </form>
+
+      {/* ── Custom domain ── */}
+      <CustomDomainCard
+        slug={property.slug}
+        current={property.customDomain}
+        published={property.status !== 'DRAFT'}
+      />
 
       {/* ── Media: gallery, logo, immersive videos ── */}
       <PropertyMediaManager slug={property.slug} heroImageUrl={property.heroImageUrl} />

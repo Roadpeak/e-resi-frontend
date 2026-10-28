@@ -206,6 +206,9 @@ export interface Property {
   id: string;
   slug: string;
   name: string;
+  /** Own domain the development is served on, e.g. herisresidence.co.ke. */
+  customDomain?: string | null;
+  whiteLabel?: boolean;
   tagline: string;
   description: string;
   category: PropertyCategory;

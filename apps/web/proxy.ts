@@ -86,7 +86,11 @@ export async function proxy(req: NextRequest) {
   if (pathname === '/' || SITE_SECTIONS.some((s) => pathname === s || pathname.startsWith(`${s}/`))) {
     const url = req.nextUrl.clone();
     url.pathname = pathname === '/' ? `/${slug}` : `/${slug}${pathname}`;
-    return NextResponse.rewrite(url);
+    const res = NextResponse.rewrite(url);
+    // Lets the API's domain-status check confirm DNS, Cloudflare and routing
+    // all reach this development, without trusting anything else on the page.
+    res.headers.set('x-eresi-site', slug);
+    return res;
   }
 
   // Everything else belongs to e-resi itself.

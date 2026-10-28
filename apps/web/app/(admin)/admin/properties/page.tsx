@@ -8,6 +8,7 @@ import { ConfirmDelete } from '../../../../components/admin/ConfirmDelete';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { adminPropertiesApi, type AdminProperty } from '../../../../lib/api/admin';
 import { propertiesApi } from '../../../../lib/api/properties';
+import { cleanDomain, isApexDomain } from '../../../../components/dashboard/CustomDomainCard';
 import { ApiError } from '../../../../lib/api/client';
 import { cn } from '../../../../lib/utils';
 
@@ -327,12 +328,6 @@ function PropertyRow({
   );
 }
 
-/** Cleans what an admin pastes ("https://www.Heris.co.ke/") down to the stored form. */
-function cleanDomain(input: string) {
-  return input.trim().toLowerCase()
-    .replace(/^[a-z]+:\/\//, '').replace(/[/?#].*$/, '').replace(/\.$/, '').replace(/^www\./, '');
-}
-
 function DomainPanel({
   property,
   busy,
@@ -347,7 +342,7 @@ function DomainPanel({
   const domain = cleanDomain(value);
   // A subdomain (tours.dev.co.ke) can be CNAMEd; a whole domain
   // (herisresidence.co.ke) needs its nameservers moved to Cloudflare.
-  const isApex = domain.split('.').length <= (/\.(co|or|ac|go|ne|sc|me)\.ke$/.test(domain) ? 3 : 2);
+  const isApex = isApexDomain(domain);
   const live = property.status !== 'DRAFT' && property.status !== 'ARCHIVED';
 
   return (

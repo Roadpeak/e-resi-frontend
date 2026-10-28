@@ -91,6 +91,10 @@ export const propertiesApi = {
     }>,
   ) => apiClient.patch<Property>(`/properties/${slug}/branding`, body),
 
+  /** Whether the custom domain reaches the development yet (checked live by the API). */
+  domainStatus: (slug: string) =>
+    apiClient.get<{ domain: string | null; live: boolean; published?: boolean }>(`/properties/${slug}/domain-status`),
+
   // Every lead carries the referring agent when there is one, attached here
   // rather than at each call site so no submission path can forget it.
   submitInquiry: (
