@@ -46,6 +46,7 @@ jobs:
             NEXT_PUBLIC_API_URL=https://api.e-resi.com
             NEXT_PUBLIC_APP_URL=https://app.e-resi.com
             NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
+            NEXT_DEPLOYMENT_ID=${{ github.sha }}
 
   deploy:
     name: Deploy to droplet

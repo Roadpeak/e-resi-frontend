@@ -11,6 +11,11 @@ const nextConfig = {
   // them up instead of tracing from apps/web/ alone.
   outputFileTracingRoot: path.join(__dirname, '../../'),
   poweredByHeader: false,
+  // Each deploy gets its own id (the commit SHA). A tab still running the
+  // previous build then does a full reload when it navigates, instead of
+  // mixing old and new chunks ("module factory is not available",
+  // exports reading as undefined).
+  deploymentId: process.env.NEXT_DEPLOYMENT_ID || undefined,
   // TEMP: skip strict TS check during production build. The three.js
   // helpers under components/ have implicit-any typing that blocks
   // `next build`. Flag to dev to fix and remove this override.
