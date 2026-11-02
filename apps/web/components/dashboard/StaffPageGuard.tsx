@@ -15,7 +15,7 @@ export function StaffPageGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const key = pathname.split('/')[2] ?? '';
-  const blocked = !!user?.isStaff && key !== '' && !(user.staffPages ?? []).includes(key);
+  const blocked = !!user?.isStaff && key !== '' && key !== 'support' && !(user.staffPages ?? []).includes(key);
 
   useEffect(() => {
     if (blocked) router.replace('/dashboard');

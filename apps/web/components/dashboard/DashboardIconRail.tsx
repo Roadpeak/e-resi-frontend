@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '../../lib/api/chat';
+import { supportApi } from '../../lib/api/support';
 import { useDeveloperInquiries } from '../../lib/api/queries';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { MaterialIcon } from './MaterialIcon';
@@ -32,6 +33,7 @@ const NAV = [
 ];
 
 const BOTTOM = [
+  { label: 'Contact e-resi', href: '/dashboard/support', icon: 'support_agent' },
   { label: 'Settings', href: '/dashboard/settings', icon: 'settings' },
   { label: 'Visit Site', href: '/', icon: 'public' },
 ];
@@ -98,12 +100,17 @@ export function DashboardIconRail() {
         return key === '' || (user.staffPages ?? []).includes(key);
       })
     : NAV;
-  const bottom = user?.isStaff ? BOTTOM.filter((b) => b.href === '/') : BOTTOM;
+  const bottom = user?.isStaff ? BOTTOM.filter((b) => b.href === '/' || b.href === '/dashboard/support') : BOTTOM;
   const { data: newInquiries } = useDeveloperInquiries({ status: 'NEW', limit: 1 });
   const { data: chatUnread } = useQuery({
     queryKey: ['chat', 'unread'],
     queryFn: () => chatApi.unreadCount(),
     refetchInterval: 30_000,
+  });
+  const { data: supportUnread } = useQuery({
+    queryKey: ['support', 'unread'],
+    queryFn: () => supportApi.unread(),
+    refetchInterval: 60_000,
   });
 
   return (
@@ -128,7 +135,14 @@ export function DashboardIconRail() {
       </nav>
       <nav className="flex shrink-0 flex-col items-center gap-0.5 border-t border-[#f1f3f4] pt-1.5">
         {bottom.map(({ label, href, icon }) => (
-          <RailItem key={href} label={label} href={href} icon={icon} active={pathname === href} />
+          <RailItem
+            key={href}
+            label={label}
+            href={href}
+            icon={icon}
+            active={pathname === href}
+            badge={href === '/dashboard/support' ? supportUnread?.count ?? 0 : 0}
+          />
         ))}
       </nav>
     </aside>

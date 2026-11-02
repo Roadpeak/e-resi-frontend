@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '../../lib/api/chat';
+import { supportApi } from '../../lib/api/support';
 import { partnershipsApi } from '../../lib/api/partnerships';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { cn } from '../../lib/utils';
@@ -27,7 +28,10 @@ const NAV = [
   { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
 ];
 
-const BOTTOM = [{ label: 'Visit Site', href: '/', icon: 'public' }];
+const BOTTOM = [
+  { label: 'Contact e-resi', href: '/agent/support', icon: 'support_agent' },
+  { label: 'Visit Site', href: '/', icon: 'public' },
+];
 
 function RailItem({
   label, href, icon, active, badge,
@@ -94,8 +98,15 @@ export function AgentIconRail() {
     refetchInterval: 120_000,
   });
 
+  const { data: supportUnread } = useQuery({
+    queryKey: ['support', 'unread'],
+    queryFn: () => supportApi.unread(),
+    refetchInterval: 60_000,
+  });
+
   function badgeFor(href: string): number | undefined {
     if (href === '/agent/messages') return unread?.count;
+    if (href === '/agent/support') return supportUnread?.count;
     if (href === '/agent/partners') return pending?.meta.total;
     return undefined;
   }
@@ -118,7 +129,7 @@ export function AgentIconRail() {
       </div>
       <div className="flex shrink-0 flex-col items-center gap-1 border-t border-[#f1f3f4] pt-2">
         {BOTTOM.map((item) => (
-          <RailItem key={item.href} {...item} />
+          <RailItem key={item.href} {...item} active={pathname === item.href} badge={badgeFor(item.href)} />
         ))}
       </div>
     </nav>

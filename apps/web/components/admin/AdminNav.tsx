@@ -9,6 +9,8 @@ import { MaterialIcon } from '../dashboard/MaterialIcon';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useUnreadNotificationCount } from '../../lib/api/queries';
+import { useQuery } from '@tanstack/react-query';
+import { adminSupportApi } from '../../lib/api/support';
 
 /**
  * Sections of the admin console. Later phases fill these in; anything not yet
@@ -31,6 +33,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },
   { label: 'Traffic', href: '/admin/traffic', icon: 'travel_explore' },
   { label: 'Audit log', href: '/admin/audit', icon: 'history' },
+  { label: 'Support', href: '/admin/support', icon: 'support_agent' },
   { label: 'Notifications', href: '/admin/notifications', icon: 'notifications' },
   { label: 'System', href: '/admin/system', icon: 'settings' },
 ];
@@ -41,6 +44,11 @@ export function AdminNav() {
   const { user, logout } = useAuthStore();
   const { data: unread } = useUnreadNotificationCount();
   const unreadCount = unread?.count ?? 0;
+  const { data: supportUnread } = useQuery({
+    queryKey: ['admin-support', 'unread'],
+    queryFn: () => adminSupportApi.unread(),
+    refetchInterval: 60_000,
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -143,6 +151,11 @@ export function AdminNav() {
               >
                 <MaterialIcon name={s.icon} size={17} fill={active} />
                 {s.label}
+                {s.href === '/admin/support' && !!supportUnread?.count && (
+                  <span className="rounded-full bg-[#ea4335] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    {supportUnread.count > 99 ? '99+' : supportUnread.count}
+                  </span>
+                )}
                 {s.soon && (
                   <span className="rounded-full bg-[#3c4043] px-1.5 py-0.5 text-[10px] text-[#9aa0a6]">
                     soon
