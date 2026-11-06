@@ -1,7 +1,7 @@
 'use client';
 
 import 'material-symbols/rounded.css';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
@@ -62,7 +62,8 @@ function RailItem({
       }}
       onMouseLeave={() => setTipY(null)}
       className={cn(
-        'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+        // 20 items don't fit a laptop-height rail at 36px; step down on short screens.
+        'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors [@media(max-height:880px)]:h-8 [@media(max-height:880px)]:w-8 [@media(max-height:720px)]:h-7 [@media(max-height:720px)]:w-7',
         active
           ? 'bg-[#d3e3fd] text-[#0b57d0]'
           : 'text-[#3c4043] hover:bg-[#f1f3f4] hover:text-[#202124]',
@@ -113,11 +114,31 @@ export function DashboardIconRail() {
     refetchInterval: 60_000,
   });
 
+  // When the list still overflows, show that more pages sit below instead of
+  // silently clipping the last ones (Team was hidden on laptop screens).
+  const listRef = useRef<HTMLElement>(null);
+  const [moreBelow, setMoreBelow] = useState(false);
+  const checkOverflow = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    setMoreBelow(el.scrollTop + el.clientHeight < el.scrollHeight - 2);
+  }, []);
+  useEffect(() => {
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [checkOverflow, nav.length]);
+
   return (
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-1.5 border-r border-[#f1f3f4] py-2 md:flex">
       {/* The page list scrolls when the viewport is shorter than the rail,
           so Settings and Visit Site below never fall off-screen. */}
-      <nav className="flex min-h-0 flex-1 flex-col items-center gap-0.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative flex min-h-0 w-full flex-1 flex-col">
+      <nav
+        ref={listRef}
+        onScroll={checkOverflow}
+        className="flex min-h-0 flex-1 flex-col items-center gap-0.5 overflow-y-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {nav.map(({ label, href, icon }) => (
           <RailItem
             key={href}
@@ -133,6 +154,17 @@ export function DashboardIconRail() {
           />
         ))}
       </nav>
+      {moreBelow && (
+        <button
+          type="button"
+          aria-label="Show more pages"
+          onClick={() => listRef.current?.scrollBy({ top: 160, behavior: 'smooth' })}
+          className="absolute inset-x-0 bottom-0 flex h-8 items-end justify-center bg-gradient-to-t from-white via-white/90 to-transparent pb-0.5 text-[#5f6368] hover:text-[#202124]"
+        >
+          <MaterialIcon name="keyboard_arrow_down" size={18} />
+        </button>
+      )}
+      </div>
       <nav className="flex shrink-0 flex-col items-center gap-0.5 border-t border-[#f1f3f4] pt-1.5">
         {bottom.map(({ label, href, icon }) => (
           <RailItem
