@@ -8,7 +8,7 @@ interface Props {
 export default async function DeveloperDetailRoute({ params }: Props) {
   const { id } = await params;
   return (
-    <div className="min-h-screen bg-[#f0f0f2]">
+    <div className="min-h-screen bg-[#f6f4f0]">
       <PropertiesNavbar />
       <DeveloperProfilePage profileId={id} />
     </div>
