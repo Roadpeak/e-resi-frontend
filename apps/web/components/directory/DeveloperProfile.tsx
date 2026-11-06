@@ -1,17 +1,28 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Building2, MapPin, Phone, Mail, Globe, ArrowLeft, ArrowUpRight, Loader2,
+  Building2, MapPin, Phone, Mail, Globe, ArrowLeft, ArrowRight, ChevronDown, Loader2, X,
 } from 'lucide-react';
-import { developersApi, type DeveloperPropertyPreview } from '../../lib/api/developers';
+import { developersApi, type DeveloperPropertyPreview, type DeveloperProfileDetail } from '../../lib/api/developers';
 import { formatPrice, formatPriceRange, cn } from '../../lib/utils';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { InstagramIcon, FacebookIcon, TwitterIcon, LinkedinIcon } from './SocialIcons';
 import { PartnersStrip } from './PartnersStrip';
+
+/*
+ * The developer page as the developer's own website: its own header and menu,
+ * a full-screen hero, centred uppercase section headings, full-bleed bands for
+ * each development, and a dark enquiry band and footer. Content and links are
+ * e-resi's; the presentation borrows from luxury developer sites.
+ */
+
+const SERIF = 'font-[family-name:var(--font-marcellus)]';
+const NAVY = 'text-[#0a0a3d]';
+const GOLD = 'text-[#a2865a]';
 
 function waLink(whatsapp: string) {
   return `https://wa.me/${whatsapp.replace(/\D/g, '')}`;
@@ -27,7 +38,6 @@ const SOCIAL_ICONS = {
   linkedin: LinkedinIcon,
 } as const;
 
-/** "APARTMENT" → "Apartment", "MIXED_USE" → "Mixed use". */
 function categoryLabel(category: string) {
   const s = category.replace(/_/g, ' ').toLowerCase();
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -38,7 +48,10 @@ function areaName(p: DeveloperPropertyPreview) {
   const n = p.neighborhood?.replace(/\s+(ward|sub-?county|constituency)$/i, '').trim();
   return n || p.city;
 }
-
+function whereLabel(p: DeveloperPropertyPreview) {
+  const a = areaName(p);
+  return a === p.city ? p.city : `${a}, ${p.city}`;
+}
 function priceLabel(p: DeveloperPropertyPreview) {
   if (!p.priceFrom || p.priceFrom <= 0) return null;
   if (p.priceTo && p.priceTo > p.priceFrom) return formatPriceRange(p.priceFrom, p.priceTo, p.currency);
@@ -54,13 +67,13 @@ interface Place {
   minPrice: { amount: number; currency: string } | null;
 }
 
-/** Group a developer's work by area, so a visitor sees where they build. */
+const placeKeyOf = (p: DeveloperPropertyPreview) => `${areaName(p)}|${p.city}`.toLowerCase();
+
 function groupPlaces(properties: DeveloperPropertyPreview[]): Place[] {
   const map = new Map<string, Place>();
   for (const p of properties) {
-    const area = areaName(p);
-    const key = `${area}|${p.city}`.toLowerCase();
-    const place = map.get(key) ?? { key, area, city: p.city, imageUrl: null, count: 0, minPrice: null };
+    const key = placeKeyOf(p);
+    const place = map.get(key) ?? { key, area: areaName(p), city: p.city, imageUrl: null, count: 0, minPrice: null };
     place.count += 1;
     place.imageUrl ??= p.heroImageUrl;
     if (p.priceFrom && p.priceFrom > 0) {
@@ -73,48 +86,249 @@ function groupPlaces(properties: DeveloperPropertyPreview[]): Place[] {
   return [...map.values()].sort((a, b) => b.count - a.count);
 }
 
-const placeKeyOf = (p: DeveloperPropertyPreview) => `${areaName(p)}|${p.city}`.toLowerCase();
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-/**
- * Developers often paste bullet lists ("• Founded: 2014 by …"). Render those as
- * labelled rows instead of one run-on paragraph; plain prose stays prose.
- */
-function Description({ text }: { text: string }) {
+/* ───────────────────────── shared pieces ───────────────────────── */
+
+function SectionHeading({
+  eyebrow, title, intro, light,
+}: { eyebrow: string; title: string; intro?: React.ReactNode; light?: boolean }) {
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <p className={cn('text-[12px] font-medium uppercase tracking-[0.28em]', light ? 'text-[#c9b48c]' : GOLD)}>{eyebrow}</p>
+      <h2
+        className={cn(
+          SERIF,
+          'mt-4 text-balance text-[30px] uppercase leading-[1.12] tracking-[0.02em] sm:text-[44px] lg:text-[48px]',
+          light ? 'text-white' : NAVY,
+        )}
+      >
+        {title}
+      </h2>
+      {intro && (
+        <div className={cn('mx-auto mt-5 max-w-[56ch] text-[15.5px] leading-[1.8]', light ? 'text-white/75' : 'text-[#0a0a3d]/80')}>
+          {intro}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SquareButton({
+  children, onClick, href, variant = 'dark', external,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  href?: string;
+  variant?: 'dark' | 'ghost' | 'light' | 'outline';
+  external?: boolean;
+}) {
+  const cls = cn(
+    'inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-[13px] font-medium uppercase tracking-[0.16em] transition-colors',
+    variant === 'dark' && 'bg-[#0a0a3d] text-white hover:bg-[#1c1c5c]',
+    variant === 'ghost' && 'border border-white/25 bg-black/35 text-white backdrop-blur-sm hover:bg-white hover:text-[#0a0a3d]',
+    variant === 'light' && 'bg-white text-[#0a0a3d] hover:bg-[#ece7dd]',
+    variant === 'outline' && 'border border-[#0a0a3d]/25 text-[#0a0a3d] hover:border-[#0a0a3d]',
+  );
+  if (href) {
+    const isInternal = href.startsWith('/');
+    if (isInternal) return <Link href={href} className={cls}>{children}</Link>;
+    return (
+      <a href={href} className={cls} {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}>
+        {children}
+      </a>
+    );
+  }
+  return <button type="button" onClick={onClick} className={cls}>{children}</button>;
+}
+
+/** Bulleted descriptions ("• Founded: 2014 by …") become labelled rows; prose stays prose. */
+function Story({ text }: { text: string }) {
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   const bullet = /^[•\-*–·]\s*/;
   const isList = lines.length > 1 && lines.filter((l) => bullet.test(l)).length >= lines.length / 2;
 
   if (!isList) {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto max-w-[60ch] space-y-5 text-center">
         {lines.map((l, i) => (
-          <p key={i} className="max-w-[62ch] text-[16px] leading-[1.75] text-[#3d3a36] sm:text-[17px]">{l}</p>
+          <p key={i} className="text-[16px] leading-[1.85] text-[#0a0a3d]/80">{l}</p>
         ))}
       </div>
     );
   }
 
   return (
-    <dl className="divide-y divide-black/[0.07] border-y border-black/[0.07]">
+    <dl className="mx-auto grid max-w-5xl gap-px overflow-hidden bg-[#0a0a3d]/10 sm:grid-cols-2 lg:grid-cols-3">
       {lines.map((raw, i) => {
         const line = raw.replace(bullet, '');
         const m = line.match(/^([^:]{2,32}):\s*(.+)$/);
         return (
-          <div key={i} className="grid gap-1 py-4 sm:grid-cols-[180px_1fr] sm:gap-6">
-            {m ? (
-              <>
-                <dt className="text-[12px] font-semibold uppercase tracking-[0.16em] text-warm-700">{m[1]}</dt>
-                <dd className="text-[15.5px] leading-relaxed text-[#2b2926]">{m[2]}</dd>
-              </>
-            ) : (
-              <dd className="text-[15.5px] leading-relaxed text-[#2b2926] sm:col-span-2">{line}</dd>
-            )}
+          <div key={i} className="bg-white px-6 py-7 text-center sm:px-8">
+            {m && <dt className={cn('text-[11.5px] font-medium uppercase tracking-[0.24em]', GOLD)}>{m[1]}</dt>}
+            <dd className="mt-3 text-[15px] leading-[1.75] text-[#0a0a3d]/85">{m ? m[2] : line}</dd>
           </div>
         );
       })}
     </dl>
   );
 }
+
+/* ───────────────────────── header + menu ───────────────────────── */
+
+function SiteHeader({
+  developer, onEnquire, sections,
+}: {
+  developer: DeveloperProfileDetail;
+  onEnquire: () => void;
+  sections: { id: string; label: string }[];
+}) {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const solid = scrolled && !open;
+
+  return (
+    <>
+      <header
+        className={cn(
+          'fixed inset-x-0 top-0 z-40 transition-colors duration-300',
+          solid ? 'bg-white/95 shadow-[0_1px_0_rgba(10,10,61,0.08)] backdrop-blur' : 'bg-gradient-to-b from-black/45 to-transparent',
+        )}
+      >
+        <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-4 sm:h-[72px] sm:px-8">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            className={cn('flex h-10 w-10 items-center justify-start', solid ? 'text-[#0a0a3d]' : 'text-white')}
+          >
+            {open ? (
+              <X size={22} strokeWidth={1.5} />
+            ) : (
+              <span className="flex w-[22px] flex-col gap-[6px]">
+                <span className="h-px w-full bg-current" />
+                <span className="h-px w-full bg-current" />
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex min-w-0 items-center justify-center gap-3"
+            aria-label={`${developer.companyName} — back to top`}
+          >
+            {developer.logoUrl && (
+              <span className="relative h-9 w-9 shrink-0 overflow-hidden bg-white">
+                <Image src={developer.logoUrl} alt="" fill sizes="36px" className="object-contain p-0.5" />
+              </span>
+            )}
+            <span
+              className={cn(
+                SERIF,
+                'truncate text-[17px] uppercase tracking-[0.32em] sm:text-[20px]',
+                solid ? 'text-[#0a0a3d]' : 'text-white',
+              )}
+            >
+              {developer.companyName}
+            </span>
+          </button>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onEnquire}
+              className={cn(
+                'px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors sm:px-5',
+                solid ? 'bg-[#0a0a3d] text-white hover:bg-[#1c1c5c]' : 'bg-black/40 text-white backdrop-blur-sm hover:bg-white hover:text-[#0a0a3d]',
+              )}
+            >
+              Enquire
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Full-screen menu */}
+      <div
+        className={cn(
+          'fixed inset-0 z-30 bg-[#0d0d14] transition-opacity duration-300',
+          open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+        )}
+        aria-hidden={!open}
+      >
+        <nav className="mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pb-10 pt-28 sm:px-12">
+          <ul className="space-y-2 sm:space-y-3">
+            {sections.map((s, i) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  tabIndex={open ? 0 : -1}
+                  onClick={() => {
+                    setOpen(false);
+                    setTimeout(() => scrollToId(s.id), 50);
+                  }}
+                  className={cn(
+                    SERIF,
+                    'group flex items-baseline gap-5 text-left text-[38px] uppercase leading-tight tracking-[0.02em] text-white/85 transition-colors hover:text-white sm:text-[60px]',
+                  )}
+                >
+                  <span className="font-sans text-[12px] tracking-[0.2em] text-[#c9b48c] tabular-nums">0{i + 1}</span>
+                  {s.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-end justify-between gap-6 border-t border-white/10 pt-6 text-[13px] text-white/55">
+            <Link
+              href="/developers"
+              tabIndex={open ? 0 : -1}
+              className="inline-flex items-center gap-2 uppercase tracking-[0.16em] transition-colors hover:text-white"
+            >
+              <ArrowLeft size={14} /> All developers on e-resi
+            </Link>
+            {developer.website && (
+              <a
+                href={developer.website}
+                target="_blank"
+                rel="noreferrer noopener"
+                tabIndex={open ? 0 : -1}
+                className="uppercase tracking-[0.16em] transition-colors hover:text-white"
+              >
+                {developer.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+              </a>
+            )}
+          </div>
+        </nav>
+      </div>
+    </>
+  );
+}
+
+/* ───────────────────────── page ───────────────────────── */
 
 export function DeveloperProfilePage({ profileId }: { profileId: string }) {
   const { data: developer, isLoading, isError } = useQuery({
@@ -129,18 +343,18 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center pt-16">
-        <Loader2 size={24} className="animate-spin text-[#8a857e]" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0d0d14]">
+        <Loader2 size={24} className="animate-spin text-white/50" />
       </div>
     );
   }
 
   if (isError || !developer) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 pt-16 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
         <Building2 size={32} className="text-[#c9c3ba]" />
         <p className="text-[15px] text-[#6b665f]">This developer couldn&apos;t be found.</p>
-        <Link href="/developers" className="text-[14px] font-medium text-ink underline">
+        <Link href="/developers" className="text-[14px] font-medium text-[#0a0a3d] underline">
           Back to all developers
         </Link>
       </div>
@@ -151,289 +365,159 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
     ? (Object.entries(developer.socials) as [keyof typeof SOCIAL_ICONS, string | undefined][])
         .filter(([key, url]) => url && key in SOCIAL_ICONS)
     : [];
-  const featured = properties.find((p) => p.heroImageUrl) ?? properties[0] ?? null;
+  const withImages = properties.filter((p) => p.heroImageUrl);
+  const featured = withImages[0] ?? properties[0] ?? null;
+  // A second image for the closing band where there is one; otherwise the featured one again.
+  const closingImage = (withImages[1] ?? withImages[0])?.heroImageUrl ?? null;
   const cities = [...new Set(properties.map((p) => p.city).filter(Boolean))];
   const placeSummary = places.slice(0, 3).map((p) => (p.area === p.city ? p.city : `${p.area}, ${p.city}`));
-  const hasDirectContact = !!(developer.phone || developer.email || developer.whatsapp);
 
   const stats = [
     developer.establishedYear && { label: 'Established', value: String(developer.establishedYear) },
     developer.completedProjects > 0 && { label: 'Projects completed', value: String(developer.completedProjects) },
-    { label: 'Live on e-resi', value: String(properties.length) },
-    places.length > 0 && { label: cities.length > 1 ? 'Cities' : 'Locations', value: String(cities.length > 1 ? cities.length : places.length) },
+    { label: properties.length === 1 ? 'Live development' : 'Live developments', value: String(properties.length).padStart(2, '0') },
+    places.length > 0 && {
+      label: cities.length > 1 ? 'Cities' : places.length === 1 ? 'Destination' : 'Destinations',
+      value: String(cities.length > 1 ? cities.length : places.length).padStart(2, '0'),
+    },
   ].filter(Boolean) as { label: string; value: string }[];
 
+  const sections = [
+    { id: 'story', label: 'Our story' },
+    ...(places.length > 0 ? [{ id: 'destinations', label: 'Destinations' }] : []),
+    { id: 'developments', label: 'Developments' },
+    { id: 'enquire', label: 'Enquire' },
+  ];
+
+  const pickPlace = (key: string | null) => {
+    setPlaceFilter(key);
+    if (key) setTimeout(() => scrollToId('developments'), 30);
+  };
+
   return (
-    <div className="pt-16">
-      {/* ── Hero: identity on the left, their best building on the right ── */}
-      <section className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8 lg:pb-16">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            href="/developers"
-            className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-[#6b665f] transition-colors hover:text-ink"
-          >
-            <ArrowLeft size={15} /> All developers
-          </Link>
-          {socialLinks.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              {socialLinks.map(([key, url]) => {
-                const Icon = SOCIAL_ICONS[key];
-                return (
-                  <a
-                    key={key}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label={key}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#3d3a36] transition-colors hover:border-ink hover:text-ink"
-                  >
-                    <Icon size={15} />
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </div>
+    <div className="bg-white text-[#0a0a3d]">
+      <SiteHeader developer={developer} sections={sections} onEnquire={() => scrollToId('enquire')} />
 
-        <div className="mt-8 grid items-end gap-10 lg:mt-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          <div className="min-w-0">
-            {developer.logoUrl && (
-              <span className="mb-8 flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <Image src={developer.logoUrl} alt={`${developer.companyName} logo`} width={72} height={72} className="h-full w-full object-contain" />
-              </span>
-            )}
-            <p className="text-[11.5px] font-semibold uppercase tracking-[0.32em] text-warm-700">
-              Property developer
+      {/* ── Hero ── */}
+      <section className="relative isolate flex h-[100svh] min-h-[560px] items-center justify-center overflow-hidden bg-[#0d0d14]">
+        {featured?.heroImageUrl && (
+          <Image
+            src={featured.heroImageUrl}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover motion-safe:animate-[dp-zoom_14s_ease-out_forwards]"
+          />
+        )}
+        <div aria-hidden="true" className="absolute inset-0 bg-black/45" />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+
+        <div className="relative mx-auto max-w-5xl px-5 text-center">
+          <p className="text-[12px] font-medium uppercase tracking-[0.34em] text-white/75">Property developer</p>
+          <h1 className={cn(SERIF, 'mt-5 text-balance text-[44px] uppercase leading-[1.02] tracking-[0.06em] text-white sm:text-[80px] lg:text-[104px]')}>
+            {developer.companyName}
+          </h1>
+          {placeSummary.length > 0 && (
+            <p className="mx-auto mt-6 max-w-[52ch] text-[15px] leading-relaxed text-white/80 sm:text-[16px]">
+              Building in {placeSummary.join(' · ')}
+              {places.length > 3 && ` and ${places.length - 3} more`}
             </p>
-            <h1 className="mt-3 text-balance font-display text-[46px] font-normal leading-[0.98] tracking-[-0.01em] text-ink sm:text-[68px] lg:text-[76px]">
-              {developer.companyName}
-            </h1>
-            {(placeSummary.length > 0 || developer.location) && (
-              <p className="mt-5 flex items-start gap-2 text-[15px] text-[#5c5750]">
-                <MapPin size={16} className="mt-[3px] shrink-0 text-warm-600" />
-                <span>
-                  {placeSummary.length > 0 ? (
-                    <>
-                      Building in {placeSummary.join(' · ')}
-                      {places.length > 3 && ` and ${places.length - 3} more`}
-                    </>
-                  ) : (
-                    developer.location
-                  )}
-                </span>
-              </p>
-            )}
-
-            <div className="mt-8 flex flex-wrap items-center gap-2.5">
-              {properties.length > 0 && (
-                <a
-                  href="#developments"
-                  className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition-colors hover:bg-[#2b2926]"
-                >
-                  View developments
-                  <span className="rounded-full bg-white/15 px-2 py-0.5 text-[12px] tabular-nums">{properties.length}</span>
-                </a>
-              )}
-              {developer.whatsapp && (
-                <a
-                  href={waLink(developer.whatsapp)}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-5 py-3.5 text-[14px] font-medium text-ink transition-colors hover:border-ink"
-                >
-                  <WhatsAppIcon size={15} /> WhatsApp
-                </a>
-              )}
-              {developer.website && (
-                <a
-                  href={developer.website}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-5 py-3.5 text-[14px] font-medium text-ink transition-colors hover:border-ink"
-                >
-                  Visit website <ArrowUpRight size={15} />
-                </a>
-              )}
-            </div>
-          </div>
-
-          {featured && (
-            <Link
-              href={`/${featured.slug}`}
-              className="group relative block aspect-[4/3] w-full overflow-hidden rounded-[28px] bg-[#e7e2da]"
-            >
-              {featured.heroImageUrl ? (
-                <Image
-                  src={featured.heroImageUrl}
-                  alt={featured.name}
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 55vw, 100vw"
-                  className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Building2 size={40} className="text-[#c9c3ba]" />
-                </div>
-              )}
-              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-4 rounded-[20px] bg-white/95 px-5 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:inset-x-4 sm:bottom-4">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-warm-700">Featured development</p>
-                  <p className="mt-1 truncate font-display text-[22px] leading-tight text-ink sm:text-[26px]">{featured.name}</p>
-                  <p className="mt-0.5 truncate text-[13px] text-[#6b665f]">
-                    {areaName(featured) === featured.city ? featured.city : `${areaName(featured)}, ${featured.city}`}
-                    {priceLabel(featured) && <> · {priceLabel(featured)}</>}
-                  </p>
-                </div>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-transform duration-300 group-hover:rotate-45">
-                  <ArrowUpRight size={18} />
-                </span>
-              </div>
-            </Link>
           )}
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <SquareButton variant="ghost" onClick={() => scrollToId('developments')}>
+              Explore developments
+            </SquareButton>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => scrollToId('story')}
+          aria-label="Scroll to our story"
+          className="absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/70 transition-colors hover:text-white"
+        >
+          Scroll
+          <ChevronDown size={18} strokeWidth={1.5} className="animate-bounce" />
+        </button>
       </section>
 
-      {/* ── Track record ── */}
-      <section className="border-y border-black/[0.07] bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {stats.map((s, i) => (
-            <div
-              key={s.label}
-              className={cn(
-                'py-7 sm:py-9',
-                i % 2 === 1 && 'border-l border-black/[0.07] pl-5 sm:pl-8',
-                i >= 2 && 'border-t border-black/[0.07] lg:border-t-0',
-                i === 2 && 'lg:border-l lg:pl-8',
-              )}
-            >
-              <p className="font-display text-[40px] leading-none text-ink tabular-nums sm:text-[52px]">{s.value}</p>
-              <p className="mt-2 text-[12.5px] font-medium uppercase tracking-[0.14em] text-[#7a746c]">{s.label}</p>
+      {/* ── Our story + numbers ── */}
+      <section id="story" className="scroll-mt-16 px-5 py-20 sm:px-8 sm:py-28">
+        <SectionHeading
+          eyebrow="Our story"
+          title={`About ${developer.companyName}`}
+          intro={
+            !developer.description
+              ? `${developer.companyName} has ${properties.length} live ${properties.length === 1 ? 'development' : 'developments'} on e-resi.`
+              : undefined
+          }
+        />
+        {developer.description && (
+          <div className="mt-12">
+            <Story text={developer.description} />
+          </div>
+        )}
+
+        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-y-10 sm:mt-20 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="border-l-[1.5px] border-[#0a0a3d]/25 pl-5 sm:pl-6">
+              <p className={cn(SERIF, 'text-[44px] leading-none tabular-nums sm:text-[60px]', NAVY)}>{s.value}</p>
+              <p className="mt-3 text-[13px] text-[#0a0a3d]/60">{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── About + contact ── */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1fr_380px] lg:gap-16">
-          <div className="min-w-0">
-            <p className="text-[11.5px] font-semibold uppercase tracking-[0.32em] text-warm-700">About</p>
-            <h2 className="mt-3 font-display text-[34px] font-normal leading-tight text-ink sm:text-[44px]">
-              About {developer.companyName}
-            </h2>
-            <div className="mt-8">
-              {developer.description ? (
-                <Description text={developer.description} />
-              ) : (
-                <p className="max-w-[62ch] text-[16px] leading-relaxed text-[#5c5750]">
-                  {developer.companyName} has {properties.length} live
-                  {properties.length === 1 ? ' development' : ' developments'} on e-resi.
-                </p>
-              )}
-            </div>
-          </div>
-
-          <aside className="h-fit rounded-[24px] border border-black/[0.07] bg-white p-6 sm:p-7 lg:sticky lg:top-24">
-            <p className="font-display text-[24px] leading-tight text-ink">Talk to {developer.companyName}</p>
-            <p className="mt-1.5 text-[14px] leading-relaxed text-[#6b665f]">
-              {hasDirectContact
-                ? 'Reach the sales team directly, or enquire from any development page.'
-                : 'Enquire from any development page to reach the sales team, book a guided virtual tour or request documents.'}
-            </p>
-            <div className="mt-5 divide-y divide-black/[0.07] border-t border-black/[0.07]">
-              {developer.phone && (
-                <ContactRow icon={<Phone size={15} />} label="Phone" href={telLink(developer.phone)} value={developer.phone} />
-              )}
-              {developer.whatsapp && (
-                <ContactRow icon={<WhatsAppIcon size={15} />} label="WhatsApp" href={waLink(developer.whatsapp)} value={developer.whatsapp} external />
-              )}
-              {developer.email && (
-                <ContactRow icon={<Mail size={15} />} label="Email" href={`mailto:${developer.email}`} value={developer.email} />
-              )}
-              {developer.website && (
-                <ContactRow
-                  icon={<Globe size={15} />}
-                  label="Website"
-                  href={developer.website}
-                  value={developer.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
-                  external
-                />
-              )}
-              {developer.location && (
-                <div className="flex items-center gap-3 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3efe9] text-[#5c5750]"><MapPin size={15} /></span>
-                  <div className="min-w-0">
-                    <p className="text-[12px] text-[#8a847b]">Office</p>
-                    <p className="text-[14.5px] font-medium text-ink">{developer.location}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-            {properties.length > 0 && (
-              <a
-                href="#developments"
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-[14px] font-medium text-white transition-colors hover:bg-[#2b2926]"
-              >
-                Enquire on a development
-              </a>
-            )}
-          </aside>
-        </div>
-      </section>
-
-      {/* ── Agents ── */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <PartnersStrip side="developer" profileId={profileId} />
-      </div>
-
-      {/* ── Where they build ── */}
+      {/* ── Destinations ── */}
       {places.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-20 lg:px-8">
-          <p className="text-[11.5px] font-semibold uppercase tracking-[0.32em] text-warm-700">Locations</p>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-            <h2 className="font-display text-[34px] font-normal leading-tight text-ink sm:text-[44px]">
-              Where {developer.companyName} builds
-            </h2>
-            {places.length > 1 && (
-              <p className="text-[14px] text-[#6b665f]">Select a location to filter the developments below.</p>
+        <section id="destinations" className="scroll-mt-16 bg-[#f7f5f1] px-5 py-20 sm:px-8 sm:py-28">
+          <SectionHeading
+            eyebrow="Destinations"
+            title={`Where ${developer.companyName} builds`}
+            intro={
+              places.length > 1
+                ? 'Choose a destination to see the developments there.'
+                : `Every ${developer.companyName} development on e-resi, by location.`
+            }
+          />
+          <div
+            className={cn(
+              'mx-auto mt-12 grid gap-4 sm:mt-14',
+              places.length === 1 ? 'max-w-xl' : places.length === 2 ? 'max-w-4xl sm:grid-cols-2' : 'max-w-6xl sm:grid-cols-2 lg:grid-cols-3',
             )}
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          >
             {places.map((place) => {
               const active = placeFilter === place.key;
               return (
                 <button
                   key={place.key}
                   type="button"
-                  onClick={() => {
-                    setPlaceFilter(active ? null : place.key);
-                    if (!active) document.getElementById('developments')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
+                  onClick={() => pickPlace(active ? null : place.key)}
                   aria-pressed={active}
-                  className={cn(
-                    'group flex items-center gap-4 rounded-[20px] border bg-white p-3 pr-5 text-left transition-all',
-                    active ? 'border-ink shadow-[0_0_0_1px_#0a0a0a]' : 'border-black/[0.07] hover:border-black/25',
-                  )}
+                  className="group relative block aspect-[4/5] w-full overflow-hidden bg-[#1a1a24] text-left sm:aspect-[4/5]"
                 >
-                  <span className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-[14px] bg-[#e7e2da]">
-                    {place.imageUrl ? (
-                      <Image src={place.imageUrl} alt="" fill sizes="76px" className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                    ) : (
-                      <MapPin size={20} className="absolute inset-0 m-auto text-[#b3aca2]" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[16px] font-semibold text-ink">{place.area}</span>
-                    {place.area !== place.city && (
-                      <span className="block truncate text-[13px] text-[#6b665f]">{place.city}</span>
-                    )}
-                    <span className="mt-1 block text-[12.5px] text-[#8a847b]">
+                  {place.imageUrl && (
+                    <Image
+                      src={place.imageUrl}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.05]"
+                    />
+                  )}
+                  <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+                  {active && <div aria-hidden="true" className="absolute inset-3 border border-white/80" />}
+                  <div className="absolute inset-x-0 bottom-0 p-7 text-center">
+                    <p className="text-[11.5px] uppercase tracking-[0.28em] text-white/70">{place.city}</p>
+                    <p className={cn(SERIF, 'mt-2 text-[30px] uppercase leading-tight tracking-[0.04em] text-white sm:text-[34px]')}>
+                      {place.area}
+                    </p>
+                    <p className="mt-2 text-[13px] text-white/75">
                       {place.count} development{place.count === 1 ? '' : 's'}
                       {place.minPrice && <> · from {formatPrice(place.minPrice.amount, place.minPrice.currency)}</>}
-                    </span>
-                  </span>
+                    </p>
+                  </div>
                 </button>
               );
             })}
@@ -442,16 +526,16 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
       )}
 
       {/* ── Developments ── */}
-      <section id="developments" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:px-8">
-        <p className="text-[11.5px] font-semibold uppercase tracking-[0.32em] text-warm-700">Portfolio</p>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-[34px] font-normal leading-tight text-ink sm:text-[44px]">
-            Developments
-            <span className="ml-3 align-middle font-sans text-[15px] font-medium text-[#8a847b] tabular-nums">{shown.length}</span>
-          </h2>
+      <section id="developments" className="scroll-mt-16 pt-20 sm:pt-28">
+        <div className="px-5 sm:px-8">
+          <SectionHeading
+            eyebrow="Portfolio"
+            title="Our developments"
+            intro="Step inside each development for units, pricing, virtual tours and documents, or enquire directly with the sales team."
+          />
           {places.length > 1 && (
-            <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
-              <FilterChip active={!placeFilter} onClick={() => setPlaceFilter(null)}>All locations</FilterChip>
+            <div className="mx-auto mt-10 flex max-w-full flex-wrap justify-center gap-2">
+              <FilterChip active={!placeFilter} onClick={() => setPlaceFilter(null)}>All</FilterChip>
               {places.map((place) => (
                 <FilterChip key={place.key} active={placeFilter === place.key} onClick={() => setPlaceFilter(place.key)}>
                   {place.area}
@@ -462,43 +546,114 @@ export function DeveloperProfilePage({ profileId }: { profileId: string }) {
         </div>
 
         {properties.length === 0 ? (
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-black/15 bg-white py-20 text-center">
+          <div className="mx-5 mt-12 flex flex-col items-center justify-center gap-3 border border-dashed border-[#0a0a3d]/20 py-20 text-center sm:mx-8">
             <Building2 size={28} className="text-[#c9c3ba]" />
-            <p className="text-[14.5px] text-[#6b665f]">No live developments yet.</p>
+            <p className="text-[14.5px] text-[#0a0a3d]/60">No live developments yet.</p>
           </div>
         ) : (
-          <div className="mt-8 space-y-6">
-            {shown[0] && <WideCard property={shown[0]} />}
-            {shown.length > 1 && (
-              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-                {shown.slice(1).map((p) => (
-                  <PropertyCard key={p.id} property={p} />
-                ))}
-              </div>
-            )}
+          <div className="mt-14 sm:mt-16">
+            {shown.map((p, i) => (
+              <DevelopmentBand key={p.id} property={p} index={i} />
+            ))}
           </div>
         )}
       </section>
-    </div>
-  );
-}
 
-function ContactRow({
-  icon, label, value, href, external,
-}: { icon: React.ReactNode; label: string; value: string; href: string; external?: boolean }) {
-  return (
-    <a
-      href={href}
-      {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-      className="group flex items-center gap-3 py-3.5"
-    >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3efe9] text-[#5c5750]">{icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[12px] text-[#8a847b]">{label}</span>
-        <span className="block truncate text-[14.5px] font-medium text-ink group-hover:underline">{value}</span>
-      </span>
-      <ArrowUpRight size={15} className="shrink-0 text-[#b3aca2] transition-colors group-hover:text-ink" />
-    </a>
+      {/* ── Agents ── */}
+      <div className="mx-auto max-w-6xl px-5 pb-6 sm:px-8">
+        <PartnersStrip side="developer" profileId={profileId} />
+      </div>
+
+      {/* ── Enquire + footer ── */}
+      <section id="enquire" className="scroll-mt-16 bg-[#16161c] px-4 pb-10 pt-16 sm:px-8 sm:pt-20">
+        <div className="relative mx-auto flex min-h-[460px] max-w-[1380px] items-center justify-center overflow-hidden px-5 py-16 text-center">
+          {closingImage && (
+            <Image src={closingImage} alt="" fill sizes="100vw" className="object-cover" />
+          )}
+          <div aria-hidden="true" className="absolute inset-0 bg-black/55" />
+          <div className="relative max-w-2xl">
+            <h2 className={cn(SERIF, 'text-balance text-[32px] uppercase leading-[1.1] tracking-[0.03em] text-white sm:text-[52px]')}>
+              {featured ? `Discover ${featured.name}` : `Talk to ${developer.companyName}`}
+            </h2>
+            <p className="mx-auto mt-4 max-w-[48ch] text-[15px] leading-relaxed text-white/75">
+              Enquire for more details, book a guided virtual tour, or request brochures and floor plans.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              {featured && (
+                <SquareButton variant="light" href={`/${featured.slug}`}>
+                  Enquire now <ArrowRight size={15} />
+                </SquareButton>
+              )}
+              {developer.whatsapp && (
+                <SquareButton variant="ghost" href={waLink(developer.whatsapp)} external>
+                  <WhatsAppIcon size={15} /> WhatsApp
+                </SquareButton>
+              )}
+              {developer.phone && (
+                <SquareButton variant="ghost" href={telLink(developer.phone)}>
+                  <Phone size={15} /> Call
+                </SquareButton>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <footer className="mx-auto max-w-[1380px] pt-16 text-center">
+          <p className={cn(SERIF, 'text-[34px] uppercase tracking-[0.3em] text-white sm:text-[52px]')}>{developer.companyName}</p>
+
+          {(developer.phone || developer.email || developer.website || developer.location) && (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[14px] text-white/65">
+              {developer.location && (
+                <span className="inline-flex items-center gap-2"><MapPin size={14} /> {developer.location}</span>
+              )}
+              {developer.phone && (
+                <a href={telLink(developer.phone)} className="inline-flex items-center gap-2 hover:text-white"><Phone size={14} /> {developer.phone}</a>
+              )}
+              {developer.email && (
+                <a href={`mailto:${developer.email}`} className="inline-flex items-center gap-2 break-all hover:text-white"><Mail size={14} /> {developer.email}</a>
+              )}
+              {developer.website && (
+                <a href={developer.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2 hover:text-white">
+                  <Globe size={14} /> {developer.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                </a>
+              )}
+            </div>
+          )}
+
+          {socialLinks.length > 0 && (
+            <div className="mt-7 flex items-center justify-center gap-2">
+              {socialLinks.map(([key, url]) => {
+                const Icon = SOCIAL_ICONS[key];
+                return (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={key}
+                    className="flex h-10 w-10 items-center justify-center border border-white/15 text-white/75 transition-colors hover:border-white hover:text-white"
+                  >
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-[12.5px] text-white/45 sm:flex-row">
+            <Link href="/developers" className="inline-flex items-center gap-2 uppercase tracking-[0.14em] hover:text-white">
+              <ArrowLeft size={13} /> All developers
+            </Link>
+            <span>
+              Listed on{' '}
+              <Link href="/" className="text-white/70 hover:text-white">e-resi</Link>
+            </span>
+          </div>
+        </footer>
+      </section>
+
+      <style>{'@keyframes dp-zoom{from{transform:scale(1.08)}to{transform:scale(1)}}'}</style>
+    </div>
   );
 }
 
@@ -509,8 +664,8 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-[13.5px] font-medium transition-colors',
-        active ? 'border-ink bg-ink text-white' : 'border-black/10 bg-white text-[#3d3a36] hover:border-black/30',
+        'border px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.16em] transition-colors',
+        active ? 'border-[#0a0a3d] bg-[#0a0a3d] text-white' : 'border-[#0a0a3d]/20 text-[#0a0a3d] hover:border-[#0a0a3d]',
       )}
     >
       {children}
@@ -518,97 +673,56 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-/** The lead development: image and details side by side, at a size the photography deserves. */
-function WideCard({ property }: { property: DeveloperPropertyPreview }) {
-  const where = areaName(property) === property.city ? property.city : `${areaName(property)}, ${property.city}`;
+/** A development as a full-bleed band: title over the photograph, facts and the way in along the bottom. */
+function DevelopmentBand({ property, index }: { property: DeveloperPropertyPreview; index: number }) {
   const price = priceLabel(property);
   return (
     <Link
       href={`/${property.slug}`}
-      className="group grid overflow-hidden rounded-[28px] border border-black/[0.07] bg-white transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] lg:grid-cols-[1.45fr_1fr]"
+      className="group relative block h-[78svh] min-h-[480px] max-h-[860px] w-full overflow-hidden bg-[#1a1a24]"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-[#e7e2da] lg:aspect-auto lg:min-h-[440px]">
-        {property.heroImageUrl ? (
-          <Image
-            src={property.heroImageUrl}
-            alt={property.name}
-            fill
-            sizes="(min-width: 1024px) 60vw, 100vw"
-            className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.03]"
-          />
-        ) : (
-          <Building2 size={40} className="absolute inset-0 m-auto text-[#c9c3ba]" />
-        )}
-        <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-[12px] font-medium text-ink">
-          {categoryLabel(property.category)}
-        </span>
-      </div>
-      <div className="flex flex-col justify-between gap-8 p-6 sm:p-9">
+      {property.heroImageUrl ? (
+        <Image
+          src={property.heroImageUrl}
+          alt={property.name}
+          fill
+          priority={index === 0}
+          sizes="100vw"
+          className="object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.04]"
+        />
+      ) : (
+        <Building2 size={44} className="absolute inset-0 m-auto text-white/20" />
+      )}
+      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+
+      <div className="absolute inset-0 mx-auto flex max-w-[1380px] flex-col justify-between px-6 py-10 sm:px-12 sm:py-14">
         <div>
-          <p className="flex items-center gap-1.5 text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#7a746c]">
-            <MapPin size={13} /> {where}
+          <p className="text-[11.5px] uppercase tracking-[0.3em] text-white/70">
+            {String(index + 1).padStart(2, '0')} · {categoryLabel(property.category)}
           </p>
-          <h3 className="mt-3 text-balance font-display text-[34px] font-normal leading-[1.05] text-ink sm:text-[44px]">
+          <h3 className={cn(SERIF, 'mt-4 max-w-[14ch] text-balance text-[38px] uppercase leading-[1.04] tracking-[0.02em] text-white sm:text-[64px] lg:text-[76px]')}>
             {property.name}
           </h3>
         </div>
-        <div>
-          <dl className="divide-y divide-black/[0.07] border-y border-black/[0.07]">
-            <div className="flex items-baseline justify-between gap-4 py-3.5">
-              <dt className="text-[13.5px] text-[#7a746c]">Type</dt>
-              <dd className="text-[14.5px] font-medium text-ink">{categoryLabel(property.category)}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 py-3.5">
-              <dt className="text-[13.5px] text-[#7a746c]">Location</dt>
-              <dd className="text-right text-[14.5px] font-medium text-ink">{where}</dd>
+
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <dl className="flex flex-wrap gap-x-10 gap-y-4 text-white">
+            <div>
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/60">Location</dt>
+              <dd className="mt-1.5 flex items-center gap-1.5 text-[15px]"><MapPin size={14} /> {whereLabel(property)}</dd>
             </div>
             {price && (
-              <div className="flex items-baseline justify-between gap-4 py-3.5">
-                <dt className="text-[13.5px] text-[#7a746c]">Price</dt>
-                <dd className="text-[14.5px] font-medium text-ink">{price}</dd>
+              <div>
+                <dt className="text-[11px] uppercase tracking-[0.24em] text-white/60">Price</dt>
+                <dd className="mt-1.5 text-[15px]">{price}</dd>
               </div>
             )}
           </dl>
-          <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-[14px] font-medium text-white transition-colors group-hover:bg-[#2b2926]">
-            Explore development
-            <ArrowUpRight size={16} className="transition-transform duration-300 group-hover:rotate-45" />
+          <span className="inline-flex items-center gap-2.5 border border-white/40 bg-black/25 px-7 py-3.5 text-[13px] font-medium uppercase tracking-[0.16em] text-white backdrop-blur-sm transition-colors duration-300 group-hover:border-white group-hover:bg-white group-hover:text-[#0a0a3d]">
+            Discover <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
           </span>
         </div>
-      </div>
-    </Link>
-  );
-}
-
-function PropertyCard({ property }: { property: DeveloperPropertyPreview }) {
-  const where = areaName(property) === property.city ? property.city : `${areaName(property)}, ${property.city}`;
-  const price = priceLabel(property);
-  return (
-    <Link href={`/${property.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[24px] bg-[#e7e2da]">
-        {property.heroImageUrl ? (
-          <Image
-            src={property.heroImageUrl}
-            alt={property.name}
-            fill
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
-          />
-        ) : (
-          <Building2 size={36} className="absolute inset-0 m-auto text-[#c9c3ba]" />
-        )}
-        <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-[12px] font-medium text-ink">
-          {categoryLabel(property.category)}
-        </span>
-        <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink opacity-0 transition-all duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
-          <ArrowUpRight size={17} />
-        </span>
-      </div>
-      <div className="mt-4 px-1">
-        <p className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.14em] text-[#7a746c]">
-          <MapPin size={12} /> {where}
-        </p>
-        <h3 className="mt-1.5 font-display text-[26px] leading-tight text-ink">{property.name}</h3>
-        {price && <p className="mt-1 text-[14.5px] text-[#3d3a36]">{price}</p>}
       </div>
     </Link>
   );
