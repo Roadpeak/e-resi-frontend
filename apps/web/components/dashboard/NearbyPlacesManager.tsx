@@ -66,7 +66,6 @@ export function NearbyPlacesManager({
   const queryClient = useQueryClient();
   const [places, setPlaces] = useState<Place[]>(amenities);
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
-  const [picked, setPicked] = useState<Set<string>>(new Set());
   const [finding, setFinding] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -88,10 +87,10 @@ export function NearbyPlacesManager({
       const existing = new Set(places.map((p) => p.name.trim().toLowerCase()));
       const fresh = found.filter((s) => !existing.has(s.name.toLowerCase()));
       setSuggestions(fresh);
-      // The closest few are pre-ticked; the rest are opt-in, because OSM
-      // returns the occasional junk entry and a developer should not have to
-      // un-publish something we chose for them.
-      setPicked(new Set(fresh.slice(0, 6).map((s) => s.name)));
+      // The closest few go straight into the list (ticking IS adding); the
+      // rest are opt-in, because OSM returns the occasional junk entry.
+      const closest = fresh.slice(0, 6);
+      if (closest.length) setPlaces((cur) => [...cur, ...closest.map((x) => ({ name: x.name, type: x.type, distance: x.distance }))]);
       if (!fresh.length) setError('No new places found around this point.');
     } catch {
       setError('Could not fetch suggestions. Add places by hand below.');
@@ -118,16 +117,10 @@ export function NearbyPlacesManager({
       setError(e instanceof ApiError || e instanceof Error ? e.message : 'Could not save.'),
   });
 
-  const addPicked = () => {
-    if (!suggestions) return;
-    setPlaces([
-      ...places,
-      ...suggestions
-        .filter((s) => picked.has(s.name))
-        .map((s) => ({ name: s.name, type: s.type, distance: s.distance })),
-    ]);
-    setSuggestions(null);
-    setPicked(new Set());
+  const inList = (name: string) => places.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+  const toggleSuggestion = (sg: Suggestion, on: boolean) => {
+    if (on && !inList(sg.name)) setPlaces([...places, { name: sg.name, type: sg.type, distance: sg.distance }]);
+    if (!on) setPlaces(places.filter((p) => p.name.trim().toLowerCase() !== sg.name.toLowerCase()));
   };
 
   const update = (i: number, patch: Partial<Place>) =>
@@ -164,7 +157,7 @@ export function NearbyPlacesManager({
       {suggestions && suggestions.length > 0 && (
         <div className="mt-5 rounded-2xl border border-[#dadce0] bg-[#f8f9fa] p-4">
           <p className="text-[14px] font-medium text-[#202124]">
-            Found {suggestions.length} nearby — tick what belongs on your listing
+            Found {suggestions.length} nearby — the closest are added to the list below; tick or untick to change it, then save
           </p>
           <div className="mt-3 max-h-64 space-y-1 overflow-y-auto">
             {suggestions.map((s) => (
@@ -174,12 +167,8 @@ export function NearbyPlacesManager({
               >
                 <input
                   type="checkbox"
-                  checked={picked.has(s.name)}
-                  onChange={(e) => {
-                    const next = new Set(picked);
-                    if (e.target.checked) next.add(s.name); else next.delete(s.name);
-                    setPicked(next);
-                  }}
+                  checked={inList(s.name)}
+                  onChange={(e) => toggleSuggestion(s, e.target.checked)}
                   className="h-4 w-4 cursor-pointer accent-[#1a73e8]"
                 />
                 <span className="min-w-0 flex-1 truncate text-[14px] text-[#202124]">{s.name}</span>
@@ -192,17 +181,10 @@ export function NearbyPlacesManager({
           </div>
           <div className="mt-3 flex gap-2">
             <button
-              onClick={addPicked}
-              disabled={picked.size === 0}
-              className="rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-40 cursor-pointer"
+              onClick={() => setSuggestions(null)}
+              className="rounded-full bg-[#1a73e8] px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] cursor-pointer"
             >
-              Add {picked.size} selected
-            </button>
-            <button
-              onClick={() => { setSuggestions(null); setPicked(new Set()); }}
-              className="rounded-full px-4 py-2 text-[14px] font-medium text-[#5f6368] transition-colors hover:bg-[#f1f3f4] cursor-pointer"
-            >
-              Cancel
+              Done
             </button>
           </div>
         </div>

@@ -76,7 +76,6 @@ function NearbyPlacesField({
   const [finding, setFinding] = useState(false);
   const [findError, setFindError] = useState('');
   const [suggestions, setSuggestions] = useState<NearbySuggestion[] | null>(null);
-  const [picked, setPicked] = useState<Set<string>>(new Set());
 
   function update(i: number, patch: Partial<NearbyPlace>) {
     onChange(places.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -95,9 +94,12 @@ function NearbyPlacesField({
       const existing = new Set(places.map((p) => p.name.trim().toLowerCase()));
       const fresh = found.filter((s) => !existing.has(s.name.toLowerCase()));
       setSuggestions(fresh);
-      // Pre-tick the closest few — the rest are opt-in rather than opt-out,
-      // since OSM returns the occasional junk entry.
-      setPicked(new Set(fresh.slice(0, 6).map((s) => s.name)));
+      // The closest few go straight into the list; the rest are opt-in, since
+      // OSM returns the occasional junk entry. Ticking IS adding: a separate
+      // "Add selected" step meant ticked places were silently dropped when
+      // the developer moved on without pressing it.
+      const closest = fresh.slice(0, 6);
+      if (closest.length) onChange([...places, ...closest.map((x) => ({ name: x.name, type: x.type, distance: x.distance }))]);
       if (!fresh.length) setFindError('No new places found around this point.');
     } catch {
       setFindError('Could not fetch suggestions. Add places manually below.');
@@ -106,14 +108,10 @@ function NearbyPlacesField({
     }
   }
 
-  function addPicked() {
-    if (!suggestions) return;
-    const chosen = suggestions
-      .filter((s) => picked.has(s.name))
-      .map((s) => ({ name: s.name, type: s.type, distance: s.distance }));
-    onChange([...places, ...chosen]);
-    setSuggestions(null);
-    setPicked(new Set());
+  const inList = (name: string) => places.some((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+  function toggleSuggestion(sg: NearbySuggestion, on: boolean) {
+    if (on && !inList(sg.name)) onChange([...places, { name: sg.name, type: sg.type, distance: sg.distance }]);
+    if (!on) onChange(places.filter((p) => p.name.trim().toLowerCase() !== sg.name.toLowerCase()));
   }
 
   return (
@@ -145,20 +143,15 @@ function NearbyPlacesField({
       {suggestions && suggestions.length > 0 && (
         <div className="mb-3 rounded-2xl border border-gray-200 bg-[#F8FAFF] p-3">
           <p className="mb-2 text-[13px] text-gray-600">
-            Found {suggestions.length} nearby. Distances are straight-line — tick what you want to list.
+            Found {suggestions.length} nearby. The closest are already added below — tick or untick to change the list. Distances are straight-line.
           </p>
           <div className="grid gap-1.5 sm:grid-cols-2">
             {suggestions.map((s) => (
               <label key={`${s.name}-${s.distanceMetres}`} className="flex items-center gap-2 text-[14px] text-gray-800 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={picked.has(s.name)}
-                  onChange={(e) => {
-                    const next = new Set(picked);
-                    if (e.target.checked) next.add(s.name);
-                    else next.delete(s.name);
-                    setPicked(next);
-                  }}
+                  checked={inList(s.name)}
+                  onChange={(e) => toggleSuggestion(s, e.target.checked)}
                   className="h-4 w-4 shrink-0 rounded border-gray-300"
                 />
                 <span className="min-w-0 flex-1 truncate">{s.name}</span>
@@ -169,18 +162,10 @@ function NearbyPlacesField({
           <div className="mt-3 flex gap-2">
             <button
               type="button"
-              onClick={addPicked}
-              disabled={picked.size === 0}
-              className="rounded-full bg-[#4A80F5] px-3.5 py-1.5 text-[14px] font-medium text-white hover:bg-[#3457E0] transition-colors cursor-pointer disabled:opacity-40"
+              onClick={() => setSuggestions(null)}
+              className="rounded-full bg-[#4A80F5] px-3.5 py-1.5 text-[14px] font-medium text-white hover:bg-[#3457E0] transition-colors cursor-pointer"
             >
-              Add {picked.size || ''} selected
-            </button>
-            <button
-              type="button"
-              onClick={() => { setSuggestions(null); setPicked(new Set()); }}
-              className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[14px] font-medium text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              Dismiss
+              Done
             </button>
           </div>
         </div>
