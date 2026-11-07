@@ -25,7 +25,7 @@ import { cn } from '../../../../../../lib/utils';
 const FRAME_WIDTH = 1440;
 const FRAME_HEIGHT = 1080;
 /** Auto-scroll speed through the page, in page pixels per second. */
-const SCROLL_SPEED = 90;
+const SCROLL_SPEED = 240;
 /** Pause at the top and bottom of each pass, in ms. */
 const SCROLL_PAUSE = 1800;
 
