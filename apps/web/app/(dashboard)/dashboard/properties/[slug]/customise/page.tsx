@@ -49,6 +49,8 @@ const MATS: Record<string, string> = {
   AUREVANT: '#8a2a22',
   REAL: '#dfe3e6',
   LUXIQ: '#c8b6dd',
+  RENOVATE: '#e9e66a',
+  ACSAPTI: '#e8b7ae',
 };
 
 export default function TemplateGallery() {

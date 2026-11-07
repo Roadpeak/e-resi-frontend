@@ -12,6 +12,8 @@ import { HomeviaTemplate } from './HomeviaTemplate';
 import { AurevantTemplate } from './AurevantTemplate';
 import { RealAgentTemplate } from './RealAgentTemplate';
 import { LuxiqTemplate } from './LuxiqTemplate';
+import { RenovateTemplate } from './RenovateTemplate';
+import { AcsaptiTemplate } from './AcsaptiTemplate';
 
 /** Complete-page templates, keyed by template key. */
 export const STUDIO_TEMPLATES: Record<string, ComponentType<StudioTemplateProps>> = {
@@ -27,6 +29,8 @@ export const STUDIO_TEMPLATES: Record<string, ComponentType<StudioTemplateProps>
   AUREVANT: AurevantTemplate,
   REAL: RealAgentTemplate,
   LUXIQ: LuxiqTemplate,
+  RENOVATE: RenovateTemplate,
+  ACSAPTI: AcsaptiTemplate,
 };
 
 export type { StudioTemplateProps };

@@ -26,13 +26,15 @@ import { PropertyMonogram } from '../../PropertyMonogram';
  *  aurevant  near-black bar, red mark beside a lowercase wordmark, red pill CTA
  *  realagent three-column top row: monogram, place, a big figure, "Menu"
  *  luxiq     solid black strip, links left, white pill CTA right
+ *  renovate  light strip with a black box CTA; turns black over dark sections
+ *  acsapti   wide dark glass bar inset at the top, red pill CTA
  *
  * Behaviour is shared: section links that exist, save, share (with
  * telemetry), the tab title, and a full-screen menu on small screens.
  */
 export type StudioNavVariant =
   | 'frame' | 'prestige' | 'gallery' | 'atelier' | 'horizon' | 'skyline' | 'noir'
-  | 'rivos' | 'homevia' | 'aurevant' | 'realagent' | 'luxiq';
+  | 'rivos' | 'homevia' | 'aurevant' | 'realagent' | 'luxiq' | 'renovate' | 'acsapti';
 
 interface Link { id: string; label: string }
 
@@ -167,6 +169,31 @@ function Overlay({
   );
 }
 
+/**
+ * Whether the band under the nav is dark — any element marked data-nav-dark
+ * crossing the bar. Lets a light nav turn dark as it passes over dark
+ * sections, the way the Renovate reference does.
+ */
+function useDarkUnderNav(enabled: boolean) {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    if (!enabled) return;
+    let raf = 0;
+    const tick = () => {
+      let d = false;
+      document.querySelectorAll('[data-nav-dark]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top <= 36 && r.bottom >= 36) d = true;
+      });
+      setDark((prev) => (prev === d ? prev : d));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [enabled]);
+  return dark;
+}
+
 export function StudioNav({
   variant, property, ctaLabel, ground = '#ffffff',
 }: {
@@ -178,6 +205,7 @@ export function StudioNav({
 }) {
   const nav = useNav(property);
   const [menu, setMenu] = useState(false);
+  const darkUnder = useDarkUnderNav(variant === 'renovate');
   const { scrolled, links, active } = nav;
   const name = property.name;
   const burger = (color: string, border: string, always = false) => (
@@ -398,6 +426,49 @@ export function StudioNav({
         </div>
       </nav>
     );
+  } else if (variant === 'renovate') {
+    const fg = darkUnder ? '#fff' : '#111';
+    bar = (
+      <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: darkUnder ? '#000' : '#f2f2f2' }}>
+        <div className="mx-auto grid h-[60px] max-w-[1240px] grid-cols-[1fr_auto_1fr] items-center px-5">
+          <a href="#overview" className="flex min-w-0 items-center gap-2 text-[14px] font-semibold uppercase tracking-[0.04em]" style={{ color: fg }}>
+            <span className="flex h-5 w-5 shrink-0 flex-col justify-center gap-[3px]"><span className="h-[3px] w-full rounded-full bg-current" /><span className="h-[3px] w-3/4 rounded-full bg-current" /><span className="h-[3px] w-full rounded-full bg-current" /></span>
+            <span className="truncate">{name}</span>
+          </a>
+          <div className="hidden items-center gap-6 lg:flex">
+            {links.map((l) => (
+              <a key={l.id} href={`#${l.id}`} className="text-[13.5px] font-medium transition-colors"
+                style={{ color: active === l.id ? 'var(--tpl-accent, #e8e000)' : fg }}>{l.label}</a>
+            ))}
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <a href="#booking" className="hidden px-4 py-2.5 text-[13px] font-medium transition-colors sm:inline-block"
+              style={darkUnder ? { color: '#fff' } : { background: '#000', color: '#fff' }}>{ctaLabel}</a>
+            {burger(fg, darkUnder ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)')}
+          </div>
+        </div>
+      </nav>
+    );
+  } else if (variant === 'acsapti') {
+    bar = (
+      <nav className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-6">
+        <div className="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between gap-6 rounded-[14px] border border-white/10 px-4 text-white shadow-[0_10px_40px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:px-6"
+          style={{ background: scrolled ? 'rgba(24,24,27,0.88)' : 'rgba(40,40,44,0.55)' }}>
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5 text-[17px] font-semibold uppercase tracking-[0.06em]">
+            <span className="grid h-6 w-6 shrink-0 grid-cols-3 gap-[2px]">{Array.from({ length: 9 }).map((_, i) => <span key={i} className="rounded-full" style={{ background: 'var(--tpl-accent, #ef3b2d)', opacity: i % 2 ? 0.6 : 1 }} />)}</span>
+            <span className="truncate">{name}</span>
+          </a>
+          <div className="hidden items-center gap-8 lg:flex">
+            {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
+          </div>
+          <div className="flex items-center gap-2">
+            <a href="#booking" className="hidden rounded-full px-5 py-2.5 text-[13px] font-medium sm:inline-block"
+              style={{ background: 'var(--tpl-accent, #ef3b2d)', color: 'var(--tpl-accent-on, #fff)' }}>{ctaLabel}</a>
+            {burger('#fff', 'rgba(255,255,255,0.25)')}
+          </div>
+        </div>
+      </nav>
+    );
   } else {
     // noir
     bar = (
@@ -414,7 +485,7 @@ export function StudioNav({
     );
   }
 
-  const darkMenu = variant === 'noir' || variant === 'prestige' || variant === 'aurevant' || variant === 'luxiq' || variant === 'rivos';
+  const darkMenu = variant === 'noir' || variant === 'prestige' || variant === 'aurevant' || variant === 'luxiq' || variant === 'rivos' || variant === 'acsapti';
   return (
     <>
       {bar}
