@@ -19,7 +19,7 @@ const STATUS_STYLES: Record<StaffStatus, string> = {
 const PAGE_LABELS: Record<string, string> = {
   properties: 'Properties', units: 'Units', reservations: 'Reservations',
   rentals: 'Rentals', messages: 'Messages', partners: 'Agent Partners',
-  deals: 'Agent Deals', mandates: 'Mandates', inquiries: 'Inquiries',
+  deals: 'Agent Deals', mandates: 'Mandates', inquiries: 'Inquiries', leads: 'Leads',
   bookings: 'Bookings', performance: 'Performance', analytics: 'Analytics',
   documents: 'Documents', billing: 'Billing', profile: 'Company Profile',
   team: 'Team',
