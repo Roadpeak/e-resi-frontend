@@ -4,6 +4,7 @@ import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-proper
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
 import { BackToBrowse } from '../../../components/property/BackToBrowse';
 import { TrackPageView } from '../../../components/property/TrackPageView';
+import { GoogleOneTap } from '../../../components/auth/GoogleOneTap';
 import { AgentReferralBar } from '../../../components/property/AgentReferralBar';
 import { PropertyFooter } from '../../../components/property/PropertyFooter';
 import { PropertyHero } from '../../../components/property/PropertyHero';
@@ -218,6 +219,7 @@ export default async function PropertyPage({ params }: Props) {
         }}
       >
         <TrackPageView propertyId={property.id} />
+        <GoogleOneTap propertyId={property.id} />
         <AgentReferralBar />
         <FloatingChat propertySlug={property.slug} />
       <BackToBrowse />
@@ -261,6 +263,7 @@ export default async function PropertyPage({ params }: Props) {
       }}
     >
       <TrackPageView propertyId={property.id} />
+        <GoogleOneTap propertyId={property.id} />
         <AgentReferralBar />
         <FloatingChat propertySlug={property.slug} />
       <BackToBrowse />

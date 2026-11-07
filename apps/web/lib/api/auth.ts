@@ -77,6 +77,14 @@ export const authApi = {
   updateProfile: (payload: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) =>
     apiClient.patch<User>('/auth/me', payload),
 
+  /** Public Google client ID for Google Identity Services (One Tap). */
+  googleClientId: () =>
+    apiClient.get<{ clientId: string | null }>('/auth/google/client-id', { skipAuth: true }),
+
+  /** Sign in or create an account from a Google One Tap credential. */
+  googleOneTap: (credential: string, role: 'INVESTOR' | 'TENANT' = 'INVESTOR') =>
+    apiClient.post<{ accessToken: string; user: User }>('/auth/google/one-tap', { credential, role }, { skipAuth: true }),
+
   /** Change the signed-in person's password (team members change their own). */
   changePassword: (currentPassword: string, newPassword: string) =>
     apiClient.post<{ message: string }>('/auth/change-password', { currentPassword, newPassword }),

@@ -54,6 +54,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        // The phone prompt's "Not now" lasts one sign-in; signing out resets it.
+        try {
+          const id = get().user?.id;
+          if (id) sessionStorage.removeItem(`eresi-phone-prompt-dismissed:${id}`);
+        } catch { /* private mode */ }
         try {
           await authApi.logout();
         } catch {
