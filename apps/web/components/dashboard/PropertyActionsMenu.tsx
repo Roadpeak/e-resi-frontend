@@ -165,10 +165,16 @@ export function PropertyActionsMenu({
               <s.icon size={16} className="shrink-0 text-[#5f6368]" /> {s.label}
             </Link>
           ))}
-          {isPublicStatus(property.status) && (
+          {/* What the row's eye icon used to do: the live page when published,
+              the management page while it is not. */}
+          {isPublicStatus(property.status) ? (
             <a href={`/${property.slug}`} target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className={itemCls} role="menuitem">
-              <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> View live page
+              <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> Preview property
             </a>
+          ) : (
+            <Link href={`/dashboard/properties/${property.slug}`} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
+              <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> Preview property
+            </Link>
           )}
           <Link href="/dashboard/billing" onClick={() => setOpen(false)} className={itemCls} role="menuitem">
             <Receipt size={16} className="shrink-0 text-[#5f6368]" /> Billing

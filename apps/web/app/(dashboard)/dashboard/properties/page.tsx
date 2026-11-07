@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, Eye, Pencil, Box, Headset, Building2, Loader2, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Eye, LayoutTemplate, Globe, Box, Headset, Building2, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { formatPrice, getStatusLabel, cn } from '../../../../lib/utils';
 import { Button } from '../../../../components/ui/Button';
 import { useMyProperties } from '../../../../lib/api/queries';
@@ -211,18 +211,28 @@ export default function DashboardProperties() {
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1">
                           <Link
-                            href={p.status === 'ACTIVE' || p.status === 'OFF_PLAN' ? `/${p.slug}` : `/dashboard/properties/${p.slug}`}
+                            href={`/dashboard/properties/${p.slug}`}
                             className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="View"
+                            title="Manage development"
+                            aria-label="Manage development"
                           >
                             <Eye size={14} />
                           </Link>
                           <Link
-                            href={`/dashboard/properties/${p.slug}`}
+                            href={`/dashboard/properties/${p.slug}/customise`}
                             className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="Edit"
+                            title="Templates"
+                            aria-label="Templates"
                           >
-                            <Pencil size={14} />
+                            <LayoutTemplate size={14} />
+                          </Link>
+                          <Link
+                            href={`/dashboard/properties/${p.slug}/domain`}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
+                            title="Domain"
+                            aria-label="Domain"
+                          >
+                            <Globe size={14} />
                           </Link>
                           <PropertyActionsMenu property={p} onError={setActionError} />
                         </div>
