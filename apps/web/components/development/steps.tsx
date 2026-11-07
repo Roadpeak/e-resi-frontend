@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Upload, X } from 'lucide-react';
 import {
   SERVICES, SERVICE_CATEGORIES, type ServiceCategory, fmtUsd, LISTING_CURRENCIES,
 } from '../../lib/onboarding/catalog';
 import { propertiesApi } from '../../lib/api/properties';
-import { useDevelopmentStore, type NearbyPlace } from '../../lib/stores/development.store';
+import { useDevelopmentStore, type NearbyPlace, type UploadedAsset } from '../../lib/stores/development.store';
+import { uploadFile, type UploadFolder } from '../../lib/api/media';
 import { DEVELOPMENT_TYPES, findDevelopmentType } from '../../lib/onboarding/development-types';
 import {
-  Checkbox, ChipGroup, Field, FieldGrid, FilePicker, SectionCard, Select, TextArea, TextInput,
+  Checkbox, ChipGroup, Field, FieldGrid, SectionCard, Select, TextArea, TextInput,
 } from '../onboarding/ui';
 import { ImageUpload } from '../dashboard/ImageUpload';
 import { DetectLocationButton } from '../dashboard/DetectLocationButton';
@@ -465,6 +467,85 @@ const UPLOAD_KINDS = [
   { key: 'logos', label: 'Logos', hint: 'Development logo & lockups, PNG/SVG', accept: 'image/*' },
 ];
 
+/** Storage folder per upload kind. */
+const UPLOAD_FOLDER: Record<string, UploadFolder> = {
+  images: 'properties', videos: 'tours', floorPlans: 'documents',
+  brochures: 'documents', pdfs: 'documents', logos: 'logos',
+};
+
+/**
+ * Uploads each picked file to storage straight away and keeps its URL, so
+ * the files exist when the development is created and can be attached to it.
+ */
+function WizardUploader({
+  kind, accept, files, onChange,
+}: {
+  kind: string;
+  accept: string;
+  files: UploadedAsset[];
+  onChange: (files: UploadedAsset[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState('');
+  const [percent, setPercent] = useState(0);
+  const [error, setError] = useState('');
+
+  async function onPick(list: FileList | null) {
+    const picked = Array.from(list ?? []);
+    if (!picked.length) return;
+    setError('');
+    let current = files;
+    for (const [i, file] of picked.entries()) {
+      setBusy(`${file.name}${picked.length > 1 ? ` (${i + 1} of ${picked.length})` : ''}`);
+      setPercent(0);
+      try {
+        const up = await uploadFile(file, UPLOAD_FOLDER[kind] ?? 'properties', { onProgress: (p) => setPercent(p.percent) });
+        current = [...current, { name: file.name, url: up.url }];
+        onChange(current);
+      } catch (e) {
+        setError(`${file.name}: ${e instanceof Error ? e.message : 'upload failed'}`);
+      }
+    }
+    setBusy('');
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
+  return (
+    <div className="space-y-2">
+      <input ref={inputRef} type="file" accept={accept} multiple={kind !== 'logos'} className="hidden" onChange={(e) => onPick(e.target.files)} />
+      {files.length > 0 && (
+        <ul className="space-y-1.5">
+          {files.map((f, i) => (
+            <li key={`${f.url}-${i}`} className="flex items-center gap-2 rounded-xl border border-[#4A80F5]/30 bg-[#F6F9FF] px-3 py-2">
+              {/^image\//.test(accept) || accept.includes('image') ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={f.url} alt="" className="h-8 w-8 shrink-0 rounded-md object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+              ) : null}
+              <span className="min-w-0 flex-1 truncate text-sm text-[#2E5BD7]">{f.name}</span>
+              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => onChange(files.filter((_, j) => j !== i))}
+                className="text-[#2E5BD7]/60 hover:text-[#2E5BD7]"><X size={15} /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {busy ? (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5">
+          <p className="truncate text-xs text-gray-500">Uploading {busy}…</p>
+          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-200">
+            <div className="h-full rounded-full bg-[#4A80F5] transition-all" style={{ width: `${percent}%` }} />
+          </div>
+        </div>
+      ) : (kind !== 'logos' || files.length === 0) && (
+        <button type="button" onClick={() => inputRef.current?.click()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 px-3.5 py-3 text-sm text-gray-500 transition-colors hover:border-[#4A80F5] hover:text-[#4A80F5]">
+          <Upload size={15} /> {files.length ? 'Add more' : kind === 'logos' ? 'Choose logo' : 'Choose files'}
+        </button>
+      )}
+      {error && <p className="text-xs text-[#c5221f]">{error}</p>}
+    </div>
+  );
+}
+
 export function StepServices() {
   const { development: dev, media, patchMedia, toggleService, patchService } = useDevelopmentStore();
   const categories = Object.keys(SERVICE_CATEGORIES) as ServiceCategory[];
@@ -494,15 +575,11 @@ export function StepServices() {
               <div className="grid gap-5 sm:grid-cols-2 pt-2">
                 {UPLOAD_KINDS.map((kind) => (
                   <Field key={kind.key} label={kind.label} hint={kind.hint}>
-                    <FilePicker
-                      multiple
+                    <WizardUploader
+                      kind={kind.key}
                       accept={kind.accept}
-                      value={(media.uploads[kind.key] ?? []).join(', ')}
-                      onChange={(names) =>
-                        patchMedia({
-                          uploads: { ...media.uploads, [kind.key]: names ? names.split(', ') : [] },
-                        })
-                      }
+                      files={media.uploads[kind.key] ?? []}
+                      onChange={(files) => patchMedia({ uploads: { ...useDevelopmentStore.getState().media.uploads, [kind.key]: files } })}
                     />
                   </Field>
                 ))}

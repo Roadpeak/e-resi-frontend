@@ -120,6 +120,30 @@ export default function NewDevelopmentPage() {
         }
       }
 
+      // Attach the media uploaded during the wizard, the same way the Media
+      // page does: gallery photos and videos as media rows, the first logo
+      // tagged as the logo. Floor plans, brochures and PDFs stay in
+      // submissionData for the production team. Non-fatal, like amenities.
+      if (slug && media.hasOwnMedia) {
+        const up = media.uploads ?? {};
+        const jobs: Array<{ type: 'PHOTO' | 'VIDEO'; url: string; title: string }> = [
+          ...(up.images ?? []).map((f) => ({ type: 'PHOTO' as const, url: f.url, title: f.name })),
+          ...(up.videos ?? []).map((f) => ({ type: 'VIDEO' as const, url: f.url, title: f.name })),
+          ...(up.logos ?? []).slice(0, 1).map((f) => ({ type: 'PHOTO' as const, url: f.url, title: '__logo__' })),
+        ];
+        let failed = 0;
+        for (const job of jobs) {
+          try {
+            await apiClient.post(`/media/properties/${slug}`, job);
+          } catch {
+            failed += 1;
+          }
+        }
+        if (failed) {
+          setError(`The development was saved, but ${failed} of your uploaded files couldn't be attached. Add them from the development's Media page.`);
+        }
+      }
+
       setCreatedSlug(slug);
       reset();
       // The properties list and dashboard counters are cached for a minute, so

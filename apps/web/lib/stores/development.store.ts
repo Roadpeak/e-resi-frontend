@@ -57,9 +57,20 @@ export interface ServiceSelection {
   accessInfo: string;
 }
 
+/** A file already uploaded to storage during the wizard. */
+export interface UploadedAsset {
+  name: string;
+  url: string;
+}
+
 export interface MediaState {
   hasOwnMedia: boolean;
-  uploads: Record<string, string[]>; // kind -> file names
+  /**
+   * kind -> files uploaded to storage. These used to be bare file names —
+   * the picker never uploaded anything, so a developer's gallery and logo
+   * silently vanished on create. Now each holds the stored URL.
+   */
+  uploads: Record<string, UploadedAsset[]>;
   /** serviceId -> per-service options; presence of key = selected */
   services: Record<string, ServiceSelection>;
 }
@@ -141,7 +152,20 @@ export const useDevelopmentStore = create<DevelopmentState>()(
           ...current,
           ...saved,
           development: { ...emptyDevelopment, ...(saved.development ?? {}) },
-          media: { ...emptyMedia, ...(saved.media ?? {}) },
+          media: {
+            ...emptyMedia,
+            ...(saved.media ?? {}),
+            // Drafts saved before uploads were real hold bare file names that
+            // were never uploaded; drop them rather than pretend they exist.
+            uploads: Object.fromEntries(
+              Object.entries(saved.media?.uploads ?? {}).map(([k, files]) => [
+                k,
+                (Array.isArray(files) ? files : []).filter(
+                  (f): f is UploadedAsset => !!f && typeof f === 'object' && typeof (f as UploadedAsset).url === 'string',
+                ),
+              ]),
+            ),
+          },
         };
       },
     },
