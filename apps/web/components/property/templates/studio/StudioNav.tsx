@@ -346,7 +346,7 @@ export function StudioNav({
         <div className="mx-auto flex h-[68px] max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-10">
           <div className="flex min-w-0 items-center gap-10">
             <a href="#overview" className="flex min-w-0 items-center gap-2 text-[19px] font-semibold lowercase tracking-[-0.02em] text-white">
-              <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] bg-[#ef3b2d]" /><span className="truncate">{name}</span>
+              <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] bg-[var(--tpl-accent,#ef3b2d)]" /><span className="truncate">{name}</span>
             </a>
             <div className="hidden items-center gap-7 lg:flex">
               {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.7 }}>{l.label}</a>)}
@@ -354,7 +354,7 @@ export function StudioNav({
           </div>
           <div className="flex items-center gap-5">
             {place && <span className="hidden text-[11.5px] uppercase tracking-[0.14em] text-white/70 xl:block">{place}</span>}
-            <a href="#booking" className="hidden rounded-full bg-[#ef3b2d] px-5 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#d92f22] sm:inline-block">{ctaLabel}</a>
+            <a href="#booking" className="hidden rounded-full bg-[var(--tpl-accent,#ef3b2d)] px-5 py-2.5 text-[13px] font-medium text-[var(--tpl-accent-on,#fff)] transition-opacity hover:opacity-90 sm:inline-block">{ctaLabel}</a>
             {burger('#fff', 'rgba(255,255,255,0.25)')}
           </div>
         </div>
@@ -389,7 +389,7 @@ export function StudioNav({
           <div className="hidden items-center gap-7 lg:flex">
             {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
           </div>
-          <a href="#overview" className="truncate text-[15px] font-medium text-white lg:hidden" style={{ fontFamily: 'var(--font-unbounded), sans-serif' }}>{name}</a>
+          <a href="#overview" className="truncate text-[15px] font-medium text-white lg:hidden" style={{ fontFamily: 'var(--tpl-font-display, var(--font-unbounded)), sans-serif' }}>{name}</a>
           <div className="flex items-center gap-3">
             <div className="hidden lg:block"><Actions nav={nav} color="#fff" border="rgba(255,255,255,0.25)" /></div>
             <a href="#booking" className="hidden rounded-full bg-white px-5 py-2 text-[13px] font-medium text-black sm:inline-block">{ctaLabel}</a>

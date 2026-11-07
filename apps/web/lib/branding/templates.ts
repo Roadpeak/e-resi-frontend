@@ -31,6 +31,16 @@ export interface MiniSiteTemplate {
   ownsHero: boolean;
   /** Newly added — listed first in the picker with a "New" badge. */
   isNew?: boolean;
+  /**
+   * Renders its own designed navigation, so the navbar style/colour settings
+   * do not apply. The editor says so rather than offering dead controls.
+   */
+  ownsNav?: boolean;
+  /**
+   * Uses its own typefaces by default but switches to the developer's chosen
+   * typeface (anything but the default) when one is picked.
+   */
+  fontsFollowBrand?: boolean;
   /** Alternate section grounds, giving a long page rhythm. */
   banded: boolean;
   /** Print a small caps label above each section. */
@@ -48,6 +58,8 @@ export interface MiniSiteTemplate {
   fonts: {
     /** Display face for headings. */
     heading: string;
+    /** Optional signature face for one showpiece element (e.g. a name band). */
+    display?: string;
     /** Text face for body copy. */
     body: string;
     /** Heading weight — light display type is central to several of these. */
@@ -138,6 +150,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'LUXE_DARK',
+    ownsNav: true,
     label: 'Dark Luxury',
     note: 'Near-black page with glass stat cards. Suits premium villas.',
     surface: 'DARK',
@@ -210,6 +223,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'FRAME',
+    ownsNav: true,
     isNew: true,
     label: 'Frame',
     note: 'Framed hero with a crossfading slideshow or film, and your highlights sliding across it.',
@@ -229,6 +243,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'PRESTIGE',
+    ownsNav: true,
     isNew: true,
     label: 'Prestige',
     note: 'Deep navy and soft white with a serif face. Film hero with a glass facts bar.',
@@ -248,6 +263,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'GALLERY',
+    ownsNav: true,
     isNew: true,
     label: 'Gallery',
     note: 'Soft rounded sheets on pale grey, a huge centred name and champagne-gold accents.',
@@ -267,6 +283,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'ATELIER',
+    ownsNav: true,
     isNew: true,
     label: 'Atelier',
     note: 'Monochrome and gallery-like. Serif with italic accents, pinned quotes, black-and-white film.',
@@ -286,6 +303,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'HORIZON',
+    ownsNav: true,
     isNew: true,
     label: 'Horizon',
     note: 'Bright and airy. Rounded hero, words that light up as you scroll, an expanding list of home types.',
@@ -305,6 +323,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'SKYLINE',
+    ownsNav: true,
     isNew: true,
     label: 'Skyline',
     note: 'Crisp and modern. Film hero with an availability card, dark how-it-works band, annotated photo.',
@@ -325,6 +344,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'RIVOS',
     isNew: true,
+    ownsNav: true,
+    fontsFollowBrand: true,
     label: 'Rivos',
     note: 'Soft grey and fully rounded: inset photo hero, glass pill nav, staggered image grid and icon feature cards.',
     surface: 'LIGHT',
@@ -344,6 +365,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'HOMEVIA',
     isNew: true,
+    ownsNav: true,
+    fontsFollowBrand: true,
     label: 'Homevia',
     note: 'Warm and quiet: the name huge and translucent behind the hero, a two-tone statement and frosted residence cards.',
     surface: 'LIGHT',
@@ -363,6 +386,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'AUREVANT',
     isNew: true,
+    ownsNav: true,
+    fontsFollowBrand: true,
     label: 'Aurevant',
     note: 'Near-black with a coral-red accent: glass signature card, a giant lowercase wordmark and filterable residences.',
     surface: 'DARK',
@@ -382,6 +407,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'REAL',
     isNew: true,
+    ownsNav: true,
+    fontsFollowBrand: true,
     label: 'Real',
     note: 'Quiet and editorial: a full-photo hero with a thin row of facts, corner-ticked listings and a dark bento band.',
     surface: 'LIGHT',
@@ -401,6 +428,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'LUXIQ',
     isNew: true,
+    ownsNav: true,
+    fontsFollowBrand: true,
     label: 'Luxiq',
     note: 'A single residence presented like a product: the name running across the hero, a ruled spec table and a full-bleed gallery.',
     surface: 'LIGHT',
@@ -410,7 +439,8 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
     sectionHeadings: true,
     airy: true,
     fonts: {
-      heading: 'var(--font-unbounded), var(--font-manrope), sans-serif',
+      heading: 'var(--font-manrope), system-ui, sans-serif',
+      display: 'var(--font-unbounded), var(--font-manrope), sans-serif',
       body: 'var(--font-manrope), system-ui, sans-serif',
       headingWeight: 500,
       headingTracking: '-0.01em',
@@ -419,6 +449,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   },
   {
     key: 'NOIR',
+    ownsNav: true,
     isNew: true,
     label: 'Noir',
     note: 'Black and white with heavy type, two-way marquees and a giant italic wordmark.',
@@ -507,10 +538,17 @@ export function surfaceTokens(surface: TemplateSurface): SurfaceTokens {
  * can opt in gradually — anything that reads `--surface-text` follows the
  * template, anything that does not keeps its current appearance.
  */
-export function templateFontVars(template: MiniSiteTemplate): Record<string, string> {
+export function templateFontVars(
+  template: MiniSiteTemplate,
+  brandFont?: { key: string; heading: string; body: string },
+): Record<string, string> {
+  // MODERN is the default the editor seeds, so it means "no choice made":
+  // the template keeps its own type. Any other pick replaces it.
+  const brand = template.fontsFollowBrand && brandFont && brandFont.key !== 'MODERN' ? brandFont : null;
   return {
-    '--tpl-font-heading': template.fonts.heading,
-    '--tpl-font-body': template.fonts.body,
+    '--tpl-font-heading': brand ? brand.heading : template.fonts.heading,
+    '--tpl-font-body': brand ? brand.body : template.fonts.body,
+    '--tpl-font-display': brand ? brand.heading : (template.fonts.display ?? template.fonts.heading),
     '--tpl-heading-weight': String(template.fonts.headingWeight),
     '--tpl-heading-tracking': template.fonts.headingTracking,
   };

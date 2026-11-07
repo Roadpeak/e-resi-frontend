@@ -26,7 +26,7 @@ const STYLE: KitStyle = {
 function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-[12.5px] text-neutral-700">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#b08968]" />{children}
+      <span className="h-1.5 w-1.5 rounded-full bg-[var(--tpl-accent)]" />{children}
     </span>
   );
 }
@@ -162,7 +162,7 @@ export function HomeviaTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="tpl-headings min-h-screen bg-white" style={{ '--tpl-accent': 'var(--brand-custom, #b08968)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)', '--tpl-cta': 'var(--brand-custom, #ffffff)', '--tpl-cta-on': 'var(--brand-custom-on, #171717)' } as React.CSSProperties}>
       <StudioNav variant="homevia" property={property} ctaLabel={cta} />
 
       <header className="relative min-h-[100svh] overflow-hidden bg-[#8a776a]">
@@ -178,7 +178,7 @@ export function HomeviaTemplate(p: StudioTemplateProps) {
         <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-[1320px] flex-wrap items-end justify-between gap-8 px-5 pb-10 sm:px-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2, ease: EASE }} className="max-w-sm">
             <p className="text-[15px] leading-relaxed text-white/90">{heroLede(property)}</p>
-            <a href="#booking" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-[13px] font-medium text-neutral-900">{cta} <ArrowUpRight size={14} /></a>
+            <a href="#booking" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--tpl-cta)] px-4 py-2.5 text-[13px] font-medium text-[var(--tpl-cta-on)]">{cta} <ArrowUpRight size={14} /></a>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.35, ease: EASE }} className="hidden w-[260px] space-y-2 sm:block">
             {[1, 2].map((n) => (
@@ -187,7 +187,7 @@ export function HomeviaTemplate(p: StudioTemplateProps) {
             <div className="rounded-xl bg-white p-3.5">
               <p className="text-[14px] font-medium text-neutral-900">{property.name}</p>
               {place && <p className="text-[12px] text-neutral-500">{place}</p>}
-              <a href="#units" className="mt-3 block rounded-lg bg-neutral-900 py-2.5 text-center text-[13px] text-white">Explore residences</a>
+              <a href="#units" className="mt-3 block rounded-lg bg-[var(--tpl-accent)] text-[var(--tpl-accent-on)] py-2.5 text-center text-[13px]">Explore residences</a>
             </div>
           </motion.div>
         </div>
@@ -207,7 +207,7 @@ export function HomeviaTemplate(p: StudioTemplateProps) {
           <Rise className="relative max-w-lg">
             <h2 className="text-[34px] font-medium leading-[1.1] tracking-[-0.025em] text-white sm:text-[48px]">Find your place at {property.name}</h2>
             <div className="mt-6 flex flex-wrap gap-2">
-              <a href="#booking" className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-[13px] font-medium text-neutral-900">{cta} <ArrowUpRight size={14} /></a>
+              <a href="#booking" className="inline-flex items-center gap-2 rounded-lg bg-[var(--tpl-cta)] px-5 py-3 text-[13px] font-medium text-[var(--tpl-cta-on)]">{cta} <ArrowUpRight size={14} /></a>
               <a href="#units" className="rounded-lg border border-white/40 px-5 py-3 text-[13px] text-white">Residences</a>
             </div>
           </Rise>

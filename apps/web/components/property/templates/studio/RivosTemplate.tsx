@@ -28,7 +28,7 @@ const GROUND = '#f6f6f8';
 function Pill({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-      <span className="h-1.5 w-1.5 rounded-full bg-neutral-900" />{children}
+      <span className="h-1.5 w-1.5 rounded-full bg-[var(--tpl-accent)]" />{children}
     </span>
   );
 }
@@ -77,7 +77,7 @@ export function RivosTemplate(p: StudioTemplateProps) {
         <Pill>Residences</Pill>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
           <H2>Explore the<br />residences</H2>
-          <a href="#units" className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-[13px] font-medium text-white">View all units <ArrowRight size={14} /></a>
+          <a href="#units" className="inline-flex items-center gap-2 rounded-full bg-[var(--tpl-accent)] text-[var(--tpl-accent-on)] px-5 py-3 text-[13px] font-medium">View all units <ArrowRight size={14} /></a>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {types.slice(0, 6).map((t, i) => (
@@ -94,7 +94,7 @@ export function RivosTemplate(p: StudioTemplateProps) {
                     <p className="text-[18px] font-medium tracking-[-0.01em] text-neutral-900">{t.label}</p>
                     <p className="mt-0.5 text-[13px] text-neutral-500">{t.fromLabel ? `From ${t.fromLabel}` : `${t.count} homes`}</p>
                   </div>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-900 transition-colors group-hover:bg-neutral-900 group-hover:text-white"><ArrowUpRight size={16} /></span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-900 transition-colors group-hover:bg-[var(--tpl-accent)] group-hover:text-[var(--tpl-accent-on)]"><ArrowUpRight size={16} /></span>
                 </div>
               </a>
             </Rise>
@@ -145,7 +145,7 @@ export function RivosTemplate(p: StudioTemplateProps) {
             {steps.map((s, i) => (
               <Rise key={s.title} delay={i * 0.05}>
                 <li className="flex gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[12px] font-medium text-white">{i + 1}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--tpl-accent)] text-[var(--tpl-accent-on)] text-[12px] font-medium">{i + 1}</span>
                   <div>
                     <p className="text-[17px] font-medium text-neutral-900">{s.title}</p>
                     <p className="mt-1 text-[14.5px] leading-relaxed text-neutral-500">{s.body}</p>
@@ -174,7 +174,7 @@ export function RivosTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen" style={{ background: GROUND }}>
+    <div className="tpl-headings min-h-screen" style={{ background: GROUND, '--tpl-accent': 'var(--brand-custom, #16181d)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="rivos" property={property} ctaLabel={cta} />
 
       <div className="p-3 sm:p-4">

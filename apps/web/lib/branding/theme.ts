@@ -319,6 +319,12 @@ export function themeVars(theme: BrandTheme): React.CSSProperties {
     '--brand-text': theme.text,
     '--brand-font-heading': theme.font.heading,
     '--brand-font-body': theme.font.body,
+    // Only set once the developer has chosen their own colour. Templates with
+    // a signature accent read var(--brand-custom, <their accent>), so they
+    // keep their own look until a colour is picked, then follow it.
+    ...(theme.color.toLowerCase() !== DEFAULT_BRAND_COLOR.toLowerCase()
+      ? { '--brand-custom': theme.color, '--brand-custom-on': theme.onColor }
+      : {}),
   } as React.CSSProperties;
 }
 

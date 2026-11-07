@@ -24,7 +24,8 @@ const STYLE: KitStyle = {
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
 
-const RED = '#ef3b2d';
+/** The signature coral, or the developer's colour once they pick one. */
+const RED = 'var(--tpl-accent)';
 const GROUND = '#0b0b0b';
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -71,7 +72,7 @@ export function AurevantTemplate(p: StudioTemplateProps) {
         </Rise>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-6">
           <p className="max-w-sm text-[14px] leading-relaxed text-white/55">{heroLede(property)}</p>
-          <a href="#units" className="rounded-full px-6 py-3 text-[13px] font-medium text-white" style={{ background: RED }}>Discover {property.name}</a>
+          <a href="#units" className="rounded-full px-6 py-3 text-[13px] font-medium text-[var(--tpl-accent-on)]" style={{ background: RED }}>Discover {property.name}</a>
         </div>
       </div>
     </div>
@@ -95,7 +96,7 @@ export function AurevantTemplate(p: StudioTemplateProps) {
                 <p className="text-[34px] font-medium tracking-[-0.03em] text-white sm:text-[56px]">{property.name}</p>
                 <p className="mt-1 text-[13px] text-white/75">{[place, stats[0] && `${stats[0].value} ${stats[0].label.toLowerCase()}`].filter(Boolean).join(' · ')}</p>
               </div>
-              <span className="rounded-full bg-white px-5 py-2.5 text-[13px] text-black transition-colors group-hover:bg-[#ef3b2d] group-hover:text-white">View the residences</span>
+              <span className="rounded-full bg-white px-5 py-2.5 text-[13px] text-black transition-colors group-hover:bg-[var(--tpl-accent)] group-hover:text-[var(--tpl-accent-on)]">View the residences</span>
             </div>
           </a>
         </Rise>
@@ -179,7 +180,7 @@ export function AurevantTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen text-white" style={{ background: GROUND }}>
+    <div className="tpl-headings min-h-screen text-white" style={{ background: GROUND, '--tpl-accent': 'var(--brand-custom, #ef3b2d)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="aurevant" property={property} ctaLabel={cta} />
 
       <header className="relative flex min-h-[100svh] items-center overflow-hidden">
@@ -191,7 +192,7 @@ export function AurevantTemplate(p: StudioTemplateProps) {
             <h1 className="mt-5 text-[46px] font-medium leading-[1.02] tracking-[-0.035em] text-white sm:text-[80px]">{property.name}</h1>
             <p className="mt-6 line-clamp-3 max-w-lg text-[16px] leading-relaxed text-white/80">{heroLede(property)}</p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <a href="#units" className="rounded-full px-6 py-3.5 text-[13.5px] font-medium text-white" style={{ background: RED }}>Explore residences</a>
+              <a href="#units" className="rounded-full px-6 py-3.5 text-[13.5px] font-medium text-[var(--tpl-accent-on)]" style={{ background: RED }}>Explore residences</a>
               <a href="#booking" className="rounded-full border border-white/35 px-6 py-3.5 text-[13.5px] text-white backdrop-blur-sm">{cta}</a>
             </div>
           </motion.div>
@@ -228,7 +229,7 @@ export function AurevantTemplate(p: StudioTemplateProps) {
           <Rise className="relative max-w-2xl">
             <h2 className="text-[36px] font-medium leading-[1.06] tracking-[-0.03em] text-white sm:text-[58px]">Find a place that feels entirely yours</h2>
             <p className="mx-auto mt-4 max-w-md text-[15px] text-white/70">Visit in person or join a live guided tour from anywhere.</p>
-            <a href="#booking" className="mt-8 inline-block rounded-full px-7 py-3.5 text-[14px] font-medium text-white" style={{ background: RED }}>{cta}</a>
+            <a href="#booking" className="mt-8 inline-block rounded-full px-7 py-3.5 text-[14px] font-medium text-[var(--tpl-accent-on)]" style={{ background: RED }}>{cta}</a>
           </Rise>
         </div>
       </section>

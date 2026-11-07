@@ -24,7 +24,8 @@ const STYLE: KitStyle = {
   unitsAs: 'table', galleryAs: 'mosaic', outlined: false,
 };
 
-const WIDE = 'var(--font-unbounded), var(--font-manrope), sans-serif';
+/** The template's wide display face, or the developer's heading font once chosen. */
+const WIDE = 'var(--tpl-font-display)';
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="flex items-center gap-1.5 text-[12px] text-neutral-600"><Home size={12} />{children}</p>;
@@ -129,7 +130,7 @@ export function LuxiqTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="tpl-headings min-h-screen bg-white" style={{ '--tpl-accent': 'var(--brand-custom, #000000)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="luxiq" property={property} ctaLabel={cta} />
 
       <header className="relative h-[100svh] min-h-[600px] overflow-hidden bg-[#b9a7c9] pt-[60px]">
@@ -155,7 +156,7 @@ export function LuxiqTemplate(p: StudioTemplateProps) {
           </motion.p>
           <div className="flex gap-2">
             <a href="#booking" className="rounded-full bg-white px-5 py-2.5 text-[13px] font-medium text-black">{cta}</a>
-            <a href="#units" className="rounded-full bg-black px-5 py-2.5 text-[13px] font-medium text-white">Residences</a>
+            <a href="#units" className="rounded-full bg-[var(--tpl-accent)] text-[var(--tpl-accent-on)] px-5 py-2.5 text-[13px] font-medium">Residences</a>
           </div>
         </div>
       </header>

@@ -155,6 +155,8 @@ export default function CustomiseMiniSite() {
     return <p className="py-16 text-center text-[14px] text-[#5f6368]">Development not found.</p>;
   }
 
+  // Templates other than Classic that don't opt in keep their designed type.
+  const fontsLocked = template.key !== 'CLASSIC' && !template.fontsFollowBrand && !!template.ownsNav;
   const isLive = ((property as { templateKey?: string }).templateKey || 'CLASSIC') === template.key;
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
 
@@ -335,8 +337,13 @@ export default function CustomiseMiniSite() {
           <section className={cardCls}>
             <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Typeface</h2>
             <p className="mb-4 text-[13px] text-[#5f6368]">
-              A short curated set — each pairing is tested against real tours.
+              {fontsLocked
+                ? `${template.label} is designed around its own typefaces, so this setting doesn't change it.`
+                : template.fontsFollowBrand
+                  ? `${template.label} uses its own type until you choose another.`
+                  : 'A short curated set — each pairing is tested against real tours.'}
             </p>
+            {!fontsLocked && (
             <div className="space-y-2">
               {BRAND_FONTS.map((f) => (
                 <button
@@ -350,18 +357,38 @@ export default function CustomiseMiniSite() {
                       : 'border-[#dadce0] hover:bg-[#f8f9fa]',
                   )}
                 >
-                  <p className="text-[15px] text-[#202124]" style={{ fontFamily: f.heading }}>
-                    {f.label}
-                  </p>
-                  <p className="text-[12px] text-[#5f6368]">{f.note}</p>
+                  {template.fontsFollowBrand && f.key === 'MODERN' ? (
+                    <>
+                      <p className="text-[15px] text-[#202124]" style={{ fontFamily: template.fonts.display ?? template.fonts.heading }}>
+                        {template.label}&apos;s own type
+                      </p>
+                      <p className="text-[12px] text-[#5f6368]">The typefaces this template was designed with.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[15px] text-[#202124]" style={{ fontFamily: f.heading }}>
+                        {f.label}
+                      </p>
+                      <p className="text-[12px] text-[#5f6368]">{f.note}</p>
+                    </>
+                  )}
                 </button>
               ))}
             </div>
+            )}
           </section>
 
           {/* Navbar */}
           <section className={cardCls}>
             <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Navigation bar</h2>
+            {template.ownsNav ? (
+              <p className="text-[13px] leading-relaxed text-[#5f6368]">
+                {template.label} has its own navigation, designed with the rest of the page. It
+                follows your brand colour where the design uses an accent, and lists only the
+                sections you show.
+              </p>
+            ) : (
+            <>
             <p className="mb-4 text-[13px] text-[#5f6368]">
               How the bar at the top of your page looks.
             </p>
@@ -421,6 +448,8 @@ export default function CustomiseMiniSite() {
                 );
               })}
             </div>
+            </>
+            )}
           </section>
 
           {/* Hero + CTA */}
@@ -434,10 +463,11 @@ export default function CustomiseMiniSite() {
             {template.ownsHero && (
               <p className="mb-3 rounded-xl bg-[#f1f3f4] px-3 py-2.5 text-[12px] leading-relaxed text-[#5f6368]">
                 The <span className="font-medium">{template.label}</span> template
-                brings its own opening — {template.heroNote.toLowerCase()} These
-                options apply if you switch to the Classic template.
+                brings its own opening — {template.heroNote.toLowerCase()} The fade and
+                button wording below still apply.
               </p>
             )}
+            {!template.ownsHero && (
             <div className="space-y-2">
               {HERO_STYLES.map((h) => (
                 <button
@@ -456,6 +486,7 @@ export default function CustomiseMiniSite() {
                 </button>
               ))}
             </div>
+            )}
 
             {/* The overlay is what keeps the status chips legible over a
                 photograph, so turning it off is offered next to the hero

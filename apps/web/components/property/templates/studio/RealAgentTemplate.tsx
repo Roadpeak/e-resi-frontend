@@ -73,7 +73,7 @@ export function RealAgentTemplate(p: StudioTemplateProps) {
                 <div className="absolute inset-0 transition-transform duration-[1200ms] group-hover:scale-[1.03]"><MediaFill image={pick(pool, i + 2)} /></div>
                 {t.available > 0 && (
                   <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded bg-white px-2 py-1 text-[11px] font-medium text-neutral-900">
-                    Available <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Available <span className="h-1.5 w-1.5 rounded-full bg-[var(--tpl-accent)]" />
                   </span>
                 )}
               </div>
@@ -105,7 +105,7 @@ export function RealAgentTemplate(p: StudioTemplateProps) {
   );
 
   const bento = (
-    <section className="bg-[#26292c] px-4 py-20 sm:px-8">
+    <section className="bg-[var(--tpl-band)] px-4 py-20 sm:px-8">
       <div className="mx-auto max-w-[1440px]">
         <div className="lg:ml-[33%]">
           <p className="text-[12px] text-white/50">Why buy here</p>
@@ -163,7 +163,7 @@ export function RealAgentTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="tpl-headings min-h-screen bg-white" style={{ '--tpl-accent': 'var(--brand-custom, #10b981)', '--tpl-cta': 'var(--brand-custom, #ffffff)', '--tpl-cta-on': 'var(--brand-custom-on, #171717)', '--tpl-band': '#26292c' } as React.CSSProperties}>
       <StudioNav variant="realagent" property={property} ctaLabel={cta} />
 
       <header className="relative h-[100svh] min-h-[560px] overflow-hidden bg-neutral-200">
@@ -174,7 +174,7 @@ export function RealAgentTemplate(p: StudioTemplateProps) {
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-end justify-between gap-6 px-5 pb-8 pt-24 sm:px-8">
             <h1 className="text-[40px] font-medium leading-[1.02] tracking-[-0.035em] text-white sm:text-[64px]">{property.name}</h1>
-            <a href="#booking" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-[13px] font-medium text-neutral-900">{cta} <ArrowUpRight size={14} /></a>
+            <a href="#booking" className="inline-flex items-center gap-2 rounded-full bg-[var(--tpl-cta)] px-5 py-3 text-[13px] font-medium text-[var(--tpl-cta-on)]">{cta} <ArrowUpRight size={14} /></a>
           </div>
         </div>
       </header>

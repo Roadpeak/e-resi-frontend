@@ -176,7 +176,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
       <main
         style={{
           ...themeVars(branding.theme),
-          ...templateFontVars(template),
+          ...templateFontVars(template, branding.theme.font),
           // The template's own face wins over the developer's brand pairing:
           // its type is part of the design, not a default to be overridden.
           fontFamily: 'var(--tpl-font-body)',

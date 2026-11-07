@@ -144,3 +144,9 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
+/* Studio mini-site templates that follow the developer's typeface: headings
+   take the heading face (the template's own unless a brand font is chosen). */
+.tpl-headings :is(h1, h2, h3) {
+  font-family: var(--tpl-font-heading);
+}
