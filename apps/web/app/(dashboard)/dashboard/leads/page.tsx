@@ -10,6 +10,7 @@ import {
   type LeadChannel, type LeadInput, type LeadRow, type LeadSource, type LeadStatus,
 } from '../../../../lib/api/leads';
 import { cn } from '../../../../lib/utils';
+import { viewersApi } from '../../../../lib/api/referrals';
 
 /**
  * Every lead in one place: inquiries and viewing requests collected from the
@@ -36,9 +37,10 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Requested', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled',
   LEAD: 'Introduced', VIEWING: 'Viewing', RESERVED: 'Reserved', SPA_SIGNED: 'SPA signed', LOST: 'Lost',
   CONTACTED: 'Contacted', QUALIFIED: 'Qualified', NEGOTIATING: 'Negotiating', WON: 'Won',
+  VIEWED: 'Browsing',
 };
 function statusTone(status: string) {
-  if (['NEW', 'PENDING', 'LEAD'].includes(status)) return 'bg-[#e8f0fe] text-[#1967d2]';
+  if (['NEW', 'PENDING', 'LEAD', 'VIEWED'].includes(status)) return 'bg-[#e8f0fe] text-[#1967d2]';
   if (['WON', 'COMPLETED', 'SPA_SIGNED', 'RESERVED', 'CONFIRMED'].includes(status)) return 'bg-[#e6f4ea] text-[#188038]';
   if (['LOST', 'CANCELLED', 'CLOSED'].includes(status)) return 'bg-[#f1f3f4] text-[#5f6368]';
   return 'bg-[#fef7e0] text-[#b06000]';
@@ -73,6 +75,23 @@ export default function LeadsPage() {
   const [q, setQ] = useState('');
   const [propertyId, setPropertyId] = useState('');
   const [editing, setEditing] = useState<LeadRow | 'new' | null>(null);
+  const [capturing, setCapturing] = useState<string | null>(null);
+  const [captureError, setCaptureError] = useState('');
+
+  /** Turn someone who only browsed into a lead (an inquiry the team can reply to). */
+  async function capture(l: LeadRow) {
+    if (!l.viewer) return;
+    setCapturing(l.id);
+    setCaptureError('');
+    try {
+      await viewersApi.capture(l.viewer.userId, l.viewer.propertyId);
+      await qc.invalidateQueries({ queryKey: ['leads'] });
+    } catch (e) {
+      setCaptureError(e instanceof Error ? e.message : 'Could not save this person as a lead.');
+    } finally {
+      setCapturing(null);
+    }
+  }
 
   const leads = useMemo(() => data?.leads ?? [], [data]);
   const properties = data?.properties ?? [];
@@ -119,8 +138,8 @@ export default function LeadsPage() {
         <div>
           <h1 className="text-[26px] font-normal text-[#202124]">Leads</h1>
           <p className="max-w-[70ch] text-[14px] text-[#5f6368]">
-            Everyone interested in your developments: inquiries and viewing requests from your pages,
-            clients agents brought you, and people your team added.
+            Everyone interested in your developments: signed-in buyers who opened your pages, inquiries
+            and viewing requests, clients agents brought you, and people your team added.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -176,6 +195,8 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {captureError && <p className="rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{captureError}</p>}
+
       {/* List */}
       <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
         <div className="hidden grid-cols-[1.6fr_1.3fr_1fr_0.8fr_0.9fr] gap-4 border-b border-[#f1f3f4] bg-[#f8f9fa] px-5 py-2.5 text-[12px] font-medium text-[#5f6368] md:grid">
@@ -201,10 +222,12 @@ export default function LeadsPage() {
               const ch = CHANNEL_STYLE[l.channel];
               const href = hrefFor(l);
               const open = () => (href ? router.push(href) : setEditing(l));
+              const isViewer = l.kind === 'VIEWER';
+              const Row = isViewer ? 'div' : 'button';
               return (
                 <li key={`${l.kind}-${l.id}`}>
-                  <button type="button" onClick={open}
-                    className="grid w-full cursor-pointer grid-cols-1 gap-2 px-5 py-3.5 text-left transition-colors hover:bg-[#f8f9fa] md:grid-cols-[1.6fr_1.3fr_1fr_0.8fr_0.9fr] md:items-center md:gap-4">
+                  <Row {...(isViewer ? {} : { type: 'button' as const, onClick: open })}
+                    className={cn('grid w-full grid-cols-1 gap-2 px-5 py-3.5 text-left transition-colors hover:bg-[#f8f9fa] md:grid-cols-[1.6fr_1.3fr_1fr_0.8fr_0.9fr] md:items-center md:gap-4', !isViewer && 'cursor-pointer')}>
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-medium text-[#202124]">{l.name}</span>
                       <span className="block truncate text-[12.5px] text-[#5f6368]">{[l.phone, l.email].filter(Boolean).join(' · ') || 'No contact details'}</span>
@@ -221,9 +244,16 @@ export default function LeadsPage() {
                     <span><span className={cn('inline-block rounded-full px-2.5 py-0.5 text-[12px] font-medium', statusTone(l.status))}>{STATUS_LABEL[l.status] ?? l.status}</span></span>
                     <span className="flex items-center justify-between gap-2 text-[12.5px] text-[#5f6368] md:justify-end">
                       {relDate(l.createdAt)}
-                      <MaterialIcon name={href ? 'open_in_new' : 'edit'} size={15} className="text-[#9aa0a6]" />
+                      {isViewer ? (
+                        <button type="button" onClick={() => capture(l)} disabled={capturing === l.id}
+                          className="cursor-pointer rounded-full border border-[#dadce0] bg-white px-3 py-1 text-[12.5px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8fbff] disabled:opacity-50">
+                          {capturing === l.id ? 'Saving…' : 'Save as lead'}
+                        </button>
+                      ) : (
+                        <MaterialIcon name={href ? 'open_in_new' : 'edit'} size={15} className="text-[#9aa0a6]" />
+                      )}
                     </span>
-                  </button>
+                  </Row>
                 </li>
               );
             })}

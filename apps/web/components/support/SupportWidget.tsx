@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ChevronRight, Loader2, MessageCircleQuestion, Plus, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, MessageCircleQuestion, Plus, X } from 'lucide-react';
 import {
   categoryLabel, rememberVisitorToken, supportApi, visitorTokens, type SupportThread,
 } from '../../lib/api/support';
@@ -53,6 +53,18 @@ export function SupportWidget() {
   const [host, setHost] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>({ name: 'home' });
+  /**
+   * Tucked away to a slim tab on the right edge, so the launcher stops
+   * covering page buttons. Remembered per browser.
+   */
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try { setCollapsed(localStorage.getItem('eresi-help-collapsed') === '1'); } catch { /* private mode */ }
+  }, []);
+  const setTucked = (v: boolean) => {
+    setCollapsed(v);
+    try { localStorage.setItem('eresi-help-collapsed', v ? '1' : '0'); } catch { /* private mode */ }
+  };
 
   useEffect(() => setHost(window.location.host), []);
 
@@ -117,27 +129,54 @@ export function SupportWidget() {
         )}
       </AnimatePresence>
 
-      <button
-        type="button"
-        onClick={() => {
-          setOpen((v) => !v);
-          if (!open) void qc.invalidateQueries({ queryKey: ['support'] });
-        }}
-        aria-label={open ? 'Close help' : 'Contact e-resi'}
-        aria-expanded={open}
-        className={cn(
-          'group fixed right-4 z-[70] flex h-12 cursor-pointer items-center gap-2 rounded-full bg-[#202124] pl-3.5 pr-4 text-white shadow-[0_6px_24px_rgba(32,33,36,0.28)] transition-colors hover:bg-[#3c4043] sm:right-6',
-          lifted ? 'bottom-24' : 'bottom-5 sm:bottom-6',
-        )}
-      >
-        {open ? <X size={19} /> : <MessageCircleQuestion size={19} />}
-        <span className="text-[14px] font-medium">{open ? 'Close' : 'Help'}</span>
-        {!open && badge > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ea4335] px-1 text-[11px] font-semibold">
-            {badge > 9 ? '9+' : badge}
-          </span>
-        )}
-      </button>
+      {collapsed && !open ? (
+        // Tucked: a slim tab on the edge. Click to bring the Help button back.
+        <button
+          type="button"
+          onClick={() => setTucked(false)}
+          aria-label="Show help button"
+          title="Help"
+          className={cn(
+            'fixed right-0 z-[70] flex h-11 w-7 cursor-pointer items-center justify-center rounded-l-xl bg-[#202124]/85 text-white shadow-[0_4px_16px_rgba(32,33,36,0.25)] transition-all hover:w-9 hover:bg-[#202124]',
+            lifted ? 'bottom-24' : 'bottom-5 sm:bottom-6',
+          )}
+        >
+          <ChevronLeft size={16} />
+          {badge > 0 && <span className="absolute left-1 top-1 h-2 w-2 rounded-full bg-[#ea4335]" />}
+        </button>
+      ) : (
+        <div className={cn('group/help fixed right-4 z-[70] flex items-center sm:right-6', lifted ? 'bottom-24' : 'bottom-5 sm:bottom-6')}>
+          {!open && (
+            <button
+              type="button"
+              onClick={() => setTucked(true)}
+              aria-label="Hide help button"
+              title="Hide"
+              className="mr-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-[#dadce0] bg-white text-[#5f6368] shadow-sm transition-opacity hover:text-[#202124] sm:opacity-0 sm:group-hover/help:opacity-100 sm:focus-visible:opacity-100"
+            >
+              <ChevronRight size={15} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen((v) => !v);
+              if (!open) void qc.invalidateQueries({ queryKey: ['support'] });
+            }}
+            aria-label={open ? 'Close help' : 'Contact e-resi'}
+            aria-expanded={open}
+            className="group relative flex h-12 cursor-pointer items-center gap-2 rounded-full bg-[#202124] pl-3.5 pr-4 text-white shadow-[0_6px_24px_rgba(32,33,36,0.28)] transition-colors hover:bg-[#3c4043]"
+          >
+            {open ? <X size={19} /> : <MessageCircleQuestion size={19} />}
+            <span className="text-[14px] font-medium">{open ? 'Close' : 'Help'}</span>
+            {!open && badge > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ea4335] px-1 text-[11px] font-semibold">
+                {badge > 9 ? '9+' : badge}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </>
   );
 }
