@@ -210,30 +210,15 @@ export default function DashboardProperties() {
                       {/* Actions */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1">
-                          <Link
-                            href={`/dashboard/properties/${p.slug}`}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="Manage development"
-                            aria-label="Manage development"
-                          >
+                          <ActionIcon href={`/dashboard/properties/${p.slug}`} label="Manage development">
                             <Eye size={14} />
-                          </Link>
-                          <Link
-                            href={`/dashboard/properties/${p.slug}/customise`}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="Templates"
-                            aria-label="Templates"
-                          >
+                          </ActionIcon>
+                          <ActionIcon href={`/dashboard/properties/${p.slug}/customise`} label="Templates">
                             <LayoutTemplate size={14} />
-                          </Link>
-                          <Link
-                            href={`/dashboard/properties/${p.slug}/domain`}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
-                            title="Domain"
-                            aria-label="Domain"
-                          >
+                          </ActionIcon>
+                          <ActionIcon href={`/dashboard/properties/${p.slug}/domain`} label="Domain">
                             <Globe size={14} />
-                          </Link>
+                          </ActionIcon>
                           <PropertyActionsMenu property={p} onError={setActionError} />
                         </div>
                       </td>
@@ -260,5 +245,40 @@ export default function DashboardProperties() {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * A row action icon with its name shown on hover. The label is positioned
+ * against the viewport: the table scrolls inside an overflow container that
+ * would clip an absolutely positioned tooltip.
+ */
+function ActionIcon({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
+  const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
+  const show = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    setTip({ x: r.left + r.width / 2, y: r.top });
+  };
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      onMouseEnter={(e) => show(e.currentTarget)}
+      onMouseLeave={() => setTip(null)}
+      onFocus={(e) => show(e.currentTarget)}
+      onBlur={() => setTip(null)}
+      className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] transition-colors hover:bg-[#f1f3f4] hover:text-[#202124]"
+    >
+      {children}
+      {tip && (
+        <span
+          role="tooltip"
+          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium text-white shadow-md"
+          style={{ left: tip.x, top: tip.y - 6 }}
+        >
+          {label}
+        </span>
+      )}
+    </Link>
   );
 }
