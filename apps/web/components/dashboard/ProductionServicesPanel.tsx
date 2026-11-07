@@ -46,10 +46,14 @@ export function ProductionServicesPanel({ slug }: { slug: string }) {
   });
 
   const placed = orders ?? [];
-  // A cancelled order may be raised again; anything else is already committed.
+  // Only work still in progress blocks a service. Delivered or cancelled
+  // services can be ordered again — a second shoot, a refreshed tour.
+  const IN_PROGRESS = ['ORDERED', 'SCHEDULED', 'IN_PRODUCTION'];
   const committed = new Set(
-    placed.filter((o) => o.status !== 'CANCELLED').map((o) => o.serviceKey),
+    placed.filter((o) => IN_PROGRESS.includes(o.status)).map((o) => o.serviceKey),
   );
+  const delivered = new Set(placed.filter((o) => o.status === 'DELIVERED').map((o) => o.serviceKey));
+  // The catalogue only carries services an admin has enabled.
   const available = catalog.filter((s) => !committed.has(s.id));
 
   const reset = () => {
@@ -170,7 +174,7 @@ export function ProductionServicesPanel({ slug }: { slug: string }) {
         <div className="mt-5 border-t border-[#dadce0]/60 pt-5">
           {available.length === 0 ? (
             <p className="text-[14px] text-[#5f6368]">
-              Everything in the catalogue is already ordered for this development.
+              Every available service is already in progress for this development. Services can be ordered again once delivered.
             </p>
           ) : (
             <>
@@ -197,7 +201,12 @@ export function ProductionServicesPanel({ slug }: { slug: string }) {
                           className="mt-0.5 h-4 w-4 accent-[#1a73e8]"
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[15px] text-[#202124]">{s.label}</span>
+                          <span className="block text-[15px] text-[#202124]">
+                            {s.label}
+                            {delivered.has(s.id) && (
+                              <span className="ml-2 rounded-full bg-[#e6f4ea] px-2 py-0.5 align-middle text-[11px] font-medium text-[#188038]">Delivered before · order again</span>
+                            )}
+                          </span>
                           {s.description && (
                             <span className="block text-[13px] leading-relaxed text-[#5f6368]">
                               {s.description}
@@ -293,7 +302,7 @@ export function ProductionServicesPanel({ slug }: { slug: string }) {
       {!picking && available.length === 0 && placed.length > 0 && (
         <p className="mt-4 flex items-center gap-2 text-[13px] text-[#5f6368]">
           <MaterialIcon name="check_circle" className="text-[16px] text-[#188038]" />
-          Every service in the catalogue has been ordered for this development.
+          Every available service is in progress for this development. You can order again once work is delivered.
         </p>
       )}
     </div>

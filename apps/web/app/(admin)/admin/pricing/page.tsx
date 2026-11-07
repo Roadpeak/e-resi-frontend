@@ -262,9 +262,11 @@ function ServiceRow({ service, onSaved }: { service: ServiceItem; onSaved: (m: s
     mutationFn: () => pricingApi.updateService(service.id, { price: Number(price) }),
     onSuccess: () => onSaved(`${service.label} updated`),
   });
-  const retire = useMutation({
-    mutationFn: () => pricingApi.retireService(service.id),
-    onSuccess: () => onSaved(`${service.label} retired`),
+  // Reversible: a disabled service disappears from what developers can order
+  // (and the API refuses it), and can be switched back on at any time.
+  const toggleActive = useMutation({
+    mutationFn: () => pricingApi.updateService(service.id, { isActive: !service.isActive }),
+    onSuccess: () => onSaved(`${service.label} ${service.isActive ? 'disabled — developers can no longer order it' : 'enabled for ordering'}`),
   });
 
   return (
@@ -274,7 +276,7 @@ function ServiceRow({ service, onSaved }: { service: ServiceItem; onSaved: (m: s
           {service.label}
           {!service.isActive && (
             <span className="ml-2 rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] text-[#5f6368]">
-              retired
+              disabled — developers can&apos;t order this
             </span>
           )}
         </p>
@@ -297,14 +299,18 @@ function ServiceRow({ service, onSaved }: { service: ServiceItem; onSaved: (m: s
       >
         Save
       </button>
-      {service.isActive && (
-        <button
-          onClick={() => retire.mutate()}
-          className="rounded-full border border-[#dadce0] px-3 py-2 text-[13px] font-medium text-[#c5221f] transition-colors hover:bg-[#fce8e6] cursor-pointer"
-        >
-          Retire
-        </button>
-      )}
+      <button
+        onClick={() => toggleActive.mutate()}
+        disabled={toggleActive.isPending}
+        className={cn(
+          'rounded-full border px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer disabled:opacity-50',
+          service.isActive
+            ? 'border-[#dadce0] text-[#c5221f] hover:bg-[#fce8e6]'
+            : 'border-[#1a73e8] text-[#1a73e8] hover:bg-[#e8f0fe]',
+        )}
+      >
+        {toggleActive.isPending ? '…' : service.isActive ? 'Disable' : 'Enable'}
+      </button>
     </div>
   );
 }
@@ -419,7 +425,7 @@ function TypePriceRow({
           )}
           {!service.isActive && (
             <span className="ml-2 rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] text-[#5f6368]">
-              retired
+              disabled — developers can&apos;t order this
             </span>
           )}
         </p>
