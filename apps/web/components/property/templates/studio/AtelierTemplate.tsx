@@ -210,7 +210,7 @@ export function AtelierTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen" style={{ background: GROUND }}>
+    <div className="tpl-headings min-h-screen" style={{ background: GROUND, '--tpl-accent': 'var(--brand-custom, #171717)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="atelier" property={property} ctaLabel={cta} />
 
       <header className="relative min-h-[100svh] overflow-hidden bg-white pt-16">
@@ -226,8 +226,8 @@ export function AtelierTemplate(p: StudioTemplateProps) {
             </h1>
             <p className="mt-6 line-clamp-4 max-w-md text-[12px] uppercase leading-[1.9] tracking-[0.1em] text-neutral-600">{heroLede(property)}</p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <a href="#booking" className="border border-neutral-900 px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white">{cta}</a>
-              <a href="#units" className="border border-neutral-900 px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white">Residences</a>
+              <a href="#booking" className="border border-[var(--tpl-accent)] px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--tpl-accent)] transition-colors hover:bg-[var(--tpl-accent)] hover:text-[var(--tpl-accent-on)]">{cta}</a>
+              <a href="#units" className="border border-[var(--tpl-accent)] px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--tpl-accent)] transition-colors hover:bg-[var(--tpl-accent)] hover:text-[var(--tpl-accent-on)]">Residences</a>
             </div>
           </Rise>
         </div>

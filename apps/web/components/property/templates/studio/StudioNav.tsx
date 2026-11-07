@@ -256,7 +256,7 @@ export function StudioNav({
           </div>
           <div className="flex items-center justify-end gap-2">
             <div className="hidden sm:block"><Actions nav={nav} color={fg} border={light ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.12)'} /></div>
-            <a href="#booking" className="hidden rounded-md px-4 py-2 text-[13px] font-medium sm:inline-block" style={light ? { background: '#fff', color: '#0f1b2d' } : { background: '#011d41', color: '#fff' }}>{ctaLabel}</a>
+            <a href="#booking" className="hidden rounded-md px-4 py-2 text-[13px] font-medium sm:inline-block" style={light ? { background: '#fff', color: '#0f1b2d' } : { background: 'var(--tpl-accent, #011d41)', color: 'var(--tpl-accent-on, #fff)' }}>{ctaLabel}</a>
             {burger(fg, light ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.12)')}
           </div>
         </div>
@@ -323,7 +323,7 @@ export function StudioNav({
               {links.map((l) => (
                 <a key={l.id} href={`#${l.id}`} className="relative py-1 text-[14px] text-neutral-800">
                   {l.label}
-                  {active === l.id && <motion.span layoutId="skyline-underline" className="absolute inset-x-0 -bottom-0.5 h-[1.5px]" style={{ background: '#e5793a' }} />}
+                  {active === l.id && <motion.span layoutId="skyline-underline" className="absolute inset-x-0 -bottom-0.5 h-[1.5px]" style={{ background: 'var(--tpl-accent, #e5793a)' }} />}
                 </a>
               ))}
             </div>

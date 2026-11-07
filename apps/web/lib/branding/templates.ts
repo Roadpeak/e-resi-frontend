@@ -224,6 +224,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'FRAME',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Frame',
     note: 'Framed hero with a crossfading slideshow or film, and your highlights sliding across it.',
@@ -244,6 +245,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'PRESTIGE',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Prestige',
     note: 'Deep navy and soft white with a serif face. Film hero with a glass facts bar.',
@@ -264,6 +266,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'GALLERY',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Gallery',
     note: 'Soft rounded sheets on pale grey, a huge centred name and champagne-gold accents.',
@@ -284,6 +287,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'ATELIER',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Atelier',
     note: 'Monochrome and gallery-like. Serif with italic accents, pinned quotes, black-and-white film.',
@@ -304,6 +308,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'HORIZON',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Horizon',
     note: 'Bright and airy. Rounded hero, words that light up as you scroll, an expanding list of home types.',
@@ -324,6 +329,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'SKYLINE',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Skyline',
     note: 'Crisp and modern. Film hero with an availability card, dark how-it-works band, annotated photo.',
@@ -492,6 +498,7 @@ export const MINI_SITE_TEMPLATES: MiniSiteTemplate[] = [
   {
     key: 'NOIR',
     ownsNav: true,
+    fontsFollowBrand: true,
     isNew: true,
     label: 'Noir',
     note: 'Black and white with heavy type, two-way marquees and a giant italic wordmark.',

@@ -203,6 +203,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable} ${marcellus.variable} ${manrope.variable} ${unbounded.variable}`} suppressHydrationWarning>
       <head>
+        {/* Stale-deploy recovery. A tab left open across a deploy can load a
+            chunk from the new build into the old runtime ("module factory is
+            not available", ChunkLoadError). deploymentId only covers
+            navigations, so catch these at the window and reload once — the
+            sessionStorage stamp stops a genuinely broken page from looping. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var R=/module factory is not available|ChunkLoadError|Loading chunk [\\w-]+ failed|Failed to fetch dynamically imported module|Importing a module script failed/i;function h(m){try{if(!R.test(m||''))return;var k='eresi-stale-reload',t=+sessionStorage.getItem(k)||0;if(Date.now()-t<30000)return;sessionStorage.setItem(k,String(Date.now()));location.reload();}catch(e){}}window.addEventListener('error',function(e){h((e&&e.message)||(e&&e.error&&e.error.message))},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;h(r&&(r.message||String(r)))});})();`,
+          }}
+        />
         {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
         <link
           rel="stylesheet"

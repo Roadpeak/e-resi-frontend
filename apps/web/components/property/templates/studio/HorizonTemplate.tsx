@@ -59,7 +59,7 @@ export function HorizonTemplate(p: StudioTemplateProps) {
             {property.developer?.name ? `By ${property.developer.name}.` : ''} {shortLine(property, 140) ?? ''}
           </p>
         </div>
-        <a href="#units" className="inline-flex items-center gap-2 rounded-full border border-neutral-900 px-5 py-2.5 text-[14px] text-neutral-900 hover:bg-neutral-900 hover:text-white">
+        <a href="#units" className="inline-flex items-center gap-2 rounded-full border border-[var(--tpl-accent)] px-5 py-2.5 text-[14px] text-[var(--tpl-accent)] hover:bg-[var(--tpl-accent)] hover:text-[var(--tpl-accent-on)]">
           See the homes <ArrowRight size={15} />
         </a>
       </div>
@@ -184,7 +184,7 @@ export function HorizonTemplate(p: StudioTemplateProps) {
                       <div className="grid gap-4 pt-6 sm:ml-[150px] sm:grid-cols-[2fr_1fr]">
                         <div className="relative aspect-[16/10] overflow-hidden rounded-xl"><MediaFill image={pick(pool, i + 2)} /></div>
                         <div className="relative aspect-[3/4] overflow-hidden rounded-xl sm:aspect-auto"><MediaFill image={pick(pool, i + 5)} /></div>
-                        <a href="#units" className="justify-self-start rounded-full border border-neutral-900 px-5 py-2.5 text-[14px] text-neutral-900 hover:bg-neutral-900 hover:text-white sm:col-span-2">
+                        <a href="#units" className="justify-self-start rounded-full border border-[var(--tpl-accent)] px-5 py-2.5 text-[14px] text-[var(--tpl-accent)] hover:bg-[var(--tpl-accent)] hover:text-[var(--tpl-accent-on)] sm:col-span-2">
                           View available {t.label.toLowerCase()} homes
                         </a>
                       </div>
@@ -211,7 +211,7 @@ export function HorizonTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white" style={{ color: INK }}>
+    <div className="tpl-headings min-h-screen bg-white" style={{ color: INK, '--tpl-accent': 'var(--brand-custom, #111111)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="horizon" property={property} ctaLabel={cta} />
 
       <header className="px-3 pb-3 pt-3">

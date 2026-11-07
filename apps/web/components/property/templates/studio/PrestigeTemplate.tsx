@@ -20,7 +20,9 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-xl', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
+/** Large navy bands keep the signature navy (white text on them); accents follow the brand. */
 const NAVY = '#011d41';
+const ACCENT = 'var(--tpl-accent)';
 const GROUND = '#f5f5f5';
 
 function Ornament() {
@@ -77,7 +79,7 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
               <ul className="mt-4 space-y-3">
                 {property.features.slice(0, 4).map((f) => (
                   <li key={f} className="flex items-start gap-3 text-[15px] text-neutral-700">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white" style={{ background: NAVY }}>
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--tpl-accent-on)]" style={{ background: ACCENT }}>
                       <Check size={11} strokeWidth={3} />
                     </span>
                     {f}
@@ -112,7 +114,7 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
             {types.slice(0, 4).map((t, i) => (
               <Rise key={t.label} delay={i * 0.07}>
                 <a href="#units" className="group flex flex-col items-center rounded-xl border border-white/12 px-6 py-10 text-center text-white transition-colors hover:bg-white/[0.04]">
-                  <span className="flex h-24 w-24 items-center justify-center rounded-full bg-white text-[#011d41] transition-transform group-hover:scale-105">
+                  <span className="flex h-24 w-24 items-center justify-center rounded-full bg-white text-[var(--tpl-accent)] transition-transform group-hover:scale-105">
                     {t.beds === 0 ? <Building2 size={30} strokeWidth={1.3} /> : <BedDouble size={30} strokeWidth={1.3} />}
                   </span>
                   <p className="mt-6 text-[22px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{t.label}</p>
@@ -224,7 +226,7 @@ export function PrestigeTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen" style={{ background: GROUND, color: '#0f1b2d' }}>
+    <div className="tpl-headings min-h-screen" style={{ background: GROUND, color: '#0f1b2d', '--tpl-accent': 'var(--brand-custom, #011d41)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="prestige" property={property} ctaLabel={cta} />
 
       <header className="relative flex min-h-[100svh] items-end overflow-hidden pb-10 pt-28">

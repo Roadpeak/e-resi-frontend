@@ -23,7 +23,8 @@ const STYLE: KitStyle = {
   onDark: false, radius: 'rounded-md', headingKind: 'eyebrow',
   unitsAs: 'cards', galleryAs: 'grid', outlined: true,
 };
-const ORANGE = '#e5793a';
+/** Signature orange, or the developer's colour once chosen. */
+const ORANGE = 'var(--tpl-accent)';
 
 function Eyebrow({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
   return <p className={`flex items-center gap-2 text-[13px] uppercase tracking-[0.06em] ${light ? 'text-white/70' : 'text-neutral-600'}`}><span className="text-[10px]">✳</span>{children}</p>;
@@ -65,7 +66,7 @@ export function SkylineTemplate(p: StudioTemplateProps) {
           <p className="mt-3 line-clamp-4 text-[15px] leading-relaxed text-neutral-500">{property.description}</p>
           <div className="mt-auto flex items-end justify-between pt-8">
             {property.priceFrom ? <p className="text-[30px] font-semibold text-neutral-900">{formatPrice(property.priceFrom, property.currency)}</p> : <span />}
-            <span className="rounded-sm px-3 py-1 text-[13px]" style={{ background: '#fde8dc', color: ORANGE }}>{status}</span>
+            <span className="rounded-sm px-3 py-1 text-[13px]" style={{ background: 'color-mix(in srgb, var(--tpl-accent) 14%, white)', color: ORANGE }}>{status}</span>
           </div>
           {sample && (
             <div className="mt-6 grid grid-cols-3 divide-x divide-neutral-200 border-t border-neutral-200 pt-5 text-center text-[13px] text-neutral-500">
@@ -82,7 +83,7 @@ export function SkylineTemplate(p: StudioTemplateProps) {
           <div><Eyebrow>About the development</Eyebrow><H2>{property.name}, built with clarity and care</H2></div>
           <div>
             <p className="text-[15px] leading-relaxed text-neutral-600">{property.areaDescription || property.description}</p>
-            <a href="#booking" className="mt-6 inline-flex items-center gap-3 rounded-sm bg-neutral-900 py-1 pl-4 pr-1 text-[13px] text-white">
+            <a href="#booking" className="mt-6 inline-flex items-center gap-3 rounded-sm bg-[var(--tpl-accent)] py-1 pl-4 pr-1 text-[13px] text-[var(--tpl-accent-on)]">
               {cta} <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-white text-neutral-900"><ArrowUpRight size={14} /></span>
             </a>
           </div>
@@ -233,7 +234,7 @@ export function SkylineTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="tpl-headings min-h-screen bg-white" style={{ '--tpl-accent': 'var(--brand-custom, #e5793a)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="skyline" property={property} ctaLabel={cta} />
 
       <header className="px-3 pb-3 pt-[68px] sm:px-4">
@@ -287,7 +288,7 @@ export function SkylineTemplate(p: StudioTemplateProps) {
               <p className="text-[22px] font-semibold text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>See {property.name} for yourself</p>
               <p className="mt-1 text-[14px] text-neutral-500">Book a site visit or a live guided tour on a video call.</p>
             </div>
-            <a href="#booking" className="rounded-sm bg-neutral-900 px-7 py-3 text-[14px] text-white">{cta}</a>
+            <a href="#booking" className="rounded-sm bg-[var(--tpl-accent)] px-7 py-3 text-[14px] text-[var(--tpl-accent-on)]">{cta}</a>
           </div>
           <div className="pt-14"><FooterColumns property={property} sections={p.sections} whiteLabel={p.whiteLabel} onDark={false} /></div>
         </div>

@@ -23,6 +23,7 @@ const STYLE: KitStyle = {
 };
 const GROUND = '#f3f4f1';
 const INK = '#1d1d1b';
+/** The dark band stays charcoal: its white text must stay readable whatever brand colour is picked. */
 const DARK = '#2d2a29';
 
 function Heading({ title, sub, light = false }: { title: string; sub?: string; light?: boolean }) {
@@ -117,7 +118,7 @@ export function FrameTemplate(p: StudioTemplateProps) {
         <StickySteps
           steps={steps}
           images={[pick(pool, 3), pick(pool, 4), pick(pool, 5)]}
-          activeClass="bg-[#2d2a29] text-white"
+          activeClass="bg-[var(--tpl-accent)] text-[var(--tpl-accent-on)]"
           idleClass="bg-white text-neutral-900"
           bodyClass="text-white/75"
         />
@@ -172,7 +173,7 @@ export function FrameTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen" style={{ background: GROUND, color: INK }}>
+    <div className="tpl-headings min-h-screen" style={{ background: GROUND, color: INK, '--tpl-accent': 'var(--brand-custom, #2d2a29)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="frame" property={property} ctaLabel={cta} />
 
       {/* Framed hero */}

@@ -42,7 +42,7 @@ export function NoirTemplate(p: StudioTemplateProps) {
         <p className="text-[24px] font-medium leading-[1.4] tracking-[-0.01em] text-neutral-900 sm:text-[30px]">
           {copy('overview').heading?.trim() || statement(property)}
         </p>
-        <a href="#units" className="mt-10 inline-block bg-black px-6 py-3 text-[13px] text-white">See the residences</a>
+        <a href="#units" className="mt-10 inline-block bg-[var(--tpl-accent)] px-6 py-3 text-[13px] text-[var(--tpl-accent-on)]">See the residences</a>
       </Rise>
       <Rise delay={0.1}><div className="relative aspect-[4/5] overflow-hidden"><MediaFill image={pick(pool, 1)} /></div></Rise>
     </div>
@@ -135,7 +135,7 @@ export function NoirTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="tpl-headings min-h-screen bg-white" style={{ '--tpl-accent': 'var(--brand-custom, #000000)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="noir" property={property} ctaLabel={cta} />
 
       <header className="relative flex min-h-[100svh] items-end overflow-hidden bg-black">

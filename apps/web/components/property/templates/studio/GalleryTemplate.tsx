@@ -26,7 +26,8 @@ const STYLE: KitStyle = {
   unitsAs: 'cards', galleryAs: 'grid', outlined: false,
 };
 const GROUND = '#f2f2f2';
-const GOLD = '#c4a46d';
+/** Signature gold, or the developer's colour once chosen. */
+const GOLD = 'var(--tpl-accent)';
 
 function BigTitle({ eyebrow, title, aside }: { eyebrow: string; title: string; aside?: string }) {
   return (
@@ -42,7 +43,7 @@ function BigTitle({ eyebrow, title, aside }: { eyebrow: string; title: string; a
 
 function GoldButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} className="inline-flex items-center rounded-full px-6 py-3 text-[14px] font-medium text-white transition-opacity hover:opacity-90" style={{ background: GOLD }}>
+    <a href={href} className="inline-flex items-center rounded-full px-6 py-3 text-[14px] font-medium text-[var(--tpl-accent-on)] transition-opacity hover:opacity-90" style={{ background: GOLD }}>
       {children}
     </a>
   );
@@ -198,7 +199,7 @@ export function GalleryTemplate(p: StudioTemplateProps) {
   const blocks = standardBlocks(p, STYLE, { overview, booking });
 
   return (
-    <div className="min-h-screen" style={{ background: GROUND }}>
+    <div className="tpl-headings min-h-screen" style={{ background: GROUND, '--tpl-accent': 'var(--brand-custom, #c4a46d)', '--tpl-accent-on': 'var(--brand-custom-on, #ffffff)' } as React.CSSProperties}>
       <StudioNav variant="gallery" property={property} ctaLabel={cta} ground={GROUND} />
 
       <header className="px-2 pb-2 pt-2 sm:px-3">
@@ -254,7 +255,7 @@ export function GalleryTemplate(p: StudioTemplateProps) {
           <div className="relative mx-auto max-w-[1240px]">
             <div className="mb-12 flex flex-wrap items-center justify-between gap-6">
               <h2 className="text-[30px] text-white sm:text-[40px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>Stay close to {property.name}</h2>
-              <a href="#booking" className="inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-[14px] font-medium text-white" style={{ background: GOLD }}>
+              <a href="#booking" className="inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-[14px] font-medium text-[var(--tpl-accent-on)]" style={{ background: GOLD }}>
                 {cta} <ArrowUpRight size={15} />
               </a>
             </div>
