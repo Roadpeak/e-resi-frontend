@@ -130,7 +130,7 @@ function NearbyPlacesField({
           title={point ? undefined : 'Set the GPS coordinates above first'}
           className="rounded-full border border-gray-200 px-3.5 py-1.5 text-[14px] font-medium text-[#4A80F5] hover:bg-[#F6F9FF] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {finding ? 'Searching…' : 'Find nearby places'}
+          {finding ? 'Searching…' : 'Find nearby amenities'}
         </button>
         {!point && (
           <span className="ml-2 text-[13px] text-gray-400">
