@@ -291,3 +291,5 @@ html.dash-dark .text-amber-500, html.dash-dark .text-amber-700 { color: #fdd663;
 html.dash-dark .text-brand-600, html.dash-dark .text-brand-700 { color: #8ab4f8; }
 html.dash-dark .border-brand-200 { border-color: rgba(138,180,248,0.35); }
 html.dash-dark .bg-\[\#34a853\]\/10 { background-color: rgba(129,201,149,0.14); }
+/* Avatar rings (team stack) cut out against the page colour. */
+html.dash-dark .ring-white { --tw-ring-color: #131314; }

@@ -14,6 +14,7 @@ import { useAuthStore } from '../../lib/stores/auth.store';
 import { CommandPalette } from './CommandPalette';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { DashboardThemeToggle } from './DashboardTheme';
+import { TeamAvatars } from './TeamAvatars';
 
 export function DashboardTopnav() {
   const pathname = usePathname();
@@ -81,6 +82,8 @@ export function DashboardTopnav() {
             {kyb === 'APPROVED' ? 'Verified' : kyb === 'PENDING' ? 'In review' : kyb === 'REJECTED' ? 'Action needed' : 'Not verified'}
           </Link>
         )}
+        {/* The team: the developer account first, then invited members. */}
+        <TeamAvatars companyName={profile?.companyName} logoUrl={profile?.logoUrl} isStaff={user?.isStaff} />
       </div>
 
       {/* Right cluster */}

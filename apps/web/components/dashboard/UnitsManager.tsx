@@ -6,6 +6,7 @@ import { Loader2, Plus, Trash2, X } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
 import { floorPlansApi } from '../../lib/api/floor-plans';
 import { formatPrice } from '../../lib/utils';
+import { UnitsBulkImport } from './UnitsBulkImport';
 
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
@@ -123,17 +124,25 @@ export function UnitsManager({ slug, currency, units }: { slug: string; currency
 
   return (
     <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
-      <div className="flex items-center justify-between border-b border-[#f1f3f4] px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1f3f4] px-6 py-4">
         <div>
           <h3 className="text-[18px] font-normal text-[#202124]">Units ({units.length})</h3>
           <p className="text-sm text-[#5f6368]">Inventory buyers can inquire about and reserve.</p>
         </div>
-        <button
-          onClick={() => { setAdding((v) => !v); setError(''); }}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer"
+        <UnitsBulkImport
+          slug={slug}
+          currency={currency}
+          plans={plans}
+          existingNames={units.map((u) => u.name)}
+          onImported={refresh}
         >
-          {adding ? <X size={14} /> : <Plus size={14} />} {adding ? 'Cancel' : 'Add unit'}
-        </button>
+          <button
+            onClick={() => { setAdding((v) => !v); setError(''); }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors cursor-pointer"
+          >
+            {adding ? <X size={14} /> : <Plus size={14} />} {adding ? 'Cancel' : 'Add unit'}
+          </button>
+        </UnitsBulkImport>
       </div>
 
       {adding && (
