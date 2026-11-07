@@ -2,6 +2,7 @@ import { DashboardTopnav } from '../../../components/dashboard/DashboardTopnav';
 import { DashboardIconRail } from '../../../components/dashboard/DashboardIconRail';
 import { RequireAuth } from '../../../components/auth/RequireAuth';
 import { StaffPageGuard } from '../../../components/dashboard/StaffPageGuard';
+import { DashboardThemeSync } from '../../../components/dashboard/DashboardTheme';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <RequireAuth roles={['DEVELOPER', 'ADMIN']}>
-      <div className="flex min-h-screen flex-col bg-white font-google text-[#202124]">
+      <DashboardThemeSync />
+      <div className="dash-root flex min-h-screen flex-col bg-white font-google text-[#202124]">
         <div className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur">
           <DashboardTopnav />
         </div>

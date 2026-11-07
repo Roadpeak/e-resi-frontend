@@ -7,6 +7,11 @@ import { AtelierTemplate } from './AtelierTemplate';
 import { HorizonTemplate } from './HorizonTemplate';
 import { SkylineTemplate } from './SkylineTemplate';
 import { NoirTemplate } from './NoirTemplate';
+import { RivosTemplate } from './RivosTemplate';
+import { HomeviaTemplate } from './HomeviaTemplate';
+import { AurevantTemplate } from './AurevantTemplate';
+import { RealAgentTemplate } from './RealAgentTemplate';
+import { LuxiqTemplate } from './LuxiqTemplate';
 
 /** Complete-page templates, keyed by template key. */
 export const STUDIO_TEMPLATES: Record<string, ComponentType<StudioTemplateProps>> = {
@@ -17,6 +22,11 @@ export const STUDIO_TEMPLATES: Record<string, ComponentType<StudioTemplateProps>
   HORIZON: HorizonTemplate,
   SKYLINE: SkylineTemplate,
   NOIR: NoirTemplate,
+  RIVOS: RivosTemplate,
+  HOMEVIA: HomeviaTemplate,
+  AUREVANT: AurevantTemplate,
+  REAL: RealAgentTemplate,
+  LUXIQ: LuxiqTemplate,
 };
 
 export type { StudioTemplateProps };

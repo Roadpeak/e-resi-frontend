@@ -13,6 +13,7 @@ import { apiClient } from '../../lib/api/client';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { CommandPalette } from './CommandPalette';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { DashboardThemeToggle } from './DashboardTheme';
 
 export function DashboardTopnav() {
   const pathname = usePathname();
@@ -118,6 +119,9 @@ export function DashboardTopnav() {
         >
           <HelpCircle size={15} />
         </a>
+
+        {/* Light / dark */}
+        <DashboardThemeToggle />
 
         {/* Notifications — links resolve to this portal's own pages */}
         <NotificationBell size={36} />

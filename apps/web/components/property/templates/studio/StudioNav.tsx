@@ -21,11 +21,18 @@ import { PropertyMonogram } from '../../PropertyMonogram';
  *  horizon   inside the rounded hero: sparkle wordmark left, links right
  *  skyline   white bar, plain wordmark, underlined active link, square outline button
  *  noir      heavy italic wordmark, links stacked top-right over the hero
+ *  rivos     a dark glass pill centred at the top, white round CTA
+ *  homevia   transparent bar, large centred links, outline pill; white on scroll
+ *  aurevant  near-black bar, red mark beside a lowercase wordmark, red pill CTA
+ *  realagent three-column top row: monogram, place, a big figure, "Menu"
+ *  luxiq     solid black strip, links left, white pill CTA right
  *
  * Behaviour is shared: section links that exist, save, share (with
  * telemetry), the tab title, and a full-screen menu on small screens.
  */
-export type StudioNavVariant = 'frame' | 'prestige' | 'gallery' | 'atelier' | 'horizon' | 'skyline' | 'noir';
+export type StudioNavVariant =
+  | 'frame' | 'prestige' | 'gallery' | 'atelier' | 'horizon' | 'skyline' | 'noir'
+  | 'rivos' | 'homevia' | 'aurevant' | 'realagent' | 'luxiq';
 
 interface Link { id: string; label: string }
 
@@ -297,6 +304,100 @@ export function StudioNav({
         </div>
       </nav>
     );
+  } else if (variant === 'rivos') {
+    bar = (
+      <nav className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+        <div className="flex h-[52px] max-w-full items-center gap-6 rounded-full bg-[#16181d]/70 pl-5 pr-1.5 text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <a href="#overview" className="flex min-w-0 items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
+            <Sparkles size={14} className="shrink-0" /><span className="truncate">{name}</span>
+          </a>
+          <div className="hidden items-center gap-6 lg:flex">
+            {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
+          </div>
+          <a href="#booking" className="hidden items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-medium text-[#16181d] sm:inline-flex">{ctaLabel} <ArrowUpRight size={13} /></a>
+          {burger('#fff', 'rgba(255,255,255,0.25)')}
+        </div>
+      </nav>
+    );
+  } else if (variant === 'homevia') {
+    const light = !scrolled;
+    const fg = light ? '#fff' : '#141414';
+    bar = (
+      <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: scrolled ? 'rgba(255,255,255,0.96)' : 'transparent', boxShadow: scrolled ? '0 1px 0 rgba(0,0,0,0.06)' : 'none' }}>
+        <div className="mx-auto grid h-[76px] max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center px-5 sm:px-10">
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5">
+            <PropertyMonogram name={name} logoUrl={property.logoUrl} size={28} onDark={light} />
+            <span className="truncate text-[18px] font-medium" style={{ color: fg }}>{name}</span>
+          </a>
+          <div className="hidden items-center gap-8 lg:flex">
+            {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[16px] transition-opacity" style={{ color: fg, opacity: active === l.id ? 1 : 0.7 }}>{l.label}</a>)}
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <a href="#booking" className="hidden items-center gap-2 rounded-lg border px-4 py-2 text-[13px] sm:inline-flex" style={{ color: fg, borderColor: light ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.15)' }}>{ctaLabel} <ArrowUpRight size={14} /></a>
+            {burger(fg, light ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.12)')}
+          </div>
+        </div>
+      </nav>
+    );
+  } else if (variant === 'aurevant') {
+    const place = [property.address?.neighborhood, property.address?.city].filter(Boolean).join(' · ');
+    bar = (
+      <nav className="fixed inset-x-0 top-0 z-50 border-b transition-colors duration-500" style={{ background: scrolled ? '#0b0b0b' : 'transparent', borderColor: 'rgba(255,255,255,0.12)' }}>
+        <div className="mx-auto flex h-[68px] max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-10">
+          <div className="flex min-w-0 items-center gap-10">
+            <a href="#overview" className="flex min-w-0 items-center gap-2 text-[19px] font-semibold lowercase tracking-[-0.02em] text-white">
+              <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] bg-[#ef3b2d]" /><span className="truncate">{name}</span>
+            </a>
+            <div className="hidden items-center gap-7 lg:flex">
+              {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.7 }}>{l.label}</a>)}
+            </div>
+          </div>
+          <div className="flex items-center gap-5">
+            {place && <span className="hidden text-[11.5px] uppercase tracking-[0.14em] text-white/70 xl:block">{place}</span>}
+            <a href="#booking" className="hidden rounded-full bg-[#ef3b2d] px-5 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#d92f22] sm:inline-block">{ctaLabel}</a>
+            {burger('#fff', 'rgba(255,255,255,0.25)')}
+          </div>
+        </div>
+      </nav>
+    );
+  } else if (variant === 'realagent') {
+    const fg = scrolled ? '#111' : '#fff';
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join(' · ');
+    const available = property.availableUnits || (property.units ?? []).filter((u) => String(u.status).toLowerCase() === 'available').length;
+    const place = [property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ');
+    bar = (
+      <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent' }}>
+        <div className="mx-auto grid h-[72px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-6 px-5 sm:grid-cols-4 sm:px-8" style={{ color: fg }}>
+          <a href="#overview" className="text-[13px] font-semibold tracking-[0.2em]">{initials}</a>
+          <div className="hidden text-[12px] leading-tight sm:block">
+            <p className="opacity-70">Location</p>
+            <p className="truncate font-medium">{place || name}</p>
+          </div>
+          <div className="hidden items-center gap-2 sm:flex">
+            {available > 0 && <><span className="text-[34px] font-medium leading-none tracking-[-0.03em]">{available}</span><span className="text-[12px] leading-tight opacity-80">Homes<br />available</span></>}
+          </div>
+          <button type="button" onClick={() => setMenu(true)} className="flex cursor-pointer items-center justify-end gap-2 text-[13px]">
+            Menu <span className="flex gap-1"><span className="h-1.5 w-1.5 rounded-full bg-current" /><span className="h-1.5 w-1.5 rounded-full bg-current" /></span>
+          </button>
+        </div>
+      </nav>
+    );
+  } else if (variant === 'luxiq') {
+    bar = (
+      <nav className="fixed inset-x-0 top-0 z-50 bg-black">
+        <div className="mx-auto flex h-[60px] max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-10">
+          <div className="hidden items-center gap-7 lg:flex">
+            {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
+          </div>
+          <a href="#overview" className="truncate text-[15px] font-medium text-white lg:hidden" style={{ fontFamily: 'var(--font-unbounded), sans-serif' }}>{name}</a>
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:block"><Actions nav={nav} color="#fff" border="rgba(255,255,255,0.25)" /></div>
+            <a href="#booking" className="hidden rounded-full bg-white px-5 py-2 text-[13px] font-medium text-black sm:inline-block">{ctaLabel}</a>
+            {burger('#fff', 'rgba(255,255,255,0.25)')}
+          </div>
+        </div>
+      </nav>
+    );
   } else {
     // noir
     bar = (
@@ -313,7 +414,7 @@ export function StudioNav({
     );
   }
 
-  const darkMenu = variant === 'noir' || variant === 'prestige';
+  const darkMenu = variant === 'noir' || variant === 'prestige' || variant === 'aurevant' || variant === 'luxiq' || variant === 'rivos';
   return (
     <>
       {bar}

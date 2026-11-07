@@ -10,6 +10,7 @@ import {
   Archivo,
   Marcellus,
   Manrope,
+  Unbounded,
 } from 'next/font/google';
 import './global.css';
 import { Providers } from './providers';
@@ -81,6 +82,13 @@ const marcellus = Marcellus({
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-manrope',
+  display: 'swap',
+});
+
+// Wide display face for the Luxiq mini-site template's name band.
+const unbounded = Unbounded({
+  subsets: ['latin'],
+  variable: '--font-unbounded',
   display: 'swap',
 });
 
@@ -193,7 +201,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable} ${marcellus.variable} ${manrope.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable} ${marcellus.variable} ${manrope.variable} ${unbounded.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
         <link
