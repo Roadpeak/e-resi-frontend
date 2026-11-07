@@ -18,7 +18,16 @@ export const INVOICE_STATUS_STYLES: Record<Invoice['status'], string> = {
   OVERDUE: 'bg-[#fce8e6] text-[#c5221f]',
   DRAFT: 'bg-[#f1f3f4] text-[#5f6368]',
   CANCELLED: 'bg-[#f1f3f4] text-[#5f6368]',
+  WAIVED: 'bg-[#f3e8fd] text-[#8430ce]',
 };
+
+/** How a status reads: a waived invoice is cleared, not paid. */
+export const invoiceStatusLabel = (s: Invoice['status']) => (s === 'WAIVED' ? 'cleared · waived' : s.toLowerCase());
+
+/** Only an unpaid monthly listing fee (developer or agent) can be waived. */
+export const isWaivable = (inv: Invoice) =>
+  inv.kind === 'SUBSCRIPTION' && !!(inv.listingFeeRunId || inv.agentFeeRunId)
+  && (inv.status === 'ISSUED' || inv.status === 'OVERDUE' || inv.status === 'DRAFT');
 
 export const money = (n: number, c: string) =>
   `${c} ${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -40,7 +49,10 @@ export function InvoiceTable({
   payingId,
   onPayMpesa,
   mpesaPayingId,
+  onWaive,
 }: {
+  /** Admin only: open the waiver dialog for an unpaid listing-fee invoice. */
+  onWaive?: (invoice: Invoice) => void;
   invoices: Invoice[];
   showCustomer?: boolean;
   /** Omitted for developers — only admins chase invoices. */
@@ -112,7 +124,7 @@ export function InvoiceTable({
               </td>
               <td className="py-3 pr-4 text-[#5f6368]">
                 {shortDate(inv.dueAt)}
-                {inv.terminatesAt && inv.status !== 'PAID' && (
+                {inv.terminatesAt && inv.status !== 'PAID' && inv.status !== 'WAIVED' && (
                   <div className="text-[12px] text-[#c5221f]">
                     Ends {shortDate(inv.terminatesAt)}
                   </div>
@@ -123,9 +135,14 @@ export function InvoiceTable({
               </td>
               <td className="py-3 pr-4">
                 <span className={cn('rounded-full px-2.5 py-1 text-[12px]', INVOICE_STATUS_STYLES[inv.status])}>
-                  {inv.status.toLowerCase()}
+                  {invoiceStatusLabel(inv.status)}
                 </span>
-                {inv.remindersSent > 0 && inv.status !== 'PAID' && (
+                {inv.status === 'WAIVED' && inv.waiverReason && (
+                  <div className="mt-1 max-w-[220px] text-[11px] text-[#5f6368]" title={inv.waiverReason}>
+                    {inv.waiverReason}
+                  </div>
+                )}
+                {inv.remindersSent > 0 && inv.status !== 'PAID' && inv.status !== 'WAIVED' && (
                   <div className="mt-1 text-[11px] text-[#5f6368]">
                     {inv.remindersSent} reminder{inv.remindersSent === 1 ? '' : 's'}
                   </div>
@@ -133,21 +150,34 @@ export function InvoiceTable({
               </td>
               <td className="py-3 text-[13px]">
                 {onRemind ? (
-                  inv.status === 'PAID' || inv.status === 'CANCELLED' ? (
-                    <span className="text-[#5f6368]">—</span>
-                  ) : inv.status === 'DRAFT' ? (
-                    // Nothing to chase: the customer has not been sent this yet.
-                    <span className="text-[#5f6368]" title="Not issued yet">Not issued</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onRemind(inv)}
-                      disabled={remindingId === inv.id}
-                      className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f0f4f9] disabled:opacity-50"
-                    >
-                      {remindingId === inv.id ? 'Sending…' : 'Send reminder'}
-                    </button>
-                  )
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {inv.status === 'PAID' || inv.status === 'CANCELLED' || inv.status === 'WAIVED' ? (
+                      <span className="text-[#5f6368]">—</span>
+                    ) : inv.status === 'DRAFT' ? (
+                      // Nothing to chase: the customer has not been sent this yet.
+                      <span className="text-[#5f6368]" title="Not issued yet">Not issued</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onRemind(inv)}
+                        disabled={remindingId === inv.id}
+                        className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[13px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f0f4f9] disabled:opacity-50"
+                      >
+                        {remindingId === inv.id ? 'Sending…' : 'Send reminder'}
+                      </button>
+                    )}
+                    {onWaive && isWaivable(inv) && (
+                      <button
+                        type="button"
+                        onClick={() => onWaive(inv)}
+                        className="rounded-full border border-[#dadce0] px-3 py-1.5 text-[13px] font-medium text-[#8430ce] transition-colors hover:bg-[#f3e8fd]"
+                      >
+                        Waive
+                      </button>
+                    )}
+                  </div>
+                ) : inv.status === 'WAIVED' ? (
+                  <span className="text-[#8430ce]">Waived — nothing to pay</span>
                 ) : inv.receipt ? (
                   <span className="text-[#188038]">{inv.receipt.number}</span>
                 ) : onPay && (inv.status === 'ISSUED' || inv.status === 'OVERDUE') ? (

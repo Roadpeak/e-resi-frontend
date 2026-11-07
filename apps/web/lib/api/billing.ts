@@ -103,6 +103,9 @@ export const billingApi = {
     }>(`/billing/invoices/${id}/pay-mpesa`, { phone }),
 
   /** Admin: chase an unpaid invoice with a termination warning. */
+  /** Admin: waive an unpaid monthly listing-fee invoice (passcode checked server-side, audited). */
+  waiveInvoice: (id: string, body: { passcode: string; reason: string }) =>
+    apiClient.post<Invoice>(`/admin/billing/invoices/${id}/waive`, body),
   remindInvoice: (id: string) => apiClient.post<Invoice>(`/billing/invoices/${id}/remind`),
   /** Admin: force the daily issue/overdue sweep. */
   dispatchInvoices: () =>
@@ -171,7 +174,7 @@ export interface Invoice {
   id: string;
   number: string;
   kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN';
-  status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
+  status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED' | 'WAIVED';
   billedToName: string;
   billedToEmail: string;
   lineItems: InvoiceLine[];
@@ -187,6 +190,12 @@ export interface Invoice {
   remindersSent: number;
   lastReminderAt?: string | null;
   notes?: string | null;
+  /** Set on listing-fee invoices: the developer or agent fee run behind it. */
+  listingFeeRunId?: string | null;
+  agentFeeRunId?: string | null;
+  /** Set when an admin waived it. */
+  waivedAt?: string | null;
+  waiverReason?: string | null;
   createdAt: string;
   receipt?: {
     id: string; number: string; amount: number; currency: string;
