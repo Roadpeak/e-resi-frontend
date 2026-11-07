@@ -193,7 +193,7 @@ export default function DashboardOverview() {
   return (
     <div>
       {/* ── Gradient hero ── */}
-      <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-300 px-6 py-10 sm:px-10">
+      <section className="dash-hero relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-300 px-6 py-10 sm:px-10">
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_380px]">
           <div>
             <motion.h1
