@@ -1,453 +1,105 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowRight, CalendarClock, CreditCard, Loader2, Receipt, Smartphone, Wallet,
+  AlertTriangle, ArrowRight, CheckCircle2, CreditCard, HelpCircle, Loader2, Receipt, Smartphone,
 } from 'lucide-react';
-import { propertiesApi } from '../../../../lib/api/properties';
 import { ApiError } from '../../../../lib/api/client';
 import { billingApi, type Invoice } from '../../../../lib/api/billing';
 import { PaymentMethodsCard } from '../../../../components/dashboard/PaymentMethods';
-import { InvoiceTable } from '../../../../components/billing/InvoiceTable';
-import { LISTING_FEE_MONTHLY, fmtUsd, serviceById } from '../../../../lib/onboarding/catalog';
+import { InvoiceTable, money, shortDate } from '../../../../components/billing/InvoiceTable';
+import { serviceById } from '../../../../lib/onboarding/catalog';
 import { useCatalog } from '../../../../lib/onboarding/useCatalog';
-
-interface RawListing {
-  id: string;
-  name: string;
-  slug: string;
-  status: string;
-  createdAt: string;
-  submissionData?: {
-    media?: { services?: Record<string, unknown> };
-    servicesOneTimeTotal?: number;
-  } | null;
-}
-
-const STATUS_CHIPS: Record<string, { label: string; className: string }> = {
-  ACTIVE: { label: 'Live', className: 'bg-[#e6f4ea] text-[#188038]' },
-  DRAFT: { label: 'In review', className: 'bg-[#fef7e0] text-[#b06000]' },
-  SOLD_OUT: { label: 'Sold out', className: 'bg-[#f1f3f4] text-[#5f6368]' },
-  ARCHIVED: { label: 'Archived', className: 'bg-[#f1f3f4] text-[#5f6368]' },
-};
-
-export default function BillingPage() {
-  // Hydrates the catalogue with admin-managed pricing.
-  useCatalog();
-  const { data, isLoading } = useQuery({
-    queryKey: ['my-listings-raw'],
-    queryFn: () => propertiesApi.myListings({ limit: 50 }),
-  });
-
-  const listings = ((data?.data ?? []) as unknown as RawListing[]);
-  const liveListings = listings.filter((p) => p.status === 'ACTIVE');
-  const monthlyTotal = liveListings.length * LISTING_FEE_MONTHLY;
-
-  const productionOrders = listings
-    .map((p) => {
-      const serviceIds = Object.keys(p.submissionData?.media?.services ?? {});
-      const services = serviceIds
-        .map((id) => serviceById(id))
-        .filter((s): s is NonNullable<ReturnType<typeof serviceById>> => Boolean(s));
-      const total = p.submissionData?.servicesOneTimeTotal
-        ?? services.reduce((n, s) => n + s.price, 0);
-      return { property: p, services, total };
-    })
-    .filter((o) => o.services.length > 0);
-  const productionTotal = productionOrders.reduce((n, o) => n + o.total, 0);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-[#80868b]" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-5xl space-y-6">
-      <div>
-        <h2 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Billing</h2>
-        <p className="text-base text-[#5f6368]">
-          Simple, per-development pricing — a flat listing fee per live development plus any one-time production services.
-        </p>
-      </div>
-
-      {/* ── Summary tiles ── */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-transparent bg-[#e8f0fe] p-6">
-          <div className="flex items-center gap-2 text-[#1967d2]">
-            <Receipt size={15} />
-            <span className="text-xs font-medium uppercase tracking-[0.1em]">Monthly fees</span>
-          </div>
-          <p className="mt-3 text-[32px] font-normal text-[#1967d2]">{fmtUsd(monthlyTotal)}</p>
-          <p className="text-[13px] text-[#1967d2]/80">
-            {liveListings.length} live listing{liveListings.length === 1 ? '' : 's'} × {fmtUsd(LISTING_FEE_MONTHLY)}
-          </p>
-        </div>
-        <div className="rounded-3xl border border-transparent bg-[#fef7e0] p-6">
-          <div className="flex items-center gap-2 text-[#b06000]">
-            <CalendarClock size={15} />
-            <span className="text-xs font-medium uppercase tracking-[0.1em]">Production pending</span>
-          </div>
-          <p className="mt-3 text-[32px] font-normal text-[#b06000]">{fmtUsd(productionTotal)}</p>
-          <p className="text-[13px] text-[#b06000]/80">one-time · 50% before shoot, 50% on delivery</p>
-        </div>
-        <div className="rounded-3xl border border-transparent bg-[#f8f9fa] p-6">
-          <div className="flex items-center gap-2 text-[#5f6368]">
-            <Wallet size={15} />
-            <span className="text-xs font-medium uppercase tracking-[0.1em]">Developments</span>
-          </div>
-          <p className="mt-3 text-[32px] font-normal text-[#202124]">{listings.length}</p>
-          <p className="text-[13px] text-[#5f6368]">{listings.length - liveListings.length} not yet billed</p>
-        </div>
-      </div>
-
-      {/* ── Listing fees per development ── */}
-      <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
-        <div className="border-b border-[#f1f3f4] px-6 py-4">
-          <h3 className="text-[18px] font-normal text-[#202124]">Monthly listing fees</h3>
-          <p className="text-sm text-[#5f6368]">The {fmtUsd(LISTING_FEE_MONTHLY)}/month fee starts only when a development goes live.</p>
-        </div>
-        {listings.length === 0 ? (
-          <div className="px-6 py-10 text-center">
-            <p className="text-base text-[#5f6368]">No developments yet — nothing is being billed.</p>
-            <Link
-              href="/dashboard/developments/new"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors"
-            >
-              Add your first development <ArrowRight size={14} />
-            </Link>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#f1f3f4]">
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Development</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-[0.08em] text-[#5f6368]">Monthly fee</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f1f3f4]">
-              {listings.map((p) => {
-                const chip = STATUS_CHIPS[p.status] ?? STATUS_CHIPS.DRAFT;
-                const billed = p.status === 'ACTIVE';
-                return (
-                  <tr key={p.id} className="hover:bg-[#f8f9fa] transition-colors">
-                    <td className="px-6 py-4 text-[15px] font-medium text-[#202124]">{p.name}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-[13px] font-medium ${chip.className}`}>
-                        {chip.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right text-[15px] tabular-nums">
-                      {billed ? (
-                        <span className="font-medium text-[#202124]">{fmtUsd(LISTING_FEE_MONTHLY)}</span>
-                      ) : (
-                        <span className="text-[#80868b]">{fmtUsd(0)} · starts when live</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr className="bg-[#f8f9fa]">
-                <td className="px-6 py-4 text-[15px] font-medium text-[#202124]" colSpan={2}>Total per month</td>
-                <td className="px-6 py-4 text-right text-[18px] font-medium tabular-nums text-[#202124]">{fmtUsd(monthlyTotal)}</td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* ── Production services ── */}
-      <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
-        <div className="border-b border-[#f1f3f4] px-6 py-4">
-          <h3 className="text-[18px] font-normal text-[#202124]">Production services</h3>
-          <p className="text-sm text-[#5f6368]">One-time media production selected per development — payable 50% before the shoot, 50% on delivery.</p>
-        </div>
-        {productionOrders.length === 0 ? (
-          <p className="px-6 py-10 text-center text-base text-[#5f6368]">
-            No production services ordered — you can add photography, cinematic video, 3D and VR when creating a development.
-          </p>
-        ) : (
-          <div className="divide-y divide-[#f1f3f4]">
-            {productionOrders.map(({ property, services, total }) => (
-              <div key={property.id} className="px-6 py-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[15px] font-medium text-[#202124]">{property.name}</p>
-                  <span className="rounded-full bg-[#fef7e0] px-3 py-1 text-[13px] font-medium text-[#b06000]">
-                    awaiting scheduling
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {services.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between">
-                      <span className="text-[15px] text-[#5f6368]">{s.label}</span>
-                      <span className="text-[15px] tabular-nums text-[#202124]">{fmtUsd(s.price)}</span>
-                    </div>
-                  ))}
-                  <div className="flex items-center justify-between border-t border-[#f1f3f4] pt-2">
-                    <span className="text-[15px] font-medium text-[#202124]">Subtotal</span>
-                    <span className="text-[15px] font-medium tabular-nums text-[#202124]">{fmtUsd(total)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div className="flex items-center justify-between bg-[#f8f9fa] px-6 py-4">
-              <span className="text-[15px] font-medium text-[#202124]">Total one-time</span>
-              <span className="text-[18px] font-medium tabular-nums text-[#202124]">{fmtUsd(productionTotal)}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Invoices & receipts ── */}
-      <InvoicesCard />
-
-      {/* ── Payment methods ── */}
-      <PaymentMethodsCard />
-
-      {/* ── Payment history + how you pay ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <PaymentHistoryCard />
-        <PayWithMpesaCard />
-      </div>
-    </div>
-  );
-}
-
-
-/* ── Payment history (live from the billing API) ─────────────────── */
-
-function PaymentHistoryCard() {
-  const { data: summary } = useQuery({
-    queryKey: ['billing', 'summary'],
-    queryFn: () => billingApi.summary(),
-  });
-  const payments = summary?.payments ?? [];
-
-  return (
-    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
-      <h3 className="text-[18px] font-normal text-[#202124]">Payment history</h3>
-      {payments.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center">
-          <CreditCard size={20} className="text-[#dadce0]" />
-          <p className="max-w-xs text-[15px] leading-relaxed text-[#5f6368]">
-            No payments recorded yet. Invoices and receipts will appear here once your first development goes live.
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-4 divide-y divide-[#f1f3f4]">
-          {payments.map((p) => (
-            <li key={p.id} className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-[15px] font-medium text-[#202124]">
-                  {p.metadata?.purpose === 'card_verification' ? 'Card verification hold'
-                    : p.metadata?.purpose === 'mpesa_verification' ? 'M-Pesa verification'
-                    : p.reference ?? p.method.replace('_', ' ').toLowerCase()}
-                </p>
-                <p className="text-[13px] text-[#5f6368]">
-                  {new Date(p.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[15px] font-medium tabular-nums text-[#202124]">
-                  {p.currency} {p.amount.toLocaleString()}
-                </p>
-                <span className={`text-[13px] font-medium ${
-                  p.status === 'COMPLETED' ? 'text-[#188038]'
-                    : p.status === 'FAILED' ? 'text-[#c5221f]'
-                    : p.status === 'REFUNDED' ? 'text-[#5f6368]'
-                    : 'text-[#b06000]'
-                }`}>
-                  {p.status === 'REFUNDED' ? 'reversed' : p.status.toLowerCase()}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-
-/* ── Pay pending bills with M-Pesa (STK push — no linking) ───────── */
-
-function PayWithMpesaCard() {
-  const queryClient = useQueryClient();
-  const { data: summary } = useQuery({
-    queryKey: ['billing', 'summary'],
-    queryFn: () => billingApi.summary(),
-  });
-  const due = (summary?.production.pendingTotal ?? 0) + (summary?.monthly.total ?? 0);
-
-  const [phone, setPhone] = useState('');
-  const [amount, setAmount] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setNotice('');
-    setError('');
-    const normalized = phone.replace(/\D/g, '').replace(/^0/, '254');
-    if (!/^254(7|1)\d{8}$/.test(normalized)) {
-      return setError('Enter a valid Safaricom number, e.g. 0712 345 678.');
-    }
-    const usd = Number.parseInt(amount || String(due), 10);
-    if (!Number.isFinite(usd) || usd < 1) return setError('Enter an amount of at least $1.');
-
-    setBusy(true);
-    try {
-      const res = await billingApi.payMpesa({
-        phone: normalized,
-        amountUsd: usd,
-        purpose: 'e-resi pending bills',
-      });
-      setNotice(
-        res.status === 'COMPLETED'
-          ? `Payment of KES ${res.amountKes.toLocaleString()} received${res.sandbox ? ' (sandbox)' : ''} — thank you!`
-          : `STK push sent for KES ${res.amountKes.toLocaleString()} — enter your M-Pesa PIN on your phone to complete.`,
-      );
-      setPhone('');
-      setAmount('');
-      queryClient.invalidateQueries({ queryKey: ['billing'] });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not start the M-Pesa payment.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="rounded-3xl border border-transparent bg-[#e6f4ea] p-6">
-      <div className="flex items-center gap-2">
-        <Smartphone size={16} className="text-[#188038]" />
-        <h3 className="text-[18px] font-normal text-[#202124]">Pay with M-Pesa</h3>
-      </div>
-      <p className="mt-1 text-sm text-[#3c4043]">
-        Settle pending bills instantly — we send an STK push to your phone, you confirm with your PIN.
-      </p>
-
-      <div className="mt-4 rounded-2xl bg-white p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-[15px] text-[#5f6368]">Pending balance</span>
-          <span className="text-[18px] font-medium tabular-nums text-[#202124]">{fmtUsd(due)}</span>
-        </div>
-        {due > 0 && (
-          <div className="mt-1 flex items-center justify-between text-[13px] text-[#80868b]">
-            <span>listing fees {fmtUsd(summary?.monthly.total ?? 0)} · production {fmtUsd(summary?.production.pendingTotal ?? 0)}</span>
-          </div>
-        )}
-      </div>
-
-      {due <= 0 ? (
-        <p className="mt-4 text-[15px] text-[#3c4043]">
-          Nothing due right now — bills appear here when a development goes live or production is scheduled.
-        </p>
-      ) : (
-        <form onSubmit={submit} className="mt-4 grid gap-3">
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Safaricom number · 0712 345 678"
-            required
-            inputMode="tel"
-            className="w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#188038] focus:outline-none focus:ring-2 focus:ring-[#188038]/20"
-          />
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-            placeholder={`Amount in USD (default ${fmtUsd(due)})`}
-            inputMode="numeric"
-            className="w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#188038] focus:outline-none focus:ring-2 focus:ring-[#188038]/20"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#188038] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#0d652d] transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {busy ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />}
-            {busy ? 'Sending STK push…' : 'Send M-Pesa prompt'}
-          </button>
-        </form>
-      )}
-
-      {notice && <p className="mt-3 rounded-xl bg-white px-4 py-2.5 text-sm text-[#188038]">{notice}</p>}
-      {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
-    </div>
-  );
-}
+import { cn } from '../../../../lib/utils';
 
 /**
- * A developer's own invoices and receipts. Read-only — reminders and dispatch
- * are admin actions, so no controls appear here.
+ * Developer billing, organised around the one question people open it with:
+ * "what do I owe, and how do I pay it?" — answered at the top, with the pay
+ * button right there. Detail lives in tabs (invoices, listing fees,
+ * production, payments) instead of one long scroll; payment method, M-Pesa
+ * and help sit in a side column.
  */
-function InvoicesCard() {
-  const queryClient = useQueryClient();
-  const [error, setError] = useState('');
-  const [toast, setToast] = useState('');
 
-  const { data, isLoading } = useQuery({
+type Tab = 'invoices' | 'listing' | 'production' | 'payments';
+type InvoiceFilter = 'unpaid' | 'paid' | 'all';
+
+const isUnpaid = (i: Invoice) => i.status === 'ISSUED' || i.status === 'OVERDUE';
+const isSettled = (i: Invoice) => i.status === 'PAID' || i.status === 'WAIVED';
+
+const LISTING_STATUS: Record<string, { label: string; cls: string }> = {
+  ACTIVE: { label: 'Live', cls: 'bg-[#e6f4ea] text-[#188038]' },
+  OFF_PLAN: { label: 'Live', cls: 'bg-[#e6f4ea] text-[#188038]' },
+  DRAFT: { label: 'In review', cls: 'bg-[#fef7e0] text-[#b06000]' },
+  SOLD_OUT: { label: 'Sold out', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
+  ARCHIVED: { label: 'Archived', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
+};
+
+const card = 'rounded-3xl border border-[#dadce0] bg-white';
+
+export default function BillingPage() {
+  // Hydrates the catalogue with admin-managed service names and prices.
+  useCatalog();
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState<Tab>('invoices');
+  const [filter, setFilter] = useState<InvoiceFilter>('unpaid');
+  const [toast, setToast] = useState('');
+  const [error, setError] = useState('');
+
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['billing', 'summary'],
+    queryFn: () => billingApi.summary(),
+  });
+  const { data: invoices, isLoading: invoicesLoading } = useQuery({
     queryKey: ['my-invoices'],
     queryFn: () => billingApi.invoices(),
   });
 
+  const all = useMemo(() => invoices ?? [], [invoices]);
+  const unpaid = all.filter(isUnpaid);
+  const overdue = unpaid.filter((i) => i.status === 'OVERDUE');
+  const dueCurrency = unpaid[0]?.currency ?? summary?.currency ?? 'KES';
+  const dueTotal = unpaid.filter((i) => i.currency === dueCurrency).reduce((n, i) => n + i.total, 0);
+  const nextDue = [...unpaid].sort((a, b) => +new Date(a.dueAt) - +new Date(b.dueAt))[0];
+  const terminates = unpaid.map((i) => i.terminatesAt).filter(Boolean).sort()[0];
+
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 6000); };
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
+    queryClient.invalidateQueries({ queryKey: ['billing', 'summary'] });
+  };
+
   const pay = useMutation({
     mutationFn: (invoice: Invoice) => billingApi.payInvoice(invoice.id),
     onSuccess: (r, invoice) => {
-      // A saved card is charged server-side, so there is nothing to redirect
-      // to — the invoice is already settled by the time this resolves.
+      // A saved card is charged server-side: the invoice is already settled.
       if (r.paid) {
-        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
-        queryClient.invalidateQueries({ queryKey: ['billing', 'summary'] });
-        const card = [r.chargedCard?.brand, r.chargedCard?.last4 && `•••• ${r.chargedCard.last4}`]
-          .filter(Boolean).join(' ');
-        setToast(card ? `Paid with ${card}.` : 'Payment complete.');
-        setTimeout(() => setToast(''), 6000);
+        refresh();
+        const c = [r.chargedCard?.brand, r.chargedCard?.last4 && `•••• ${r.chargedCard.last4}`].filter(Boolean).join(' ');
+        flash(c ? `Paid with ${c}.` : 'Payment complete.');
         return;
       }
-      // Remember which invoice this was: Paystack returns with a reference but
-      // no invoice id, and sessionStorage survives the redirect.
+      // Paystack returns with a reference but no invoice id; sessionStorage survives the redirect.
       sessionStorage.setItem('eresi:payingInvoice', invoice.id);
       window.location.href = r.authorizationUrl;
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not start the payment'),
   });
 
-  /**
-   * M-Pesa has no redirect to return through — Safaricom pushes the result
-   * straight to the API once the PIN is entered. So instead of a return leg,
-   * this polls the invoice list for a few seconds after sending the prompt,
-   * which is enough for the row to flip to Paid without the developer having
-   * to refresh manually.
-   */
+  // M-Pesa has no return leg: poll for a minute so the row flips to Paid by itself.
   const payMpesa = useMutation({
-    mutationFn: ({ invoice, phone }: { invoice: Invoice; phone: string }) =>
-      billingApi.payInvoiceMpesa(invoice.id, phone),
+    mutationFn: ({ invoice, phone }: { invoice: Invoice; phone: string }) => billingApi.payInvoiceMpesa(invoice.id, phone),
     onSuccess: (r) => {
       setError('');
-      setToast(
-        `Sent to your phone for ${r.invoiceNumber} — enter your M-Pesa PIN to complete. `
-        + 'This page will update once it clears.',
-      );
-      const poll = setInterval(
-        () => queryClient.invalidateQueries({ queryKey: ['my-invoices'] }),
-        4000,
-      );
+      flash(`Sent to your phone for ${r.invoiceNumber} — enter your M-Pesa PIN. This page updates once it clears.`);
+      const poll = setInterval(() => queryClient.invalidateQueries({ queryKey: ['my-invoices'] }), 4000);
       setTimeout(() => clearInterval(poll), 60_000);
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not start the M-Pesa payment'),
   });
 
-  /**
-   * Return leg from Paystack. The webhook settles this too, so this only
-   * shortens the wait — both paths are idempotent.
-   */
+  // Return leg from Paystack (the webhook settles it too; both are idempotent).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('paystack') !== 'invoice') return;
@@ -456,46 +108,325 @@ function InvoicesCard() {
     sessionStorage.removeItem('eresi:payingInvoice');
     window.history.replaceState({}, '', window.location.pathname);
     if (!reference || !invoiceId) return;
-
     billingApi.confirmInvoice(invoiceId, reference)
-      .then((r) => {
-        setToast(`Payment received — receipt ${r.number} is on its way to your inbox.`);
-        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
-      })
-      .catch(() => {
-        // The webhook will still settle it; do not alarm the customer.
-        setToast('Payment received. Your receipt will arrive shortly.');
-        queryClient.invalidateQueries({ queryKey: ['my-invoices'] });
-      });
-  }, [queryClient]);
+      .then((r) => { flash(`Payment received — receipt ${r.number} is on its way to your inbox.`); refresh(); })
+      .catch(() => { flash('Payment received. Your receipt will arrive shortly.'); refresh(); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const shown = filter === 'unpaid' ? unpaid : filter === 'paid' ? all.filter(isSettled) : all;
+  const tabs: { key: Tab; label: string; badge?: number }[] = [
+    { key: 'invoices', label: 'Invoices', badge: unpaid.length || undefined },
+    { key: 'listing', label: 'Listing fees' },
+    { key: 'production', label: 'Production' },
+    { key: 'payments', label: 'Payments' },
+  ];
 
   return (
-    <div className="rounded-3xl border border-[#dadce0] bg-white p-6">
-      <h2 className="text-[18px] font-medium text-[#202124]">Invoices &amp; receipts</h2>
-      <p className="mt-1 text-[14px] text-[#5f6368]">
-        Listing fees are invoiced three days before they are charged. Receipts are
-        issued automatically once payment clears.
-      </p>
-      {toast && (
-        <p className="mt-3 rounded-2xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</p>
-      )}
-      {error && (
-        <p className="mt-3 rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>
-      )}
-
-      <div className="mt-4">
-        {isLoading
-          ? <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
-          : (
-            <InvoiceTable
-              invoices={data ?? []}
-              onPay={(inv) => { setError(''); pay.mutate(inv); }}
-              payingId={pay.isPending ? pay.variables?.id : null}
-              onPayMpesa={(inv, phone) => { setError(''); payMpesa.mutate({ invoice: inv, phone }); }}
-              mpesaPayingId={payMpesa.isPending ? payMpesa.variables?.invoice.id : null}
-            />
-          )}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[26px] font-normal text-[#202124]">Billing</h1>
+          <p className="text-[14px] text-[#5f6368]">A monthly listing fee per live development, plus any production you order.</p>
+        </div>
+        <Link href="/dashboard/support" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:underline">
+          <HelpCircle size={15} /> Question about a charge?
+        </Link>
       </div>
+
+      {toast && <p className="rounded-2xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</p>}
+      {error && <p className="rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          {/* ── What you owe ── */}
+          {invoicesLoading ? (
+            <div className={cn(card, 'flex h-40 items-center justify-center')}><Loader2 size={22} className="animate-spin text-[#80868b]" /></div>
+          ) : unpaid.length ? (
+            <section className={cn('rounded-3xl p-6', overdue.length ? 'bg-[#fce8e6]' : 'bg-[#e8f0fe]')}>
+              <div className="flex flex-wrap items-start justify-between gap-5">
+                <div>
+                  <p className={cn('flex items-center gap-1.5 text-[13px] font-medium', overdue.length ? 'text-[#c5221f]' : 'text-[#1967d2]')}>
+                    {overdue.length ? <AlertTriangle size={15} /> : <Receipt size={15} />}
+                    {overdue.length ? `${overdue.length} overdue` : 'Amount due'}
+                  </p>
+                  <p className="mt-2 text-[36px] font-normal leading-none text-[#202124] tabular-nums">{money(dueTotal, dueCurrency)}</p>
+                  <p className="mt-2 text-[14px] text-[#3c4043]">
+                    {unpaid.length} unpaid invoice{unpaid.length === 1 ? '' : 's'}
+                    {nextDue && ` · next due ${shortDate(nextDue.dueAt)}`}
+                  </p>
+                  {terminates && (
+                    <p className="mt-1 text-[13px] font-medium text-[#c5221f]">
+                      Pay by {shortDate(terminates)} to keep your developments online.
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {unpaid.length === 1 ? (
+                    <button type="button" onClick={() => { setError(''); pay.mutate(unpaid[0]); }} disabled={pay.isPending}
+                      className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50">
+                      {pay.isPending ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
+                      Pay {money(unpaid[0].total, unpaid[0].currency)}
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => { setTab('invoices'); setFilter('unpaid'); }}
+                      className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc]">
+                      Review &amp; pay <ArrowRight size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-[#e6f4ea] p-6">
+              <div>
+                <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#188038]"><CheckCircle2 size={15} /> All paid up</p>
+                <p className="mt-2 text-[20px] font-normal text-[#202124]">Nothing is due right now.</p>
+                {!!summary?.monthly.liveCount && (
+                  <p className="mt-1 text-[14px] text-[#3c4043]">
+                    Monthly listing fees: {money(summary.monthly.total, summary.currency)} for {summary.monthly.liveCount} live
+                    {summary.monthly.liveCount === 1 ? ' development' : ' developments'}. Invoiced 3 days before each charge.
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* ── Detail ── */}
+          <section className={card}>
+            <div className="flex gap-1 overflow-x-auto border-b border-[#f1f3f4] px-3 pt-3" role="tablist">
+              {tabs.map((t) => (
+                <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+                  className={cn('relative shrink-0 rounded-t-xl px-4 py-2.5 text-[14px] font-medium transition-colors',
+                    tab === t.key ? 'text-[#1a73e8]' : 'text-[#5f6368] hover:text-[#202124]')}>
+                  {t.label}
+                  {t.badge ? <span className="ml-1.5 rounded-full bg-[#c5221f] px-1.5 py-0.5 text-[11px] text-white">{t.badge}</span> : null}
+                  {tab === t.key && <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-t-full bg-[#1a73e8]" />}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5 sm:p-6">
+              {tab === 'invoices' && (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex gap-1.5">
+                      {(['unpaid', 'paid', 'all'] as const).map((f) => {
+                        const n = f === 'unpaid' ? unpaid.length : f === 'paid' ? all.filter(isSettled).length : all.length;
+                        return (
+                          <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f}
+                            className={cn('rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
+                              filter === f ? 'border-[#202124] bg-[#202124] text-white' : 'border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4]')}>
+                            {f === 'unpaid' ? 'Unpaid' : f === 'paid' ? 'Paid' : 'All'}
+                            <span className="ml-1.5 tabular-nums opacity-60">{n}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[12.5px] text-[#80868b]">Receipts are emailed automatically once a payment clears.</p>
+                  </div>
+                  {invoicesLoading ? (
+                    <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
+                  ) : shown.length === 0 ? (
+                    <Empty icon={<Receipt size={22} />} text={filter === 'unpaid' ? 'No unpaid invoices.' : 'No invoices yet. They appear once a development goes live or production is ordered.'} />
+                  ) : (
+                    <InvoiceTable
+                      invoices={shown}
+                      onPay={(inv) => { setError(''); pay.mutate(inv); }}
+                      payingId={pay.isPending ? pay.variables?.id : null}
+                      onPayMpesa={(inv, phone) => { setError(''); payMpesa.mutate({ invoice: inv, phone }); }}
+                      mpesaPayingId={payMpesa.isPending ? payMpesa.variables?.invoice.id : null}
+                    />
+                  )}
+                </>
+              )}
+
+              {tab === 'listing' && (
+                summaryLoading ? <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
+                : !summary?.listings.length ? (
+                  <Empty icon={<Receipt size={22} />} text="No developments yet — nothing is being billed.">
+                    <Link href="/dashboard/developments/new" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">
+                      Add a development <ArrowRight size={14} />
+                    </Link>
+                  </Empty>
+                ) : (
+                  <>
+                    <p className="mb-4 text-[13.5px] text-[#5f6368]">
+                      {money(summary.feePerListing, summary.currency)} a month per development, starting only once it goes live.
+                    </p>
+                    <ul className="divide-y divide-[#f1f3f4] rounded-2xl border border-[#f1f3f4]">
+                      {summary.listings.map((l) => {
+                        const st = LISTING_STATUS[l.status] ?? LISTING_STATUS.DRAFT;
+                        return (
+                          <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <Link href={`/dashboard/properties/${l.slug}`} className="truncate text-[15px] font-medium text-[#202124] hover:underline">{l.name}</Link>
+                              <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-medium', st.cls)}>{st.label}</span>
+                            </div>
+                            <span className="text-[15px] tabular-nums">
+                              {l.monthlyFee > 0
+                                ? <span className="font-medium text-[#202124]">{money(l.monthlyFee, summary.currency)}<span className="text-[13px] font-normal text-[#80868b]"> /mo</span></span>
+                                : <span className="text-[13px] text-[#80868b]">Starts when live</span>}
+                            </span>
+                          </li>
+                        );
+                      })}
+                      <li className="flex items-center justify-between bg-[#f8f9fa] px-4 py-3.5">
+                        <span className="text-[14px] font-medium text-[#202124]">Total per month</span>
+                        <span className="text-[17px] font-medium tabular-nums text-[#202124]">{money(summary.monthly.total, summary.currency)}</span>
+                      </li>
+                    </ul>
+                  </>
+                )
+              )}
+
+              {tab === 'production' && (
+                summaryLoading ? <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>
+                : !summary?.production.orders.length ? (
+                  <Empty icon={<Receipt size={22} />} text="No production ordered. Order photography, cinematic video, 3D or VR from a development's Production services page." />
+                ) : (
+                  <>
+                    <p className="mb-4 text-[13.5px] text-[#5f6368]">One-time work, invoiced when ordered: 50% before the shoot, 50% on delivery.</p>
+                    <div className="space-y-3">
+                      {summary.production.orders.map((o) => (
+                        <div key={o.propertyId} className="rounded-2xl border border-[#f1f3f4] p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[15px] font-medium text-[#202124]">{o.name}</p>
+                            <span className="text-[15px] font-medium tabular-nums text-[#202124]">{money(o.total, summary.currency)}</span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {o.serviceIds.map((id) => (
+                              <span key={id} className="rounded-full bg-[#f1f3f4] px-2.5 py-1 text-[12.5px] text-[#3c4043]">{serviceById(id)?.label ?? id.replace(/_/g, ' ')}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between rounded-2xl bg-[#f8f9fa] px-4 py-3.5">
+                      <span className="text-[14px] font-medium text-[#202124]">Pending production total</span>
+                      <span className="text-[17px] font-medium tabular-nums text-[#202124]">{money(summary.production.pendingTotal, summary.currency)}</span>
+                    </div>
+                  </>
+                )
+              )}
+
+              {tab === 'payments' && <PaymentHistory payments={summary?.payments ?? []} loading={summaryLoading} />}
+            </div>
+          </section>
+        </div>
+
+        {/* ── Side column ── */}
+        <aside className="space-y-6">
+          <PaymentMethodsCard />
+          <PayWithMpesaCard />
+          <div className={cn(card, 'p-5')}>
+            <h3 className="text-[15px] font-medium text-[#202124]">How billing works</h3>
+            <ul className="mt-3 space-y-2.5 text-[13.5px] leading-relaxed text-[#5f6368]">
+              <li>• Each live development has a monthly listing fee; drafts and archived ones are free.</li>
+              <li>• Listing fees are invoiced 3 days before your saved card is charged.</li>
+              <li>• Production is invoiced when ordered: half before the shoot, half on delivery.</li>
+              <li>• Pay any invoice by card or M-Pesa; receipts arrive by email.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function Empty({ icon, text, children }: { icon: React.ReactNode; text: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-10 text-center">
+      <span className="text-[#bdc1c6]">{icon}</span>
+      <p className="max-w-sm text-[14px] leading-relaxed text-[#5f6368]">{text}</p>
+      {children}
+    </div>
+  );
+}
+
+/* ── Payment history ─────────────────────────────────────────────── */
+
+function PaymentHistory({ payments, loading }: { payments: { id: string; amount: number; currency: string; method: string; status: string; reference?: string | null; metadata?: { purpose?: string } | null; createdAt: string }[]; loading: boolean }) {
+  if (loading) return <p className="py-8 text-center text-[14px] text-[#5f6368]">Loading…</p>;
+  if (!payments.length) return <Empty icon={<CreditCard size={22} />} text="No payments yet. Card and M-Pesa payments appear here once made." />;
+  return (
+    <ul className="divide-y divide-[#f1f3f4]">
+      {payments.map((p) => (
+        <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-[14.5px] font-medium text-[#202124]">
+              {p.metadata?.purpose === 'card_verification' ? 'Card verification hold'
+                : p.metadata?.purpose === 'mpesa_verification' ? 'M-Pesa verification'
+                : p.reference ?? p.method.replace('_', ' ').toLowerCase()}
+            </p>
+            <p className="text-[12.5px] text-[#5f6368]">
+              {new Date(p.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })} · {p.method.replace(/_/g, ' ').toLowerCase()}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-[14.5px] font-medium tabular-nums text-[#202124]">{p.currency} {p.amount.toLocaleString()}</p>
+            <span className={cn('text-[12.5px] font-medium',
+              p.status === 'COMPLETED' ? 'text-[#188038]' : p.status === 'FAILED' ? 'text-[#c5221f]' : p.status === 'REFUNDED' ? 'text-[#5f6368]' : 'text-[#b06000]')}>
+              {p.status === 'REFUNDED' ? 'reversed' : p.status.toLowerCase()}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ── Pay a balance with M-Pesa (STK push) ────────────────────────── */
+
+function PayWithMpesaCard() {
+  const queryClient = useQueryClient();
+  const { data: summary } = useQuery({ queryKey: ['billing', 'summary'], queryFn: () => billingApi.summary() });
+  const due = (summary?.production.pendingTotal ?? 0) + (summary?.monthly.total ?? 0);
+  const [phone, setPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setNotice(''); setError('');
+    const normalized = phone.replace(/\D/g, '').replace(/^0/, '254');
+    if (!/^254(7|1)\d{8}$/.test(normalized)) return setError('Enter a valid Safaricom number, e.g. 0712 345 678.');
+    const usd = Number.parseInt(amount || String(due), 10);
+    if (!Number.isFinite(usd) || usd < 1) return setError('Enter an amount of at least $1.');
+    setBusy(true);
+    try {
+      const res = await billingApi.payMpesa({ phone: normalized, amountUsd: usd, purpose: 'e-resi pending bills' });
+      setNotice(res.status === 'COMPLETED'
+        ? `Payment of KES ${res.amountKes.toLocaleString()} received${res.sandbox ? ' (sandbox)' : ''} — thank you!`
+        : `Prompt sent for KES ${res.amountKes.toLocaleString()} — enter your M-Pesa PIN to complete.`);
+      setPhone(''); setAmount('');
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not start the M-Pesa payment.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (due <= 0) return null;
+  return (
+    <div className="rounded-3xl bg-[#e6f4ea] p-5">
+      <h3 className="flex items-center gap-2 text-[15px] font-medium text-[#202124]"><Smartphone size={16} className="text-[#188038]" /> Pay a balance with M-Pesa</h3>
+      <p className="mt-1 text-[13px] text-[#3c4043]">For bills not yet on an invoice. To pay an invoice, use its M-Pesa button.</p>
+      <form onSubmit={submit} className="mt-3 grid gap-2.5">
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0712 345 678" required inputMode="tel"
+          className="w-full rounded-xl border border-[#dadce0] bg-white px-3.5 py-2.5 text-[14px] text-[#202124] outline-none focus:border-[#188038]" />
+        <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} placeholder={`Amount in USD (default ${due.toLocaleString()})`} inputMode="numeric"
+          className="w-full rounded-xl border border-[#dadce0] bg-white px-3.5 py-2.5 text-[14px] text-[#202124] outline-none focus:border-[#188038]" />
+        <button type="submit" disabled={busy}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#188038] px-5 py-2.5 text-[14px] font-medium text-white hover:bg-[#0d652d] disabled:opacity-50">
+          {busy ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />} {busy ? 'Sending…' : 'Send M-Pesa prompt'}
+        </button>
+      </form>
+      {notice && <p className="mt-3 rounded-xl bg-white px-3.5 py-2 text-[13px] text-[#188038]">{notice}</p>}
+      {error && <p className="mt-3 rounded-xl bg-[#fce8e6] px-3.5 py-2 text-[13px] text-[#c5221f]">{error}</p>}
     </div>
   );
 }
