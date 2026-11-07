@@ -285,7 +285,27 @@ export default function CustomiseMiniSite() {
 
           {/* Colour */}
           <section className={cardCls}>
-            <h2 className="mb-4 text-[16px] font-medium text-[#202124]">Brand colour</h2>
+            <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Brand colour</h2>
+            {template.fontsFollowBrand ? (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[13px] text-[#5f6368]">
+                  {draft.brandColor.toLowerCase() === DEFAULT_BRAND_COLOR
+                    ? `Using ${template.label}'s own colours. Pick a colour to make it yours.`
+                    : `${template.label}'s accents follow this colour.`}
+                </p>
+                {draft.brandColor.toLowerCase() !== DEFAULT_BRAND_COLOR && (
+                  <button
+                    type="button"
+                    onClick={() => set({ brandColor: DEFAULT_BRAND_COLOR })}
+                    className="cursor-pointer text-[13px] font-medium text-[#1a73e8] hover:underline"
+                  >
+                    Use {template.label}&apos;s own colours
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="mb-4" />
+            )}
             <div className="flex items-center gap-3">
               <input
                 type="color"
