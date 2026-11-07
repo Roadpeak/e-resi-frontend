@@ -158,42 +158,42 @@ function TemplateShowcase({
         live ? 'border-[#1a73e8] ring-1 ring-[#1a73e8]' : 'border-[#dadce0]',
       )}
     >
-      <header className="flex flex-1 flex-col gap-3 px-5 py-4">
+      <header className="flex flex-1 flex-col gap-3 bg-[#1f2329] px-5 py-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[12px] tabular-nums text-[#80868b]">
+            <span className="text-[12px] tabular-nums text-white/45">
               {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
             </span>
-            <h2 className="text-[20px] font-medium text-[#202124]">{template.label}</h2>
+            <h2 className="text-[20px] font-medium text-white">{template.label}</h2>
             {live && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f4ea] px-2.5 py-0.5 text-[12px] font-medium text-[#188038]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#81c995]/15 px-2.5 py-0.5 text-[12px] font-medium text-[#81c995]">
                 <MaterialIcon name="check_circle" size={14} fill /> Live on your page
               </span>
             )}
             {template.isNew && (
-              <span className="rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#1a73e8]">
+              <span className="rounded-full bg-[#8ab4f8]/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#8ab4f8]">
                 New
               </span>
             )}
             {template.surface === 'DARK' && (
-              <span className="rounded-full bg-[#202124] px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white">
+              <span className="rounded-full border border-white/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white/75">
                 Dark
               </span>
             )}
           </div>
-          <p className="mt-1 line-clamp-2 text-[13.5px] text-[#5f6368]">{template.note}</p>
+          <p className="mt-1 line-clamp-2 text-[13.5px] text-white/65">{template.note}</p>
         </div>
 
         <div className="mt-auto flex flex-wrap items-center gap-2">
           <Link
             href={customiseHref}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#202124] transition-colors hover:bg-[#f1f3f4]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-white/10"
           >
             <MaterialIcon name="tune" size={18} />
             Customise
           </Link>
           {live ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e6f4ea] px-5 py-2 text-[14px] font-medium text-[#188038]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#81c995]/15 px-5 py-2 text-[14px] font-medium text-[#81c995]">
               <MaterialIcon name="check" size={18} />
               Applied
             </span>
@@ -202,7 +202,7 @@ function TemplateShowcase({
               type="button"
               onClick={onApply}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-2 text-[14px] font-medium text-[#1f2329] transition-colors hover:bg-[#e8eaed] disabled:opacity-50"
             >
               {applying ? 'Applying…' : 'Apply template'}
             </button>
