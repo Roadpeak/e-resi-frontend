@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Building2, Camera, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { staffApi } from '../../../lib/api/staff';
 import { authApi } from '../../../lib/api/auth';
 import { useAuthStore } from '../../../lib/stores/auth.store';
@@ -32,6 +32,27 @@ function StaffInvite() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  async function pickPhoto(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setFormError('Choose an image for your profile photo.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setFormError('Your photo must be under 5 MB.'); return; }
+    setFormError('');
+    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoUploading(true);
+    try {
+      const { url } = await staffApi.uploadInvitePhoto(token, file);
+      setPhotoUrl(url);
+    } catch (e) {
+      setPhotoUrl('');
+      setFormError((e as Error).message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   const accept = useMutation({
     mutationFn: async () => {
@@ -39,6 +60,7 @@ function StaffInvite() {
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        avatarUrl: photoUrl,
       });
       // Straight into the dashboard: the password they just set is the login.
       return authApi.login({ email: invite!.email, password });
@@ -51,7 +73,7 @@ function StaffInvite() {
   });
 
   const disabled =
-    accept.isPending || !firstName.trim() || !lastName.trim() || password.length < 8;
+    accept.isPending || photoUploading || !photoUrl || !firstName.trim() || !lastName.trim() || password.length < 8;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] px-4 py-10 font-google">
@@ -90,6 +112,30 @@ function StaffInvite() {
             <p className="mt-1 text-[13.5px] text-[#5f6368]">
               Signing in as <span className="font-medium text-[#202124]">{invite.email}</span>
             </p>
+
+            {/* Profile photo — required: the team sees each other in the dashboard header. */}
+            <div className="mt-5 flex items-center gap-4">
+              <label className="group relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#dadce0] bg-[#f8f9fa] transition-colors hover:border-[#1a73e8]">
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="Your profile photo" className="h-full w-full object-cover" />
+                ) : (
+                  <Camera size={22} className="text-[#80868b] group-hover:text-[#1a73e8]" />
+                )}
+                {photoUploading && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-white/70">
+                    <Loader2 size={18} className="animate-spin text-[#1a73e8]" />
+                  </span>
+                )}
+                <input type="file" accept="image/*" className="sr-only" onChange={(e) => pickPhoto(e.target.files?.[0])} />
+              </label>
+              <div>
+                <p className="text-[14px] font-medium text-[#202124]">Profile photo <span className="text-[#d93025]">*</span></p>
+                <p className="text-[12.5px] leading-snug text-[#5f6368]">
+                  {photoUrl ? 'Looks good. Click it to choose another.' : 'Required. A clear photo of your face, JPG or PNG under 5 MB.'}
+                </p>
+              </div>
+            </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <input

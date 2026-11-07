@@ -76,4 +76,8 @@ export const authApi = {
 
   updateProfile: (payload: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) =>
     apiClient.patch<User>('/auth/me', payload),
+
+  /** Change the signed-in person's password (team members change their own). */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiClient.post<{ message: string }>('/auth/change-password', { currentPassword, newPassword }),
 };

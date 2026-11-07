@@ -33,8 +33,14 @@ function memberName(m: StaffMember) {
 const MAX = 4;
 
 export function TeamAvatars({
-  companyName, logoUrl, isStaff,
-}: { companyName?: string; logoUrl?: string | null; isStaff?: boolean }) {
+  companyName, logoUrl, isStaff, self,
+}: {
+  companyName?: string;
+  logoUrl?: string | null;
+  isStaff?: boolean;
+  /** For a team member: themselves, shown after the company. */
+  self?: { name: string; email: string; photo?: string | null };
+}) {
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
     queryFn: staffApi.list,
@@ -47,7 +53,9 @@ export function TeamAvatars({
   const shown = members.slice(0, MAX);
   const extra = members.length - shown.length;
   const company = companyName || 'Your company';
-  const ring = 'ring-2 ring-white';
+  // A white gap and a grey outer frame, so each circle stands out from its
+  // neighbours and from the bar in both light and dark mode.
+  const ring = 'ring-2 ring-white shadow-[0_0_0_3.5px_#bdc1c6]';
 
   return (
     <Link
@@ -55,7 +63,7 @@ export function TeamAvatars({
       className="hidden shrink-0 items-center md:flex"
       aria-label={isStaff ? company : `Team: ${company} and ${members.length} member${members.length === 1 ? '' : 's'}`}
     >
-      <span className="flex -space-x-2">
+      <span className="flex -space-x-1.5 pl-1">
         <span
           title={`${company} · Account owner`}
           className={`relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white text-[11px] font-semibold text-white ${ring}`}
@@ -68,17 +76,33 @@ export function TeamAvatars({
         </span>
         {shown.map((m) => {
           const name = memberName(m);
+          const photo = m.user?.avatarUrl;
           return (
             <span
               key={m.id}
               title={`${name}${m.status === 'INVITED' ? ' · Invited' : ''}`}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold text-white ${ring} ${m.status === 'INVITED' ? 'opacity-60' : ''}`}
-              style={{ background: tone(m.email) }}
+              className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white ${ring} ${m.status === 'INVITED' ? 'opacity-60' : ''}`}
+              style={photo ? undefined : { background: tone(m.email) }}
             >
-              {initialsOf(name)}
+              {photo
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={photo} alt="" className="h-full w-full object-cover" />
+                : initialsOf(name)}
             </span>
           );
         })}
+        {self && (
+          <span
+            title={`${self.name || self.email} · You`}
+            className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white ${ring}`}
+            style={self.photo ? undefined : { background: tone(self.email) }}
+          >
+            {self.photo
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={self.photo} alt="" className="h-full w-full object-cover" />
+              : initialsOf(self.name || self.email)}
+          </span>
+        )}
         {extra > 0 && (
           <span title={`${extra} more`} className={`flex h-8 w-8 items-center justify-center rounded-full bg-[#e8eaed] text-[11px] font-semibold text-[#3c4043] ${ring}`}>
             +{extra}

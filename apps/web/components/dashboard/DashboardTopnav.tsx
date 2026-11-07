@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Clock3, Globe, HelpCircle, LogOut, Plus, Search, Settings, ShieldCheck,
+  Clock3, Globe, HelpCircle, LogOut, Plus, Search, Settings, ShieldCheck, UserRound,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
@@ -83,7 +83,12 @@ export function DashboardTopnav() {
           </Link>
         )}
         {/* The team: the developer account first, then invited members. */}
-        <TeamAvatars companyName={profile?.companyName} logoUrl={profile?.logoUrl} isStaff={user?.isStaff} />
+        <TeamAvatars
+          companyName={profile?.companyName}
+          logoUrl={profile?.logoUrl}
+          isStaff={user?.isStaff}
+          self={user?.isStaff ? { name: `${user.firstName} ${user.lastName}`.trim(), email: user.email, photo: user.avatarUrl } : undefined}
+        />
       </div>
 
       {/* Right cluster */}
@@ -139,7 +144,11 @@ export function DashboardTopnav() {
             )}
             aria-label="Account menu"
           >
-            {profile?.logoUrl ? (
+            {user?.isStaff && user.avatarUrl ? (
+              // A team member's own face, not the company logo.
+              // eslint-disable-next-line @next/next/no-img-element -- uploaded host
+              <img src={user.avatarUrl} alt={`${user.firstName} ${user.lastName}`} className="h-full w-full object-cover" />
+            ) : !user?.isStaff && profile?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- uploaded host
               <img src={profile.logoUrl} alt={profile.companyName} className="h-full w-full object-contain p-1" />
             ) : (
@@ -153,8 +162,12 @@ export function DashboardTopnav() {
                 <p className="text-xs text-gray-400 truncate">{user?.email}</p>
               </div>
               {[
-                { label: 'Company Profile', href: '/dashboard/profile', icon: ShieldCheck },
-                { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+                { label: 'My profile', href: '/dashboard/my-profile', icon: UserRound },
+                // Company-level pages are the owner's; a team member can't open them.
+                ...(user?.isStaff ? [] : [
+                  { label: 'Company Profile', href: '/dashboard/profile', icon: ShieldCheck },
+                  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+                ]),
                 { label: 'Visit Site', href: '/', icon: Globe },
               ].map(({ label, href, icon: Icon }) => (
                 <Link
