@@ -23,7 +23,11 @@ import { cn } from '../../../../../../lib/utils';
 
 /** Desktop width each template is rendered at before being scaled to fit. */
 const FRAME_WIDTH = 1440;
-const FRAME_HEIGHT = 900;
+const FRAME_HEIGHT = 1080;
+/** Auto-scroll speed through the page, in page pixels per second. */
+const SCROLL_SPEED = 90;
+/** Pause at the top and bottom of each pass, in ms. */
+const SCROLL_PAUSE = 1800;
 
 export default function TemplateGallery() {
   const { slug } = useParams<{ slug: string }>();
@@ -92,8 +96,8 @@ export default function TemplateGallery() {
           </Link>
           <h1 className="mt-2 text-[26px] font-normal text-[#202124]">Mini-site templates</h1>
           <p className="max-w-[70ch] text-[14px] text-[#5f6368]">
-            Each template below is your real page, with your photos, units and sections. Scroll
-            inside any of them to explore it. Apply one as it is, or open Customise to change its
+            Each template below is your real page, with your photos, units and sections, scrolling
+            through on its own. Apply one as it is, or open Customise to explore it and change its
             colours, type, navigation and sections first.
           </p>
         </div>
@@ -111,7 +115,7 @@ export default function TemplateGallery() {
       {toast && <p className="rounded-2xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</p>}
       {error && <p className="rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>}
 
-      <div className="space-y-10">
+      <div className="grid gap-6 xl:grid-cols-2">
         {ordered.map((t, i) => (
           <TemplateShowcase
             key={t.key}
@@ -150,11 +154,11 @@ function TemplateShowcase({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-[28px] border bg-white',
+        'flex flex-col overflow-hidden rounded-[28px] border bg-white',
         live ? 'border-[#1a73e8] ring-1 ring-[#1a73e8]' : 'border-[#dadce0]',
       )}
     >
-      <header className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6">
+      <header className="flex flex-1 flex-col gap-3 px-5 py-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[12px] tabular-nums text-[#80868b]">
@@ -177,10 +181,10 @@ function TemplateShowcase({
               </span>
             )}
           </div>
-          <p className="mt-1 max-w-[80ch] text-[13.5px] text-[#5f6368]">{template.note}</p>
+          <p className="mt-1 line-clamp-2 text-[13.5px] text-[#5f6368]">{template.note}</p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="mt-auto flex flex-wrap items-center gap-2">
           <Link
             href={customiseHref}
             className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#202124] transition-colors hover:bg-[#f1f3f4]"
@@ -206,21 +210,25 @@ function TemplateShowcase({
         </div>
       </header>
 
-      <LiveFrame src={src} title={`${template.label} template preview`} />
+      <LiveFrame src={src} title={`${template.label} template preview`} customiseHref={customiseHref} />
     </section>
   );
 }
 
 /**
  * The real page in an iframe, rendered at desktop width and scaled down to the
- * card, so a developer sees the layout buyers on a laptop see — not a squeezed
- * mobile view. Mounted only as it nears the viewport: fifteen full pages
- * loading at once would stall the dashboard.
+ * card, scrolling through on its own. Visitors can't scroll or click inside it
+ * here; exploring is what the template's Customise page is for, and clicking
+ * the preview opens it. Mounted only as it nears the viewport, and it only
+ * scrolls while on screen: fifteen pages animating at once would stall the
+ * dashboard.
  */
-function LiveFrame({ src, title }: { src: string; title: string }) {
+function LiveFrame({ src, title, customiseHref }: { src: string; title: string; customiseHref: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [onScreen, setOnScreen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -228,21 +236,67 @@ function LiveFrame({ src, title }: { src: string; title: string }) {
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
     ro.observe(el);
-    const io = new IntersectionObserver(
+    // Mount early, ahead of the viewport, so the page is ready when reached.
+    const mountIo = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true);
-          io.disconnect();
+          setMounted(true);
+          mountIo.disconnect();
         }
       },
       { rootMargin: '600px 0px' },
     );
-    io.observe(el);
+    mountIo.observe(el);
+    // Scroll only while actually visible.
+    const visIo = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.15 });
+    visIo.observe(el);
     return () => {
       ro.disconnect();
-      io.disconnect();
+      mountIo.disconnect();
+      visIo.disconnect();
     };
   }, []);
+
+  // Auto-scroll: down to the bottom, pause, ease back to the top, pause, repeat.
+  useEffect(() => {
+    if (!loaded || !onScreen) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let win: Window | null = null;
+    try {
+      win = frameRef.current?.contentWindow ?? null;
+      void win?.document; // throws if the frame is somehow cross-origin
+    } catch {
+      return;
+    }
+    if (!win) return;
+    const doc = win.document;
+    const root = () => doc.scrollingElement ?? doc.documentElement;
+
+    let raf = 0;
+    let last = 0;
+    let pauseUntil = performance.now() + SCROLL_PAUSE;
+    let dir: 1 | -1 = 1;
+
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = last ? Math.min(now - last, 64) : 0;
+      last = now;
+      if (now < pauseUntil) return;
+      const el = root();
+      const max = el.scrollHeight - el.clientHeight;
+      if (max <= 0) return;
+      // Back up to the top three times faster than the read-through down.
+      const step = (SCROLL_SPEED * dt) / 1000 * (dir === 1 ? 1 : 3);
+      const next = Math.max(0, Math.min(max, el.scrollTop + step * dir));
+      el.scrollTop = next;
+      if ((dir === 1 && next >= max - 1) || (dir === -1 && next <= 0)) {
+        dir = dir === 1 ? -1 : 1;
+        pauseUntil = now + SCROLL_PAUSE;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [loaded, onScreen]);
 
   // Never upscale past 1:1; on very wide screens the frame simply fills.
   const scale = width ? Math.min(1, width / FRAME_WIDTH) : 0;
@@ -259,7 +313,7 @@ function LiveFrame({ src, title }: { src: string; title: string }) {
           <span className="h-2.5 w-2.5 rounded-full bg-[#dadce0]" />
         </span>
         <span className="ml-2 truncate rounded-full bg-white px-3 py-0.5 text-[11.5px] text-[#5f6368]">
-          Live preview · scroll to explore
+          Live preview
         </span>
         <a
           href={src}
@@ -273,16 +327,19 @@ function LiveFrame({ src, title }: { src: string; title: string }) {
 
       <div
         ref={boxRef}
-        className="relative w-full overflow-hidden"
-        style={{ height: height || 'min(56vw, 720px)' }}
+        className="group relative w-full overflow-hidden"
+        style={{ height: height || 'min(42vw, 560px)' }}
       >
-        {visible && scale > 0 && (
+        {mounted && scale > 0 && (
           <iframe
+            ref={frameRef}
             title={title}
             src={src}
-            loading="lazy"
+            tabIndex={-1}
+            aria-hidden="true"
+            scrolling="no"
             onLoad={() => setLoaded(true)}
-            className="absolute left-0 top-0 origin-top-left border-0 bg-white"
+            className="pointer-events-none absolute left-0 top-0 origin-top-left select-none border-0 bg-white"
             style={{
               width: frameW,
               height: FRAME_HEIGHT,
@@ -290,8 +347,19 @@ function LiveFrame({ src, title }: { src: string; title: string }) {
             }}
           />
         )}
+        {/* Covers the frame: wheel and touch scroll the dashboard, not the
+            preview, and a click opens this template's customise page. */}
+        <Link
+          href={customiseHref}
+          aria-label={`Customise ${title.replace(/ template preview$/, '')}`}
+          className="absolute inset-0 flex items-end justify-center bg-transparent pb-5"
+        >
+          <span className="translate-y-2 rounded-full bg-[#202124]/85 px-4 py-2 text-[13px] font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+            Customise &amp; explore
+          </span>
+        </Link>
         {!loaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="flex items-center gap-2 text-[13px] text-[#5f6368]">
               <MaterialIcon name="progress_activity" size={18} className="animate-spin" />
               Loading template…
