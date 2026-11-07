@@ -63,7 +63,7 @@ export default function NewDevelopmentPage() {
     }
     setSubmitting(true);
     try {
-      const res = await apiClient.post<{ success: boolean; data: { slug: string } }>('/properties', {
+      const res = await apiClient.post<{ slug: string }>('/properties', {
         name: development.name.trim(),
         heroImageUrl: development.heroImageUrl || undefined,
         tagline: development.shortDescription || undefined,
@@ -98,7 +98,11 @@ export default function NewDevelopmentPage() {
           servicesOneTimeTotal: billing.oneTimeTotal,
         },
       });
-      const slug = res.data?.slug ?? '';
+      // apiClient already unwraps the { success, data } envelope, so the slug
+      // is on the result itself. Reading res.data.slug was always undefined,
+      // which silently skipped everything below that needs the slug — the
+      // nearby amenities and the uploaded media were never attached.
+      const slug = res?.slug ?? '';
 
       // Amenities are rows against the property, so they can only be written
       // once it exists. A failure here must not lose the development the

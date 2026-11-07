@@ -93,9 +93,10 @@ export function StepCompany() {
   useEffect(() => {
     if (!company.companyName || !company.logoUrl) {
       apiClient
-        .get<{ success: boolean; data: { companyName?: string; logoUrl?: string | null } }>('/users/developers/me')
+        .get<{ companyName?: string; logoUrl?: string | null }>('/users/developers/me')
         .then((res) => {
-          const { companyName: name, logoUrl } = res?.data ?? {};
+          // apiClient unwraps the { success, data } envelope already.
+          const { companyName: name, logoUrl } = res ?? {};
           const now = useOnboardingStore.getState().company;
           if (name && !now.companyName) patchCompany({ companyName: name });
           // A logo saved earlier (here or from the dashboard) shows up again.
