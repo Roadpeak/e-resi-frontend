@@ -206,6 +206,8 @@ export function StudioNav({
   const nav = useNav(property);
   const [menu, setMenu] = useState(false);
   const darkUnder = useDarkUnderNav(variant === 'renovate');
+  /** The development's uploaded logo, on a small white tile so it reads on any bar. */
+  const logo = (size: number) => (property.logoUrl ? <PropertyMonogram name={name} logoUrl={property.logoUrl} size={size} /> : null);
   const { scrolled, links, active } = nav;
   const name = property.name;
   const burger = (color: string, border: string, always = false) => (
@@ -228,7 +230,7 @@ export function StudioNav({
             {left.map((l) => <a key={l.id} href={`#${l.id}`} className={`text-[13px] ${active === l.id ? 'text-neutral-900' : 'text-neutral-600'}`}>{l.label}</a>)}
           </div>
           <div className="lg:hidden" />
-          <a href="#overview" className="truncate text-center text-[19px] font-black uppercase tracking-[-0.02em] text-neutral-900 sm:text-[22px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center justify-center gap-2.5 text-[19px] font-black uppercase tracking-[-0.02em] text-neutral-900 sm:text-[22px]" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{logo(30)}<span className="truncate">{name}</span></a>
           <div className="flex items-center justify-end gap-6">
             <div className="hidden gap-6 lg:flex">
               {right.map((l) => <a key={l.id} href={`#${l.id}`} className={`text-[13px] ${active === l.id ? 'text-neutral-900' : 'text-neutral-600'}`}>{l.label}</a>)}
@@ -266,7 +268,7 @@ export function StudioNav({
     bar = (
       <nav className="fixed inset-x-2 top-2 z-50 rounded-[24px] transition-colors duration-500 sm:inset-x-3" style={{ background: scrolled ? ground : 'transparent' }}>
         <div className="grid h-[72px] grid-cols-[1fr_auto_1fr] items-center px-6 sm:px-9">
-          <a href="#overview" className="truncate pr-2 text-[22px] font-extrabold uppercase italic tracking-[-0.03em]" style={{ color: fg }}>{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5 pr-2 text-[22px] font-extrabold uppercase italic tracking-[-0.03em]" style={{ color: fg }}>{logo(34)}<span className="truncate">{name}</span></a>
           <div className="hidden items-center gap-10 lg:flex">
             {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[14px]" style={{ color: fg, opacity: active === l.id ? 1 : 0.85 }}>{l.label}</a>)}
           </div>
@@ -282,7 +284,7 @@ export function StudioNav({
     bar = (
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-neutral-200/70 bg-white/95 backdrop-blur">
         <div className="grid h-[64px] grid-cols-[1fr_auto_1fr] items-center px-6 sm:px-10">
-          <a href="#overview" className="truncate text-[13px] uppercase tracking-[0.32em] text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5 text-[13px] uppercase tracking-[0.32em] text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{logo(30)}<span className="truncate">{name}</span></a>
           <button type="button" onClick={() => setMenu(true)} className="flex cursor-pointer items-center gap-2 text-[13px] text-neutral-800">
             <span className="flex flex-col gap-[3px]"><span className="block h-px w-4 bg-current" /><span className="block h-px w-4 bg-current" /></span>Menu
           </button>
@@ -299,7 +301,7 @@ export function StudioNav({
       <nav className="fixed inset-x-3 top-3 z-50 rounded-[20px] transition-all duration-500" style={{ background: scrolled ? 'rgba(255,255,255,0.96)' : 'transparent', boxShadow: scrolled ? '0 2px 20px rgba(0,0,0,0.06)' : 'none' }}>
         <div className="mx-auto flex h-[68px] max-w-[1240px] items-center justify-between px-6 sm:px-10">
           <a href="#overview" className="flex items-center gap-1 text-[22px] font-semibold tracking-[-0.02em]" style={{ color: fg, fontFamily: 'var(--font-playfair), Georgia, serif' }}>
-            <Sparkles size={15} className="-mt-3" />{name}
+            {logo(32) ?? <Sparkles size={15} className="-mt-3" />}<span className={property.logoUrl ? 'ml-1.5' : ''}>{name}</span>
           </a>
           <div className="flex items-center gap-8">
             <div className="hidden items-center gap-8 lg:flex">
@@ -315,7 +317,7 @@ export function StudioNav({
     bar = (
       <nav className="fixed inset-x-0 top-0 z-50 bg-white">
         <div className="mx-auto flex h-[64px] max-w-[1400px] items-center justify-between px-5 sm:px-8">
-          <a href="#overview" className="truncate text-[19px] font-medium tracking-[-0.01em] text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5 text-[19px] font-medium tracking-[-0.01em] text-neutral-900" style={{ fontFamily: 'var(--tpl-font-heading)' }}>{logo(30)}<span className="truncate">{name}</span></a>
           <div className="flex items-center gap-7">
             <div className="hidden items-center gap-7 lg:flex">
               {links.map((l) => (
@@ -337,7 +339,7 @@ export function StudioNav({
       <nav className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
         <div className="flex h-[52px] max-w-full items-center gap-6 rounded-full bg-[#16181d]/70 pl-5 pr-1.5 text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl">
           <a href="#overview" className="flex min-w-0 items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
-            <Sparkles size={14} className="shrink-0" /><span className="truncate">{name}</span>
+            {logo(28) ?? <Sparkles size={14} className="shrink-0" />}<span className="truncate">{name}</span>
           </a>
           <div className="hidden items-center gap-6 lg:flex">
             {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
@@ -374,7 +376,7 @@ export function StudioNav({
         <div className="mx-auto flex h-[68px] max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-10">
           <div className="flex min-w-0 items-center gap-10">
             <a href="#overview" className="flex min-w-0 items-center gap-2 text-[19px] font-semibold lowercase tracking-[-0.02em] text-white">
-              <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] bg-[var(--tpl-accent,#ef3b2d)]" /><span className="truncate">{name}</span>
+              {logo(30) ?? <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] bg-[var(--tpl-accent,#ef3b2d)]" />}<span className="truncate">{name}</span>
             </a>
             <div className="hidden items-center gap-7 lg:flex">
               {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.7 }}>{l.label}</a>)}
@@ -396,7 +398,7 @@ export function StudioNav({
     bar = (
       <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent' }}>
         <div className="mx-auto grid h-[72px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-6 px-5 sm:grid-cols-4 sm:px-8" style={{ color: fg }}>
-          <a href="#overview" className="text-[13px] font-semibold tracking-[0.2em]">{initials}</a>
+          <a href="#overview" className="text-[13px] font-semibold tracking-[0.2em]">{logo(34) ?? initials}</a>
           <div className="hidden text-[12px] leading-tight sm:block">
             <p className="opacity-70">Location</p>
             <p className="truncate font-medium">{place || name}</p>
@@ -415,9 +417,10 @@ export function StudioNav({
       <nav className="fixed inset-x-0 top-0 z-50 bg-black">
         <div className="mx-auto flex h-[60px] max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-10">
           <div className="hidden items-center gap-7 lg:flex">
+            {property.logoUrl && <a href="#overview" aria-label={name}>{logo(32)}</a>}
             {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[13.5px] text-white transition-opacity" style={{ opacity: active === l.id ? 1 : 0.75 }}>{l.label}</a>)}
           </div>
-          <a href="#overview" className="truncate text-[15px] font-medium text-white lg:hidden" style={{ fontFamily: 'var(--tpl-font-display, var(--font-unbounded)), sans-serif' }}>{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center gap-2 text-[15px] font-medium text-white lg:hidden" style={{ fontFamily: 'var(--tpl-font-display, var(--font-unbounded)), sans-serif' }}>{logo(28)}<span className="truncate">{name}</span></a>
           <div className="flex items-center gap-3">
             <div className="hidden lg:block"><Actions nav={nav} color="#fff" border="rgba(255,255,255,0.25)" /></div>
             <a href="#booking" className="hidden rounded-full bg-white px-5 py-2 text-[13px] font-medium text-black sm:inline-block">{ctaLabel}</a>
@@ -432,7 +435,7 @@ export function StudioNav({
       <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: darkUnder ? '#000' : '#f2f2f2' }}>
         <div className="mx-auto grid h-[60px] max-w-[1240px] grid-cols-[1fr_auto_1fr] items-center px-5">
           <a href="#overview" className="flex min-w-0 items-center gap-2 text-[14px] font-semibold uppercase tracking-[0.04em]" style={{ color: fg }}>
-            <span className="flex h-5 w-5 shrink-0 flex-col justify-center gap-[3px]"><span className="h-[3px] w-full rounded-full bg-current" /><span className="h-[3px] w-3/4 rounded-full bg-current" /><span className="h-[3px] w-full rounded-full bg-current" /></span>
+            {logo(30) ?? <span className="flex h-5 w-5 shrink-0 flex-col justify-center gap-[3px]"><span className="h-[3px] w-full rounded-full bg-current" /><span className="h-[3px] w-3/4 rounded-full bg-current" /><span className="h-[3px] w-full rounded-full bg-current" /></span>}
             <span className="truncate">{name}</span>
           </a>
           <div className="hidden items-center gap-6 lg:flex">
@@ -455,7 +458,7 @@ export function StudioNav({
         <div className="mx-auto flex h-[60px] max-w-[1200px] items-center justify-between gap-6 rounded-[14px] border border-white/10 px-4 text-white shadow-[0_10px_40px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:px-6"
           style={{ background: scrolled ? 'rgba(24,24,27,0.88)' : 'rgba(40,40,44,0.55)' }}>
           <a href="#overview" className="flex min-w-0 items-center gap-2.5 text-[17px] font-semibold uppercase tracking-[0.06em]">
-            <span className="grid h-6 w-6 shrink-0 grid-cols-3 gap-[2px]">{Array.from({ length: 9 }).map((_, i) => <span key={i} className="rounded-full" style={{ background: 'var(--tpl-accent, #ef3b2d)', opacity: i % 2 ? 0.6 : 1 }} />)}</span>
+            {logo(32) ?? <span className="grid h-6 w-6 shrink-0 grid-cols-3 gap-[2px]">{Array.from({ length: 9 }).map((_, i) => <span key={i} className="rounded-full" style={{ background: 'var(--tpl-accent, #ef3b2d)', opacity: i % 2 ? 0.6 : 1 }} />)}</span>}
             <span className="truncate">{name}</span>
           </a>
           <div className="hidden items-center gap-8 lg:flex">
@@ -474,7 +477,7 @@ export function StudioNav({
     bar = (
       <nav className="fixed inset-x-0 top-0 z-50 transition-colors duration-500" style={{ background: scrolled ? '#0a0a0a' : 'transparent' }}>
         <div className={`mx-auto flex max-w-[1400px] justify-between px-5 sm:px-10 ${scrolled ? 'h-[60px] items-center' : 'items-start pt-6'}`}>
-          <a href="#overview" className="truncate pr-2 text-[24px] font-black uppercase italic tracking-[-0.04em] text-white">{name}</a>
+          <a href="#overview" className="flex min-w-0 items-center gap-2.5 pr-2 text-[24px] font-black uppercase italic tracking-[-0.04em] text-white">{logo(34)}<span className="truncate">{name}</span></a>
           <div className={`hidden lg:flex ${scrolled ? 'flex-row items-center gap-8' : 'flex-col items-end gap-1'}`}>
             {links.map((l) => <a key={l.id} href={`#${l.id}`} className="text-[15px] text-white" style={{ opacity: active === l.id ? 1 : 0.85 }}>{l.label}</a>)}
             {scrolled && <Actions nav={nav} color="#fff" border="rgba(255,255,255,0.3)" />}
