@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { FloatingChat } from '../../../components/chat/FloatingChat';
+import { ChatAudienceProvider } from '../../../components/chat/ChatWithDeveloper';
 import { fetchProperty, fetchPropertySlugs } from '../../../lib/api/fetch-property';
 import { PropertyTopbar } from '../../../components/property/PropertyTopbar';
 import { BackToBrowse } from '../../../components/property/BackToBrowse';
@@ -210,6 +211,7 @@ export default async function PropertyPage({ params }: Props) {
   if (template.key !== 'CLASSIC') {
     const Rendered = template.key === 'LUXE_DARK' ? LuxeDarkTemplate : STUDIO_TEMPLATES[template.key] ?? null;
     return (
+      <ChatAudienceProvider agent={!!property.listedByAgent}>
       <main
         style={{
           ...themeVars(branding.theme),
@@ -249,10 +251,12 @@ export default async function PropertyPage({ params }: Props) {
           />
         )}
       </main>
+      </ChatAudienceProvider>
     );
   }
 
   return (
+    <ChatAudienceProvider agent={!!property.listedByAgent}>
     <main
       className="min-h-screen"
       style={{
@@ -352,5 +356,6 @@ export default async function PropertyPage({ params }: Props) {
 
       <PropertyFooter property={property} whiteLabel={branding.whiteLabel} />
     </main>
+    </ChatAudienceProvider>
   );
 }

@@ -1,11 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { chatApi } from '../../lib/api/chat';
 import { getReferral } from '../../lib/analytics/referral';
 import { useAuthStore } from '../../lib/stores/auth.store';
+
+/**
+ * Who answers a property's chat. Agency-listed properties are answered by the
+ * agent, so the page wraps itself in `agent` and every chat button on it —
+ * hero, floating, overview, template — says "agent" instead of "developer".
+ */
+const ChatAudience = createContext<'developer' | 'agent'>('developer');
+
+export function ChatAudienceProvider({ agent, children }: { agent: boolean; children: ReactNode }) {
+  return <ChatAudience.Provider value={agent ? 'agent' : 'developer'}>{children}</ChatAudience.Provider>;
+}
+
+function forAudience(label: string, audience: 'developer' | 'agent') {
+  if (audience === 'developer') return label;
+  return label.replace(/developer(’s|'s)? team/gi, 'agent').replace(/developer/gi, 'agent');
+}
 
 /**
  * "Chat with developer" launcher shown on public property / rental pages.
@@ -18,7 +34,7 @@ export function ChatWithDeveloper({
   className = '',
   tone = 'light',
   variant = 'button',
-  label = 'Chat with developer',
+  label: rawLabel = 'Chat with developer',
 }: {
   propertySlug?: string;
   rentListingSlug?: string;
@@ -36,6 +52,7 @@ export function ChatWithDeveloper({
   variant?: 'button' | 'icon';
   label?: string;
 }) {
+  const label = forAudience(rawLabel, useContext(ChatAudience));
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuthStore();

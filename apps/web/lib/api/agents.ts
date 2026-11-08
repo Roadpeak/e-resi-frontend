@@ -179,9 +179,11 @@ export interface AgentProperty {
   has3DTour: boolean;
   hasVRTour: boolean;
   hasCinematicTour: boolean;
-  developer: { id: string; companyName: string; logoUrl?: string | null };
+  developer: { id: string | null; companyName: string; logoUrl?: string | null };
   _count: { units: number };
   assignedAt: string;
+  /** Listed by the agent themselves rather than assigned through a partnership. */
+  own?: boolean;
   /** SALE — they sell it; RENT — they find tenants for it. */
   kind: 'SALE' | 'RENT';
 }

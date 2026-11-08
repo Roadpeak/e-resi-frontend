@@ -497,7 +497,8 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
                   >
                     Book a viewing
                   </Link>
-                  <ChatWithDeveloper propertySlug={unit.property.slug} className="w-full" />
+                  <ChatWithDeveloper propertySlug={unit.property.slug} className="w-full"
+                    label={(unit.property as { listedByAgentId?: string | null }).listedByAgentId ? 'Chat with agent' : 'Chat with developer'} />
                   <Link
                     href={`/${unit.property.slug}`}
                     className="flex w-full items-center justify-center gap-2 py-2 text-[13.5px] font-medium text-brand-600 transition-colors hover:text-brand-700"

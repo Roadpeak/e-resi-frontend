@@ -348,6 +348,7 @@ function AgentProperties({
                       <p className="text-[12px] font-medium uppercase tracking-wide text-[#8a8a90]">
                         {p.category.toLowerCase()}
                         {p.status === 'OFF_PLAN' ? ' · off plan' : ''}
+                        {p.own ? ' · listed by this agent' : ''}
                       </p>
                       <p className="mt-0.5 text-[22px] font-semibold text-[#111112]">{price}</p>
                       <p className="mt-0.5 truncate text-[16px] font-medium text-[#111112]">{p.name}</p>
