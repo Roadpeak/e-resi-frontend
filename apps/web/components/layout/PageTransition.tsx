@@ -11,6 +11,9 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const content = contentRef.current;
     if (!content) return;
+    // A View Transition is revealing this page (transitions/PageTransitions);
+    // fading it as well would double up.
+    if (document.documentElement.dataset.vt === 'running') return;
 
     const tween = gsap.fromTo(
       content,

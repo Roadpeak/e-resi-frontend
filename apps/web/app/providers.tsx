@@ -7,6 +7,8 @@ import { PageTransition } from '../components/layout/PageTransition';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { SiteTracker } from '../components/analytics/SiteTracker';
 import { SupportWidget } from '../components/support/SupportWidget';
+import { PageTransitions } from '../components/transitions/PageTransitions';
+import { Suspense } from 'react';
 
 function AuthHydrator() {
   useEffect(() => {
@@ -34,6 +36,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           {children}
         </PageTransition>
       </SmoothScroll>
+      {/* After the page in the tree, so its effects see the new route rendered. */}
+      <Suspense fallback={null}><PageTransitions /></Suspense>
       <SupportWidget />
     </QueryClientProvider>
   );
