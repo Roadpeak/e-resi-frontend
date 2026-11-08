@@ -33,6 +33,9 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=$NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
 ENV NEXT_DEPLOYMENT_ID=$NEXT_DEPLOYMENT_ID
 ENV NEXT_TELEMETRY_DISABLED=1
+# The workspace was never claimed on Nx Cloud, which now fails builds after
+# three days (401). The image build needs no remote cache: stay local.
+ENV NX_NO_CLOUD=true
 RUN pnpm nx build web --configuration=production
 
 # ─── runtime ─────────────────────────────────────────────────────────────────
