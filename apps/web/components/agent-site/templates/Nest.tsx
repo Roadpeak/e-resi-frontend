@@ -171,7 +171,13 @@ export function NestTemplate({ data }: { data: AgentSiteData }) {
             <p className="truncate text-[16px] font-semibold">{agent.displayName}</p>
           </div>
         </div>
-        {kit?.forms.valuation && <a href="#valuation" className="rounded-full border border-black/10 px-4 py-2 text-[13.5px] font-medium hover:bg-black/[0.03]">List your property</a>}
+        {kit && (kit.forms.viewing || kit.forms.contact) && (
+          <button type="button" onClick={() => kit.open(kit.forms.viewing ? { kind: 'viewing' } : { kind: 'contact' })}
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-[13.5px] font-semibold text-white" style={{ background: INK }}>
+            <Icon d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" size={15} />
+            {kit.forms.viewing ? 'Book a viewing' : 'Send a message'}
+          </button>
+        )}
       </header>
 
       <section id="top" className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
