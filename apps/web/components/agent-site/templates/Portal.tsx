@@ -396,7 +396,7 @@ export function PortalTemplate({ data }: { data: AgentSiteData }) {
           </div>
         </footer>
       </main>
-      <SiteKitLayer theme={theme} hideDock />
+      <SiteKitLayer theme={theme} hideDock chatClassName="bottom-24 right-4 lg:bottom-5 lg:right-5" />
     </div>
   );
 }

@@ -38,9 +38,11 @@ export interface MeResponse {
  * /auth/google/complete. `role` only applies when the account is created —
  * an existing user keeps the role they already have.
  */
-export function googleSignInUrl(role: 'INVESTOR' | 'TENANT'): string {
+export function googleSignInUrl(role: 'INVESTOR' | 'TENANT', next?: string | null): string {
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
-  return `${base}/auth/google?role=${role}`;
+  // `next` (an internal path) is where the user lands once signed in.
+  const back = next && next.startsWith('/') && !next.startsWith('//') ? `&next=${encodeURIComponent(next)}` : '';
+  return `${base}/auth/google?role=${role}${back}`;
 }
 
 export const authApi = {

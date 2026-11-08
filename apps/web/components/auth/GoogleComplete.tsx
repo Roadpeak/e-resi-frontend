@@ -31,6 +31,9 @@ export function GoogleComplete() {
     const run = async () => {
       const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const accessToken = params.get('access_token');
+      // Where to go next (e.g. straight into a chat), internal paths only.
+      const nextRaw = new URLSearchParams(window.location.search).get('next');
+      const next = nextRaw && nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : null;
 
       if (!accessToken) {
         setError('Sign-in did not complete. Please try again.');
@@ -47,7 +50,7 @@ export function GoogleComplete() {
         setToken(accessToken);
         const user = await authApi.me();
         setUser(user, accessToken);
-        router.replace(homePathFor(user.role));
+        router.replace(next ?? homePathFor(user.role));
       } catch {
         setError('We could not complete your sign-in. Please try again.');
       }

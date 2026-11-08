@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ApiError } from '../../lib/api/client';
+import { GoogleButton } from '../auth/GoogleButton';
+import { useAuthStore } from '../../lib/stores/auth.store';
 import { siteFormsApi, type SiteLeadInput, type SiteLeadType, type ViewingSlots } from '../../lib/api/agent-site';
 import type { AgentSiteData, AgentSiteListing, Role, SiteFormsPublic } from './types';
 import type { SiteTheme } from './sections';
@@ -20,7 +22,8 @@ type Modal =
   | { kind: 'contact'; listingIds?: string[] }
   | { kind: 'viewing'; listing?: AgentSiteListing }
   | { kind: 'apply'; role?: Role }
-  | { kind: 'saved' };
+  | { kind: 'saved' }
+  | { kind: 'chat' };
 
 interface Kit {
   agentId: string;
@@ -69,6 +72,56 @@ export function SiteKitProvider({ data, preview = false, children }: { data: Age
   return <KitContext.Provider value={value}>{children}</KitContext.Provider>;
 }
 
+// ─── e-resi chat ────────────────────────────────────────────────────────────
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://e-resi.com';
+const CHAT_ICON = 'M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 20l1.1-4.5A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z';
+export const chatPath = (agentId: string) => `/chat/agent/${agentId}`;
+
+/**
+ * Open the e-resi chat with this agent. Already signed in on e-resi (the
+ * site is being viewed on e-resi.com) → straight to the chat. Anywhere else
+ * there is no e-resi session, so ask them to continue with Google first.
+ */
+export function useOpenChat() {
+  const kit = useSiteKit();
+  const signedIn = useAuthStore((st) => st.isAuthenticated);
+  return () => {
+    if (!kit) return;
+    const onEresi = typeof window !== 'undefined' && /^((www|app)\.)?e-resi\.com$|^localhost$/.test(window.location.hostname);
+    if (onEresi && signedIn && !kit.preview) window.location.href = chatPath(kit.agentId);
+    else kit.open({ kind: 'chat' });
+  };
+}
+
+function ChatPrompt({ theme }: { theme: SiteTheme }) {
+  const kit = useSiteKit()!;
+  const path = chatPath(kit.agentId);
+  return (
+    <div className="text-center">
+      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full text-white" style={{ background: theme.accent }}>
+        <Icon d={CHAT_ICON} size={24} />
+      </span>
+      <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed" style={{ color: theme.muted }}>
+        Chat with {kit.agentName} on e-resi. Your messages, viewings and documents stay in one place, and you’ll get a reply on your phone.
+      </p>
+      {kit.preview ? (
+        <p className="mx-auto mt-6 max-w-sm rounded-xl px-4 py-3 text-[13px]" style={{ background: theme.card, color: theme.muted }}>
+          Preview: visitors continue with Google here, then land in a chat with you on e-resi.
+        </p>
+      ) : (
+        <div className="mx-auto mt-6 max-w-sm space-y-3">
+          <GoogleButton role="INVESTOR" label="Continue with Google" next={path} />
+          <a href={`${SITE}${path}`} className="block text-[13.5px] font-medium underline underline-offset-4" style={{ color: theme.ink }}>
+            Already on e-resi? Open the chat
+          </a>
+        </div>
+      )}
+      <p className="mx-auto mt-5 max-w-xs text-[11.5px]" style={{ color: theme.muted }}>Free account. By continuing you agree to e-resi’s terms and privacy policy.</p>
+    </div>
+  );
+}
+
 // ─── Small pieces templates drop in ─────────────────────────────────────────
 
 const HEART = 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z';
@@ -92,7 +145,8 @@ export function SaveHeart({ listing, className = '', tone = 'light' }: { listing
 /** "Send a message" / "Book a viewing" for a contact block. */
 export function LeadButtons({ theme, tone = 'light', center = false, onAccent = '#fff' }: { theme: SiteTheme; tone?: 'light' | 'dark'; center?: boolean; onAccent?: string }) {
   const kit = useSiteKit();
-  if (!kit || (!kit.forms.contact && !kit.forms.viewing)) return null;
+  const openChat = useOpenChat();
+  if (!kit) return null;
   const r = Math.min(theme.radius, 999);
   const solid = { background: theme.accent, color: onAccent, borderRadius: r >= 16 ? 999 : r };
   const ghost = tone === 'dark'
@@ -112,6 +166,10 @@ export function LeadButtons({ theme, tone = 'light', center = false, onAccent = 
           <Icon d={CAL} size={17} /> Book a viewing
         </button>
       )}
+      <button type="button" onClick={openChat} style={ghost}
+        className="inline-flex cursor-pointer items-center gap-2 px-6 py-3 text-[15px] font-medium transition-opacity hover:opacity-80">
+        <Icon d={CHAT_ICON} size={17} /> Chat on e-resi
+      </button>
     </div>
   );
 }
@@ -553,8 +611,9 @@ function SavedList({ theme }: { theme: SiteTheme }) {
 }
 
 /** Pop-ups and the floating saved button, drawn in the template's theme. */
-export function SiteKitLayer({ theme, hideDock = false }: { theme: SiteTheme; hideDock?: boolean }) {
+export function SiteKitLayer({ theme, hideDock = false, chatClassName = 'bottom-5 right-5' }: { theme: SiteTheme; hideDock?: boolean; chatClassName?: string }) {
   const kit = useSiteKit();
+  const openChat = useOpenChat();
   const panel = useRef<HTMLDivElement>(null);
   const modal = kit?.modal ?? null;
   useEffect(() => {
@@ -571,7 +630,8 @@ export function SiteKitLayer({ theme, hideDock = false }: { theme: SiteTheme; hi
   const title = !modal ? '' : modal.kind === 'contact' ? 'Send a message'
     : modal.kind === 'viewing' ? (modal.listing ? `View ${modal.listing.name}` : 'Book a viewing')
       : modal.kind === 'apply' ? (modal.role ? `Apply — ${modal.role.title}` : 'Send an open application')
-        : 'Saved homes';
+        : modal.kind === 'chat' ? `Chat with ${kit.agentName}`
+          : 'Saved homes';
   const sub = !modal ? '' : modal.kind === 'apply' && modal.role
     ? [modal.role.location, modal.role.employment && EMPLOYMENT[modal.role.employment]].filter(Boolean).join(' · ')
     : modal.kind === 'viewing' ? 'Pick a time that suits you. We’ll confirm it.' : '';
@@ -586,6 +646,16 @@ export function SiteKitLayer({ theme, hideDock = false }: { theme: SiteTheme; hi
             style={{ background: theme.ink }}>
             <svg width={15} height={15} viewBox="0 0 24 24" fill="#e0473a" aria-hidden><path d={HEART} /></svg>
             Saved · {kit.saved.length}
+          </motion.button>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {!modal && (
+          <motion.button type="button" onClick={openChat} aria-label={`Chat with ${kit.agentName} on e-resi`}
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.3, ease: EASE }}
+            className={`fixed z-40 inline-flex cursor-pointer items-center gap-2 rounded-full py-3 pl-4 pr-5 text-[14.5px] font-medium text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition-transform hover:-translate-y-0.5 ${chatClassName}`}
+            style={{ background: theme.accent === '#ffffff' ? theme.ink : theme.accent }}>
+            <Icon d={CHAT_ICON} size={18} /> Chat
           </motion.button>
         )}
       </AnimatePresence>
@@ -620,6 +690,7 @@ export function SiteKitLayer({ theme, hideDock = false }: { theme: SiteTheme; hi
               {modal.kind === 'viewing' && <ViewingForm key={modal.listing?.id ?? 'any'} theme={theme} listing={modal.listing} onDone={kit.close} />}
               {modal.kind === 'apply' && <ApplyForm key={modal.role?.id ?? 'open'} theme={theme} role={modal.role} onDone={kit.close} />}
               {modal.kind === 'saved' && <SavedList theme={theme} />}
+              {modal.kind === 'chat' && <ChatPrompt theme={theme} />}
             </motion.div>
           </motion.div>
         )}

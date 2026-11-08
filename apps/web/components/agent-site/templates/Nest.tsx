@@ -237,7 +237,7 @@ export function NestTemplate({ data }: { data: AgentSiteData }) {
           <Icon d={ICON.chat} size={17} /> <span className="hidden sm:inline">Contact</span>
         </button>
       </nav>
-      <SiteKitLayer theme={theme} hideDock />
+      <SiteKitLayer theme={theme} hideDock chatClassName="bottom-24 right-4 lg:bottom-5 lg:right-5" />
     </div>
   );
 }

@@ -28,10 +28,13 @@ export function GoogleButton({
   role,
   label = 'Continue with Google',
   className,
+  next,
 }: {
   role: 'INVESTOR' | 'TENANT';
   label?: string;
   className?: string;
+  /** Internal path to land on after sign-in. */
+  next?: string | null;
 }) {
   const [redirecting, setRedirecting] = useState(false);
 
@@ -41,7 +44,7 @@ export function GoogleButton({
       disabled={redirecting}
       onClick={() => {
         setRedirecting(true);
-        window.location.href = googleSignInUrl(role);
+        window.location.href = googleSignInUrl(role, next);
       }}
       className={cn(
         'flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-5 py-3',

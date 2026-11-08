@@ -200,7 +200,7 @@ export function LoginForm() {
                   tenants who want that role pick it on the register screen.
                 */}
                 <div className="space-y-2">
-                  <GoogleButton role="INVESTOR" label="Continue with Google" />
+                  <GoogleButton role="INVESTOR" label="Continue with Google" next={searchParams.get('redirect')} />
                   {/*
                     Said plainly so a developer or agent does not sign in with
                     Google, land on the wrong account type and have to be
