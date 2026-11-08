@@ -20,7 +20,7 @@ function Preview() {
   });
   if (error) return <p className="p-10 text-[14px] text-[#5f6368]">Sign in as an agent to preview your website.</p>;
   if (!data) return <p className="p-10 text-[14px] text-[#5f6368]">Loading preview…</p>;
-  return <AgentSite data={data} template={template ?? data.template} />;
+  return <AgentSite data={data} template={template ?? data.template} preview />;
 }
 
 export default function AgentPreviewPage() {

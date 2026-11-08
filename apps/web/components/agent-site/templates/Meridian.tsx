@@ -1,6 +1,7 @@
 'use client';
 
 import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+import { LeadButtons, SaveHeart, SiteKitLayer, useSiteKit } from '../kit';
 
 import { useEffect, useState, type ReactNode } from 'react';
 import type { AgentSiteData, SiteSectionId } from '../types';
@@ -44,6 +45,7 @@ function Label({ children, light = false }: { children: ReactNode; light?: boole
 export function MeridianTemplate({ data }: { data: AgentSiteData }) {
   const { agent, listings } = data;
   const accent = agent.siteAccent ?? '#a5793f';
+  const kit = useSiteKit();
   const order = orderedSections(data, SUPPORTED);
   const hero = heroImage(data);
   const areas = areasOf(data);
@@ -112,6 +114,15 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
               <p className="text-[13px] uppercase tracking-[0.16em]" style={{ color: MUTED }}>{placeLabel(current)}{CATEGORY[current.category] ? ` · ${CATEGORY[current.category]}` : ''}</p>
               <a href={current.href} className="mt-2 block text-[36px] leading-tight hover:opacity-70 sm:text-[44px]" style={{ fontFamily: SERIF }}>{current.name}</a>
               <p className="mt-2 text-[15px] font-semibold tracking-[0.08em]" style={{ color: accent }}>{priceLabel(current)}</p>
+              <div className="mt-5 flex items-center justify-center gap-4">
+                <SaveHeart listing={current} tone="dark" />
+                {kit?.forms.viewing && (
+                  <button type="button" onClick={() => kit.open({ kind: 'viewing', listing: current })}
+                    className="cursor-pointer border-b pb-0.5 text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ borderColor: accent, color: INK }}>
+                    Arrange a viewing
+                  </button>
+                )}
+              </div>
             </motion.div>
             {listings.length > 1 && (
               <div className="mt-8 flex items-center justify-center gap-3">
@@ -201,7 +212,8 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
             <Label light>Private consultation</Label>
             <h2 className="mx-auto mt-5 max-w-2xl text-[44px] leading-[1.04] sm:text-[64px]" style={{ fontFamily: SERIF }}>Begin a private conversation</h2>
             <p className="mx-auto mt-5 max-w-lg text-[15px] leading-relaxed text-white/70">Viewings by appointment, in person or by live guided tour, at a time that suits you.</p>
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <div className="mt-10"><LeadButtons theme={theme} tone="dark" center /></div>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
               {agent.whatsapp && (
                 <a href={waLink(agent.whatsapp)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.16em] text-white" style={{ background: accent }}>
                   <Icon d={ICON.chat} size={16} /> WhatsApp
@@ -283,6 +295,7 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
           <LegalLine data={data} color={MUTED} />
         </div>
       </footer>
+      <SiteKitLayer theme={theme} />
     </div>
   );
 }

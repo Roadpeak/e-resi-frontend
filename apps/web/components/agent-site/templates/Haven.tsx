@@ -1,6 +1,7 @@
 'use client';
 
 import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+import { LeadButtons, ListingTools, SaveHeart, SiteKitLayer, useListingSearch } from '../kit';
 
 import { useEffect, useState, type ReactNode } from 'react';
 import type { AgentSiteData, SiteSectionId } from '../types';
@@ -28,6 +29,8 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
   const hero = heroImage(data);
   const featured = listings.find((l) => l.heroImageUrl) ?? listings[0];
   const f = useListingFilter(listings);
+  const search = useListingSearch(listings);
+  const shown = search.apply(f.shown);
   const areas = areasOf(data);
   const firstName = agent.kind === 'INDIVIDUAL' ? agent.displayName.split(' ')[0] : agent.displayName;
   const [scrolled, setScrolled] = useState(false);
@@ -86,20 +89,22 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
               )}
             </div>
           </div>
+          <ListingTools f={search} theme={theme} />
         </Reveal>
-        {f.shown.length === 0 ? (
+        {shown.length === 0 ? (
           <p className="mt-10 rounded-3xl bg-white p-10 text-center text-[15px]" style={{ color: MUTED }}>
-            New homes are on the way. Get in touch to hear about them first.
+            {search.active ? 'No homes match these filters.' : 'New homes are on the way. Get in touch to hear about them first.'}
           </p>
         ) : (
           <Stagger className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {f.shown.map((l) => (
+            {shown.map((l) => (
               <a key={l.id} href={l.href} className="group block rounded-[28px] bg-white p-2 transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-[22px]">
                   <Img src={l.heroImageUrl} alt={l.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: INK }}>
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />{statusLabel(l)}
                   </span>
+                  <SaveHeart listing={l} className="absolute bottom-3 right-3" />
                   {hasTour(l) && (
                     <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium" style={{ color: INK }}>
                       <Icon d={ICON.cube} size={12} /> Tour
@@ -182,7 +187,8 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
             <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/60">Your next chapter</p>
             <h2 className="mx-auto mt-4 max-w-2xl text-[32px] font-medium leading-[1.1] tracking-tight sm:text-[46px]">Let’s talk about your move.</h2>
             <p className="mx-auto mt-4 max-w-lg text-[15px] text-white/70">Ask about a home, book a viewing or a live guided tour. I reply the same day.</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-8"><LeadButtons theme={theme} tone="dark" center /></div>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
               {agent.whatsapp && (
                 <a href={waLink(agent.whatsapp)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[15px] font-medium text-white" style={{ background: accent }}>
                   <Icon d={ICON.chat} /> WhatsApp
@@ -277,6 +283,7 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
           <LegalLine data={data} color={MUTED} />
         </div>
       </footer>
+      <SiteKitLayer theme={theme} />
     </div>
   );
 }

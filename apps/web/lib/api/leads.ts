@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 
 export type LeadChannel = 'AUTOMATIC' | 'AGENT' | 'MANUAL';
-export type LeadKind = 'INQUIRY' | 'BOOKING' | 'AGENT_DEAL' | 'MANUAL' | 'VIEWER';
+export type LeadKind = 'INQUIRY' | 'BOOKING' | 'AGENT_DEAL' | 'MANUAL' | 'VIEWER' | 'SITE';
 export type LeadSource = 'WALK_IN' | 'PHONE_CALL' | 'REFERRAL' | 'EVENT' | 'SOCIAL_MEDIA' | 'EMAIL' | 'WEBSITE' | 'AGENT' | 'OTHER';
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'VIEWING' | 'NEGOTIATING' | 'WON' | 'LOST';
 
@@ -24,6 +24,10 @@ export interface LeadRow {
   source?: LeadSource;
   /** Page viewers: what the capture endpoint needs. */
   viewer?: { userId: string; propertyId: string; views: number };
+  /** Website leads: the form's answers. */
+  details?: { label: string; value: string }[];
+  /** Website leads: which form (CONTACT, VALUATION, VIEWING, CAREER, NEWSLETTER). */
+  siteType?: string;
   createdAt: string;
 }
 

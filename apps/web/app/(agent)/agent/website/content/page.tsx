@@ -131,6 +131,17 @@ const TYPES: TypeDef[] = [
     ],
     title: (d) => s(d.title), sub: (d) => [s(d.issuer), s(d.year)].filter(Boolean).join(' · '),
   },
+  {
+    type: 'ROLE', label: 'Careers', one: 'open role', intro: 'Jobs you are hiring for. Applications arrive in Leads. The section hides when there are no roles.',
+    fields: [
+      { key: 'title', label: 'Role', kind: 'text', required: true, placeholder: 'Sales agent' },
+      { key: 'location', label: 'Location', kind: 'text', placeholder: 'Nairobi' },
+      { key: 'employment', label: 'Type', kind: 'select', options: [{ value: '', label: '—' }, { value: 'FULL_TIME', label: 'Full-time' }, { value: 'PART_TIME', label: 'Part-time' }, { value: 'COMMISSION', label: 'Commission' }, { value: 'CONTRACT', label: 'Contract' }, { value: 'INTERNSHIP', label: 'Internship' }] },
+      { key: 'description', label: 'About the role', kind: 'textarea' },
+      { key: 'requirements', label: 'What you need', kind: 'lines', hint: 'One per line, up to 8' },
+    ],
+    title: (d) => s(d.title), sub: (d) => s(d.location),
+  },
 ];
 
 const input = 'w-full rounded-xl border border-[#dadce0] px-3 py-2.5 text-[15px] text-[#202124] outline-none focus:border-[#1a73e8]';

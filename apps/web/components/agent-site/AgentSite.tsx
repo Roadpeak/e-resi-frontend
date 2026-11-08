@@ -3,6 +3,7 @@
 import type { ComponentType } from 'react';
 import type { AgentSiteData } from './types';
 import { AgentSiteView } from './AgentSiteView';
+import { SiteKitProvider } from './kit';
 import { HavenTemplate } from './templates/Haven';
 import { AtelierTemplate } from './templates/Atelier';
 import { MeridianTemplate } from './templates/Meridian';
@@ -19,7 +20,11 @@ export const AGENT_TEMPLATES: Record<string, ComponentType<{ data: AgentSiteData
   MERIDIAN: MeridianTemplate,
 };
 
-export function AgentSite({ data, template }: { data: AgentSiteData; template?: string | null }) {
+export function AgentSite({ data, template, preview = false }: { data: AgentSiteData; template?: string | null; preview?: boolean }) {
   const Template = AGENT_TEMPLATES[template ?? data.template ?? 'CLASSIC'] ?? AgentSiteView;
-  return <Template data={data} />;
+  return (
+    <SiteKitProvider data={data} preview={preview}>
+      <Template data={data} />
+    </SiteKitProvider>
+  );
 }

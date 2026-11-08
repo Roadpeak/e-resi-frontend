@@ -8,6 +8,7 @@ import type {
 } from './types';
 import { Icon, ICON, Img } from './shared';
 import { EASE, Marquee, motion, Reveal, Stagger } from './motion';
+import { CareersSection, NewsletterSection, ValuationSection } from './kit';
 
 /**
  * Content sections every template draws — team, testimonials, past sales,
@@ -391,8 +392,23 @@ export function LegalLine({ data, color }: { data: AgentSiteData; color: string 
 /** The content blocks for a template, given its theme. */
 export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Record<SiteSectionId, ReactNode>> {
   const c = data.content;
-  if (!c) return {};
+  const forms: Partial<Record<SiteSectionId, ReactNode>> = {
+    valuation: (
+      <ValuationSection theme={theme} eyebrow={
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.eyebrow === 'slash' ? theme.muted : theme.accent }}>
+          {theme.eyebrow === 'slash' ? '/ Free valuation' : 'Free valuation'}
+        </p>
+      } />
+    ),
+    newsletter: <NewsletterSection theme={theme} />,
+    careers: (
+      <CareersSection theme={theme} roles={c?.roles ?? []}
+        head={<SectionHead theme={theme} eyebrow="Careers" title="Join the team" intro="We’re growing. If you love property and people, we’d like to hear from you." />} />
+    ),
+  };
+  if (!c) return forms;
   return {
+    ...forms,
     services: <ServicesSection items={c.services} theme={theme} />,
     process: <ProcessSection items={c.steps} theme={theme} />,
     team: <TeamSection items={c.team} theme={theme} />,
@@ -405,5 +421,5 @@ export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Re
 }
 
 export const ALL_SECTIONS: readonly SiteSectionId[] = [
-  'stats', 'listings', 'services', 'process', 'about', 'team', 'sold', 'testimonials', 'areas', 'awards', 'journal', 'faq', 'contact',
+  'stats', 'listings', 'services', 'process', 'valuation', 'about', 'team', 'sold', 'testimonials', 'areas', 'awards', 'journal', 'careers', 'faq', 'newsletter', 'contact',
 ];

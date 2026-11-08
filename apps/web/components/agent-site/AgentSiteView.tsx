@@ -3,6 +3,7 @@
 import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from './sections';
 
 import type { ReactNode } from 'react';
+import { LeadButtons, ListingTools, SaveHeart, SiteKitLayer, useListingSearch } from './kit';
 import type { AgentSiteData, SiteSectionId } from './types';
 import {
   areasOf, CATEGORY, Icon, ICON, orderedSections, priceLabel, specialtyLabel, useListingFilter, waLink,
@@ -17,6 +18,8 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
   const { agent, listings } = data;
   const accent = agent.siteAccent ?? '#1a73e8';
   const f = useListingFilter(listings);
+  const search = useListingSearch(listings);
+  const shown = search.apply(f.shown);
   const mark = agent.logoUrl ?? agent.photoUrl;
   const hero = agent.siteHeroUrl ?? listings.find((l) => l.heroImageUrl)?.heroImageUrl ?? null;
   const order = orderedSections(data, SUPPORTED);
@@ -56,19 +59,21 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
             )}
           </div>
         </div>
-        {f.shown.length === 0 ? (
+        <ListingTools f={search} theme={theme} />
+        {shown.length === 0 ? (
           <p className="mt-10 rounded-2xl border border-dashed border-[#ddd] p-10 text-center text-[15px] text-[#666]">
-            New listings are on the way. Get in touch to hear about them first.
+            {search.active ? 'No homes match these filters.' : 'New listings are on the way. Get in touch to hear about them first.'}
           </p>
         ) : (
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {f.shown.map((l) => (
+            {shown.map((l) => (
               <a key={l.id} href={l.href} className="group block">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#f2f2f2]">
                   {l.heroImageUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={l.heroImageUrl} alt={l.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                   )}
+                  <SaveHeart listing={l} className="absolute bottom-3 right-3" />
                   <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                     {l.status === 'OFF_PLAN' && <span className="rounded-full bg-white px-2.5 py-1 text-[11.5px] font-medium">Off-plan</span>}
                     {l.status === 'SOLD_OUT' && <span className="rounded-full bg-white px-2.5 py-1 text-[11.5px] font-medium">Sold out</span>}
@@ -135,7 +140,8 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <h2 className="text-[26px] font-semibold tracking-tight">Talk to {agent.displayName}</h2>
           <p className="mt-2 max-w-xl text-[15px] text-[#666]">Ask about a development, book a viewing or a live guided tour.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6"><LeadButtons theme={theme} /></div>
+          <div className="mt-4 flex flex-wrap gap-3">
             {agent.whatsapp && (
               <a href={waLink(agent.whatsapp)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-[15px] font-medium text-white" style={{ background: accent }}>
                 <Icon d={ICON.chat} /> WhatsApp
@@ -224,6 +230,7 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
           <LegalLine data={data} color={'#888'} />
         </div>
       </footer>
+      <SiteKitLayer theme={theme} />
     </div>
   );
 }

@@ -9,8 +9,8 @@ export interface AgentSiteListing {
 }
 
 export type SiteSectionId =
-  | 'stats' | 'listings' | 'services' | 'process' | 'about' | 'team' | 'sold' | 'testimonials'
-  | 'areas' | 'awards' | 'journal' | 'faq' | 'contact';
+  | 'stats' | 'listings' | 'services' | 'process' | 'valuation' | 'about' | 'team' | 'sold' | 'testimonials'
+  | 'areas' | 'awards' | 'journal' | 'careers' | 'faq' | 'newsletter' | 'contact';
 export type SiteSection = { id: SiteSectionId; visible: boolean };
 
 export const SECTION_LABELS: Record<SiteSectionId, string> = {
@@ -18,6 +18,7 @@ export const SECTION_LABELS: Record<SiteSectionId, string> = {
   listings: 'Listings',
   services: 'Services',
   process: 'How it works',
+  valuation: 'Free valuation',
   about: 'About',
   team: 'Team',
   sold: 'Past sales',
@@ -25,7 +26,9 @@ export const SECTION_LABELS: Record<SiteSectionId, string> = {
   areas: 'Areas you cover',
   awards: 'Awards',
   journal: 'Journal',
+  careers: 'Careers',
   faq: 'FAQ',
+  newsletter: 'Newsletter',
   contact: 'Contact',
 };
 
@@ -36,12 +39,13 @@ export interface Faq { id: string; question: string; answer: string }
 export interface Service { id: string; title: string; description?: string; points?: string[]; imageUrl?: string }
 export interface Step { id: string; title: string; description?: string; audience?: 'ALL' | 'BUYERS' | 'SELLERS' }
 export interface Award { id: string; title: string; issuer?: string; year?: number }
+export interface Role { id: string; title: string; location?: string; employment?: 'FULL_TIME' | 'PART_TIME' | 'COMMISSION' | 'CONTRACT' | 'INTERNSHIP'; description?: string; requirements?: string[] }
 export interface PostSummary { id: string; slug: string; title: string; category?: string; coverUrl?: string; excerpt?: string; publishedAt?: string; readMinutes: number }
 export interface Post extends PostSummary { body: string }
 
 export interface AgentSiteContent {
   team: TeamMember[]; testimonials: Testimonial[]; sold: PastSale[]; faqs: Faq[];
-  services: Service[]; steps: Step[]; awards: Award[]; posts: PostSummary[];
+  services: Service[]; steps: Step[]; awards: Award[]; posts: PostSummary[]; roles?: Role[];
 }
 
 export interface AgentSiteStats {
@@ -65,4 +69,11 @@ export interface AgentSiteData {
   listings: AgentSiteListing[];
   content?: AgentSiteContent;
   legal?: { licenceNo: string | null; footerNote: string | null };
+  /** Which website forms are on. */
+  forms?: SiteFormsPublic;
+}
+
+export interface SiteFormsPublic {
+  contact: boolean; valuation: boolean; viewing: boolean; newsletter: boolean; careers: boolean;
+  modes: ('IN_PERSON' | 'VIDEO')[]; slotMinutes: number;
 }

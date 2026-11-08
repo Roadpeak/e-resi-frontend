@@ -50,7 +50,7 @@ export const agentTemplatesAdminApi = {
     apiClient.patch<{ currency: string; templates: AdminAgentTemplate[] }>(`/admin/agent-templates/${key}`, body),
 };
 
-export type ContentType = 'TEAM' | 'TESTIMONIAL' | 'PAST_SALE' | 'FAQ' | 'SERVICE' | 'STEP' | 'POST' | 'AWARD';
+export type ContentType = 'ROLE' | 'TEAM' | 'TESTIMONIAL' | 'PAST_SALE' | 'FAQ' | 'SERVICE' | 'STEP' | 'POST' | 'AWARD';
 export interface ContentItem { id: string; type: ContentType; data: Record<string, unknown>; slug: string | null; isPublished: boolean; sortOrder: number; updatedAt: string }
 export interface ContentState { licenceNo: string | null; footerNote: string | null; items: ContentItem[] }
 
@@ -79,4 +79,30 @@ export const agentSiteApi = {
   check: () => apiClient.post<AgentSiteSettings>('/agent-site/me/domain/check'),
   branding: (body: { tagline?: string | null; accent?: string | null; heroUrl?: string | null }) =>
     apiClient.patch<AgentSiteSettings>('/agent-site/me/branding', body),
+};
+
+// ─── Website forms ────────────────────────────────────────────────────────
+
+export type ViewingMode = 'IN_PERSON' | 'VIDEO';
+export interface SiteFormsSettings {
+  contact: boolean; valuation: boolean; viewing: boolean; newsletter: boolean; careers: boolean;
+  days: number[]; start: string; end: string; slotMinutes: number; modes: ViewingMode[]; noticeHours: number;
+}
+export type SiteLeadType = 'CONTACT' | 'VALUATION' | 'VIEWING' | 'CAREER' | 'NEWSLETTER';
+export interface SiteLeadInput {
+  type: SiteLeadType; name?: string; email?: string; phone?: string; message?: string;
+  propertyId?: string; slotAt?: string; data?: Record<string, unknown>; website?: string;
+}
+export interface ViewingSlots { days: { date: string; label: string; slots: { at: string; label: string }[] }[]; modes: ViewingMode[]; slotMinutes?: number }
+
+export const siteFormsApi = {
+  get: () => apiClient.get<SiteFormsSettings>('/agent-site/me/forms'),
+  save: (body: Partial<SiteFormsSettings>) => apiClient.put<SiteFormsSettings>('/agent-site/me/forms', body),
+  setLeadStatus: (id: string, status: string) => apiClient.patch<{ id: string; status: string }>(`/agent-site/me/leads/${id}`, { status }),
+  removeLead: (id: string) => apiClient.delete<{ message: string }>(`/agent-site/me/leads/${id}`),
+  subscribers: () => apiClient.get<{ email: string; name: string; createdAt: string }[]>('/agent-site/me/subscribers'),
+  /** Visitors: open viewing slots. Preview uses the owner's endpoint (site may not be live). */
+  slots: (agentId: string, preview = false) =>
+    preview ? apiClient.get<ViewingSlots>('/agent-site/me/slots') : apiClient.get<ViewingSlots>(`/agent-site/${agentId}/slots`, { skipAuth: true }),
+  submit: (agentId: string, body: SiteLeadInput) => apiClient.post<{ ok: boolean }>(`/agent-site/${agentId}/leads`, body, { skipAuth: true }),
 };

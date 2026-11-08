@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { agentSiteApi, type AgentSiteSettings, type AgentTemplatesState } from '../../../../lib/api/agent-site';
+import { agentSiteApi, siteFormsApi, type AgentSiteSettings, type AgentTemplatesState, type SiteFormsSettings } from '../../../../lib/api/agent-site';
 import { billingApi } from '../../../../lib/api/billing';
 import { ApiError } from '../../../../lib/api/client';
 import { ImageUpload } from '../../../../components/dashboard/ImageUpload';
@@ -177,6 +177,115 @@ function Templates({ onPreview }: { onPreview: (key: string) => void }) {
   );
 }
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const HOURS = Array.from({ length: 33 }, (_, i) => {
+  const m = 6 * 60 + i * 30;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+});
+
+/** Which forms the site shows, and when visitors can book viewings. */
+function FormsCard() {
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ['agent-site-forms'], queryFn: siteFormsApi.get });
+  const [f, setF] = useState<SiteFormsSettings | null>(null);
+  const [msg, setMsg] = useState('');
+  useEffect(() => { if (data) setF(data); }, [data]);
+  const save = useMutation({
+    mutationFn: () => siteFormsApi.save(f!),
+    onSuccess: (next) => { qc.setQueryData(['agent-site-forms'], next); setF(next); setMsg('Saved'); setTimeout(() => setMsg(''), 2500); },
+    onError: (e) => setMsg(e instanceof ApiError ? e.message : 'Could not save'),
+  });
+  if (!f) return null;
+  const dirty = JSON.stringify(f) !== JSON.stringify(data);
+  const toggle = (k: 'contact' | 'valuation' | 'viewing' | 'newsletter' | 'careers') => setF({ ...f, [k]: !f[k] });
+  const FORMS: { k: 'contact' | 'valuation' | 'viewing' | 'newsletter' | 'careers'; label: string; hint: string }[] = [
+    { k: 'contact', label: 'Message form', hint: 'Asks what they want (buy, rent, sell…), timeframe, area and budget. Saved homes are attached.' },
+    { k: 'viewing', label: 'Viewing booking', hint: 'Visitors pick an open slot below; taken slots disappear.' },
+    { k: 'valuation', label: 'Free valuation', hint: 'A section for owners thinking of selling or letting.' },
+    { k: 'careers', label: 'Careers', hint: 'Shows your open roles (add them in Site content) with an apply form.' },
+    { k: 'newsletter', label: 'Newsletter sign-up', hint: 'Collects emails for new-listing updates. Export them from Leads.' },
+  ];
+  return (
+    <section className={card}>
+      <h2 className="text-[18px] font-normal text-[#202124]">Forms and viewings</h2>
+      <p className="mt-1 text-[14px] text-[#5f6368]">Everything visitors send lands in <Link href="/agent/leads" className="text-[#1a73e8] hover:underline">Leads</Link> and you get a notification and email straight away.</p>
+      <ul className="mt-4 divide-y divide-[#f1f3f4] rounded-2xl border border-[#e8eaed]">
+        {FORMS.map((x) => (
+          <li key={x.k} className="px-4 py-3">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input type="checkbox" checked={f[x.k]} onChange={() => toggle(x.k)} className="mt-1 h-4 w-4 accent-[#1a73e8]" />
+              <span>
+                <span className="block text-[15px] text-[#202124]">{x.label}</span>
+                <span className="block text-[13px] text-[#5f6368]">{x.hint}</span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {f.viewing && (
+        <div className="mt-5 space-y-4 rounded-2xl bg-[#f8f9fa] p-4">
+          <div>
+            <p className="mb-2 text-[13px] font-medium text-[#5f6368]">Viewing days</p>
+            <div className="flex flex-wrap gap-2">
+              {DAY_NAMES.map((d, i) => {
+                const on = f.days.includes(i);
+                return (
+                  <button key={d} type="button" aria-pressed={on}
+                    onClick={() => setF({ ...f, days: on ? f.days.filter((x) => x !== i) : [...f.days, i].sort() })}
+                    className={cn('rounded-full border px-3.5 py-1.5 text-[13px] font-medium', on ? 'border-[#1a73e8] bg-[#e8f0fe] text-[#1967d2]' : 'border-[#dadce0] bg-white text-[#5f6368]')}>
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <label className="block text-[13px] text-[#5f6368]">From
+              <select value={f.start} onChange={(e) => setF({ ...f, start: e.target.value })} className={cn(input, 'mt-1')}>
+                {HOURS.map((h) => <option key={h}>{h}</option>)}
+              </select>
+            </label>
+            <label className="block text-[13px] text-[#5f6368]">Until
+              <select value={f.end} onChange={(e) => setF({ ...f, end: e.target.value })} className={cn(input, 'mt-1')}>
+                {HOURS.filter((h) => h > f.start).map((h) => <option key={h}>{h}</option>)}
+              </select>
+            </label>
+            <label className="block text-[13px] text-[#5f6368]">Each viewing
+              <select value={f.slotMinutes} onChange={(e) => setF({ ...f, slotMinutes: Number(e.target.value) })} className={cn(input, 'mt-1')}>
+                {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{m < 60 ? `${m} min` : `${m / 60} hr${m > 60 ? 's' : ''}`.replace('1.5 hrs', '1½ hrs')}</option>)}
+              </select>
+            </label>
+            <label className="block text-[13px] text-[#5f6368]">Notice needed
+              <select value={f.noticeHours} onChange={(e) => setF({ ...f, noticeHours: Number(e.target.value) })} className={cn(input, 'mt-1')}>
+                {[0, 2, 4, 12, 24, 48].map((h) => <option key={h} value={h}>{h === 0 ? 'None' : `${h} hours`}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-4 text-[14px] text-[#202124]">
+            {(['IN_PERSON', 'VIDEO'] as const).map((m) => (
+              <label key={m} className="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" className="h-4 w-4 accent-[#1a73e8]" checked={f.modes.includes(m)}
+                  onChange={() => {
+                    const next = f.modes.includes(m) ? f.modes.filter((x) => x !== m) : [...f.modes, m];
+                    if (next.length) setF({ ...f, modes: next });
+                  }} />
+                {m === 'IN_PERSON' ? 'In-person viewings' : 'Video-call viewings'}
+              </label>
+            ))}
+          </div>
+          <p className="text-[12.5px] text-[#5f6368]">Times are Nairobi time. Mark a booking as Lost in Leads to free its slot.</p>
+        </div>
+      )}
+      <div className="mt-4 flex items-center gap-3">
+        <button type="button" onClick={() => save.mutate()} disabled={!dirty || save.isPending} className={btn}>
+          {save.isPending ? 'Saving…' : 'Save forms'}
+        </button>
+        {msg && <span className="text-[13.5px] text-[#5f6368]">{msg}</span>}
+      </div>
+    </section>
+  );
+}
+
 export default function AgentWebsitePage() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['agent-site'], queryFn: agentSiteApi.mine });
@@ -243,6 +352,8 @@ export default function AgentWebsitePage() {
       )}
 
       <Templates onPreview={(key) => { setPreview(key); setFrameKey((k) => k + 1); setTimeout(() => document.getElementById('site-preview')?.scrollIntoView({ behavior: 'smooth' }), 50); }} />
+
+      <FormsCard />
 
       {/* e-resi address */}
       <section className={card}>

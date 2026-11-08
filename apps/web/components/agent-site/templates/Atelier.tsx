@@ -1,6 +1,7 @@
 'use client';
 
 import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+import { LeadButtons, ListingTools, SaveHeart, SiteKitLayer, useListingSearch } from '../kit';
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -42,6 +43,8 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
   const hero = heroImage(data);
   const areas = areasOf(data);
   const f = useListingFilter(listings);
+  const search = useListingSearch(listings);
+  const shown = search.apply(f.shown);
   const spotlight = listings.filter((l) => l.heroImageUrl).slice(0, 5);
   const auto = useAutoplay(spotlight.length, 6000);
   const [menu, setMenu] = useState(false);
@@ -184,11 +187,12 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
                 )}
               </div>
             </div>
-            {f.shown.length === 0 ? (
-              <p className="mt-10 text-[15px]" style={{ color: MUTED }}>New listings are on the way.</p>
+            <ListingTools f={search} theme={theme} />
+            {shown.length === 0 ? (
+              <p className="mt-10 text-[15px]" style={{ color: MUTED }}>{search.active ? 'No homes match these filters.' : 'New listings are on the way.'}</p>
             ) : (
               <ul className="mt-10 border-t" style={{ borderColor: 'rgba(0,0,0,0.12)' }} onMouseLeave={() => setHover(null)}>
-                {f.shown.map((l, i) => (
+                {shown.map((l, i) => (
                   <Reveal as="li" key={l.id} delay={Math.min(i, 6) * 0.04} blur={false} y={14}>
                     <a href={l.href} onMouseEnter={() => setHover(l.id)}
                       className="group relative grid grid-cols-[2.5rem_1fr_auto] items-center gap-4 border-b py-5 sm:grid-cols-[4rem_1.4fr_1fr_auto_2rem]"
@@ -196,7 +200,7 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
                       <span className="text-[13px] tabular-nums" style={{ color: MUTED }}>{String(i + 1).padStart(2, '0')}</span>
                       <span className="text-[20px] font-medium tracking-tight transition-transform duration-300 group-hover:translate-x-2 sm:text-[26px]">{l.name}</span>
                       <span className="hidden text-[14px] sm:block" style={{ color: MUTED }}>{placeLabel(l)}</span>
-                      <span className="text-right text-[14px] font-medium">{priceLabel(l, '')}</span>
+                      <span className="flex items-center justify-end gap-3 text-right text-[14px] font-medium">{priceLabel(l, '')}<SaveHeart listing={l} tone="dark" /></span>
                       <span className="hidden justify-end sm:flex" style={{ color: accent }}><Icon d={ICON.arrowUpRight} size={18} /></span>
                       <AnimatePresence>
                         {hover === l.id && l.heroImageUrl && (
@@ -262,6 +266,7 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
           <Reveal>
             <h2 className="text-[64px] font-medium leading-[0.9] tracking-tight sm:text-[140px]">Let’s talk.</h2>
           </Reveal>
+          <div className="mt-10"><LeadButtons theme={theme} tone="dark" /></div>
           <div className="mt-14 border-t border-white/15">
             {[
               agent.whatsapp && { href: waLink(agent.whatsapp), label: 'WhatsApp', value: agent.whatsapp, ext: true },
@@ -385,6 +390,7 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
           <LegalLine data={data} color={'rgba(255,255,255,0.45)'} />
         </div>
       </footer>
+      <SiteKitLayer theme={theme} />
     </div>
   );
 }

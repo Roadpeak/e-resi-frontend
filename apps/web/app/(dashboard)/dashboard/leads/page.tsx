@@ -11,6 +11,7 @@ import {
 } from '../../../../lib/api/leads';
 import { cn } from '../../../../lib/utils';
 import { viewersApi } from '../../../../lib/api/referrals';
+import { siteFormsApi } from '../../../../lib/api/agent-site';
 
 /**
  * Every lead in one place: inquiries and viewing requests collected from the
@@ -81,6 +82,7 @@ export default function LeadsPage() {
   const [q, setQ] = useState('');
   const [propertyId, setPropertyId] = useState('');
   const [editing, setEditing] = useState<LeadRow | 'new' | null>(null);
+  const [siteLead, setSiteLead] = useState<LeadRow | null>(null);
   const [capturing, setCapturing] = useState<string | null>(null);
   const [captureError, setCaptureError] = useState('');
 
@@ -145,7 +147,7 @@ export default function LeadsPage() {
           <h1 className="text-[26px] font-normal text-[#202124]">Leads</h1>
           <p className="max-w-[70ch] text-[14px] text-[#5f6368]">
             {agentPortal
-              ? 'Everyone interested in the developments you list: buyers who opened your pages, inquiries and viewing requests, plus the clients you referred or registered elsewhere, and people you added.'
+              ? 'Everyone interested in the developments you list: forms sent from your website, buyers who opened your pages, inquiries and viewing requests, plus the clients you referred or registered elsewhere, and people you added.'
               : 'Everyone interested in your developments: signed-in buyers who opened your pages, inquiries and viewing requests, clients agents brought you, and people your team added.'}
           </p>
         </div>
@@ -228,7 +230,7 @@ export default function LeadsPage() {
             {shown.map((l) => {
               const ch = CHANNEL_STYLE[l.channel];
               const href = hrefFor(l, agentPortal);
-              const open = () => (href ? router.push(href) : setEditing(l));
+              const open = () => (href ? router.push(href) : l.kind === 'SITE' ? setSiteLead(l) : setEditing(l));
               const isViewer = l.kind === 'VIEWER';
               const Row = isViewer ? 'div' : 'button';
               return (
@@ -257,7 +259,7 @@ export default function LeadsPage() {
                           {capturing === l.id ? 'Saving…' : 'Save as lead'}
                         </button>
                       ) : (
-                        <MaterialIcon name={href ? 'open_in_new' : 'edit'} size={15} className="text-[#9aa0a6]" />
+                        <MaterialIcon name={href ? 'open_in_new' : l.kind === 'SITE' ? 'chevron_right' : 'edit'} size={15} className="text-[#9aa0a6]" />
                       )}
                     </span>
                   </Row>
@@ -268,6 +270,13 @@ export default function LeadsPage() {
         )}
       </div>
 
+      {siteLead && (
+        <SiteLeadDrawer
+          lead={siteLead}
+          onClose={() => setSiteLead(null)}
+          onSaved={() => { qc.invalidateQueries({ queryKey: ['leads'] }); setSiteLead(null); }}
+        />
+      )}
       {editing && (
         <LeadDrawer
           lead={editing === 'new' ? null : editing}
@@ -436,6 +445,87 @@ function LeadDrawer({
           </div>
         </div>
       </form>
+    </div>
+  );
+}
+
+/** A lead from the agent's own website: what they sent, status, delete. */
+function SiteLeadDrawer({ lead, onClose, onSaved }: { lead: LeadRow; onClose: () => void; onSaved: () => void }) {
+  const [status, setStatus] = useState(lead.status);
+  const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const save = useMutation({
+    mutationFn: () => siteFormsApi.setLeadStatus(lead.id, status),
+    onSuccess: onSaved,
+    onError: (e) => setError(e instanceof Error ? e.message : 'Could not save.'),
+  });
+  const remove = useMutation({
+    mutationFn: () => siteFormsApi.removeLead(lead.id),
+    onSuccess: onSaved,
+    onError: (e) => setError(e instanceof Error ? e.message : 'Could not delete.'),
+  });
+  const wa = lead.phone ? `https://wa.me/${lead.phone.replace(/[^\d]/g, '').replace(/^0/, '254')}` : null;
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Website lead">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 cursor-default bg-black/30" />
+      <div className="relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#f1f3f4] px-6 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-[18px] font-normal text-[#202124]">{lead.name}</h2>
+            <p className="text-[12.5px] text-[#5f6368]">{lead.sourceLabel} · {new Date(lead.createdAt).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="cursor-pointer rounded-full p-1.5 text-[#5f6368] hover:bg-[#f1f3f4]">
+            <MaterialIcon name="close" size={20} />
+          </button>
+        </div>
+        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+          <div className="flex flex-wrap gap-2">
+            {lead.phone && <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-3.5 py-1.5 text-[13px] font-medium text-[#1a73e8] hover:bg-[#f8fbff]"><MaterialIcon name="call" size={15} />{lead.phone}</a>}
+            {wa && <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-3.5 py-1.5 text-[13px] font-medium text-[#188038] hover:bg-[#f6fbf7]"><MaterialIcon name="chat" size={15} />WhatsApp</a>}
+            {lead.email && <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-3.5 py-1.5 text-[13px] font-medium text-[#1a73e8] hover:bg-[#f8fbff]"><MaterialIcon name="mail" size={15} />{lead.email}</a>}
+          </div>
+          {lead.property && (
+            <p className="text-[13.5px] text-[#3c4043]"><span className="text-[#5f6368]">Development: </span>{lead.property.name}</p>
+          )}
+          {!!lead.details?.length && (
+            <dl className="divide-y divide-[#f1f3f4] rounded-2xl border border-[#e8eaed]">
+              {lead.details.map((d) => (
+                <div key={d.label} className="grid grid-cols-[7.5rem_1fr] gap-3 px-4 py-2.5 text-[13.5px]">
+                  <dt className="text-[#5f6368]">{d.label}</dt>
+                  <dd className="whitespace-pre-line break-words text-[#202124]">
+                    {/^https?:\/\//.test(d.value) ? <a href={d.value} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">{d.value}</a> : d.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <div>
+            <label className={labelCls} htmlFor="site-lead-status">Status</label>
+            <select id="site-lead-status" className={field} value={status} onChange={(e) => setStatus(e.target.value)}>
+              {LEAD_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+            {lead.siteType === 'VIEWING' && <p className="mt-1.5 text-[12px] text-[#5f6368]">Marking a booking Lost frees its time slot on your site.</p>}
+          </div>
+          {error && <p className="rounded-xl bg-[#fce8e6] px-4 py-2.5 text-[13.5px] text-[#c5221f]">{error}</p>}
+        </div>
+        <div className="flex items-center justify-between gap-2 border-t border-[#f1f3f4] px-6 py-4">
+          {confirmDelete ? (
+            <span className="flex items-center gap-2 text-[13px] text-[#5f6368]">
+              Delete this lead?
+              <button type="button" onClick={() => remove.mutate()} disabled={remove.isPending} className="cursor-pointer font-medium text-[#c5221f] hover:underline">Delete</button>
+              <button type="button" onClick={() => setConfirmDelete(false)} className="cursor-pointer hover:underline">Keep</button>
+            </span>
+          ) : (
+            <button type="button" onClick={() => setConfirmDelete(true)} className="inline-flex cursor-pointer items-center gap-1 text-[13px] text-[#c5221f] hover:underline">
+              <MaterialIcon name="delete" size={16} /> Delete
+            </button>
+          )}
+          <button type="button" onClick={() => save.mutate()} disabled={save.isPending || status === lead.status}
+            className="cursor-pointer rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc] disabled:opacity-50">
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
