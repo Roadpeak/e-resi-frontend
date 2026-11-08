@@ -90,11 +90,11 @@ export function SaveHeart({ listing, className = '', tone = 'light' }: { listing
 }
 
 /** "Send a message" / "Book a viewing" for a contact block. */
-export function LeadButtons({ theme, tone = 'light', center = false }: { theme: SiteTheme; tone?: 'light' | 'dark'; center?: boolean }) {
+export function LeadButtons({ theme, tone = 'light', center = false, onAccent = '#fff' }: { theme: SiteTheme; tone?: 'light' | 'dark'; center?: boolean; onAccent?: string }) {
   const kit = useSiteKit();
   if (!kit || (!kit.forms.contact && !kit.forms.viewing)) return null;
   const r = Math.min(theme.radius, 999);
-  const solid = { background: theme.accent, color: '#fff', borderRadius: r >= 16 ? 999 : r };
+  const solid = { background: theme.accent, color: onAccent, borderRadius: r >= 16 ? 999 : r };
   const ghost = tone === 'dark'
     ? { border: '1px solid rgba(255,255,255,0.3)', color: '#fff', borderRadius: r >= 16 ? 999 : r }
     : { border: `1px solid ${theme.line}`, color: theme.ink, borderRadius: r >= 16 ? 999 : r };

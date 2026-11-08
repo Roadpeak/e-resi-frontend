@@ -11,6 +11,12 @@ import { TerraceTemplate } from './templates/Terrace';
 import { PortalTemplate } from './templates/Portal';
 import { ArcadiaTemplate } from './templates/Arcadia';
 import { CrestTemplate } from './templates/Crest';
+import { NestTemplate } from './templates/Nest';
+import { LineaTemplate } from './templates/Linea';
+import { RoamTemplate } from './templates/Roam';
+import { SummitTemplate } from './templates/Summit';
+import { MetroTemplate } from './templates/Metro';
+import { ResidenceTemplate } from './templates/Residence';
 
 /**
  * Agent-website templates by key. The API owns the catalogue (free/premium,
@@ -26,6 +32,12 @@ export const AGENT_TEMPLATES: Record<string, ComponentType<{ data: AgentSiteData
   PORTAL: PortalTemplate,
   ARCADIA: ArcadiaTemplate,
   CREST: CrestTemplate,
+  NEST: NestTemplate,
+  LINEA: LineaTemplate,
+  ROAM: RoamTemplate,
+  SUMMIT: SummitTemplate,
+  METRO: MetroTemplate,
+  RESIDENCE: ResidenceTemplate,
 };
 
 export function AgentSite({ data, template, preview = false }: { data: AgentSiteData; template?: string | null; preview?: boolean }) {
