@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Clock, Copy, Globe, Loader2, RefreshCw } fro
 import Link from 'next/link';
 import { fmtMoney, propertiesApi, type DomainStatus } from '../../lib/api/properties';
 import { ApiError } from '../../lib/api/client';
+import { useBillingHref } from '../../lib/hooks/useBillingHref';
 
 /** Cleans what someone pastes ("https://www.Heris.co.ke/") down to the stored form. */
 export function cleanDomain(input: string) {
@@ -267,6 +268,7 @@ function CopyValue({ value }: { value: string }) {
 /** What the developer has to do now, for whichever way the domain is connected. */
 function NextSteps({ domain, status, published }: { domain: string; status: DomainStatus; published: boolean }) {
   const box = 'rounded-2xl bg-[#f8f9fa] p-4 text-[14px] leading-relaxed text-[#3c4043]';
+  const billingHref = useBillingHref();
 
   if (status.state === 'AWAITING_PAYMENT' || status.state === 'SUSPENDED') {
     const inv = status.billing?.invoice;
@@ -285,7 +287,7 @@ function NextSteps({ domain, status, published }: { domain: string; status: Doma
             : 'As soon as it is paid we set the domain up and show you the next step here.'}
         </p>
         <Link
-          href="/dashboard/billing"
+          href={`${billingHref}#invoices`}
           className="mt-3 inline-flex items-center rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]"
         >
           Pay now

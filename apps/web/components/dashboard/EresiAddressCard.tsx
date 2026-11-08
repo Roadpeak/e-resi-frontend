@@ -6,6 +6,7 @@ import { CheckCircle2, Clock, Copy, Link2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { fmtMoney, propertiesApi } from '../../lib/api/properties';
 import { ApiError } from '../../lib/api/client';
+import { useBillingHref } from '../../lib/hooks/useBillingHref';
 
 const RESERVED = new Set([
   'www', 'app', 'api', 'admin', 'dashboard', 'mail', 'email', 'smtp', 'imap', 'pop', 'ftp', 'cdn',
@@ -40,6 +41,7 @@ export function EresiAddressCard({
   published: boolean;
 }) {
   const queryClient = useQueryClient();
+  const billingHref = useBillingHref();
   const [editing, setEditing] = useState(!current);
   const [value, setValue] = useState(current ?? slug);
   const [saving, setSaving] = useState(false);
@@ -206,7 +208,7 @@ export function EresiAddressCard({
                 Invoice {openInvoice.number} for <b>{fmtMoney(openInvoice.total, openInvoice.currency)}</b> (incl. VAT)
                 is waiting. {host} switches on as soon as it&apos;s paid.
               </p>
-              <Link href="/dashboard/billing" className="mt-3 inline-flex rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">
+              <Link href={`${billingHref}#invoices`} className="mt-3 inline-flex rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">
                 Pay now
               </Link>
             </>

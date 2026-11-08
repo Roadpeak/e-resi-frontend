@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight, CreditCard, Loader2, Lock, Plus, ShieldCheck, Smartphone, Trash2,
@@ -16,6 +16,8 @@ import { cn } from '../../lib/utils';
 
 export function PaymentMethodsCard() {
   const router = useRouter();
+  // Agents and developers each have their own billing page; return to this one.
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: methods, isLoading } = useQuery({
@@ -36,7 +38,9 @@ export function PaymentMethodsCard() {
   useEffect(() => {
     const state = searchParams.get('paystack');
     const reference = searchParams.get('reference') ?? searchParams.get('trxref');
-    if (!state || !reference) return;
+    // Invoice payments come back here too (paystack=invoice); only card links
+    // (references starting link_) are ours to confirm.
+    if (!state || !reference || !reference.startsWith('link_')) return;
 
     setBusy(true);
     billingApi
@@ -50,7 +54,7 @@ export function PaymentMethodsCard() {
       )
       .finally(() => {
         setBusy(false);
-        router.replace('/dashboard/billing');
+        router.replace(pathname);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -72,11 +76,11 @@ export function PaymentMethodsCard() {
         )
         .finally(() => {
           setBusy(false);
-          router.replace('/dashboard/billing');
+          router.replace(pathname);
         });
     } else if (state === 'cancelled') {
       setError('PayPal linking was cancelled.');
-      router.replace('/dashboard/billing');
+      router.replace(pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

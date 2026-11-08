@@ -10,6 +10,7 @@ import {
   Archive, ChevronDown, ExternalLink, Loader2, MoreHorizontal, Receipt, RotateCcw, Trash2,
 } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
+import { useBillingHref } from '../../lib/hooks/useBillingHref';
 import { PROPERTY_SECTIONS, isPublicStatus, sectionHref } from './propertySections';
 
 interface MenuProperty {
@@ -38,6 +39,7 @@ export function PropertyActionsMenu({
 }) {
   const { base } = usePropertyPaths();
   const router = useRouter();
+  const billingHref = useBillingHref();
   const queryClient = useQueryClient();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -178,7 +180,7 @@ export function PropertyActionsMenu({
               <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> Preview property
             </Link>
           )}
-          <Link href="/dashboard/billing" onClick={() => setOpen(false)} className={itemCls} role="menuitem">
+          <Link href={billingHref} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
             <Receipt size={16} className="shrink-0 text-[#5f6368]" /> Billing
           </Link>
           <div className="my-1.5 border-t border-[#e8eaed]" />

@@ -7,6 +7,8 @@ import { AlertTriangle, CheckCircle2, CreditCard, HelpCircle, Loader2, Receipt, 
 import { agentsApi, type AgentFeeRun } from '../../../../lib/api/agents';
 import { AgentStatusBanner } from '../../../../components/agent/AgentStatusBanner';
 import { PaymentMethodsCard } from '../../../../components/dashboard/PaymentMethods';
+import { InvoicesSection } from '../../../../components/billing/InvoicesSection';
+import type { Invoice } from '../../../../lib/api/billing';
 import { cn } from '../../../../lib/utils';
 
 /**
@@ -37,6 +39,8 @@ const STATUS_LABELS: Record<AgentFeeRun['status'], string> = {
 };
 
 const card = 'rounded-3xl border border-[#dadce0] bg-white';
+/** Membership invoices are shown as fee runs below; the invoice list carries everything else. */
+const isMembershipInvoice = (i: Invoice) => !!i.agentFeeRunId;
 const isOwed = (r: AgentFeeRun) => (r.status === 'PENDING' || r.status === 'FAILED') && r.amount > 0;
 
 export default function AgentBilling() {
@@ -122,7 +126,7 @@ export default function AgentBilling() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[26px] font-normal text-[#202124]">Billing</h1>
-          <p className="text-[14px] text-[#5f6368]">Your monthly listing fee keeps your profile visible in the agent directory.</p>
+          <p className="text-[14px] text-[#5f6368]">Your membership, plus listing, domain and website invoices.</p>
         </div>
         <Link href="/contact" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:underline">
           <HelpCircle size={15} /> Question about a charge?
@@ -172,7 +176,7 @@ export default function AgentBilling() {
               </section>
             ) : (
               <section className="rounded-3xl bg-[#e6f4ea] p-6">
-                <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#188038]"><CheckCircle2 size={15} /> All paid up</p>
+                <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#188038]"><CheckCircle2 size={15} /> Membership paid up</p>
                 <p className="mt-2 text-[20px] font-normal text-[#202124]">Nothing is due.</p>
                 <p className="mt-1 text-[13px] text-[#3c4043]">
                   {lastPaid?.chargedAt ? `Last paid ${day(lastPaid.chargedAt)}. ` : ''}Your saved card is charged automatically each month.
@@ -181,9 +185,12 @@ export default function AgentBilling() {
             )}
           </div>
 
+          {/* ── Invoices: listing fees, domains, website ── */}
+          <InvoicesSection exclude={isMembershipInvoice} />
+
           {/* ── History ── */}
           <section className={cn(card, 'p-6')}>
-            <h2 className="text-[17px] font-medium text-[#202124]">History</h2>
+            <h2 className="text-[17px] font-medium text-[#202124]">Membership history</h2>
             {isLoading ? (
               <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-[#80868b]" /></div>
             ) : runs.length === 0 ? (
