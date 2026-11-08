@@ -1,5 +1,7 @@
 'use client';
 
+import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+
 import { useEffect, useState, type ReactNode } from 'react';
 import type { AgentSiteData, SiteSectionId } from '../types';
 import {
@@ -14,7 +16,7 @@ import { CountUp, Reveal, Stagger } from '../motion';
  * story up front, and calm reveal-on-scroll motion throughout.
  */
 
-const SUPPORTED: readonly SiteSectionId[] = ['stats', 'listings', 'about', 'areas', 'contact'];
+const SUPPORTED = ALL_SECTIONS;
 const BG = '#f6f4ef';
 const INK = '#1d1c1a';
 const MUTED = '#6b675f';
@@ -43,7 +45,9 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
     (data.stats?.withTours ?? 0) > 0 ? { v: data.stats!.withTours, s: '', label: 'With virtual tours' } : null,
   ].filter(Boolean).slice(0, 4) as { v: number; s: string; d?: number; label: string }[];
 
-  const blocks: Record<SiteSectionId, ReactNode> = {
+  const theme: SiteTheme = { ink: INK, muted: MUTED, accent, card: '#ffffff', line: 'rgba(0,0,0,0.07)', radius: 28 };
+  const blocks: Partial<Record<SiteSectionId, ReactNode>> = {
+    ...contentBlocks(data, theme),
     stats: stats.length ? (
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-black/[0.07] md:grid-cols-4">
@@ -205,6 +209,8 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
     order.includes('listings') && { href: '#listings', label: 'Homes' },
     order.includes('about') && agent.bio && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Areas' },
+    order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },
+    order.includes('journal') && data.content?.posts.length && { href: '#journal', label: 'Journal' },
   ].filter(Boolean) as { href: string; label: string }[];
 
   return (
@@ -268,6 +274,7 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-[13px] sm:px-6" style={{ color: MUTED }}>
           <span>© {new Date().getFullYear()} {agent.displayName}</span>
           <a href="https://e-resi.com" className="hover:text-black">Powered by e-resi</a>
+          <LegalLine data={data} color={MUTED} />
         </div>
       </footer>
     </div>

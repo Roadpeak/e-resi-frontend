@@ -1,5 +1,7 @@
 'use client';
 
+import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from './sections';
+
 import type { ReactNode } from 'react';
 import type { AgentSiteData, SiteSectionId } from './types';
 import {
@@ -8,7 +10,7 @@ import {
 
 export type { AgentSiteData, AgentSiteListing } from './types';
 
-const SUPPORTED: readonly SiteSectionId[] = ['stats', 'listings', 'about', 'areas', 'contact'];
+const SUPPORTED = ALL_SECTIONS;
 
 /** CLASSIC — the original, always-free agent site. */
 export function AgentSiteView({ data }: { data: AgentSiteData }) {
@@ -20,7 +22,9 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
   const order = orderedSections(data, SUPPORTED);
   const areas = areasOf(data);
 
-  const blocks: Record<SiteSectionId, ReactNode> = {
+  const theme: SiteTheme = { ink: '#111111', muted: '#666666', accent, card: '#f6f6f6', line: 'rgba(0,0,0,0.08)', radius: 16 };
+  const blocks: Partial<Record<SiteSectionId, ReactNode>> = {
+    ...contentBlocks(data, theme),
     stats: (
       <div className="mx-auto flex max-w-6xl flex-wrap gap-x-10 gap-y-3 px-4 py-6 text-[14px] text-[#555] sm:px-6">
         <span><strong className="text-[18px] font-semibold text-black">{listings.length}</strong> developments</span>
@@ -217,6 +221,7 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-[13px] text-[#888] sm:px-6">
           <span>© {new Date().getFullYear()} {agent.displayName}</span>
           <a href="https://e-resi.com" className="hover:text-black">Powered by e-resi</a>
+          <LegalLine data={data} color={'#888'} />
         </div>
       </footer>
     </div>

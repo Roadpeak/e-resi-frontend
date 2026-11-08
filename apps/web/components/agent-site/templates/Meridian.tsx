@@ -1,5 +1,7 @@
 'use client';
 
+import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+
 import { useEffect, useState, type ReactNode } from 'react';
 import type { AgentSiteData, SiteSectionId } from '../types';
 import {
@@ -15,7 +17,7 @@ import { useReducedMotion } from 'framer-motion';
  * action.
  */
 
-const SUPPORTED: readonly SiteSectionId[] = ['listings', 'about', 'stats', 'areas', 'contact'];
+const SUPPORTED = ALL_SECTIONS;
 const SAND = '#efe9df';
 const INK = '#26231f';
 const MUTED = '#7a7268';
@@ -65,7 +67,9 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
     (data.stats?.cities ?? 0) > 0 ? { v: data.stats!.cities, label: data.stats!.cities === 1 ? 'City' : 'Cities' } : null,
   ].filter(Boolean) as { v: number; label: string; s?: string }[];
 
-  const blocks: Record<SiteSectionId, ReactNode> = {
+  const theme: SiteTheme = { ink: INK, muted: MUTED, accent, card: '#f7f3ec', line: 'rgba(0,0,0,0.12)', radius: 0, display: SERIF, eyebrow: 'slash', weight: 400 };
+  const blocks: Partial<Record<SiteSectionId, ReactNode>> = {
+    ...contentBlocks(data, theme),
     listings: listings.length ? (
       <section id="listings" className="scroll-mt-20 overflow-hidden py-24">
         <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
@@ -225,6 +229,8 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
     order.includes('listings') && listings.length && { href: '#listings', label: 'Residences' },
     order.includes('about') && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Communities' },
+    order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },
+    order.includes('journal') && data.content?.posts.length && { href: '#journal', label: 'Journal' },
   ].filter(Boolean) as { href: string; label: string }[];
   const tone = solid ? INK : '#fff';
 
@@ -274,6 +280,7 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-[12px] uppercase tracking-[0.14em] sm:px-8" style={{ color: MUTED }}>
           <span>© {new Date().getFullYear()} {agent.displayName}</span>
           <a href="https://e-resi.com" className="hover:text-black">Powered by e-resi</a>
+          <LegalLine data={data} color={MUTED} />
         </div>
       </footer>
     </div>

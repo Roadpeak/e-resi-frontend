@@ -30,6 +30,7 @@ const NAV = [
   { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring' },
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
   { label: 'Website', href: '/agent/website', icon: 'language' },
+  { label: 'Site content', href: '/agent/website/content', icon: 'article' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
   { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
 ];

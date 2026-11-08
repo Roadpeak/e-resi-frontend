@@ -147,7 +147,11 @@ function Templates({ onPreview }: { onPreview: (key: string) => void }) {
 
       <section className={card}>
         <h2 className="text-[18px] font-normal text-[#202124]">Sections</h2>
-        <p className="mt-1 text-[14px] text-[#5f6368]">Choose what appears on your site and in what order. Every template follows this.</p>
+        <p className="mt-1 text-[14px] text-[#5f6368]">
+          Choose what appears on your site and in what order. Every template follows this. Sections without content
+          stay hidden — add testimonials, team, past sales, services, FAQ and journal posts in{' '}
+          <Link href="/agent/website/content" className="text-[#1a73e8] hover:underline">Site content</Link>.
+        </p>
         <ul className="mt-4 divide-y divide-[#f1f3f4] rounded-2xl border border-[#e8eaed]">
           {sections.map((s, i) => (
             <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">

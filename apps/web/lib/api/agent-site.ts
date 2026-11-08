@@ -50,6 +50,21 @@ export const agentTemplatesAdminApi = {
     apiClient.patch<{ currency: string; templates: AdminAgentTemplate[] }>(`/admin/agent-templates/${key}`, body),
 };
 
+export type ContentType = 'TEAM' | 'TESTIMONIAL' | 'PAST_SALE' | 'FAQ' | 'SERVICE' | 'STEP' | 'POST' | 'AWARD';
+export interface ContentItem { id: string; type: ContentType; data: Record<string, unknown>; slug: string | null; isPublished: boolean; sortOrder: number; updatedAt: string }
+export interface ContentState { licenceNo: string | null; footerNote: string | null; items: ContentItem[] }
+
+export const agentContentApi = {
+  list: () => apiClient.get<ContentState>('/agent-site/me/content'),
+  create: (type: ContentType, data: Record<string, unknown>, isPublished = true) =>
+    apiClient.post<ContentState>('/agent-site/me/content', { type, data, isPublished }),
+  update: (id: string, body: { data?: Record<string, unknown>; isPublished?: boolean }) =>
+    apiClient.patch<ContentState>(`/agent-site/me/content/${id}`, body),
+  remove: (id: string) => apiClient.delete<ContentState>(`/agent-site/me/content/${id}`),
+  reorder: (type: ContentType, ids: string[]) => apiClient.put<ContentState>('/agent-site/me/content/order', { type, ids }),
+  legal: (body: { licenceNo?: string | null; footerNote?: string | null }) => apiClient.patch<ContentState>('/agent-site/me/legal', body),
+};
+
 export const agentSiteApi = {
   prices: () => apiClient.get<{ currency: string; subdomain: number; customDomain: number }>('/agent-site/prices', { skipAuth: true }),
   mine: () => apiClient.get<AgentSiteSettings>('/agent-site/me'),

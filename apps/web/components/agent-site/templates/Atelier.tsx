@@ -1,5 +1,7 @@
 'use client';
 
+import { ALL_SECTIONS, contentBlocks, LegalLine, type SiteTheme } from '../sections';
+
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { AgentSiteData, SiteSectionId } from '../types';
@@ -17,7 +19,7 @@ import { CountUp, EASE, KenBurns, LiveClock, Marquee, motion, Reveal, useAutopla
  * laid over faint column lines.
  */
 
-const SUPPORTED: readonly SiteSectionId[] = ['stats', 'listings', 'about', 'areas', 'contact'];
+const SUPPORTED = ALL_SECTIONS;
 const BG = '#eeece7';
 const INK = '#121211';
 const MUTED = '#6e6b65';
@@ -74,12 +76,16 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
     order.includes('listings') && { href: '#listings', label: 'Listings' },
     order.includes('about') && agent.bio && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Areas' },
+    order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },
+    order.includes('journal') && data.content?.posts.length && { href: '#journal', label: 'Journal' },
     order.includes('contact') && { href: '#contact', label: 'Contact' },
   ].filter(Boolean) as { href: string; label: string }[];
 
   const current = spotlight[auto.index];
 
-  const blocks: Record<SiteSectionId, ReactNode> = {
+  const theme: SiteTheme = { ink: INK, muted: MUTED, accent, card: '#e5e2dc', line: 'rgba(0,0,0,0.12)', radius: 12, width: 'max-w-7xl' };
+  const blocks: Partial<Record<SiteSectionId, ReactNode>> = {
+    ...contentBlocks(data, theme),
     stats: (
       <section className="relative">
         <GridLines />
@@ -376,6 +382,7 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-6 text-[13px] sm:px-8">
           <span>© {new Date().getFullYear()} {agent.displayName}</span>
           <a href="https://e-resi.com" className="hover:text-white">Powered by e-resi</a>
+          <LegalLine data={data} color={'rgba(255,255,255,0.45)'} />
         </div>
       </footer>
     </div>
