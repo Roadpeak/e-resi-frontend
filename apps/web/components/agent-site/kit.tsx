@@ -349,7 +349,7 @@ function Chips({ options, value, onChange, theme, dark }: { options: { key: stri
 
 // ─── Forms ─────────────────────────────────────────────────────────────────
 
-function ContactForm({ theme, listingIds, onDone }: { theme: SiteTheme; listingIds?: string[]; onDone: () => void }) {
+export function ContactForm({ theme, listingIds, onDone }: { theme: SiteTheme; listingIds?: string[]; onDone?: () => void }) {
   const kit = useSiteKit()!;
   const s = useSubmit('CONTACT');
   const { form, setForm, bind } = useForm({ name: '', phone: '', email: '', intent: listingIds?.length ? 'BUY' : '', timeframe: '', area: '', budget: '', message: '', website: '' });
@@ -553,7 +553,7 @@ function SavedList({ theme }: { theme: SiteTheme }) {
 }
 
 /** Pop-ups and the floating saved button, drawn in the template's theme. */
-export function SiteKitLayer({ theme }: { theme: SiteTheme }) {
+export function SiteKitLayer({ theme, hideDock = false }: { theme: SiteTheme; hideDock?: boolean }) {
   const kit = useSiteKit();
   const panel = useRef<HTMLDivElement>(null);
   const modal = kit?.modal ?? null;
@@ -579,7 +579,7 @@ export function SiteKitLayer({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <AnimatePresence>
-        {kit.saved.length > 0 && !modal && (
+        {kit.saved.length > 0 && !modal && !hideDock && (
           <motion.button type="button" onClick={() => kit.open({ kind: 'saved' })}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }} transition={{ duration: 0.3, ease: EASE }}
             className="fixed bottom-5 left-5 z-40 inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-[14px] font-medium text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"

@@ -11,6 +11,10 @@ export const LOOK: Record<string, { bg: string; ink: string; muted: string; disp
   HAVEN: { bg: '#f6f4ef', ink: '#1d1c1a', muted: '#6b675f' },
   ATELIER: { bg: '#eeece7', ink: '#121211', muted: '#6e6b65' },
   MERIDIAN: { bg: '#efe9df', ink: '#26231f', muted: '#7a7268', display: 'var(--font-cormorant), Georgia, serif' },
+  TERRACE: { bg: '#efebe4', ink: '#1a1916', muted: '#6f6a61' },
+  PORTAL: { bg: '#f4f4f2', ink: '#141414', muted: '#6b6b6b' },
+  ARCADIA: { bg: '#f7f0e6', ink: '#2a2420', muted: '#7a6c60', display: 'var(--font-jakarta), system-ui, sans-serif' },
+  CREST: { bg: '#ffffff', ink: '#0f1724', muted: '#5b6475' },
 };
 
 /** A journal post: plain paragraphs, with "## " lines as subheadings and "- " lines as bullets. */

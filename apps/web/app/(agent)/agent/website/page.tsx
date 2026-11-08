@@ -48,11 +48,15 @@ function Status({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'grey'; 
 
 /** Small drawn thumbnail per template: palette, type and layout at a glance. */
 function TemplateThumb({ k }: { k: string }) {
-  const t: Record<string, { bg: string; ink: string; serif?: boolean; dark?: boolean; layout: 'classic' | 'framed' | 'full' }> = {
+  const t: Record<string, { bg: string; ink: string; serif?: boolean; dark?: boolean; layout: 'classic' | 'framed' | 'full' | 'sidebar' | 'arch' }> = {
     CLASSIC: { bg: '#ffffff', ink: '#111', layout: 'classic' },
     HAVEN: { bg: '#f6f4ef', ink: '#1d1c1a', layout: 'framed' },
     ATELIER: { bg: '#121211', ink: '#fff', dark: true, layout: 'full' },
     MERIDIAN: { bg: '#efe9df', ink: '#26231f', serif: true, layout: 'full' },
+    TERRACE: { bg: '#efebe4', ink: '#1a1916', layout: 'full' },
+    PORTAL: { bg: '#f4f4f2', ink: '#141414', layout: 'sidebar' },
+    ARCADIA: { bg: '#f7f0e6', ink: '#2a2420', layout: 'arch' },
+    CREST: { bg: '#ffffff', ink: '#0f1724', dark: true, layout: 'full' },
   };
   const c = t[k] ?? t.CLASSIC;
   return (
@@ -67,6 +71,18 @@ function TemplateThumb({ k }: { k: string }) {
         <div className="mx-auto mt-3 h-2 w-1/2 rounded bg-black/70" />
         <div className="mx-auto mt-1 h-2 w-1/3 rounded bg-black/70" />
         <div className="mx-4 mt-3 h-12 rounded-xl bg-[#cfc6b8]" />
+      </>)}
+      {c.layout === 'sidebar' && (<>
+        <div className="absolute inset-y-0 left-0 w-1/5 border-r border-black/5 bg-white" />
+        <div className="absolute left-[24%] right-3 top-3 h-12 rounded-lg bg-[#c9c9c4]" />
+        <div className="absolute bottom-3 left-[24%] right-3 grid grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className="h-7 rounded bg-white" />)}</div>
+      </>)}
+      {c.layout === 'arch' && (<>
+        <div className="mx-auto mt-2 h-2.5 w-1/2 rounded-full bg-white" />
+        <div className="mx-auto mt-2 h-2 w-2/5 rounded bg-black/70" />
+        <div className="absolute bottom-0 left-1/2 h-[55%] w-1/4 -translate-x-1/2 rounded-t-full bg-[#cdb9a1]" />
+        <div className="absolute bottom-0 right-[18%] h-1/3 w-[9%] rounded-t-full bg-[#c8643b]" />
+        <div className="absolute right-[30%] top-[38%] h-4 w-4 rounded-full bg-[#e0a93b]" />
       </>)}
       {c.layout === 'full' && (<>
         <div className={`absolute inset-0 ${c.dark ? 'bg-[#3a3a38]' : 'bg-[#b9ad9a]'}`} />

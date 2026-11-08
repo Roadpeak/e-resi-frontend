@@ -7,6 +7,10 @@ import { SiteKitProvider } from './kit';
 import { HavenTemplate } from './templates/Haven';
 import { AtelierTemplate } from './templates/Atelier';
 import { MeridianTemplate } from './templates/Meridian';
+import { TerraceTemplate } from './templates/Terrace';
+import { PortalTemplate } from './templates/Portal';
+import { ArcadiaTemplate } from './templates/Arcadia';
+import { CrestTemplate } from './templates/Crest';
 
 /**
  * Agent-website templates by key. The API owns the catalogue (free/premium,
@@ -18,6 +22,10 @@ export const AGENT_TEMPLATES: Record<string, ComponentType<{ data: AgentSiteData
   HAVEN: HavenTemplate,
   ATELIER: AtelierTemplate,
   MERIDIAN: MeridianTemplate,
+  TERRACE: TerraceTemplate,
+  PORTAL: PortalTemplate,
+  ARCADIA: ArcadiaTemplate,
+  CREST: CrestTemplate,
 };
 
 export function AgentSite({ data, template, preview = false }: { data: AgentSiteData; template?: string | null; preview?: boolean }) {
