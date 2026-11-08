@@ -50,7 +50,7 @@ export const agentTemplatesAdminApi = {
     apiClient.patch<{ currency: string; templates: AdminAgentTemplate[] }>(`/admin/agent-templates/${key}`, body),
 };
 
-export type ContentType = 'ROLE' | 'TEAM' | 'TESTIMONIAL' | 'PAST_SALE' | 'FAQ' | 'SERVICE' | 'STEP' | 'POST' | 'AWARD';
+export type ContentType = 'AREA' | 'CASE_STUDY' | 'PACKAGE' | 'ROLE' | 'TEAM' | 'TESTIMONIAL' | 'PAST_SALE' | 'FAQ' | 'SERVICE' | 'STEP' | 'POST' | 'AWARD';
 export interface ContentItem { id: string; type: ContentType; data: Record<string, unknown>; slug: string | null; isPublished: boolean; sortOrder: number; updatedAt: string }
 export interface ContentState { licenceNo: string | null; footerNote: string | null; items: ContentItem[] }
 
@@ -87,6 +87,7 @@ export type ViewingMode = 'IN_PERSON' | 'VIDEO';
 export interface SiteFormsSettings {
   contact: boolean; valuation: boolean; viewing: boolean; newsletter: boolean; careers: boolean;
   days: number[]; start: string; end: string; slotMinutes: number; modes: ViewingMode[]; noticeHours: number;
+  calculator: boolean; mortgageRate: number; depositPct: number; termYears: number;
 }
 export type SiteLeadType = 'CONTACT' | 'VALUATION' | 'VIEWING' | 'CAREER' | 'NEWSLETTER';
 export interface SiteLeadInput {

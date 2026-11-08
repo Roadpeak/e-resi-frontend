@@ -6,7 +6,7 @@ import { monthLabel, postHref } from './sections';
 import { Reveal } from './motion';
 
 /** Look per template, so a post reads like part of the agent's site. */
-const LOOK: Record<string, { bg: string; ink: string; muted: string; display?: string }> = {
+export const LOOK: Record<string, { bg: string; ink: string; muted: string; display?: string }> = {
   CLASSIC: { bg: '#ffffff', ink: '#111111', muted: '#666666' },
   HAVEN: { bg: '#f6f4ef', ink: '#1d1c1a', muted: '#6b675f' },
   ATELIER: { bg: '#eeece7', ink: '#121211', muted: '#6e6b65' },

@@ -9,6 +9,7 @@ import type {
 import { Icon, ICON, Img } from './shared';
 import { EASE, Marquee, motion, Reveal, Stagger } from './motion';
 import { CareersSection, NewsletterSection, ValuationSection } from './kit';
+import { CalculatorSection, CasesSection, GuidesSection, PackagesSection } from './guides';
 
 /**
  * Content sections every template draws — team, testimonials, past sales,
@@ -405,10 +406,23 @@ export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Re
       <CareersSection theme={theme} roles={c?.roles ?? []}
         head={<SectionHead theme={theme} eyebrow="Careers" title="Join the team" intro="We’re growing. If you love property and people, we’d like to hear from you." />} />
     ),
+    calculator: (
+      <CalculatorSection theme={theme} data={data}
+        head={<SectionHead theme={theme} eyebrow="Mortgage calculator" title="What would it cost each month?" intro="Move the sliders to see an estimate. Tap a listing to use its price." />} />
+    ),
   };
   if (!c) return forms;
   return {
     ...forms,
+    guides: (
+      <GuidesSection items={c.guides ?? []} theme={theme} data={data}
+        head={<SectionHead theme={theme} eyebrow="Area guides" title="Know the neighbourhood" intro="What it’s like to live there, what homes cost, and what’s nearby." />} />
+    ),
+    cases: <CasesSection items={c.cases ?? []} theme={theme} head={<SectionHead theme={theme} eyebrow="Case studies" title="How we got it done" />} />,
+    packages: (
+      <PackagesSection items={c.packages ?? []} theme={theme}
+        head={<SectionHead theme={theme} eyebrow="For landlords" title="Letting and management" intro="Choose how much you want handled. No surprises on fees." />} />
+    ),
     services: <ServicesSection items={c.services} theme={theme} />,
     process: <ProcessSection items={c.steps} theme={theme} />,
     team: <TeamSection items={c.team} theme={theme} />,
@@ -421,5 +435,6 @@ export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Re
 }
 
 export const ALL_SECTIONS: readonly SiteSectionId[] = [
-  'stats', 'listings', 'services', 'process', 'valuation', 'about', 'team', 'sold', 'testimonials', 'areas', 'awards', 'journal', 'careers', 'faq', 'newsletter', 'contact',
+  'stats', 'listings', 'services', 'packages', 'process', 'valuation', 'calculator', 'about', 'team', 'sold', 'cases',
+  'testimonials', 'areas', 'guides', 'awards', 'journal', 'careers', 'faq', 'newsletter', 'contact',
 ];

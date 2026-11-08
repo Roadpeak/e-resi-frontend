@@ -104,9 +104,12 @@ export async function proxy(req: NextRequest) {
     // The home page, and journal posts (linked as /site/agent/<id>/journal/<slug>
     // so the same links work on e-resi; /journal/<slug> is accepted too).
     const own = `/site/agent/${agentId}`;
-    if (pathname === '/' || pathname === own || pathname.startsWith(`${own}/journal/`) || pathname.startsWith('/journal/')) {
+    // Area guides work the same way under /areas/<slug>.
+    const sub = /^\/(journal|areas)\//.test(pathname);
+    const ownSub = pathname.startsWith(`${own}/journal/`) || pathname.startsWith(`${own}/areas/`);
+    if (pathname === '/' || pathname === own || ownSub || sub) {
       const url = req.nextUrl.clone();
-      url.pathname = pathname === '/' ? own : pathname.startsWith('/journal/') ? `${own}${pathname}` : pathname;
+      url.pathname = pathname === '/' ? own : sub ? `${own}${pathname}` : pathname;
       const res = NextResponse.rewrite(url);
       res.headers.set('x-eresi-agent-site', agentId);
       return res;

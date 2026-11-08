@@ -276,6 +276,28 @@ function FormsCard() {
           <p className="text-[12.5px] text-[#5f6368]">Times are Nairobi time. Mark a booking as Lost in Leads to free its slot.</p>
         </div>
       )}
+      <div className="mt-5 rounded-2xl border border-[#e8eaed] px-4 py-3">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input type="checkbox" checked={f.calculator} onChange={() => setF({ ...f, calculator: !f.calculator })} className="mt-1 h-4 w-4 accent-[#1a73e8]" />
+          <span>
+            <span className="block text-[15px] text-[#202124]">Mortgage calculator</span>
+            <span className="block text-[13px] text-[#5f6368]">Visitors estimate monthly payments; your listings’ prices are one tap away. Set where the sliders start.</span>
+          </span>
+        </label>
+        {f.calculator && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <label className="block text-[13px] text-[#5f6368]">Interest rate (%)
+              <input type="number" min={1} max={40} step={0.25} value={f.mortgageRate} onChange={(e) => setF({ ...f, mortgageRate: Number(e.target.value) })} className={cn(input, 'mt-1')} />
+            </label>
+            <label className="block text-[13px] text-[#5f6368]">Deposit (%)
+              <input type="number" min={0} max={90} step={5} value={f.depositPct} onChange={(e) => setF({ ...f, depositPct: Number(e.target.value) })} className={cn(input, 'mt-1')} />
+            </label>
+            <label className="block text-[13px] text-[#5f6368]">Term (years)
+              <input type="number" min={1} max={35} value={f.termYears} onChange={(e) => setF({ ...f, termYears: Math.round(Number(e.target.value)) })} className={cn(input, 'mt-1')} />
+            </label>
+          </div>
+        )}
+      </div>
       <div className="mt-4 flex items-center gap-3">
         <button type="button" onClick={() => save.mutate()} disabled={!dirty || save.isPending} className={btn}>
           {save.isPending ? 'Saving…' : 'Save forms'}

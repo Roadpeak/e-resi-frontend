@@ -9,21 +9,25 @@ export interface AgentSiteListing {
 }
 
 export type SiteSectionId =
-  | 'stats' | 'listings' | 'services' | 'process' | 'valuation' | 'about' | 'team' | 'sold' | 'testimonials'
-  | 'areas' | 'awards' | 'journal' | 'careers' | 'faq' | 'newsletter' | 'contact';
+  | 'stats' | 'listings' | 'services' | 'packages' | 'process' | 'valuation' | 'calculator' | 'about' | 'team' | 'sold' | 'cases'
+  | 'testimonials' | 'areas' | 'guides' | 'awards' | 'journal' | 'careers' | 'faq' | 'newsletter' | 'contact';
 export type SiteSection = { id: SiteSectionId; visible: boolean };
 
 export const SECTION_LABELS: Record<SiteSectionId, string> = {
   stats: 'Numbers',
   listings: 'Listings',
   services: 'Services',
+  packages: 'Landlord packages',
   process: 'How it works',
   valuation: 'Free valuation',
+  calculator: 'Mortgage calculator',
   about: 'About',
   team: 'Team',
   sold: 'Past sales',
+  cases: 'Case studies',
   testimonials: 'Testimonials',
   areas: 'Areas you cover',
+  guides: 'Area guides',
   awards: 'Awards',
   journal: 'Journal',
   careers: 'Careers',
@@ -40,12 +44,23 @@ export interface Service { id: string; title: string; description?: string; poin
 export interface Step { id: string; title: string; description?: string; audience?: 'ALL' | 'BUYERS' | 'SELLERS' }
 export interface Award { id: string; title: string; issuer?: string; year?: number }
 export interface Role { id: string; title: string; location?: string; employment?: 'FULL_TIME' | 'PART_TIME' | 'COMMISSION' | 'CONTRACT' | 'INTERNSHIP'; description?: string; requirements?: string[] }
+export interface AreaGuideSummary {
+  id: string; slug: string; name: string; tagline?: string; coverUrl?: string; summary?: string; highlights?: string[];
+  priceFrom?: number; rentFrom?: number; commute?: string; schools?: string[]; match?: string; hasPage: boolean;
+}
+export interface AreaGuide extends Omit<AreaGuideSummary, 'hasPage'> { body?: string }
+export interface CaseStudy {
+  id: string; title: string; clientType?: string; location?: string; coverUrl?: string;
+  challenge?: string; approach?: string; result?: string; metrics?: string[]; quote?: string; date?: string;
+}
+export interface Package { id: string; name: string; fee: string; feeNote?: string; description?: string; points?: string[]; featured?: 'YES' | 'NO' }
 export interface PostSummary { id: string; slug: string; title: string; category?: string; coverUrl?: string; excerpt?: string; publishedAt?: string; readMinutes: number }
 export interface Post extends PostSummary { body: string }
 
 export interface AgentSiteContent {
   team: TeamMember[]; testimonials: Testimonial[]; sold: PastSale[]; faqs: Faq[];
   services: Service[]; steps: Step[]; awards: Award[]; posts: PostSummary[]; roles?: Role[];
+  guides?: AreaGuideSummary[]; cases?: CaseStudy[]; packages?: Package[];
 }
 
 export interface AgentSiteStats {
@@ -76,4 +91,5 @@ export interface AgentSiteData {
 export interface SiteFormsPublic {
   contact: boolean; valuation: boolean; viewing: boolean; newsletter: boolean; careers: boolean;
   modes: ('IN_PERSON' | 'VIDEO')[]; slotMinutes: number;
+  calculator?: boolean; mortgageRate?: number; depositPct?: number; termYears?: number;
 }
