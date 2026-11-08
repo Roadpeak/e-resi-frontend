@@ -31,8 +31,10 @@ export function PageTransitions() {
   useEffect(() => {
     const done = pending.current;
     if (!done) return;
-    pending.current = null;
+    // A frame for the paint, but never only a frame: hidden tabs pause
+    // requestAnimationFrame, and the screen must not stay frozen.
     requestAnimationFrame(() => done());
+    setTimeout(() => done(), 80);
   }, [pathname, search]);
 
   useEffect(() => {
@@ -56,7 +58,11 @@ export function PageTransitions() {
       // Tells the global fade (layout/PageTransition) to stand aside.
       root.dataset.vt = 'running';
       const vt = doc.startViewTransition!(() => new Promise<void>((resolve) => {
-        pending.current = () => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          pending.current = null;
           // The unit fade runs on the live page, under the reveal.
           root.classList.remove('vt-in');
           void root.offsetWidth;
@@ -65,11 +71,12 @@ export function PageTransitions() {
           unitTimer.current = setTimeout(() => root.classList.remove('vt-in'), 2000);
           resolve();
         };
+        pending.current = finish;
         router.push(url.pathname + url.search + url.hash);
         // Never hold the screen frozen if a route is slow to render.
-        setTimeout(() => { if (pending.current) { pending.current(); pending.current = null; } }, 1800);
+        setTimeout(finish, 1800);
       }));
-      vt.finished.finally(() => { delete root.dataset.vt; });
+      vt.finished.catch(() => undefined).finally(() => { delete root.dataset.vt; });
     };
 
     document.addEventListener('click', onClick, true);
