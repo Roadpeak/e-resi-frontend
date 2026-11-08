@@ -52,6 +52,11 @@ function BookingRow({ booking }: { booking: Booking }) {
             </span>
           </span>
           <span className="mt-0.5 block truncate text-[13px] text-[#5f6368]">
+{booking.property?.listedByAgentId ? (
+              <span className="mr-1.5 rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[11.5px] font-medium text-[#1967d2]">Your listing</span>
+            ) : (
+              <span className="mr-1.5 rounded-full bg-[#fef7e0] px-2 py-0.5 text-[11.5px] font-medium text-[#b06000]">Referral</span>
+            )}
             {booking.property.name} · {new Date(booking.date).toLocaleDateString()} at {booking.time}
             {booking.phone ? ` · ${booking.phone}` : ''}
           </span>

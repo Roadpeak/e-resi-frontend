@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { ApiError } from '../../../../lib/api/client';
@@ -46,12 +46,16 @@ function statusTone(status: string) {
   return 'bg-[#fef7e0] text-[#b06000]';
 }
 
-function hrefFor(l: LeadRow): string | null {
-  if (l.kind === 'INQUIRY') return '/dashboard/inquiries';
-  if (l.kind === 'BOOKING') return '/dashboard/bookings';
-  if (l.kind === 'AGENT_DEAL') return `/dashboard/deals/${l.id}`;
+function hrefFor(l: LeadRow, agent = false): string | null {
+  const root = agent ? '/agent' : '/dashboard';
+  if (l.kind === 'INQUIRY') return `${root}/inquiries`;
+  if (l.kind === 'BOOKING') return `${root}/bookings`;
+  if (l.kind === 'AGENT_DEAL') return `${root}/deals/${l.id}`;
   return null;
 }
+
+/** In the agent portal, "agent" leads are the agent's own referrals. */
+const AGENT_LABELS: Record<string, string> = { AGENT: 'Your referrals', MANUAL: 'Added by you' };
 
 function relDate(iso: string) {
   const d = new Date(iso);
@@ -69,6 +73,8 @@ function csvCell(v: unknown) {
 
 export default function LeadsPage() {
   const router = useRouter();
+  // Same page serves the agent portal (/agent/leads) for agent-owned listings.
+  const agentPortal = (usePathname() ?? '').startsWith('/agent');
   const qc = useQueryClient();
   const { data, isLoading, isError } = useQuery({ queryKey: ['leads'], queryFn: leadsApi.list });
   const [channel, setChannel] = useState<'ALL' | LeadChannel>('ALL');
@@ -138,8 +144,9 @@ export default function LeadsPage() {
         <div>
           <h1 className="text-[26px] font-normal text-[#202124]">Leads</h1>
           <p className="max-w-[70ch] text-[14px] text-[#5f6368]">
-            Everyone interested in your developments: signed-in buyers who opened your pages, inquiries
-            and viewing requests, clients agents brought you, and people your team added.
+            {agentPortal
+              ? 'Everyone interested in the developments you list: buyers who opened your pages, inquiries and viewing requests, plus the clients you referred or registered elsewhere, and people you added.'
+              : 'Everyone interested in your developments: signed-in buyers who opened your pages, inquiries and viewing requests, clients agents brought you, and people your team added.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -176,7 +183,7 @@ export default function LeadsPage() {
           <button key={c.key} type="button" onClick={() => setChannel(c.key)} aria-pressed={channel === c.key}
             className={cn('cursor-pointer rounded-full border px-4 py-1.5 text-[13px] font-medium transition-colors',
               channel === c.key ? 'border-[#202124] bg-[#202124] text-white' : 'border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4]')}>
-            {c.label}<span className="ml-1.5 tabular-nums opacity-60">{counts[c.key]}</span>
+            {(agentPortal && AGENT_LABELS[c.key]) || c.label}<span className="ml-1.5 tabular-nums opacity-60">{counts[c.key]}</span>
           </button>
         ))}
         <div className="ml-auto flex flex-wrap gap-2">
@@ -220,7 +227,7 @@ export default function LeadsPage() {
           <ul className="divide-y divide-[#f1f3f4]">
             {shown.map((l) => {
               const ch = CHANNEL_STYLE[l.channel];
-              const href = hrefFor(l);
+              const href = hrefFor(l, agentPortal);
               const open = () => (href ? router.push(href) : setEditing(l));
               const isViewer = l.kind === 'VIEWER';
               const Row = isViewer ? 'div' : 'button';
@@ -234,7 +241,7 @@ export default function LeadsPage() {
                     </span>
                     <span className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <span className={cn('inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-medium', ch.cls)}>
-                        <MaterialIcon name={ch.icon} size={13} />{ch.label}
+                        <MaterialIcon name={ch.icon} size={13} />{agentPortal && l.channel === 'AGENT' ? 'Referral' : agentPortal && l.channel === 'MANUAL' ? 'You' : ch.label}
                       </span>
                       <span className="truncate text-[12.5px] text-[#3c4043]">
                         {l.sourceLabel}{l.agent ? ` · ${l.agent.displayName}` : ''}{l.addedBy ? ` · by ${l.addedBy}` : ''}

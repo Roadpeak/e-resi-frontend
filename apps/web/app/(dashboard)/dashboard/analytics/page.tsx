@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { Eye, MessageSquare, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { StatCard } from '../../../../components/dashboard/StatCard';
 import { useDeveloperStats, useMyProperties, useDeveloperInquiries, useDeveloperEngagement } from '../../../../lib/api/queries';
@@ -39,6 +40,8 @@ const weekday = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('en-KE', { weekday: 'short' });
 
 export default function DashboardAnalytics() {
+  // Also serves /agent/analytics, scoped by the API to the agent's own listings.
+  const side: 'developer' | 'agent' = (usePathname() ?? '').startsWith('/agent') ? 'agent' : 'developer';
   const { data: stats } = useDeveloperStats();
   const { data: propertiesData } = useMyProperties({ limit: 10 });
   const { data: inquiriesData } = useDeveloperInquiries({ limit: 100 });
@@ -171,9 +174,9 @@ export default function DashboardAnalytics() {
       </div>
 
       {/* Which partner agents actually drive traffic and leads — per development. */}
-      <ReferralTrafficPanel side="developer" />
+      <ReferralTrafficPanel side={side} />
       {/* Signed-in customers quietly browsing — one tap files them as leads. */}
-      <InterestedVisitorsPanel side="developer" />
+      <InterestedVisitorsPanel side={side} />
     </div>
   );
 }

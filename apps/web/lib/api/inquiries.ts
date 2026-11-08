@@ -10,7 +10,8 @@ export interface Inquiry {
   reply?: string | null;
   repliedAt?: string | null;
   createdAt: string;
-  property: { id: string; name: string; slug: string };
+  /** listedByAgentId set → an agent-owned development (agent lists only). */
+  property: { id: string; name: string; slug: string; listedByAgentId?: string | null };
   unit?: { id: string; name: string } | null;
   /**
    * Set once a reply turned this lead into a chat thread. Absent for guest

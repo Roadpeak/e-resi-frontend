@@ -92,7 +92,8 @@ export function useMyProperties(query: PropertiesQuery = {}) {
       const res = await propertiesApi.myListings(query);
       return { items: (res.data ?? []).map(toProperty), total: res.meta?.total ?? 0 };
     },
-    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+    // Agents own listings too (agent-owned developments).
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'AGENT' || user?.role === 'ADMIN'),
   });
 }
 
@@ -102,7 +103,8 @@ export function useDeveloperEngagement(days = 7) {
   return useQuery({
     queryKey: ['analytics', 'developer-engagement', days],
     queryFn: () => analyticsApi.developerEngagement(days),
-    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+    // Agents own listings too (agent-owned developments).
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'AGENT' || user?.role === 'ADMIN'),
   });
 }
 
@@ -154,7 +156,8 @@ export function useDeveloperStats() {
   return useQuery({
     queryKey: ['analytics', 'developer-stats'],
     queryFn: () => analyticsApi.developerStats(),
-    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+    // Agents own listings too (agent-owned developments).
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'AGENT' || user?.role === 'ADMIN'),
   });
 }
 
@@ -166,10 +169,13 @@ export function useDeveloperInquiries(params: { page?: number; limit?: number; s
   return useQuery({
     queryKey: ['inquiries', 'developer', params],
     queryFn: async () => {
-      const res = await inquiriesApi.listForDeveloper(params);
+      const res = user?.role === 'AGENT'
+        ? await inquiriesApi.listForAgent(params)
+        : await inquiriesApi.listForDeveloper(params);
       return { items: res.data, total: res.meta.total };
     },
-    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+    // Agents own listings too (agent-owned developments).
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'AGENT' || user?.role === 'ADMIN'),
   });
 }
 

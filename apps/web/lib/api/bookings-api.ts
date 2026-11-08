@@ -12,7 +12,8 @@ export interface Booking {
   message?: string | null;
   meetingUrl?: string | null;
   createdAt: string;
-  property: { id: string; name: string; slug: string };
+  /** listedByAgentId set → an agent-owned development (agent lists only). */
+  property: { id: string; name: string; slug: string; listedByAgentId?: string | null };
 }
 
 export interface BookingsResponse {
