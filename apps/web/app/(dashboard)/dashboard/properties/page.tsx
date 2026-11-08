@@ -24,6 +24,8 @@ const STATUS_CHIPS: Record<string, string> = {
   ACTIVE: 'bg-[#e6f4ea] text-[#188038]',
   SOLD_OUT: 'bg-[#fce8e6] text-[#c5221f]',
   ARCHIVED: 'bg-[#f1f3f4] text-[#5f6368]',
+  PENDING_PAYMENT: 'bg-[#fef7e0] text-[#b06000]',
+  PAUSED: 'bg-[#fce8e6] text-[#c5221f]',
 };
 
 type Filter = 'all' | 'live' | 'review' | 'changes' | 'archived';

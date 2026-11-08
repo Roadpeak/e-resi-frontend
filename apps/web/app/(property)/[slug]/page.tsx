@@ -132,7 +132,8 @@ export default async function PropertyPage({ params }: Props) {
   const { slug } = await params;
 
   const property: Property | null = await fetchProperty(slug);
-  if (!property) notFound();
+  // Awaiting its listing fee or paused for non-payment: not on show to buyers.
+  if (!property || property.status === 'PENDING_PAYMENT' || property.status === 'PAUSED') notFound();
 
   const rentListings = await fetchRentListings(property.id);
 

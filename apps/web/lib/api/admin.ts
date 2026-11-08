@@ -252,6 +252,11 @@ export const peopleApi = {
 
 export interface AdminProperty {
   id: string;
+  /** Per-listing plan override (null = follow the default) and the plan billed now. */
+  listingPlanOverride?: 'MONTHLY' | 'ONE_TIME' | null;
+  listingPlan?: 'MONTHLY' | 'ONE_TIME' | null;
+  listingPendingPlan?: 'MONTHLY' | 'ONE_TIME' | null;
+  listingPendingPlanAt?: string | null;
   slug: string;
   name: string;
   status: string;

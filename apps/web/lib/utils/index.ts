@@ -84,6 +84,8 @@ export function getStatusLabel(status: string, completionDate?: string | null): 
     SOLD_OUT: 'Sold Out',
     DRAFT: 'Pending review',
     ARCHIVED: 'Archived',
+    PENDING_PAYMENT: 'Awaiting payment',
+    PAUSED: 'Paused — fee unpaid',
     // The read path used to lowercase status before it reached here; tolerate
     // both so an older cached payload still renders a label rather than a raw
     // enum value.

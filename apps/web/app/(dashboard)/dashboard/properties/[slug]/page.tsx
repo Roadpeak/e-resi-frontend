@@ -17,6 +17,7 @@ import { AreaSearchInput } from '../../../../../components/dashboard/AreaSearchI
 import { PropertyActionsMenu } from '../../../../../components/dashboard/PropertyActionsMenu';
 import { PropertySectionNav } from '../../../../../components/dashboard/PropertySubpage';
 import { PROPERTY_SECTIONS, isPublicStatus, sectionHref } from '../../../../../components/dashboard/propertySections';
+import { ListingFeeBanner } from '../../../../../components/dashboard/ListingFeeBanner';
 import { REVIEW_CHIP, ReviewStatusBanner, reviewStateOf } from '../../../../../components/dashboard/ReviewStatus';
 
 interface DashProperty {
@@ -28,7 +29,8 @@ interface DashProperty {
   tagline?: string | null;
   description?: string | null;
   category: string;
-  status: 'DRAFT' | 'ACTIVE' | 'OFF_PLAN' | 'SOLD_OUT' | 'ARCHIVED';
+  status: 'DRAFT' | 'ACTIVE' | 'OFF_PLAN' | 'SOLD_OUT' | 'ARCHIVED' | 'PENDING_PAYMENT' | 'PAUSED';
+  listingInvoiceId?: string | null;
   /** Set when an admin has reviewed it; a DRAFT with this set was sent back. */
   reviewedAt?: string | null;
   reviewNotes?: string | null;
@@ -67,6 +69,8 @@ const STATUS_CHIPS: Record<string, { label: string; cls: string }> = {
   OFF_PLAN: { label: 'Off plan', cls: 'bg-[#e8f0fe] text-[#1967d2]' },
   SOLD_OUT: { label: 'Sold out', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
   ARCHIVED: { label: 'Archived', cls: 'bg-[#f1f3f4] text-[#5f6368]' },
+  PENDING_PAYMENT: { label: 'Awaiting payment', cls: 'bg-[#fef7e0] text-[#b06000]' },
+  PAUSED: { label: 'Paused', cls: 'bg-[#fce8e6] text-[#c5221f]' },
 };
 
 const inputCls =
@@ -88,7 +92,7 @@ function parseCoordinates(raw?: string): { latitude?: number; longitude?: number
 }
 
 export default function DashboardPropertyPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { base } = usePropertyPaths();
+  const { base, agent } = usePropertyPaths();
   const { slug } = use(params);
   const router = useRouter();
   // Live listing fee from the admin catalogue (the built-in fallback is not what admin charges).
@@ -345,6 +349,8 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
 
       <PropertySectionNav slug={property.slug} />
       {error && <p className="rounded-xl bg-[#fce8e6] px-4 py-2.5 text-sm text-[#c5221f]">{error}</p>}
+
+      <ListingFeeBanner status={property.status} invoiceId={property.listingInvoiceId} agent={agent} />
 
       <ReviewStatusBanner
         status={property.status}

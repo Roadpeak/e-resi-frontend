@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ConfirmDelete } from '../../../../components/admin/ConfirmDelete';
+import { billingApi } from '../../../../lib/api/billing';
 import { MaterialIcon } from '../../../../components/dashboard/MaterialIcon';
 import { adminPropertiesApi, type AdminProperty } from '../../../../lib/api/admin';
 import { propertiesApi } from '../../../../lib/api/properties';
@@ -18,6 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
   OFF_PLAN: 'bg-[#e8f0fe] text-[#1967d2]',
   SOLD_OUT: 'bg-[#f1f3f4] text-[#5f6368]',
   ARCHIVED: 'bg-[#f1f3f4] text-[#5f6368]',
+  PENDING_PAYMENT: 'bg-[#fef7e0] text-[#b06000]',
+  PAUSED: 'bg-[#fce8e6] text-[#c5221f]',
 };
 
 const FILTERS = [
@@ -58,7 +61,7 @@ export default function AdminProperties() {
       adminPropertiesApi.review(slug, decision, notes),
     onSuccess: (p) => {
       refresh();
-      flash(`${p.name} ${p.status === 'ACTIVE' ? 'approved and live' : 'returned to draft'}`);
+      flash(`${p.name} ${p.status === 'ACTIVE' ? 'approved and live' : p.status === 'PENDING_PAYMENT' ? 'approved — invoiced, goes live once paid' : 'returned to draft'}`);
     },
     onError,
   });
@@ -68,6 +71,16 @@ export default function AdminProperties() {
     onSuccess: (p) => {
       refresh();
       flash(`${p.name} ${p.isFeatured ? 'featured' : 'unfeatured'}`);
+    },
+    onError,
+  });
+
+  const plan = useMutation({
+    mutationFn: ({ slug, override }: { slug: string; override: 'MONTHLY' | 'ONE_TIME' | null }) =>
+      billingApi.setListingPlanOverride(slug, override),
+    onSuccess: (r) => {
+      refresh();
+      flash(r.scheduled ? 'Listing plan changed — the owner has been given notice' : 'Listing plan saved');
     },
     onError,
   });
@@ -162,6 +175,7 @@ export default function AdminProperties() {
               busy={review.isPending || feature.isPending}
               onReview={(decision, notes) => review.mutate({ slug: p.slug, decision, notes })}
               onFeature={(on) => feature.mutate({ slug: p.slug, on })}
+              onPlan={(override) => plan.mutate({ slug: p.slug, override })}
               onDelete={() => { setError(''); setDeleting(p); }}
               onDomain={(customDomain, whiteLabel) => domain.mutate({ slug: p.slug, customDomain, whiteLabel })}
               domainBusy={domain.isPending}
@@ -196,6 +210,7 @@ function PropertyRow({
   busy,
   onReview,
   onFeature,
+  onPlan,
   onDelete,
   onDomain,
   domainBusy,
@@ -204,6 +219,7 @@ function PropertyRow({
   busy: boolean;
   onReview: (decision: 'APPROVE' | 'REJECT', notes?: string) => void;
   onFeature: (on: boolean) => void;
+  onPlan: (override: 'MONTHLY' | 'ONE_TIME' | null) => void;
   onDelete: () => void;
   onDomain: (customDomain: string, whiteLabel: boolean) => void;
   domainBusy: boolean;
@@ -319,6 +335,19 @@ function PropertyRow({
               {property.isFeatured ? 'Unfeature' : 'Feature'}
             </button>
           )}
+          <select
+            aria-label={`Listing plan for ${property.name}`}
+            title={property.listingPendingPlan
+              ? `Moving to ${property.listingPendingPlan === 'ONE_TIME' ? 'one-time' : 'monthly'} on ${new Date(property.listingPendingPlanAt ?? '').toLocaleDateString()}`
+              : 'Listing plan for this development'}
+            value={property.listingPlanOverride ?? ''}
+            onChange={(e) => onPlan((e.target.value || null) as 'MONTHLY' | 'ONE_TIME' | null)}
+            className="rounded-full border border-[#dadce0] bg-white px-3 py-2 text-[13px] font-medium text-[#5f6368] hover:bg-[#f1f3f4]"
+          >
+            <option value="">Plan: follow default</option>
+            <option value="MONTHLY">Plan: always monthly</option>
+            <option value="ONE_TIME">Plan: always one-time</option>
+          </select>
           <button
             onClick={onDelete}
             disabled={busy}

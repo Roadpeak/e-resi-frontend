@@ -103,6 +103,18 @@ export const billingApi = {
     }>(`/billing/invoices/${id}/pay-mpesa`, { phone }),
 
   /** Admin: chase an unpaid invoice with a termination warning. */
+  /** Public: listing-fee plans and prices (for the listing wizard). */
+  listingPlans: () => apiClient.get<ListingPlansConfig>('/billing/listing-plans', { skipAuth: true }),
+  /** Admin: listing-fee settings + counts. */
+  adminListingPlans: () => apiClient.get<ListingPlansConfig & { counts: { pendingPayment: number; paused: number; pendingChanges: number } }>('/admin/billing/listing-plans'),
+  /** Admin: change the default plan (owners get 7 days notice). */
+  setDefaultListingPlan: (ownerType: 'DEVELOPER' | 'AGENT', plan: 'MONTHLY' | 'ONE_TIME') =>
+    apiClient.post<{ plan: string; listingsNotified: number }>('/admin/billing/listing-plans/default', { ownerType, plan }),
+  /** Admin: one listing's override (null = follow default). */
+  setListingPlanOverride: (slug: string, override: 'MONTHLY' | 'ONE_TIME' | null) =>
+    apiClient.patch<{ scheduled: boolean; plan?: string }>(`/admin/billing/listing-plans/properties/${slug}`, { override }),
+  /** Admin: run the daily listing-fee job now. */
+  runListingPlans: () => apiClient.post<Record<string, number>>('/admin/billing/listing-plans/run'),
   /** Admin: waive an unpaid monthly listing-fee invoice (passcode checked server-side, audited). */
   waiveInvoice: (id: string, body: { passcode: string; reason: string }) =>
     apiClient.post<Invoice>(`/admin/billing/invoices/${id}/waive`, body),
@@ -170,10 +182,24 @@ export interface InvoiceLine {
   amount: number;
 }
 
+export interface ListingPlansConfig {
+  currency: string;
+  developer: { enabled: boolean; plan: 'MONTHLY' | 'ONE_TIME'; monthly: number; oneTime: number };
+  agent: {
+    enabled: boolean; plan: 'MONTHLY' | 'ONE_TIME';
+    monthly: { individual: number; company: number };
+    oneTime: { individual: number; company: number };
+    membershipEnabled: boolean;
+  };
+  honourOneTime: boolean;
+  noticeDays: number;
+  graceDays: number;
+}
+
 export interface Invoice {
   id: string;
   number: string;
-  kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN';
+  kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN' | 'LISTING';
   status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED' | 'WAIVED';
   billedToName: string;
   billedToEmail: string;

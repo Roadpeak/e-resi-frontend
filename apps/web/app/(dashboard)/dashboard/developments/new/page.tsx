@@ -9,7 +9,8 @@ import { cn } from '../../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { useDevelopmentStore } from '../../../../../lib/stores/development.store';
 import { StepDevelopment, StepServices } from '../../../../../components/development/steps';
-import { LISTING_FEE_MONTHLY, computeBilling, fmtUsd } from '../../../../../lib/onboarding/catalog';
+import { computeBilling, fmtUsd } from '../../../../../lib/onboarding/catalog';
+import { useListingQuote } from '../../../../../components/billing/useListingQuote';
 import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
 import { toCategory } from '../../../../../lib/onboarding/development-types';
 import { propertiesApi } from '../../../../../lib/api/properties';
@@ -46,6 +47,7 @@ export default function NewDevelopmentPage() {
   // The same wizard serves agents listing a development themselves; they add
   // who the developer is and confirm they may market it.
   const { base, agent } = usePropertyPaths();
+  const quote = useListingQuote(agent);
   const [agentInfo, setAgentInfo] = useState({ developerName: '', authority: false, mandateUrl: '', mandateName: '' });
 
   const billing = computeBilling(Object.keys(media.services));
@@ -113,7 +115,7 @@ export default function NewDevelopmentPage() {
         submissionData: {
           development,
           media,
-          listingFeeMonthly: LISTING_FEE_MONTHLY,
+          listingFee: { amount: quote.amount, oneTime: quote.oneTime, free: quote.free },
           servicesOneTimeTotal: billing.oneTimeTotal,
         },
       });
@@ -196,7 +198,9 @@ export default function NewDevelopmentPage() {
       {
         icon: Globe,
         title: 'It goes live',
-        body: `Buyers can find it on e-resi. The ${fmtUsd(LISTING_FEE_MONTHLY)}/month listing fee starts only then.`,
+        body: quote.free
+          ? 'Buyers can find it on e-resi as soon as it is approved — listing is free.'
+          : `Once approved, pay the ${quote.short} listing fee and it goes live straight away.`,
       },
     ];
     return (
@@ -265,7 +269,7 @@ export default function NewDevelopmentPage() {
       <div className="mb-8">
         <h1 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Add a development</h1>
         <p className="mt-1 text-base text-[#5f6368]">
-          Each development gets its own branded page — listing costs {fmtUsd(LISTING_FEE_MONTHLY)}/month once live.
+          Each development gets its own branded page — {quote.free ? 'listing is free' : <>listing costs {quote.short}, paid after approval</>}.
         </p>
         <ol className="mt-6 flex items-center gap-2">
           {STEPS.map((label, i) => {
@@ -363,6 +367,7 @@ export default function NewDevelopmentPage() {
 
 function ReviewAndCosts() {
   const { development: dev, media, setStep, toggleService } = useDevelopmentStore();
+  const quote = useListingQuote(usePropertyPaths().agent);
   const billing = computeBilling(Object.keys(media.services));
   const uploadCount = Object.values(media.uploads).reduce((n, files) => n + files.length, 0);
 
@@ -450,7 +455,7 @@ function ReviewAndCosts() {
           <div className="flex items-center justify-between py-2.5">
             <span className="text-[15px] text-[#5f6368]">Listing fee</span>
             <span className="text-[15px] font-medium text-[#202124] tabular-nums">
-              {fmtUsd(billing.listingFeeMonthly)} / month
+              {quote.price}
             </span>
           </div>
           {[...billing.production, ...billing.marketing].map((s) => (
@@ -475,15 +480,22 @@ function ReviewAndCosts() {
               <span className="block text-[22px] font-normal text-[#202124] tabular-nums">
                 {fmtUsd(billing.oneTimeTotal)} <span className="text-[15px] text-[#5f6368]">one-time</span>
               </span>
-              <span className="block text-[15px] text-[#5f6368] tabular-nums">
-                + {fmtUsd(billing.listingFeeMonthly)} / month when live
-              </span>
+              {!quote.free && (
+                <span className="block text-[15px] text-[#5f6368] tabular-nums">
+                  + {quote.oneTime ? `${fmtUsd(quote.amount)} listing fee, once` : `${fmtUsd(quote.amount)} / month listing fee`}
+                </span>
+              )}
             </span>
           </div>
         </div>
         <p className="mt-4 rounded-2xl bg-[#f8f9fa] border border-transparent p-4 text-sm leading-relaxed text-[#5f6368]">
           Production fees are one-time and payable 50% before the shoot, 50% on delivery.
-          The monthly listing fee starts only when this development goes live. All prices exclude VAT.
+          {quote.free
+            ? 'Listing is free: it goes live as soon as our team approves it.'
+            : quote.oneTime
+              ? 'The one-time listing fee is invoiced once our team approves it; pay it and the development goes live and stays up.'
+              : 'The first month is invoiced once our team approves it; pay it and the development goes live. It then renews monthly.'}{' '}
+          All prices exclude VAT.
         </p>
       </div>
     </div>

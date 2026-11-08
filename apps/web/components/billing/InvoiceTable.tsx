@@ -26,7 +26,7 @@ export const invoiceStatusLabel = (s: Invoice['status']) => (s === 'WAIVED' ? 'c
 
 /** Only an unpaid monthly listing fee (developer or agent) can be waived. */
 export const isWaivable = (inv: Invoice) =>
-  inv.kind === 'SUBSCRIPTION' && !!(inv.listingFeeRunId || inv.agentFeeRunId)
+  (inv.kind === 'LISTING' || (inv.kind === 'SUBSCRIPTION' && !!(inv.listingFeeRunId || inv.agentFeeRunId)))
   && (inv.status === 'ISSUED' || inv.status === 'OVERDUE' || inv.status === 'DRAFT');
 
 export const money = (n: number, c: string) =>
@@ -120,7 +120,7 @@ export function InvoiceTable({
                 </td>
               )}
               <td className="py-3 pr-4 text-[#5f6368]">
-                {inv.lineItems?.[0]?.description ?? (inv.kind === 'SUBSCRIPTION' ? 'Listing fee' : inv.kind === 'DOMAIN' ? 'Domain' : 'Production')}
+                {inv.lineItems?.[0]?.description ?? (inv.kind === 'SUBSCRIPTION' || inv.kind === 'LISTING' ? 'Listing fee' : inv.kind === 'DOMAIN' ? 'Domain' : 'Production')}
               </td>
               <td className="py-3 pr-4 text-[#5f6368]">
                 {shortDate(inv.dueAt)}
