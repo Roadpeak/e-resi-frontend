@@ -87,6 +87,13 @@ jobs:
           # so backend deploys can't touch it. Bypass that policy with a
           # direct `docker pull`, then roll only the frontend container.
           export FRONTEND_IMAGE_TAG="$IMAGE_TAG"
+          # Every release is tagged by SHA, so `prune -f` (dangling only) never
+          # freed them and the disk filled up (2026-11-08: "no space left" on
+          # pull). Drop unused images older than 3 days and the build cache
+          # first; images of running containers are never touched.
+          docker image prune -af --filter "until=72h" || true
+          docker builder prune -af || true
+          df -h / | tail -1
           docker pull "ghcr.io/roadpeak/e-resi-frontend:$IMAGE_TAG"
           docker compose -f docker-compose.prod.yml up -d --no-deps frontend
 
