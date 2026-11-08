@@ -28,6 +28,8 @@ export interface LeadRow {
   details?: { label: string; value: string }[];
   /** Website leads: which form (CONTACT, VALUATION, VIEWING, CAREER, NEWSLETTER). */
   siteType?: string;
+  /** Website viewing bookings: the slot (ISO). */
+  slotAt?: string | null;
   createdAt: string;
 }
 
