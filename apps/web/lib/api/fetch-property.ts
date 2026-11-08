@@ -86,6 +86,7 @@ function normaliseProperty(raw: any): Property {
     logoUrl: findLogo(raw),
     // Backend exposes the developer as companyName; the UI reads .name.
     developer: normaliseDeveloper(raw.developer),
+    listedByAgent: raw.listedByAgent ?? null,
     // Scene categories/enums arrive UPPER_SNAKE from Prisma; the UI keys off lower_snake.
     cinematicScenes: (raw.cinematicScenes ?? []).map((s: any) => ({
       ...s,

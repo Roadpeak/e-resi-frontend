@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from '../../../../components/dashboard/PropertyBase';
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -45,6 +46,7 @@ function StatusChip({ p }: { p: P }) {
 }
 
 export default function DashboardProperties() {
+  const { newHref } = usePropertyPaths();
   const [actionError, setActionError] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
@@ -95,7 +97,7 @@ export default function DashboardProperties() {
           <h1 className="text-[26px] font-normal text-[#202124]">Your properties</h1>
           <p className="text-[14px] text-[#5f6368]">{properties.length} development{properties.length === 1 ? '' : 's'} in your portfolio</p>
         </div>
-        <Link href="/dashboard/developments/new"
+        <Link href={newHref}
           className="inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1765cc]">
           <Plus size={15} /> Add development
         </Link>
@@ -108,7 +110,7 @@ export default function DashboardProperties() {
           <Building2 size={32} className="mx-auto mb-3 text-[#bdc1c6]" />
           <p className="text-[16px] font-medium text-[#202124]">No developments yet</p>
           <p className="mx-auto mt-1 max-w-md text-[14px] text-[#5f6368]">Submit a development. Once our team approves it, buyers can find it and send inquiries.</p>
-          <Link href="/dashboard/developments/new"
+          <Link href={newHref}
             className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[14px] font-medium text-white hover:bg-[#1765cc]">
             <Plus size={14} /> Add development
           </Link>
@@ -186,7 +188,7 @@ export default function DashboardProperties() {
           ) : view === 'grid' ? (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {shown.map((p) => <PropertyCard key={p.id} p={p} onError={setActionError} />)}
-              <Link href="/dashboard/developments/new"
+              <Link href={newHref}
                 className="flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-3xl border border-dashed border-[#dadce0] bg-white text-[#5f6368] transition-colors hover:border-[#1a73e8] hover:text-[#1a73e8]">
                 <Plus size={26} />
                 <span className="text-[14px] font-medium">Add a development</span>
@@ -231,22 +233,24 @@ function Features({ p }: { p: P }) {
 }
 
 function Actions({ p, onError }: { p: P; onError: (m: string) => void }) {
+  const { base } = usePropertyPaths();
   return (
     <div className="flex items-center gap-0.5">
-      <ActionIcon href={`/dashboard/properties/${p.slug}`} label="Manage development"><Eye size={15} /></ActionIcon>
-      <ActionIcon href={`/dashboard/properties/${p.slug}/customise`} label="Templates"><LayoutTemplate size={15} /></ActionIcon>
-      <ActionIcon href={`/dashboard/properties/${p.slug}/domain`} label="Domain"><Globe size={15} /></ActionIcon>
+      <ActionIcon href={`${base}/${p.slug}`} label="Manage development"><Eye size={15} /></ActionIcon>
+      <ActionIcon href={`${base}/${p.slug}/customise`} label="Templates"><LayoutTemplate size={15} /></ActionIcon>
+      <ActionIcon href={`${base}/${p.slug}/domain`} label="Domain"><Globe size={15} /></ActionIcon>
       <PropertyActionsMenu property={p} onError={onError} />
     </div>
   );
 }
 
 function PropertyCard({ p, onError }: { p: P; onError: (m: string) => void }) {
+  const { base } = usePropertyPaths();
   const review = reviewStateOf(p);
   const where = [p.address?.neighborhood, p.address?.city].filter(Boolean).join(', ');
   return (
     <article className="flex flex-col overflow-hidden rounded-3xl border border-[#dadce0] bg-white transition-shadow hover:shadow-[0_8px_28px_rgba(32,33,36,0.10)]">
-      <Link href={`/dashboard/properties/${p.slug}`} className="group relative block aspect-[16/10] overflow-hidden bg-[#f1f3f4]">
+      <Link href={`${base}/${p.slug}`} className="group relative block aspect-[16/10] overflow-hidden bg-[#f1f3f4]">
         {p.heroImageUrl
           ? <Image src={p.heroImageUrl} alt={p.name} fill sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
           : <Building2 size={30} className="absolute inset-0 m-auto text-[#bdc1c6]" />}
@@ -254,7 +258,7 @@ function PropertyCard({ p, onError }: { p: P; onError: (m: string) => void }) {
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="min-w-0">
-          <Link href={`/dashboard/properties/${p.slug}`} className="block truncate text-[16px] font-medium text-[#202124] hover:underline">{p.name}</Link>
+          <Link href={`${base}/${p.slug}`} className="block truncate text-[16px] font-medium text-[#202124] hover:underline">{p.name}</Link>
           <p className="flex items-center gap-1 truncate text-[13px] text-[#5f6368]"><MapPin size={12} className="shrink-0" />{where || 'Location not set'}</p>
         </div>
         <div className="flex items-baseline justify-between gap-2">
@@ -267,7 +271,7 @@ function PropertyCard({ p, onError }: { p: P; onError: (m: string) => void }) {
           <p className="text-[12px] text-[#80868b]">{review === 'pending' ? `Submitted ${fmtShortDate(p.createdAt)}` : 'Open it to see the reviewer’s note'}</p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-[#f1f3f4] pt-3">
-          <Link href={`/dashboard/properties/${p.slug}`} className="text-[13.5px] font-medium text-[#1a73e8] hover:underline">Manage</Link>
+          <Link href={`${base}/${p.slug}`} className="text-[13.5px] font-medium text-[#1a73e8] hover:underline">Manage</Link>
           <Actions p={p} onError={onError} />
         </div>
       </div>
@@ -276,6 +280,7 @@ function PropertyCard({ p, onError }: { p: P; onError: (m: string) => void }) {
 }
 
 function PropertyTable({ rows, onError }: { rows: P[]; onError: (m: string) => void }) {
+  const { base } = usePropertyPaths();
   return (
     <div className="overflow-hidden rounded-3xl border border-[#dadce0] bg-white">
       <div className="overflow-x-auto">
@@ -299,7 +304,7 @@ function PropertyTable({ rows, onError }: { rows: P[]; onError: (m: string) => v
                       {p.heroImageUrl && <Image src={p.heroImageUrl} alt={p.name} fill className="object-cover" sizes="64px" />}
                     </div>
                     <div className="min-w-0">
-                      <Link href={`/dashboard/properties/${p.slug}`} className="block max-w-56 truncate text-[15px] font-medium text-[#202124] hover:underline">{p.name}</Link>
+                      <Link href={`${base}/${p.slug}`} className="block max-w-56 truncate text-[15px] font-medium text-[#202124] hover:underline">{p.name}</Link>
                       <p className="text-[12.5px] text-[#5f6368]">{[p.address?.neighborhood, p.address?.city].filter(Boolean).join(', ') || '—'}</p>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from '../../../../../../components/dashboard/PropertyBase';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -54,6 +55,7 @@ const MATS: Record<string, string> = {
 };
 
 export default function TemplateGallery() {
+  const { base } = usePropertyPaths();
   const { slug } = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
 
@@ -127,7 +129,7 @@ export default function TemplateGallery() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
-            href={`/dashboard/properties/${slug}`}
+            href={`${base}/${slug}`}
             className="inline-flex items-center gap-1 text-[13px] text-[#5f6368] transition-colors hover:text-[#202124]"
           >
             <MaterialIcon name="arrow_back" className="text-[16px]" />
@@ -180,7 +182,7 @@ export default function TemplateGallery() {
             template={t}
             live={t.key === liveKey}
             src={previewSrcFor(slug, { ...saved, templateKey: t.key })}
-            customiseHref={`/dashboard/properties/${slug}/customise/${t.key.toLowerCase()}`}
+            customiseHref={`${base}/${slug}/customise/${t.key.toLowerCase()}`}
             onApply={() => {
               setError('');
               apply.mutate(t.key);

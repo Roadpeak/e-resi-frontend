@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from '../../../../../components/dashboard/PropertyBase';
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -87,6 +88,7 @@ function parseCoordinates(raw?: string): { latitude?: number; longitude?: number
 }
 
 export default function DashboardPropertyPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { base } = usePropertyPaths();
   const { slug } = use(params);
   const router = useRouter();
   // Live listing fee from the admin catalogue (the built-in fallback is not what admin charges).
@@ -206,7 +208,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
     try {
       await apiClient.delete(`/properties/${slug}/permanent`);
       await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
-      router.push('/dashboard/properties');
+      router.push(base);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not delete this development.');
     } finally {
@@ -222,7 +224,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
       await queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
       await queryClient.invalidateQueries({ queryKey: ['dash-property-archived', slug] });
       await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
-      if (status === 'ARCHIVED') router.push('/dashboard/properties');
+      if (status === 'ARCHIVED') router.push(base);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not change status.');
     } finally {
@@ -272,7 +274,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
             >
               <Trash2 size={15} /> Delete permanently
             </button>
-            <Link href="/dashboard/properties" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors">
+            <Link href={base} className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors">
               <ArrowLeft size={15} /> Back to properties
             </Link>
           </div>
@@ -282,7 +284,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
     return (
       <div className="mx-auto max-w-2xl py-16 text-center">
         <p className="text-base text-[#5f6368]">This development could not be loaded.</p>
-        <Link href="/dashboard/properties" className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
+        <Link href={base} className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
           <ArrowLeft size={15} /> Back to properties
         </Link>
       </div>
@@ -297,7 +299,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
     <div className="mx-auto max-w-5xl space-y-6">
       {/* ── Header ── */}
       <div>
-        <Link href="/dashboard/properties" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
+        <Link href={base} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
           <ArrowLeft size={14} /> Properties
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
@@ -383,7 +385,7 @@ export default function DashboardPropertyPage({ params }: { params: Promise<{ sl
           return (
             <Link
               key={x.key}
-              href={sectionHref(property.slug, x)}
+              href={sectionHref(property.slug, x, base)}
               className="group flex items-start gap-3 rounded-3xl border border-[#dadce0] bg-white p-5 transition-colors hover:border-[#c6dafc] hover:bg-[#f8fbff]"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1f3f4] text-[#5f6368] group-hover:bg-[#e8f0fe] group-hover:text-[#1a73e8]">

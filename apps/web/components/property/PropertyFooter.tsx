@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MarketedBy } from './MarketedBy';
 import { MapPin, Globe, ExternalLink } from 'lucide-react';
 import type { Property } from '../../lib/types';
 import { PropertyMonogram } from './PropertyMonogram';
@@ -37,6 +38,7 @@ export function PropertyFooter({ property, whiteLabel = false }: Props) {
           {/* Developer contact */}
           <div className="lg:col-span-1">
             <h4 className="mb-5 text-xs font-semibold uppercase tracking-widest text-gray-400">Developer</h4>
+            <MarketedBy property={property} className="mb-5" />
             <div className="flex items-center gap-3 mb-5">
               <PropertyMonogram
                 name={property.developer?.name ?? ''}

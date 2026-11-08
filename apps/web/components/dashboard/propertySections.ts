@@ -27,7 +27,8 @@ export const PROPERTY_SECTIONS: PropertySection[] = [
   { key: 'insights', label: 'Insights', path: '/insights', icon: BarChart3, blurb: 'Visits, leads and shared links' },
 ];
 
-export const sectionHref = (slug: string, s: PropertySection) => `/dashboard/properties/${slug}${s.path}`;
+/** Link to a section; `base` is the portal's management root (see PropertyBase). */
+export const sectionHref = (slug: string, s: PropertySection, base = '/dashboard/properties') => `${base}/${slug}${s.path}`;
 
 /** Buyers can open the page only in these states. */
 export const isPublicStatus = (status: string) =>

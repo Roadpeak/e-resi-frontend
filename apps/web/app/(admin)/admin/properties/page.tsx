@@ -232,9 +232,22 @@ function PropertyRow({
             )}
           </p>
           <p className="text-[13px] text-[#5f6368]">
-            {property.developer?.companyName ?? 'Unknown developer'}
+            {property.listedByAgent ? (
+              <>
+                <span className="mr-1.5 rounded-full bg-[#fef7e0] px-2 py-0.5 text-[11.5px] font-medium text-[#b06000]">Agent listing</span>
+                {property.listedByAgent.displayName}
+                {property.listedByAgent.kybStatus !== 'APPROVED' && <span className="text-[#c5221f]"> (agent not verified)</span>}
+                {' · developer: '}{property.developerName || '—'}
+              </>
+            ) : (property.developer?.companyName ?? 'Unknown developer')}
             {property.city && ` · ${[property.neighborhood, property.city].filter(Boolean).join(', ')}`}
           </p>
+          {property.listedByAgent && (
+            <p className="mt-0.5 text-[12px] text-[#5f6368]">
+              {property.marketingAuthorityConfirmed ? 'Agent confirmed authority to market' : 'Authority not confirmed'}
+              {property.mandateDocUrl && <> · <a href={property.mandateDocUrl} target="_blank" rel="noreferrer" className="font-medium text-[#1a73e8] hover:underline">View mandate letter</a></>}
+            </p>
+          )}
           <p className="mt-0.5 text-[12px] text-[#80868b]">
             {property._count?.units ?? 0} units · {property._count?.media ?? 0} media ·{' '}
             {property._count?.inquiries ?? 0} inquiries

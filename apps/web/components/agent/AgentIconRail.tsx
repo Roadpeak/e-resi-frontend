@@ -13,7 +13,10 @@ import { cn } from '../../lib/utils';
 
 const NAV = [
   { label: 'Overview', href: '/agent', icon: 'dashboard' },
-  { label: 'My Listings', href: '/agent/properties', icon: 'apartment' },
+  // Developments the agent lists and owns themselves.
+  { label: 'My Listings', href: '/agent/listings', icon: 'apartment' },
+  // Developers' developments assigned to them through a partnership.
+  { label: 'Partner Listings', href: '/agent/properties', icon: 'corporate_fare' },
   { label: 'Partners', href: '/agent/partners', icon: 'handshake' },
   { label: 'Deals', href: '/agent/deals', icon: 'payments' },
   { label: 'Reservations', href: '/agent/reservations', icon: 'vpn_key' },

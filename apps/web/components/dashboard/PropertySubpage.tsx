@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from './PropertyBase';
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -28,12 +29,13 @@ export interface SubpageProperty {
 
 /** Tabs across every page of one development. Scrolls sideways on a phone. */
 export function PropertySectionNav({ slug }: { slug: string }) {
+  const { base } = usePropertyPaths();
   const pathname = usePathname();
   return (
     <nav className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Development sections">
       <div className="flex min-w-max gap-1 border-b border-[#e8eaed]">
         {PROPERTY_SECTIONS.map((s) => {
-          const href = sectionHref(slug, s);
+          const href = sectionHref(slug, s, base);
           const active = pathname === href;
           return (
             <Link
@@ -70,6 +72,7 @@ export function PropertySubpage({
   description?: string;
   children: (property: SubpageProperty) => ReactNode;
 }) {
+  const { base } = usePropertyPaths();
   const [error, setError] = useState('');
   const { data: property, isLoading, isError } = useQuery({
     queryKey: ['dash-property', slug],
@@ -88,7 +91,7 @@ export function PropertySubpage({
     return (
       <div className="mx-auto max-w-2xl py-16 text-center">
         <p className="text-base text-[#5f6368]">This development could not be loaded. Archived developments must be restored first.</p>
-        <Link href={`/dashboard/properties/${slug}`} className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1a73e8]">
+        <Link href={`${base}/${slug}`} className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1a73e8]">
           <ArrowLeft size={15} /> Back to the development
         </Link>
       </div>
@@ -99,7 +102,7 @@ export function PropertySubpage({
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <Link
-          href={`/dashboard/properties/${slug}`}
+          href={`${base}/${slug}`}
           className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]"
         >
           <ArrowLeft size={14} /> {property.name}

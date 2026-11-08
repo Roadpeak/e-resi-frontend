@@ -13,6 +13,8 @@ import { LISTING_FEE_MONTHLY, computeBilling, fmtUsd } from '../../../../../lib/
 import { useCatalog } from '../../../../../lib/onboarding/useCatalog';
 import { toCategory } from '../../../../../lib/onboarding/development-types';
 import { propertiesApi } from '../../../../../lib/api/properties';
+import { uploadFile } from '../../../../../lib/api/media';
+import { usePropertyPaths } from '../../../../../components/dashboard/PropertyBase';
 
 const STEPS = ['Development details', 'Media & services', 'Review & costs'];
 
@@ -41,6 +43,10 @@ export default function NewDevelopmentPage() {
   const [error, setError] = useState('');
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  // The same wizard serves agents listing a development themselves; they add
+  // who the developer is and confirm they may market it.
+  const { base, agent } = usePropertyPaths();
+  const [agentInfo, setAgentInfo] = useState({ developerName: '', authority: false, mandateUrl: '', mandateName: '' });
 
   const billing = computeBilling(Object.keys(media.services));
   const isReview = step === 2;
@@ -55,6 +61,14 @@ export default function NewDevelopmentPage() {
     // development appears on, so it cannot be left to the default.
     if (step === 0 && !development.type) {
       setError('Choose a development type before continuing.');
+      return;
+    }
+    if (step === 0 && agent && !agentInfo.developerName.trim()) {
+      setError("Enter the developer's name before continuing.");
+      return;
+    }
+    if (step === 0 && agent && !agentInfo.authority) {
+      setError('Confirm you are authorised to market this development.');
       return;
     }
     if (!isReview) {
@@ -90,6 +104,11 @@ export default function NewDevelopmentPage() {
         completionDate: development.expectedCompletion
           ? `${development.expectedCompletion}-01T00:00:00.000Z`
           : undefined,
+        ...(agent && {
+          developerName: agentInfo.developerName.trim(),
+          marketingAuthorityConfirmed: agentInfo.authority,
+          mandateDocUrl: agentInfo.mandateUrl || undefined,
+        }),
         // full wizard payload for the review & production teams
         submissionData: {
           development,
@@ -215,14 +234,14 @@ export default function NewDevelopmentPage() {
         </ol>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/dashboard/properties"
+            href={base}
             className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors"
           >
             View my developments <ArrowRight size={15} />
           </Link>
           {createdSlug && (
             <Link
-              href={`/dashboard/properties/${createdSlug}`}
+              href={`${base}/${createdSlug}`}
               className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
             >
               Add units &amp; media
@@ -292,6 +311,7 @@ export default function NewDevelopmentPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
         >
+          {step === 0 && agent && <AgentListingFields value={agentInfo} onChange={setAgentInfo} />}
           {step === 0 && <StepDevelopment />}
           {step === 1 && <StepServices />}
           {step === 2 && <ReviewAndCosts />}
@@ -465,6 +485,69 @@ function ReviewAndCosts() {
           Production fees are one-time and payable 50% before the shoot, 50% on delivery.
           The monthly listing fee starts only when this development goes live. All prices exclude VAT.
         </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Agent listings only: who the developer is (they need not be on e-resi),
+ * the agent's confirmation that they may market it, and an optional mandate
+ * letter. Reviewed by our team before the listing goes live.
+ */
+function AgentListingFields({
+  value, onChange,
+}: {
+  value: { developerName: string; authority: boolean; mandateUrl: string; mandateName: string };
+  onChange: (v: { developerName: string; authority: boolean; mandateUrl: string; mandateName: string }) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState('');
+  async function onFile(file?: File) {
+    if (!file) return;
+    setErr('');
+    setUploading(true);
+    try {
+      const up = await uploadFile(file, 'documents');
+      onChange({ ...value, mandateUrl: up.url, mandateName: file.name });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
+  return (
+    <div className="mb-6 rounded-3xl border border-[#dadce0] bg-white p-6">
+      <h2 className="text-[17px] font-medium text-[#202124]">Developer &amp; authority</h2>
+      <p className="mt-1 text-[13.5px] text-[#5f6368]">
+        You&apos;re listing this development as an agent. Buyers see it as marketed by you; the developer doesn&apos;t need to be on e-resi.
+      </p>
+      <label htmlFor="agent-dev-name" className="mt-4 block text-[13px] font-medium text-[#5f6368]">Developer&apos;s name *</label>
+      <input id="agent-dev-name" value={value.developerName} maxLength={120}
+        onChange={(e) => onChange({ ...value, developerName: e.target.value })}
+        placeholder="e.g. Acme Developers Ltd"
+        className="mt-1.5 w-full rounded-xl border border-[#dadce0] px-3.5 py-2.5 text-[15px] text-[#202124] outline-none focus:border-[#1a73e8]" />
+      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#dadce0] p-3.5">
+        <input type="checkbox" checked={value.authority} onChange={(e) => onChange({ ...value, authority: e.target.checked })}
+          className="mt-0.5 h-4 w-4 accent-[#1a73e8]" />
+        <span className="text-[14px] leading-relaxed text-[#3c4043]">
+          I confirm I&apos;m authorised by the developer (or owner) to market and sell this development. *
+        </span>
+      </label>
+      <div className="mt-4">
+        <p className="text-[13px] font-medium text-[#5f6368]">Mandate or authority letter <span className="font-normal text-[#80868b]">(optional — speeds up review)</span></p>
+        {value.mandateUrl ? (
+          <div className="mt-1.5 flex items-center justify-between rounded-xl border border-[#4A80F5]/40 bg-[#EAF1FE] px-3.5 py-2.5">
+            <span className="truncate text-[14px] text-[#2E5BD7]">{value.mandateName || 'Uploaded'}</span>
+            <button type="button" onClick={() => onChange({ ...value, mandateUrl: '', mandateName: '' })} className="ml-2 text-[13px] font-medium text-[#2E5BD7]">Remove</button>
+          </div>
+        ) : (
+          <label className="mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 px-3.5 py-3 text-[14px] text-gray-500 hover:border-[#4A80F5] hover:text-[#4A80F5]">
+            {uploading ? 'Uploading…' : 'Upload PDF or image'}
+            <input type="file" accept=".pdf,image/*" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
+          </label>
+        )}
+        {err && <p className="mt-1.5 text-[13px] text-[#c5221f]">{err}</p>}
       </div>
     </div>
   );

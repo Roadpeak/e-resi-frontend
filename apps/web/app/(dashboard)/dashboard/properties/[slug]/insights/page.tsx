@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from '../../../../../../components/dashboard/PropertyBase';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -34,6 +35,7 @@ function duration(seconds: number): string {
 }
 
 export default function MiniSiteInsights() {
+  const { base } = usePropertyPaths();
   const { slug } = useParams<{ slug: string }>();
   const [days, setDays] = useState(30);
 
@@ -59,7 +61,7 @@ export default function MiniSiteInsights() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
-            href={`/dashboard/properties/${slug}`}
+            href={`${base}/${slug}`}
             className="inline-flex items-center gap-1 text-[13px] text-[#5f6368] transition-colors hover:text-[#202124]"
           >
             <MaterialIcon name="arrow_back" className="text-[16px]" />

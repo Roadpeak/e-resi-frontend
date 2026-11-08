@@ -1,5 +1,6 @@
 'use client';
 
+import { MarketedBy } from '../MarketedBy';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -621,6 +622,7 @@ export function KitTemplate({
             {/* Who is building it */}
             {property.developer?.name && (
               <div>
+                <MarketedBy property={property} onDark={style.onDark} className="mb-6" />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: muted }}>
                   Developer
                 </p>

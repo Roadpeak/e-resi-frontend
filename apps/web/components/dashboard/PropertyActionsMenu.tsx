@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from './PropertyBase';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
@@ -35,6 +36,7 @@ export function PropertyActionsMenu({
   variant?: 'icon' | 'button';
   onError?: (message: string) => void;
 }) {
+  const { base } = usePropertyPaths();
   const router = useRouter();
   const queryClient = useQueryClient();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -95,7 +97,7 @@ export function PropertyActionsMenu({
     try {
       await apiClient.patch(`/properties/${property.slug}/status`, { status });
       await refresh();
-      if (status === 'ARCHIVED') router.push('/dashboard/properties');
+      if (status === 'ARCHIVED') router.push(base);
     } catch (e) {
       onError?.(e instanceof ApiError ? e.message : 'Could not change the status.');
     } finally {
@@ -112,7 +114,7 @@ export function PropertyActionsMenu({
     try {
       await apiClient.delete(`/properties/${property.slug}/permanent`);
       await queryClient.invalidateQueries({ queryKey: ['my-properties'] });
-      router.push('/dashboard/properties');
+      router.push(base);
     } catch (e) {
       onError?.(e instanceof ApiError ? e.message : 'Could not delete this development.');
     } finally {
@@ -161,7 +163,7 @@ export function PropertyActionsMenu({
         >
           <p className="truncate px-4 pb-1.5 pt-1 text-[12px] font-medium text-[#80868b]">{property.name}</p>
           {PROPERTY_SECTIONS.map((s) => (
-            <Link key={s.key} href={sectionHref(property.slug, s)} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
+            <Link key={s.key} href={sectionHref(property.slug, s, base)} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
               <s.icon size={16} className="shrink-0 text-[#5f6368]" /> {s.label}
             </Link>
           ))}
@@ -172,7 +174,7 @@ export function PropertyActionsMenu({
               <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> Preview property
             </a>
           ) : (
-            <Link href={`/dashboard/properties/${property.slug}`} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
+            <Link href={`${base}/${property.slug}`} onClick={() => setOpen(false)} className={itemCls} role="menuitem">
               <ExternalLink size={16} className="shrink-0 text-[#5f6368]" /> Preview property
             </Link>
           )}

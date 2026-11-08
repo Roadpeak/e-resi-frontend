@@ -214,6 +214,11 @@ export interface Property {
   category: PropertyCategory;
   status: PropertyStatus;
   developer: Developer;
+  /** Set when an agent lists and owns this development (public details only). */
+  listedByAgent?: {
+    id: string; kind: string; displayName: string; logoUrl?: string | null; photoUrl?: string | null;
+    phone?: string | null; whatsapp?: string | null; email?: string | null; kybStatus?: string;
+  } | null;
   address: Address;
   heroVideoUrl?: string;
   heroImageUrl: string;

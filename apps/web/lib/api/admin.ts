@@ -269,6 +269,11 @@ export interface AdminProperty {
   reviewedAt?: string | null;
   createdAt: string;
   developer?: { id: string; companyName?: string | null } | null;
+  /** Agent-owned listings: the listing agent and what they declared. */
+  listedByAgent?: { id: string; displayName: string; kind: string; kybStatus: string } | null;
+  developerName?: string | null;
+  marketingAuthorityConfirmed?: boolean;
+  mandateDocUrl?: string | null;
   _count?: { units: number; media: number; inquiries: number };
 }
 

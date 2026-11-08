@@ -1,5 +1,6 @@
 'use client';
 
+import { MarketedBy } from '../../MarketedBy';
 import type { Property } from '../../../../lib/types';
 import type { RentListing } from '../../../../lib/types';
 import type { SectionCopy } from '../../../../lib/branding/theme';
@@ -220,6 +221,7 @@ export function LuxeDarkTemplate({
 
             {property.developer?.name && (
               <div>
+                <MarketedBy property={property} onDark className="mb-6" />
                 <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Developer</p>
                 <div className="mt-4 flex items-center gap-3">
                   <PropertyMonogram

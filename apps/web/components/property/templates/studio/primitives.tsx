@@ -769,6 +769,16 @@ export function FooterColumns({
             {property.developer.description && (
               <p className="mt-4 max-w-xs text-[13px] leading-relaxed" style={{ color: muted }}>{property.developer.description}</p>
             )}
+            {/* Agent-owned listing: who is selling it. */}
+            {property.listedByAgent && (
+              <div className="mt-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: muted }}>Marketed by</p>
+                <a href={`/agents/${property.listedByAgent.id}`} className="mt-3 flex items-center gap-3">
+                  <PropertyMonogram name={property.listedByAgent.displayName} logoUrl={property.listedByAgent.logoUrl ?? property.listedByAgent.photoUrl ?? undefined} size={36} onDark={onDark} />
+                  <span className="text-[14px] font-medium" style={{ color: strong }}>{property.listedByAgent.displayName}</span>
+                </a>
+              </div>
+            )}
           </div>
         )}
         <div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePropertyPaths } from '../../../../../../../components/dashboard/PropertyBase';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -57,6 +58,7 @@ const copyFieldCls =
 type Draft = MiniSiteDraft;
 
 export default function CustomiseMiniSite() {
+  const { base } = usePropertyPaths();
   const { slug, template: templateParam } = useParams<{ slug: string; template: string }>();
   const queryClient = useQueryClient();
   // The template being customised comes from the URL: each template has its
@@ -142,7 +144,7 @@ export default function CustomiseMiniSite() {
     return (
       <div className="py-16 text-center">
         <p className="text-[14px] text-[#5f6368]">That template doesn&apos;t exist.</p>
-        <Link href={`/dashboard/properties/${slug}/customise`} className="mt-3 inline-block text-[14px] font-medium text-[#1a73e8] hover:underline">
+        <Link href={`${base}/${slug}/customise`} className="mt-3 inline-block text-[14px] font-medium text-[#1a73e8] hover:underline">
           Browse templates
         </Link>
       </div>
@@ -205,7 +207,7 @@ export default function CustomiseMiniSite() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
-            href={`/dashboard/properties/${slug}/customise`}
+            href={`${base}/${slug}/customise`}
             className="inline-flex items-center gap-1 text-[13px] text-[#5f6368] transition-colors hover:text-[#202124]"
           >
             <MaterialIcon name="arrow_back" className="text-[16px]" />
