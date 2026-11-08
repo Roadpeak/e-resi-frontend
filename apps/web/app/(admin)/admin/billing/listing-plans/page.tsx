@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingApi } from '../../../../../lib/api/billing';
+import { agentSiteApi } from '../../../../../lib/api/agent-site';
 import { pricingApi } from '../../../../../lib/api/admin';
 import { ApiError } from '../../../../../lib/api/client';
 import { cn } from '../../../../../lib/utils';
@@ -88,7 +89,11 @@ export default function AdminListingPlans() {
   const fail = (e: unknown) => setError(e instanceof ApiError ? e.message : 'Something went wrong');
 
   const { data: cfg, isLoading } = useQuery({ queryKey: ['admin-listing-plans'], queryFn: () => billingApi.adminListingPlans() });
-  const refresh = () => qc.invalidateQueries({ queryKey: ['admin-listing-plans'] });
+  const { data: sitePrices } = useQuery({ queryKey: ['agent-site-prices'], queryFn: () => agentSiteApi.prices() });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['admin-listing-plans'] });
+    qc.invalidateQueries({ queryKey: ['agent-site-prices'] });
+  };
 
   const setFlag = useMutation({
     mutationFn: ({ key, on }: { key: string; on: boolean }) => pricingApi.updateSetting(key, on ? 'true' : 'false'),
@@ -192,6 +197,17 @@ export default function AdminListingPlans() {
           </div>
         </section>
       </div>
+
+      <section className={cardCls}>
+        <h2 className="text-[17px] font-medium text-[#202124]">Agent websites</h2>
+        <p className="mt-1 text-[13px] text-[#5f6368]">One-time fees for an agent&apos;s site. 0 makes it free.</p>
+        {sitePrices && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <PriceField label="e-resi address (name.e-resi.com)" settingKey="agent_site_fee" value={sitePrices.subdomain} currency={cfg.currency} onSaved={saved} />
+            <PriceField label="Custom domain" settingKey="agent_site_domain_fee" value={sitePrices.customDomain} currency={cfg.currency} onSaved={saved} />
+          </div>
+        )}
+      </section>
 
       <section className={cardCls}>
         <h2 className="text-[17px] font-medium text-[#202124]">Other switches</h2>

@@ -29,6 +29,7 @@ const NAV = [
   { label: 'Messages', href: '/agent/messages', icon: 'chat' },
   { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring' },
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
+  { label: 'Website', href: '/agent/website', icon: 'language' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
   { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
 ];

@@ -34,6 +34,28 @@ function isOwnHost(host: string) {
 // Per-process cache: every page load also fetches scripts, images and RSC
 // payloads, and each would otherwise cost an API round trip.
 const cache = new Map<string, { slug: string | null; at: number }>();
+/** Agent websites (<handle>.e-resi.com or the agent's own domain) → agent id. */
+const agentCache = new Map<string, { id: string | null; at: number }>();
+
+async function agentFor(host: string): Promise<string | null> {
+  const hit = agentCache.get(host);
+  if (hit && Date.now() - hit.at < (hit.id ? HIT_TTL : MISS_TTL)) return hit.id;
+  let id: string | null = null;
+  try {
+    const res = await fetch(`${API_BASE}/agent-site/resolve/${encodeURIComponent(host)}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return hit?.id ?? null;
+    const body = await res.json();
+    id = body?.data?.agentId ?? body?.agentId ?? null;
+  } catch {
+    if (hit) return hit.id;
+  }
+  if (agentCache.size > 2000) agentCache.clear();
+  agentCache.set(host, { id, at: Date.now() });
+  return id;
+}
 const HIT_TTL = 60_000;
 const MISS_TTL = 30_000;
 
@@ -66,12 +88,28 @@ export async function proxy(req: NextRequest) {
   const host = (req.headers.get('host') ?? '').toLowerCase().replace(/:\d+$/, '');
   if (!host || isOwnHost(host)) return NextResponse.next();
 
-  const slug = await slugFor(host.replace(/^www\./, ''));
-  if (!slug) {
-    return new NextResponse('Not found', { status: 404, headers: { 'content-type': 'text/plain' } });
-  }
-
+  const bare = host.replace(/^www\./, '');
+  const slug = await slugFor(bare);
   const { pathname, search } = req.nextUrl;
+
+  if (!slug) {
+    // Not a development: maybe an agent's website.
+    const agentId = await agentFor(bare);
+    if (!agentId) {
+      return new NextResponse('Not found', { status: 404, headers: { 'content-type': 'text/plain' } });
+    }
+    if (pathname.startsWith('/_next/') || pathname.startsWith('/api/') || /\.[a-z0-9]+$/i.test(pathname)) {
+      return NextResponse.next();
+    }
+    if (pathname === '/' || pathname === `/site/agent/${agentId}`) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/site/agent/${agentId}`;
+      const res = NextResponse.rewrite(url);
+      res.headers.set('x-eresi-agent-site', agentId);
+      return res;
+    }
+    return NextResponse.redirect(new URL(`${pathname}${search}`, SITE_URL));
+  }
 
   // Framework assets and public files are host-independent.
   if (pathname.startsWith('/_next/') || pathname.startsWith('/api/') || /\.[a-z0-9]+$/i.test(pathname)) {
