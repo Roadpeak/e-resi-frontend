@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { AgentSiteView, type AgentSiteData } from '../../../../../components/agent-site/AgentSiteView';
+import { AgentSite } from '../../../../../components/agent-site/AgentSite';
+import type { AgentSiteData } from '../../../../../components/agent-site/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -36,5 +37,5 @@ export default async function AgentSitePage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const data = await load(id);
   if (!data) notFound();
-  return <AgentSiteView data={data} />;
+  return <AgentSite data={data} />;
 }

@@ -29,6 +29,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Billing', href: '/admin/billing', icon: 'payments' },
   { label: 'Invoices', href: '/admin/billing/invoices', icon: 'receipt_long' },
   { label: 'Listing plans', href: '/admin/billing/listing-plans', icon: 'tune' },
+  { label: 'Agent templates', href: '/admin/agent-templates', icon: 'web' },
   { label: 'Listing fees', href: '/admin/billing/listing-fees', icon: 'payments' },
   { label: 'Agent fees', href: '/admin/billing/agent-fees', icon: 'support_agent' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'monitoring' },

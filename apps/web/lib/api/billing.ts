@@ -199,7 +199,7 @@ export interface ListingPlansConfig {
 export interface Invoice {
   id: string;
   number: string;
-  kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN' | 'LISTING' | 'AGENT_SITE';
+  kind: 'SUBSCRIPTION' | 'PRODUCTION' | 'DOMAIN' | 'LISTING' | 'AGENT_SITE' | 'AGENT_TEMPLATE';
   status: 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED' | 'WAIVED';
   billedToName: string;
   billedToEmail: string;

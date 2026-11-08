@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { AgentSiteData } from '../../components/agent-site/AgentSiteView';
+import type { AgentSiteData, SiteSection } from '../../components/agent-site/types';
 
 type OpenInvoice = { id: string; number: string; total: number; currency: string; status: string } | null;
 
@@ -27,10 +27,38 @@ export interface AgentSiteSettings {
   url: string | null;
 }
 
+export interface AgentTemplateOption {
+  key: string; name: string; description: string | null; tier: 'FREE' | 'PREMIUM';
+  unlockPrice: number; free: boolean; unlocked: boolean; invoice: OpenInvoice;
+}
+
+export interface AgentTemplatesState {
+  currency: string;
+  current: string;
+  sections: SiteSection[];
+  templates: AgentTemplateOption[];
+}
+
+export interface AdminAgentTemplate {
+  key: string; name: string; description: string | null; tier: 'FREE' | 'PREMIUM';
+  unlockPrice: number; isActive: boolean; sortOrder: number; unlocked: number; inUse: number;
+}
+
+export const agentTemplatesAdminApi = {
+  list: () => apiClient.get<{ currency: string; templates: AdminAgentTemplate[] }>('/admin/agent-templates'),
+  update: (key: string, body: Partial<Pick<AdminAgentTemplate, 'tier' | 'unlockPrice' | 'isActive' | 'name' | 'description'>>) =>
+    apiClient.patch<{ currency: string; templates: AdminAgentTemplate[] }>(`/admin/agent-templates/${key}`, body),
+};
+
 export const agentSiteApi = {
   prices: () => apiClient.get<{ currency: string; subdomain: number; customDomain: number }>('/agent-site/prices', { skipAuth: true }),
   mine: () => apiClient.get<AgentSiteSettings>('/agent-site/me'),
-  preview: () => apiClient.get<AgentSiteData>('/agent-site/me/preview'),
+  preview: (template?: string) =>
+    apiClient.get<AgentSiteData>(`/agent-site/me/preview${template ? `?template=${encodeURIComponent(template)}` : ''}`),
+  templates: () => apiClient.get<AgentTemplatesState>('/agent-site/me/templates'),
+  unlockTemplate: (key: string) => apiClient.post<AgentTemplatesState>(`/agent-site/me/templates/${key}/unlock`),
+  selectTemplate: (key: string) => apiClient.put<AgentTemplatesState>('/agent-site/me/template', { key }),
+  saveSections: (sections: SiteSection[]) => apiClient.put<AgentTemplatesState>('/agent-site/me/sections', { sections }),
   claim: (handle: string) => apiClient.post<AgentSiteSettings>('/agent-site/me/handle', { handle }),
   setDomain: (domain: string | null) => apiClient.put<AgentSiteSettings>('/agent-site/me/domain', { domain }),
   check: () => apiClient.post<AgentSiteSettings>('/agent-site/me/domain/check'),
