@@ -56,32 +56,45 @@ jobs:
       contents: read
       packages: read
     steps:
+      # Plain OpenSSH from the runner rather than appleboy/ssh-action: that
+      # action downloads its binary from GitHub Releases on every run, so a
+      # Releases outage (2026-11-08, 504s for over half an hour) blocked
+      # deploys of builds that had already passed.
       - name: SSH pull + roll frontend
-        uses: appleboy/ssh-action@v1
         env:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_TAG: ${{ github.sha }}
-        with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
-          envs: GHCR_USER,GHCR_TOKEN,IMAGE_TAG
-          script: |
-            set -euo pipefail
-            cd /home/deploy/e-resi
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DROPLET_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Variables travel over the SSH session's stdin, never on a command line.
+          {
+            printf 'export GHCR_USER=%q GHCR_TOKEN=%q IMAGE_TAG=%q\n' "$GHCR_USER" "$GHCR_TOKEN" "$IMAGE_TAG"
+            cat <<'REMOTE'
+          set -euo pipefail
+          cd /home/deploy/e-resi
 
-            # Auth against sibling GHCR namespace (same Roadpeak org).
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          # Auth against sibling GHCR namespace (same Roadpeak org).
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
-            # docker-compose.prod.yml marks the frontend service `pull_policy: never`
-            # so backend deploys can't touch it. Bypass that policy with a
-            # direct `docker pull`, then roll only the frontend container.
-            export FRONTEND_IMAGE_TAG="$IMAGE_TAG"
-            docker pull "ghcr.io/roadpeak/e-resi-frontend:$IMAGE_TAG"
-            docker compose -f docker-compose.prod.yml up -d --no-deps frontend
+          # docker-compose.prod.yml marks the frontend service `pull_policy: never`
+          # so backend deploys can't touch it. Bypass that policy with a
+          # direct `docker pull`, then roll only the frontend container.
+          export FRONTEND_IMAGE_TAG="$IMAGE_TAG"
+          docker pull "ghcr.io/roadpeak/e-resi-frontend:$IMAGE_TAG"
+          docker compose -f docker-compose.prod.yml up -d --no-deps frontend
 
-            # Nudge nginx so it re-resolves the frontend upstream.
-            docker compose -f docker-compose.prod.yml restart nginx
+          # Nudge nginx so it re-resolves the frontend upstream.
+          docker compose -f docker-compose.prod.yml restart nginx
 
-            docker image prune -f
+          docker image prune -f
+          REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+              "$DROPLET_USER@$DROPLET_HOST" 'bash -s'
+          rm -f ~/.ssh/deploy_key
