@@ -202,3 +202,15 @@ html.vt-in main > :nth-child(n + 4) { animation-delay: 0.18s; }
   ::view-transition-new(*) { animation: none !important; }
   html.vt-in main > *, html.vt-in [data-vt-unit] { animation: none !important; }
 }
+
+/* Rent marketplace type: Inter Tight at medium weight throughout. */
+.rent-type {
+  font-family: var(--font-inter-tight), 'Inter Tight', system-ui, sans-serif;
+  font-weight: 500;
+  color: #18181b;
+}
+.rent-type .font-google,
+.rent-type .font-listing { font-family: inherit; }
+.rent-type .rent-greeting {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+}

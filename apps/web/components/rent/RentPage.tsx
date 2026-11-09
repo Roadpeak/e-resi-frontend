@@ -87,7 +87,7 @@ function HeaderSearch({ live }: { live: boolean }) {
     >
       <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa0a6]" />
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search area, building or listing"
-        className="h-11 w-full rounded-full border border-[#e3e3e3] bg-white pl-10 pr-4 text-[14.5px] text-[#1d1d1f] placeholder-[#9aa0a6] focus:border-[#1d1d1f] focus:outline-none" />
+        className="h-11 w-full rounded-full border border-[#e3e3e3] bg-white pl-10 pr-4 text-[16px] text-[#18181b] placeholder-[#9aa0a6] focus:border-[#18181b] focus:outline-none" />
     </form>
   );
 }
@@ -128,7 +128,7 @@ function HomeView({ all, loading }: { all: RentListing[]; loading: boolean }) {
               {areas.map(([a, n]) => (
                 <Link key={a} href="/rent?view=search"
                   onClick={() => { resetFilters(); setFilter('neighborhood', a); }}
-                  className="shrink-0 rounded-full bg-[#f2f2f2] px-4 py-2 text-[14px] text-[#1d1d1f] hover:bg-[#e8e8e8]">
+                  className="shrink-0 rounded-full bg-[#f2f2f2] px-4 py-2 text-[16px] text-[#18181b] hover:bg-[#e8e8e8]">
                   {a} <span className="text-[#9aa0a6]">{n}</span>
                 </Link>
               ))}
@@ -142,8 +142,8 @@ function HomeView({ all, loading }: { all: RentListing[]; loading: boolean }) {
           </RentSection>
 
           <div className="mt-12 rounded-[22px] bg-[#f7f7f7] p-6">
-            <p className="text-[17px] font-semibold text-[#1d1d1f]">Want someone to find it for you?</p>
-            <p className="mt-1 text-[14.5px] text-[#5f6368]">Tell a letting agent what you need and they will shortlist homes for you.</p>
+            <p className="text-[17px] font-medium text-[#18181b]">Want someone to find it for you?</p>
+            <p className="mt-1 text-[14.5px] text-[#52525b]">Tell a letting agent what you need and they will shortlist homes for you.</p>
             <div className="mt-4"><NeedAgentHelp deal="RENT" /></div>
           </div>
         </>
@@ -166,7 +166,7 @@ function Featured({ items }: { items: RentListing[] }) {
   const baths = rangeOf(l.units.map((u) => u.bathrooms));
 
   return (
-    <div className="relative h-[340px] overflow-hidden rounded-[24px] bg-[#1d1d1f] sm:h-[440px]">
+    <div className="relative h-[340px] overflow-hidden rounded-[24px] bg-[#18181b] sm:h-[440px]">
       <AnimatePresence initial={false}>
         <motion.div key={l.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0">
           <Link href={`/rent/${l.slug}`} className="absolute inset-0">
@@ -175,12 +175,12 @@ function Featured({ items }: { items: RentListing[] }) {
           </Link>
           <div className="pointer-events-none absolute bottom-6 left-6 right-6 text-white">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[24px] font-semibold sm:text-[28px]">{l.name}</p>
-              <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[12.5px] backdrop-blur-sm">
+              <p className="text-[24px] font-medium">{l.name}</p>
+              <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[12px] backdrop-blur-sm">
                 {FURNISHINGS.find((f) => f.value === l.furnishing)?.label ?? 'Rent'}
               </span>
             </div>
-            <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[15px] text-white/90">
+            <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[16px] text-white">
               <span>{l.address.neighborhood || l.address.city}</span>
               {beds && <><span aria-hidden>•</span><span className="inline-flex items-center gap-1"><BedDouble size={15} /> {beds}</span></>}
               {baths && <span className="inline-flex items-center gap-1"><Bath size={15} /> {baths}</span>}
@@ -201,7 +201,7 @@ function Featured({ items }: { items: RentListing[] }) {
           <div className="absolute right-0 top-0 hidden gap-1.5 rounded-bl-[20px] bg-white p-1.5 pr-0 sm:flex">
             {items.map((t, k) => (
               <button key={t.id} onClick={() => setI(k)} aria-label={t.name}
-                className={cn('relative h-12 w-16 overflow-hidden rounded-xl transition-opacity last:mr-1.5', k === i ? 'opacity-100 ring-2 ring-[#1d1d1f]' : 'opacity-70 hover:opacity-100')}>
+                className={cn('relative h-12 w-16 overflow-hidden rounded-xl transition-opacity last:mr-1.5', k === i ? 'opacity-100 ring-2 ring-[#18181b]' : 'opacity-70 hover:opacity-100')}>
                 <Image src={t.heroImageUrl} alt="" fill className="object-cover" sizes="64px" />
               </button>
             ))}
@@ -235,9 +235,9 @@ function SearchView({ all, loading, heading, category }: { all: RentListing[]; l
 
         <div className="min-w-0 flex-1">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[14.5px] text-[#5f6368]">{loading ? 'Searching…' : `${results.length} rental${results.length === 1 ? '' : 's'}`}</p>
+            <p className="text-[16px] text-[#52525b]">{loading ? 'Searching…' : `${results.length} rental${results.length === 1 ? '' : 's'}`}</p>
             <div className="flex items-center gap-2">
-              <button onClick={() => setPanel(true)} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-4 py-2 text-[14px] text-[#1d1d1f] lg:hidden">
+              <button onClick={() => setPanel(true)} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f2f2] px-4 py-2 text-[14px] text-[#18181b] lg:hidden">
                 <SlidersHorizontal size={14} /> Filters{active ? ` (${active})` : ''}
               </button>
               <SortSelect />
@@ -248,7 +248,7 @@ function SearchView({ all, loading, heading, category }: { all: RentListing[]; l
             <div className="flex h-[40vh] items-center justify-center"><Loader2 size={28} className="animate-spin text-[#9aa0a6]" /></div>
           ) : results.length === 0 ? (
             <Empty title="Nothing matches those filters" body="Try a wider area, another budget, or fewer filters."
-              action={<button onClick={resetFilters} className="rounded-full bg-[#1d1d1f] px-5 py-2.5 text-[14px] font-medium text-white">Clear filters</button>} />
+              action={<button onClick={resetFilters} className="rounded-full bg-[#18181b] px-5 py-2.5 text-[14px] font-medium text-white">Clear filters</button>} />
           ) : (
             <>
               <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
@@ -268,7 +268,7 @@ function SearchView({ all, loading, heading, category }: { all: RentListing[]; l
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-[24px] bg-white p-3" onClick={(e) => e.stopPropagation()}>
               <div className="mb-2 flex items-center justify-between px-2 pt-1">
-                <p className="text-[17px] text-[#1d1d1f]">Filters</p>
+                <p className="text-[17px] text-[#18181b]">Filters</p>
                 <button onClick={() => setPanel(false)} aria-label="Close" className="rounded-full p-2 hover:bg-[#f2f2f2]"><X size={18} /></button>
               </div>
               <FilterPanel all={all} onDone={() => setPanel(false)} />
@@ -292,7 +292,7 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
   return (
     <div className="rounded-[22px] bg-[#f2f2f2] p-2">
       <div className="flex items-center justify-between px-3 pb-2 pt-1.5">
-        <p className="text-[16px] font-semibold text-[#1d1d1f]">Filters</p>
+        <p className="text-[18px] font-medium tracking-[-0.01em] text-[#18181b]">Filters</p>
       </div>
       <div className="space-y-2">
         <Box title="Furnishing">
@@ -313,7 +313,7 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
           <div className="grid grid-cols-4 gap-2">
             {[1, 2, 3, 4].map((n) => (
               <button key={n} onClick={() => setFilter('bedrooms', filters.bedrooms === n ? undefined : n)}
-                className={cn('rounded-full py-2 text-[14px] transition-colors', filters.bedrooms === n ? 'bg-[#1d1d1f] text-white' : 'bg-[#f2f2f2] text-[#1d1d1f] hover:bg-[#e8e8e8]')}>
+                className={cn('rounded-full py-2 text-[14px] transition-colors', filters.bedrooms === n ? 'bg-[#18181b] text-white' : 'bg-[#f2f2f2] text-[#18181b] hover:bg-[#e8e8e8]')}>
                 {n}{n === 4 ? '+' : ''}
               </button>
             ))}
@@ -331,8 +331,8 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
         </Box>
       </div>
       <div className="flex gap-2 p-2 pt-3">
-        <button onClick={resetFilters} className="flex-1 rounded-full bg-white py-3 text-[14.5px] text-[#1d1d1f] hover:bg-[#fafafa]">Clear filters</button>
-        {onDone && <button onClick={onDone} className="flex-1 rounded-full bg-[#1d1d1f] py-3 text-[14.5px] text-white">Show results</button>}
+        <button onClick={resetFilters} className="flex-1 rounded-full bg-white py-3 text-[14.5px] text-[#18181b] hover:bg-[#fafafa]">Clear filters</button>
+        {onDone && <button onClick={onDone} className="flex-1 rounded-full bg-[#18181b] py-3 text-[14.5px] text-white">Show results</button>}
       </div>
     </div>
   );
@@ -341,7 +341,7 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
 function Box({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[18px] bg-white p-3.5">
-      <p className="mb-2.5 text-[14px] font-semibold text-[#1d1d1f]">{title}</p>
+      <p className="mb-2.5 text-[16px] font-medium text-[#52525b]">{title}</p>
       {children}
     </div>
   );
@@ -352,7 +352,7 @@ function Chips({ value, options, onChange }: { value?: string; options: { value:
     <div className="flex flex-wrap gap-2">
       {options.map((o) => (
         <button key={o.value} onClick={() => onChange(value === o.value ? undefined : o.value)}
-          className={cn('rounded-full px-3.5 py-1.5 text-[13.5px] transition-colors', value === o.value ? 'bg-[#1d1d1f] text-white' : 'bg-[#f2f2f2] text-[#1d1d1f] hover:bg-[#e8e8e8]')}>
+          className={cn('rounded-full px-3.5 py-1.5 text-[14px] transition-colors', value === o.value ? 'bg-[#18181b] text-white' : 'bg-[#f2f2f2] text-[#18181b] hover:bg-[#e8e8e8]')}>
           {o.label}
         </button>
       ))}
@@ -362,9 +362,9 @@ function Chips({ value, options, onChange }: { value?: string; options: { value:
 
 function Switch({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!on)} className="flex w-full items-center justify-between py-1.5 text-[14px] text-[#1d1d1f]" role="switch" aria-checked={on}>
+    <button onClick={() => onChange(!on)} className="flex w-full items-center justify-between py-1.5 text-[14px] text-[#18181b]" role="switch" aria-checked={on}>
       {label}
-      <span className={cn('relative h-6 w-10 rounded-full transition-colors', on ? 'bg-[#1d1d1f]' : 'bg-[#e3e3e3]')}>
+      <span className={cn('relative h-6 w-10 rounded-full transition-colors', on ? 'bg-[#18181b]' : 'bg-[#e3e3e3]')}>
         <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', on ? 'left-[18px]' : 'left-0.5')} />
       </span>
     </button>
@@ -375,11 +375,11 @@ function PriceSelect({ label, value, onChange }: { label: string; value?: number
   return (
     <div className="relative">
       <select value={value ?? ''} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)} aria-label={`${label} rent`}
-        className="w-full cursor-pointer appearance-none rounded-full bg-[#f2f2f2] py-2 pl-4 pr-8 text-[13.5px] text-[#1d1d1f] focus:outline-none">
+        className="w-full cursor-pointer appearance-none rounded-full bg-[#f2f2f2] py-2 pl-4 pr-8 text-[13.5px] text-[#18181b] focus:outline-none">
         <option value="">{label}: any</option>
         {PRICE_STEPS.map((p) => <option key={p} value={p}>{label}: {p >= 1_000_000 ? `${p / 1_000_000}M` : `${p / 1000}K`}</option>)}
       </select>
-      <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#5f6368]" />
+      <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#52525b]" />
     </div>
   );
 }
@@ -389,12 +389,12 @@ function SortSelect() {
   return (
     <div className="relative">
       <select value={filters.sortBy ?? 'newest'} onChange={(e) => setFilter('sortBy', e.target.value as RentFilters['sortBy'])}
-        className="cursor-pointer appearance-none rounded-full bg-[#f2f2f2] py-2 pl-4 pr-8 text-[14px] text-[#1d1d1f] focus:outline-none">
+        className="cursor-pointer appearance-none rounded-full bg-[#f2f2f2] py-2 pl-4 pr-8 text-[14px] text-[#18181b] focus:outline-none">
         <option value="newest">Newest</option>
         <option value="price_asc">Lowest rent</option>
         <option value="price_desc">Highest rent</option>
       </select>
-      <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#5f6368]" />
+      <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#52525b]" />
     </div>
   );
 }
@@ -411,7 +411,7 @@ function SavedView({ all, loading }: { all: RentListing[]; loading: boolean }) {
         <div className="flex h-[40vh] items-center justify-center"><Loader2 size={28} className="animate-spin text-[#9aa0a6]" /></div>
       ) : saved.length === 0 ? (
         <Empty icon={<Heart size={22} />} title="Nothing saved yet" body="Tap the heart on any rental to keep it here."
-          action={<Link href="/rent?view=search" className="rounded-full bg-[#1d1d1f] px-5 py-2.5 text-[14px] font-medium text-white">Browse rentals</Link>} />
+          action={<Link href="/rent?view=search" className="rounded-full bg-[#18181b] px-5 py-2.5 text-[14px] font-medium text-white">Browse rentals</Link>} />
       ) : (
         <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-4">
           {saved.map((l) => <RentCard key={l.id} listing={l} />)}
@@ -427,9 +427,9 @@ function SavedView({ all, loading }: { all: RentListing[]; loading: boolean }) {
 function Empty({ title, body, action, icon }: { title: string; body: string; action?: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-[22px] bg-[#f7f7f7] px-6 py-20 text-center">
-      {icon && <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#5f6368]">{icon}</span>}
-      <p className="text-[18px] font-semibold text-[#1d1d1f]">{title}</p>
-      <p className="mt-1 text-[14.5px] text-[#5f6368]">{body}</p>
+      {icon && <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#52525b]">{icon}</span>}
+      <p className="text-[18px] font-medium text-[#18181b]">{title}</p>
+      <p className="mt-1 text-[14.5px] text-[#52525b]">{body}</p>
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -437,11 +437,11 @@ function Empty({ title, body, action, icon }: { title: string; body: string; act
 
 function Footer() {
   return (
-    <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-6 text-[14px] text-[#5f6368]">
+    <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-6 text-[14px] text-[#52525b]">
       <span>Homes to rent on e-resi</span>
       <span className="flex gap-4">
-        <Link href="/privacy" className="hover:text-[#1d1d1f]">Privacy Policy</Link>
-        <Link href="/terms" className="hover:text-[#1d1d1f]">Terms of Service</Link>
+        <Link href="/privacy" className="hover:text-[#18181b]">Privacy Policy</Link>
+        <Link href="/terms" className="hover:text-[#18181b]">Terms of Service</Link>
       </span>
     </footer>
   );

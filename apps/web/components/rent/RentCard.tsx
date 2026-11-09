@@ -50,7 +50,7 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw" />
         )}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          <span className="rounded-full bg-white px-3 py-1 text-[12.5px] font-semibold text-[#1d1d1f]">
+          <span className="rounded-full bg-white px-3 py-1 text-[12px] font-medium text-[#18181b]">
             {letOut ? 'Fully let' : FURNISHING[listing.furnishing] ?? 'Rent'}
           </span>
           {listing.isFeatured && (
@@ -79,13 +79,13 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
         )}
       </div>
       <div className="px-0.5 pt-3">
-        <h3 className="truncate text-[16.5px] font-semibold text-[#1d1d1f]">{listing.name}</h3>
-        <p className="mt-1 text-[15px] font-semibold text-[#1d1d1f]">
+        <h3 className="truncate text-[18px] font-medium tracking-[-0.01em] text-[#18181b]">{listing.name}</h3>
+        <p className="mt-1.5 text-[16px] font-medium text-[#18181b]">
           {listing.priceFrom ? (
-            <>{units.length > 1 && listing.priceTo > listing.priceFrom ? 'From ' : ''}{formatRent(listing.priceFrom, listing.currency)} <span className="font-normal text-[#5f6368]">/ month</span></>
+            <>{units.length > 1 && listing.priceTo > listing.priceFrom ? 'From ' : ''}{formatRent(listing.priceFrom, listing.currency)} <span className="text-[#18181b]">/ month</span></>
           ) : 'Rent on request'}
         </p>
-        <p className="mt-1 flex items-center gap-2 text-[14px] text-[#5f6368]">
+        <p className="mt-1.5 flex items-center gap-2 text-[16px] text-[#52525b]">
           <span className="truncate">{listing.address.neighborhood || listing.address.city}</span>
           {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
           {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}

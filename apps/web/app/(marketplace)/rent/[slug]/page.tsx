@@ -55,7 +55,7 @@ function range(nums: number[], unit = '', studio = false): string | null {
 type Raw = any;
 
 const card = 'rounded-[20px] border border-[#ececec] bg-[#fafafa] p-5 sm:p-6';
-const cardTitle = 'mb-4 text-[16px] font-semibold text-[#1d1d1f]';
+const cardTitle = 'mb-4 text-[16px] font-medium text-[#52525b]';
 
 /**
  * A rental listing, laid out like an app detail screen: one large photo with
@@ -114,7 +114,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
     return (
       <Frame>
         <div className="mx-auto max-w-md py-32 text-center">
-          <p className="text-[18px] text-[#1d1d1f]">This rental could not be found.</p>
+          <p className="text-[18px] text-[#18181b]">This rental could not be found.</p>
           <Link href="/rent" className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f2f2f2] px-4 py-2 text-[14px]"><ArrowLeft size={14} /> Back to rentals</Link>
         </div>
       </Frame>
@@ -176,22 +176,22 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       {/* ── Top row ── */}
       <div className="mb-5 flex items-center justify-between">
         <button onClick={() => (history.length > 1 ? router.back() : router.push('/rent'))} aria-label="Back"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#1d1d1f] hover:bg-[#e8e8e8]">
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#18181b] hover:bg-[#e8e8e8]">
           <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={share} className="flex h-11 items-center gap-2 rounded-full bg-[#f2f2f2] px-4 text-[14px] text-[#1d1d1f] hover:bg-[#e8e8e8]">
+          <button onClick={share} className="flex h-11 items-center gap-2 rounded-full bg-[#f2f2f2] px-4 text-[14px] text-[#18181b] hover:bg-[#e8e8e8]">
             {copied ? <Check size={16} /> : <Share2 size={16} />} <span className="hidden sm:inline">{copied ? 'Link copied' : 'Share'}</span>
           </button>
           <button onClick={() => toggle(listing.id)} aria-pressed={saved}
-            className={cn('flex h-11 items-center gap-2 rounded-full px-4 text-[14px]', saved ? 'bg-[#fce8e6] text-[#d93025]' : 'bg-[#f2f2f2] text-[#1d1d1f] hover:bg-[#e8e8e8]')}>
+            className={cn('flex h-11 items-center gap-2 rounded-full px-4 text-[14px]', saved ? 'bg-[#fce8e6] text-[#d93025]' : 'bg-[#f2f2f2] text-[#18181b] hover:bg-[#e8e8e8]')}>
             <Heart size={16} className={saved ? 'fill-current' : ''} /> <span className="hidden sm:inline">{saved ? 'Saved' : 'Save'}</span>
           </button>
         </div>
       </div>
 
       {/* ── Hero ── */}
-      <div className="relative h-[340px] overflow-hidden rounded-[24px] bg-[#1d1d1f] sm:h-[520px]">
+      <div className="relative h-[340px] overflow-hidden rounded-[24px] bg-[#18181b] sm:h-[520px]">
         {photos.length ? (
           photos.map((p, i) => (
             <button key={p} onClick={() => setLightbox(i)} aria-label="Open photos"
@@ -208,12 +208,12 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           <div className="absolute right-0 top-0 hidden gap-1.5 rounded-bl-[20px] bg-white p-1.5 sm:flex">
             {photos.slice(0, 4).map((p, i) => (
               <button key={p} onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`}
-                className={cn('relative h-14 w-[74px] overflow-hidden rounded-xl transition-opacity', i === active ? 'ring-2 ring-[#1d1d1f]' : 'opacity-75 hover:opacity-100')}>
+                className={cn('relative h-14 w-[74px] overflow-hidden rounded-xl transition-opacity', i === active ? 'ring-2 ring-[#18181b]' : 'opacity-75 hover:opacity-100')}>
                 <Image src={p} alt="" fill className="object-cover" sizes="74px" />
               </button>
             ))}
             {photos.length > 4 && (
-              <button onClick={() => setLightbox(4)} className="flex h-14 w-[74px] items-center justify-center rounded-xl bg-[#f2f2f2] text-[13.5px] text-[#1d1d1f] hover:bg-[#e8e8e8]">
+              <button onClick={() => setLightbox(4)} className="flex h-14 w-[74px] items-center justify-center rounded-xl bg-[#f2f2f2] text-[13.5px] text-[#18181b] hover:bg-[#e8e8e8]">
                 +{photos.length - 4}
               </button>
             )}
@@ -223,16 +223,16 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         <div className="pointer-events-none absolute bottom-5 left-5 right-5 flex flex-wrap items-end justify-between gap-4 sm:bottom-7 sm:left-7 sm:right-7">
           <div className="min-w-0 text-white">
             <div className="mb-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-white px-3 py-1 text-[12.5px] text-[#1d1d1f]">{STATUS[listing.status] ?? 'For rent'}</span>
-              <span className="rounded-full bg-white/20 px-3 py-1 text-[12.5px] backdrop-blur-sm">{FURNISHING[listing.furnishing] ?? 'Rent'}</span>
+              <span className="rounded-full bg-white px-3 py-1 text-[12px] text-[#18181b]">{STATUS[listing.status] ?? 'For rent'}</span>
+              <span className="rounded-full bg-white/20 px-3 py-1 text-[12px] backdrop-blur-sm">{FURNISHING[listing.furnishing] ?? 'Rent'}</span>
             </div>
-            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.01em] sm:text-[34px]">
+            <h1 className="text-[24px] font-medium leading-tight">
               {listing.name}
               {listing.priceFrom > 0 && (
                 <span className="text-white/85"> · {formatPrice(listing.priceFrom, listing.currency)}<span className="text-[0.6em] text-white/70"> / month</span></span>
               )}
             </h1>
-            {where && <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-white/85"><MapPin size={15} /> {where}</p>}
+            {where && <p className="mt-1 flex items-center gap-1.5 text-[16px] font-medium text-white"><MapPin size={15} /> {where}</p>}
           </div>
           <div className="pointer-events-auto flex gap-2">
             {property.slug && property.has3DTour && (
@@ -258,8 +258,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               <div key={f.label} className={cn('flex items-center gap-3 px-5 py-4', i % 2 === 1 && 'border-l border-[#ececec]', i > 1 && 'border-t border-[#ececec] sm:border-t-0', i === 2 && 'sm:border-l')}>
                 <f.icon size={20} strokeWidth={1.6} className="shrink-0 text-[#9aa0a6]" />
                 <div className="min-w-0">
-                  <p className="truncate text-[16.5px] font-semibold text-[#1d1d1f]">{f.value}</p>
-                  <p className="text-[13px] font-medium text-[#5f6368]">{f.label}</p>
+                  <p className="truncate text-[18px] font-medium tracking-[-0.01em] text-[#18181b]">{f.value}</p>
+                  <p className="text-[13px] font-medium text-[#52525b]">{f.label}</p>
                 </div>
               </div>
             ))}
@@ -268,7 +268,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {/* Description */}
           <section className={card}>
             <p className={cardTitle}>Description</p>
-            <p className="whitespace-pre-line text-[15.5px] leading-[1.7] text-[#202124]">
+            <p className="whitespace-pre-line text-[16px] leading-[1.6] text-[#18181b]">
               {listing.description || listing.tagline || `${listing.name} offers ${beds ?? ''} homes to rent${where ? ` in ${where}` : ''}.`}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -281,7 +281,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   : 'Move in now',
                 ...listing.tags.map((t) => t.replace(/-/g, ' ')),
               ].filter(Boolean).map((t) => (
-                <span key={t as string} className="rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] font-medium capitalize text-[#3c4043]">{t}</span>
+                <span key={t as string} className="rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] font-medium capitalize text-[#3f3f46]">{t}</span>
               ))}
             </div>
           </section>
@@ -290,8 +290,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {units.length > 0 && (
             <section className={card}>
               <div className="mb-4 flex items-baseline justify-between gap-3">
-                <p className="text-[16px] font-semibold text-[#1d1d1f]">Units to rent</p>
-                <p className="text-[13.5px] font-medium text-[#5f6368]"><span className="font-semibold text-[#1d1d1f]">{totalAvailable}</span> of {totalUnits} available</p>
+                <p className="text-[16px] font-medium text-[#52525b]">Units to rent</p>
+                <p className="text-[13.5px] font-medium text-[#52525b]"><span className="font-medium text-[#18181b]">{totalAvailable}</span> of {totalUnits} available</p>
               </div>
               <div className="space-y-3">
                 {units.map((u) => <UnitRow key={u.id} unit={u} propertySlug={listing.propertySlug} />)}
@@ -308,10 +308,10 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 { title: 'In the building', items: buildingFeatures },
               ].filter((g) => g.items.length).map((g, gi) => (
                 <div key={g.title} className={gi ? 'mt-5' : ''}>
-                  {homeFeatures.length > 0 && buildingFeatures.length > 0 && <p className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-[#9aa0a6]">{g.title}</p>}
+                  {homeFeatures.length > 0 && buildingFeatures.length > 0 && <p className="mb-2.5 text-[13px] font-medium uppercase tracking-[0.06em] text-[#9aa0a6]">{g.title}</p>}
                   <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
                     {g.items.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-[15px] font-medium capitalize text-[#1d1d1f]">
+                      <li key={f} className="flex items-center gap-2.5 text-[16px] font-medium capitalize text-[#18181b]">
                         <Plus size={14} className="shrink-0 text-[#1a73e8]" /> {f.replace(/-/g, ' ')}
                       </li>
                     ))}
@@ -329,7 +329,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 <div className="mb-4 flex flex-wrap gap-2">
                   {plans.map((p, i) => (
                     <button key={p.id} onClick={() => setPlan(i)}
-                      className={cn('rounded-full px-4 py-1.5 text-[13.5px] transition-colors', i === plan ? 'bg-[#1d1d1f] text-white' : 'border border-[#e3e3e3] bg-white text-[#3c4043] hover:bg-[#f2f2f2]')}>
+                      className={cn('rounded-full px-4 py-1.5 text-[13.5px] transition-colors', i === plan ? 'bg-[#18181b] text-white' : 'border border-[#e3e3e3] bg-white text-[#3f3f46] hover:bg-[#f2f2f2]')}>
                       {p.name}
                     </button>
                   ))}
@@ -341,7 +341,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={plans[plan].imageUrl} alt={plans[plan].name} className="mx-auto max-h-[480px] w-auto object-contain" />
                   </a>
-                  <p className="mt-3 text-[13.5px] text-[#5f6368]">
+                  <p className="mt-3 text-[13.5px] text-[#52525b]">
                     {[plans[plan].name,
                       plans[plan].bedrooms == null ? null : plans[plan].bedrooms === 0 ? 'Studio' : `${plans[plan].bedrooms} bed`,
                       plans[plan].bathrooms == null ? null : `${plans[plan].bathrooms} bath`,
@@ -356,9 +356,9 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {videos.length > 0 && (
             <section className={card}>
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-[16px] font-semibold text-[#1d1d1f]">Video</p>
+                <p className="text-[16px] font-medium text-[#52525b]">Video</p>
                 {property.slug && property.hasCinematicTour && (
-                  <Link href={`/${property.slug}/tour/cinematic`} className="text-[13.5px] text-[#1d1d1f] hover:underline">Full cinematic tour</Link>
+                  <Link href={`/${property.slug}/tour/cinematic`} className="text-[13.5px] text-[#18181b] hover:underline">Full cinematic tour</Link>
                 )}
               </div>
               <button onClick={() => setPlaying(videos[0].url)} className="group relative block aspect-video w-full overflow-hidden rounded-2xl bg-black">
@@ -377,7 +377,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               {videos.length > 1 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {videos.slice(1).map((v) => (
-                    <button key={v.url} onClick={() => setPlaying(v.url)} className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] text-[#3c4043] hover:bg-[#f2f2f2]">
+                    <button key={v.url} onClick={() => setPlaying(v.url)} className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] text-[#3f3f46] hover:bg-[#f2f2f2]">
                       <Film size={13} /> {v.label || 'Video'}
                     </button>
                   ))}
@@ -398,10 +398,10 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               {nearby.length > 0 && (
                 <ul className={cn('grid gap-x-6 gap-y-2.5 sm:grid-cols-2', lat && lng && 'mt-5')}>
                   {nearby.map((a) => (
-                    <li key={a.id ?? a.name} className="flex items-center gap-2.5 text-[14.5px] text-[#1d1d1f]">
+                    <li key={a.id ?? a.name} className="flex items-center gap-2.5 text-[14.5px] text-[#18181b]">
                       <MapPin size={14} className="shrink-0 text-[#9aa0a6]" />
                       <span className="min-w-0 flex-1 truncate">{a.name}</span>
-                      {a.distance && <span className="shrink-0 text-[13px] text-[#5f6368]">{a.distance}</span>}
+                      {a.distance && <span className="shrink-0 text-[13px] text-[#52525b]">{a.distance}</span>}
                     </li>
                   ))}
                 </ul>
@@ -413,7 +413,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {(property.petsAllowed != null || property.leaseTerms) && (
             <section className={card}>
               <p className={cardTitle}>House rules</p>
-              <div className="space-y-3 text-[15px] text-[#1d1d1f]">
+              <div className="space-y-3 text-[15px] text-[#18181b]">
                 {property.petsAllowed != null && (
                   <p className="flex items-start gap-2.5"><PawPrint size={16} className="mt-0.5 text-[#9aa0a6]" />
                     {property.petsAllowed ? 'Pets allowed' : 'No pets'}{property.petPolicy ? ` · ${property.petPolicy}` : ''}</p>
@@ -435,51 +435,51 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   {contact.image ? <Image src={contact.image} alt="" fill className="object-cover" sizes="48px" unoptimized /> : <Building2 size={18} className="text-[#9aa0a6]" />}
                 </ContactLink>
                 <div className="min-w-0 flex-1">
-                  <ContactLink href={contact.href} className="block truncate text-[16.5px] font-semibold text-[#1d1d1f] hover:underline">{contact.name}</ContactLink>
-                  <p className="text-[13px] text-[#5f6368]">{contact.role}</p>
+                  <ContactLink href={contact.href} className="block truncate text-[18px] font-medium tracking-[-0.01em] text-[#18181b] hover:underline">{contact.name}</ContactLink>
+                  <p className="text-[13px] text-[#52525b]">{contact.role}</p>
                 </div>
                 {contact.href && (
-                  <Link href={contact.href} className="shrink-0 rounded-full border border-[#e3e3e3] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1d1d1f] hover:bg-[#f2f2f2]">
+                  <Link href={contact.href} className="shrink-0 rounded-full border border-[#e3e3e3] bg-white px-3 py-1.5 text-[13px] font-medium text-[#18181b] hover:bg-[#f2f2f2]">
                     View profile
                   </Link>
                 )}
               </div>
             )}
-            <dl className={cn('space-y-2.5 text-[14px]', contact && 'pt-4')}>
+            <dl className={cn('space-y-2.5 text-[16px]', contact && 'pt-4')}>
               <div className="flex justify-between gap-3">
-                <dt className="text-[#5f6368]">Rent</dt>
-                <dd className="text-right font-semibold text-[#1d1d1f]">
+                <dt className="text-[#52525b]">Rent</dt>
+                <dd className="text-right font-medium text-[#18181b]">
                   {listing.priceFrom > 0 ? formatPrice(listing.priceFrom, listing.currency) : 'On request'}
-                  {listing.priceTo > listing.priceFrom && <span className="text-[#5f6368]"> – {formatPrice(listing.priceTo, listing.currency)}</span>}
-                  <span className="text-[#5f6368]"> / mo</span>
+                  {listing.priceTo > listing.priceFrom && <span className="text-[#52525b]"> – {formatPrice(listing.priceTo, listing.currency)}</span>}
+                  <span className="text-[#52525b]"> / mo</span>
                 </dd>
               </div>
               {totalUnits > 0 && (
-                <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Available</dt><dd className="font-medium text-[#1d1d1f]">{totalAvailable} of {totalUnits} units</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-[#52525b]">Available</dt><dd className="font-medium text-[#18181b]">{totalAvailable} of {totalUnits} units</dd></div>
               )}
-              <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Furnishing</dt><dd className="font-medium text-[#1d1d1f]">{FURNISHING[listing.furnishing] ?? '—'}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-[#52525b]">Furnishing</dt><dd className="font-medium text-[#18181b]">{FURNISHING[listing.furnishing] ?? '—'}</dd></div>
               {listing.availableFrom && (
-                <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Move in</dt>
-                  <dd className="font-medium text-[#1d1d1f]">{new Date(listing.availableFrom) > new Date() ? new Date(listing.availableFrom).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Now'}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-[#52525b]">Move in</dt>
+                  <dd className="font-medium text-[#18181b]">{new Date(listing.availableFrom) > new Date() ? new Date(listing.availableFrom).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Now'}</dd></div>
               )}
             </dl>
             <div className="mt-5 space-y-2">
-              <button onClick={() => setModal('VIEWING')} className="w-full rounded-full bg-[#1d1d1f] py-3 text-[14.5px] font-semibold text-white hover:bg-black">Book a viewing</button>
+              <button onClick={() => setModal('VIEWING')} className="w-full rounded-full bg-[#18181b] py-3 text-[14.5px] font-medium text-white hover:bg-black">Book a viewing</button>
               <div className="flex gap-2">
-                <button onClick={() => setModal('ENQUIRY')} className="flex-1 rounded-full border border-[#e3e3e3] bg-white py-3 text-[14.5px] font-semibold text-[#1d1d1f] hover:bg-[#f2f2f2]">Send enquiry</button>
+                <button onClick={() => setModal('ENQUIRY')} className="flex-1 rounded-full border border-[#e3e3e3] bg-white py-3 text-[14.5px] font-medium text-[#18181b] hover:bg-[#f2f2f2]">Send enquiry</button>
                 <ChatWithDeveloper rentListingSlug={listing.slug} variant="icon" label={agent ? 'Chat with agent' : 'Chat'} />
               </div>
               {waHref && (
                 <a href={waHref} target="_blank" rel="noopener noreferrer"
                   onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25d366] py-3 text-[14.5px] font-semibold text-white hover:bg-[#1ebe5b]">
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25d366] py-3 text-[14.5px] font-medium text-white hover:bg-[#1ebe5b]">
                   <WhatsAppIcon /> WhatsApp {agent ? 'the agent' : 'the developer'}
                 </a>
               )}
               {phoneRaw && (
                 <a href={`tel:${phoneRaw.replace(/\s/g, '')}`}
                   onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'phone' } })}
-                  className="flex w-full items-center justify-center gap-2 py-1.5 text-[14px] font-medium text-[#1d1d1f] hover:underline">
+                  className="flex w-full items-center justify-center gap-2 py-1.5 text-[14px] font-medium text-[#18181b] hover:underline">
                   <Phone size={15} /> {phoneRaw}
                 </a>
               )}
@@ -492,8 +492,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 {property.heroImageUrl && <Image src={property.heroImageUrl} alt="" fill className="object-cover" sizes="64px" />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[12.5px] text-[#5f6368]">Part of</span>
-                <span className="block truncate text-[15px] font-semibold text-[#1d1d1f]">{property.name}</span>
+                <span className="block text-[12.5px] text-[#52525b]">Part of</span>
+                <span className="block truncate text-[15px] font-medium text-[#18181b]">{property.name}</span>
               </span>
               <ArrowRight size={16} className="mr-1 text-[#9aa0a6]" />
             </Link>
@@ -501,7 +501,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
           {property.slug && (property.hasCinematicTour || property.has3DTour || property.hasVRTour) && (
             <div className="rounded-[20px] border border-[#ececec] bg-[#fafafa] p-4">
-              <p className="mb-2.5 text-[15px] font-semibold text-[#1d1d1f]">Tour it from home</p>
+              <p className="mb-2.5 text-[15px] font-medium text-[#18181b]">Tour it from home</p>
               <div className="flex flex-wrap gap-2">
                 {property.hasCinematicTour && <TourChip href={`/${property.slug}/tour/cinematic`} icon={<Film size={14} />} label="Cinematic" />}
                 {property.has3DTour && <TourChip href={`/${property.slug}/tour/3d`} icon={<Box size={14} />} label="3D" />}
@@ -515,8 +515,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       {/* ── Phone booking bar (above the tab bar) ── */}
       <div className="fixed inset-x-0 bottom-[58px] z-30 flex items-center justify-between gap-3 border-t border-black/[0.06] bg-white px-4 py-2.5 lg:hidden">
         <div className="min-w-0">
-          <p className="truncate text-[15.5px] font-bold text-[#1d1d1f]">{listing.priceFrom > 0 ? `${formatPrice(listing.priceFrom, listing.currency)} / mo` : 'Rent on request'}</p>
-          <p className="truncate text-[12.5px] text-[#5f6368]">{totalUnits ? `${totalAvailable} of ${totalUnits} available` : STATUS[listing.status]}</p>
+          <p className="truncate text-[15.5px] font-medium text-[#18181b]">{listing.priceFrom > 0 ? `${formatPrice(listing.priceFrom, listing.currency)} / mo` : 'Rent on request'}</p>
+          <p className="truncate text-[12.5px] text-[#52525b]">{totalUnits ? `${totalAvailable} of ${totalUnits} available` : STATUS[listing.status]}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {waHref && (
@@ -524,7 +524,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25d366] text-white"><WhatsAppIcon /></a>
           )}
-          <button onClick={() => setModal('VIEWING')} className="rounded-full bg-[#1d1d1f] px-5 py-2.5 text-[14px] font-semibold text-white">Book a viewing</button>
+          <button onClick={() => setModal('VIEWING')} className="rounded-full bg-[#18181b] px-5 py-2.5 text-[14px] font-medium text-white">Book a viewing</button>
         </div>
       </div>
 
@@ -571,7 +571,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 function TourChip({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13.5px] text-[#1d1d1f] hover:bg-[#f2f2f2]">
+    <Link href={href} className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13.5px] text-[#18181b] hover:bg-[#f2f2f2]">
       {icon} {label}
     </Link>
   );
@@ -591,12 +591,12 @@ function UnitRow({ unit, propertySlug }: { unit: RentUnit; propertySlug?: string
     <div className={cn('rounded-2xl bg-white p-4 sm:p-5', soldOut && 'opacity-60')}>
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[16.5px] font-semibold text-[#1d1d1f]">
+          <p className="text-[18px] font-medium tracking-[-0.01em] text-[#18181b]">
             {unit.unitType || unit.label}
             {unit.unitType && unit.label !== unit.unitType && <span className="text-[#9aa0a6]"> · {unit.label}</span>}
             {unit.floor != null && <span className="text-[#9aa0a6]"> · {ordinalFloor(unit.floor)}</span>}
           </p>
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13.5px] text-[#5f6368]">
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13.5px] text-[#52525b]">
             <span className="inline-flex items-center gap-1"><BedDouble size={14} /> {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} bed`}</span>
             {unit.bathrooms ? <span className="inline-flex items-center gap-1"><Bath size={14} /> {unit.bathrooms} bath</span> : null}
             {unit.sqm > 0 && <span className="inline-flex items-center gap-1"><Maximize2 size={14} /> {unit.sqm} m²</span>}
@@ -604,20 +604,20 @@ function UnitRow({ unit, propertySlug }: { unit: RentUnit; propertySlug?: string
           </p>
           <div className="mt-2.5 flex items-center gap-2.5">
             <span className="h-1.5 w-28 overflow-hidden rounded-full bg-[#efefef]">
-              <span className={cn('block h-full rounded-full', soldOut ? 'bg-[#d0d0d0]' : 'bg-[#1d1d1f]')} style={{ width: `${Math.max(pct, 4)}%` }} />
+              <span className={cn('block h-full rounded-full', soldOut ? 'bg-[#d0d0d0]' : 'bg-[#18181b]')} style={{ width: `${Math.max(pct, 4)}%` }} />
             </span>
-            <span className="text-[12.5px] text-[#5f6368]">{soldOut ? 'Fully let' : `${unit.available} of ${unit.total} left`}</span>
+            <span className="text-[12.5px] text-[#52525b]">{soldOut ? 'Fully let' : `${unit.available} of ${unit.total} left`}</span>
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <p className="text-[18px] font-bold text-[#1d1d1f]">{formatPrice(unit.pricePerMonth, unit.currency)}<span className="text-[13px] text-[#5f6368]"> / mo</span></p>
+          <p className="text-[16px] font-medium text-[#18181b]">{formatPrice(unit.pricePerMonth, unit.currency)}<span className="text-[13px] text-[#52525b]"> / mo</span></p>
           <Reserve unit={unit} />
         </div>
       </div>
       {tours.length > 0 && propertySlug && (
         <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f2f2f2] pt-3">
           {tours.map((t) => (
-            <Link key={t.label} href={t.href} className="inline-flex items-center gap-1 rounded-full bg-[#f2f2f2] px-3 py-1 text-[12.5px] text-[#3c4043] hover:bg-[#e8e8e8]">
+            <Link key={t.label} href={t.href} className="inline-flex items-center gap-1 rounded-full bg-[#f2f2f2] px-3 py-1 text-[12.5px] text-[#3f3f46] hover:bg-[#e8e8e8]">
               <t.icon size={12} /> {t.label} tour
             </Link>
           ))}
@@ -657,7 +657,7 @@ function Reserve({ unit }: { unit: RentUnit }) {
   return (
     <>
       <button onClick={reserve} disabled={busy || soldOut}
-        className="inline-flex items-center gap-1.5 rounded-full bg-[#1d1d1f] px-4 py-2 text-[13px] font-semibold text-white hover:bg-black disabled:opacity-40">
+        className="inline-flex items-center gap-1.5 rounded-full bg-[#18181b] px-4 py-2 text-[13px] font-medium text-white hover:bg-black disabled:opacity-40">
         {busy ? 'Reserving…' : soldOut ? 'Fully let' : <><KeyRound size={13} /> Reserve</>}
       </button>
       {error && <span className="text-[12px] text-[#d93025]">{error}</span>}

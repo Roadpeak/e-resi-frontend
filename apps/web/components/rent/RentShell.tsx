@@ -34,7 +34,7 @@ export function RentShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuthStore();
 
   return (
-    <div className="min-h-screen bg-[#f2f2f2] font-google text-[#1d1d1f]">
+    <div className="min-h-screen bg-[#f2f2f2] font-google text-[#18181b]">
       {/* ── Phone top bar ── */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-[#f2f2f2] px-4 lg:hidden">
         <Link href="/" aria-label="e-resi home"><Logo markSize={26} /></Link>
@@ -51,8 +51,8 @@ export function RentShell({ children }: { children: React.ReactNode }) {
               return (
                 <Link key={n.label} href={n.href}
                   className={cn(
-                    'flex items-center gap-3 rounded-full px-4 py-2.5 text-[15px] font-medium transition-colors',
-                    on ? 'bg-white font-semibold text-[#1d1d1f] shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'text-[#5f6368] hover:bg-white/60 hover:text-[#1d1d1f]',
+                    'flex items-center gap-3 rounded-full px-4 py-2.5 text-[16px] font-medium transition-colors',
+                    on ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'text-[#52525b] hover:bg-white/60 hover:text-[#18181b]',
                   )}>
                   <n.icon size={17} className={on ? 'text-[#1a73e8]' : 'text-[#9aa0a6]'} />
                   {n.label}
@@ -61,15 +61,15 @@ export function RentShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="mt-auto space-y-1 px-1 pb-1">
-            <Link href="/properties" className="flex items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#5f6368] hover:bg-white/60 hover:text-[#1d1d1f]">
+            <Link href="/properties" className="flex items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#52525b] hover:bg-white/60 hover:text-[#18181b]">
               <Building size={16} className="text-[#9aa0a6]" /> Buy off-plan
             </Link>
             {isAuthenticated && user ? (
-              <Link href={homePathFor(user.role)} className="flex items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#5f6368] hover:bg-white/60 hover:text-[#1d1d1f]">
+              <Link href={homePathFor(user.role)} className="flex items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#52525b] hover:bg-white/60 hover:text-[#18181b]">
                 <UserAvatar user={user} size={22} /> {homeLabelFor(user.role)}
               </Link>
             ) : (
-              <Link href="/login?redirect=/rent" className="flex items-center justify-center rounded-full bg-[#1d1d1f] px-4 py-2.5 text-[14px] font-medium text-white hover:bg-black">
+              <Link href="/login?redirect=/rent" className="flex items-center justify-center rounded-full bg-[#18181b] px-4 py-2.5 text-[14px] font-medium text-white hover:bg-black">
                 Sign in
               </Link>
             )}
@@ -87,7 +87,7 @@ export function RentShell({ children }: { children: React.ReactNode }) {
         {MOBILE.map((n) => {
           const on = n.match(pathname, view);
           return (
-            <Link key={n.label} href={n.href} className={cn('flex flex-col items-center gap-0.5 py-2.5 text-[11.5px]', on ? 'font-medium text-[#1a73e8]' : 'text-[#5f6368]')}>
+            <Link key={n.label} href={n.href} className={cn('flex flex-col items-center gap-0.5 py-2.5 text-[11.5px]', on ? 'font-medium text-[#1a73e8]' : 'text-[#52525b]')}>
               <n.icon size={20} /> {n.label}
             </Link>
           );
@@ -101,7 +101,7 @@ function Account({ isAuthenticated, user }: { isAuthenticated: boolean; user: Re
   if (isAuthenticated && user) {
     return <Link href={homePathFor(user.role)} aria-label="Your account"><UserAvatar user={user} size={34} /></Link>;
   }
-  return <Link href="/login?redirect=/rent" className="rounded-full bg-[#1d1d1f] px-4 py-1.5 text-[13.5px] font-medium text-white">Sign in</Link>;
+  return <Link href="/login?redirect=/rent" className="rounded-full bg-[#18181b] px-4 py-1.5 text-[13.5px] font-medium text-white">Sign in</Link>;
 }
 
 /** The greeting header every rent page opens with. */
@@ -116,14 +116,14 @@ export function RentHeader({ title, children }: { title?: string; children?: Rea
 
   return (
     <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[#1d1d1f] sm:text-[32px]">{title ?? greeting}</h1>
+      <h1 className="rent-greeting text-[28px] font-medium tracking-[-0.04em] text-[#52525b] sm:text-[32px]">{title ?? greeting}</h1>
       <div className="flex flex-1 items-center justify-end gap-3">
         {children}
         <span className="hidden lg:block">
           {isAuthenticated && user ? (
             <Link href={homePathFor(user.role)} aria-label="Your account"><UserAvatar user={user} size={40} /></Link>
           ) : (
-            <Link href="/login?redirect=/rent" aria-label="Sign in" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f2f2] text-[#5f6368] hover:bg-[#e8e8e8]">
+            <Link href="/login?redirect=/rent" aria-label="Sign in" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f2f2] text-[#52525b] hover:bg-[#e8e8e8]">
               <Users size={17} />
             </Link>
           )}
@@ -138,8 +138,8 @@ export function RentSection({ title, action, children }: { title: string; action
   return (
     <section className="mt-9 first:mt-0">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[18px] font-semibold text-[#1d1d1f]">{title}</h2>
-        {action && <Link href={action.href} className="text-[14.5px] font-medium text-[#1d1d1f] hover:underline">{action.label}</Link>}
+        <h2 className="text-[18px] font-medium tracking-[-0.01em] text-[#52525b]">{title}</h2>
+        {action && <Link href={action.href} className="text-[16px] font-medium text-[#18181b] hover:underline">{action.label}</Link>}
       </div>
       {children}
     </section>
