@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { MIN_INDEXABLE, fetchAreas } from '../lib/seo/areas';
+import { GUIDES } from '../lib/guides';
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://e-resi.com';
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.e-resi.com/api';
@@ -23,6 +24,15 @@ const STATIC: { path: string; priority: number; changeFrequency: MetadataRoute.S
   // The page that sells to our paying customer — ranked above browse.
   { path: '/for-developers', priority: 0.95, changeFrequency: 'weekly' },
   { path: '/for-investors', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/for-agents', priority: 0.9, changeFrequency: 'weekly' },
+  { path: '/list-agency', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/list-development', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/map', priority: 0.7, changeFrequency: 'daily' },
+  // Content hubs — informational searches that lead into the browse pages.
+  { path: '/neighbourhoods', priority: 0.85, changeFrequency: 'weekly' },
+  { path: '/guides', priority: 0.75, changeFrequency: 'monthly' },
+  ...GUIDES.map((g) => ({ path: `/guides/${g.slug}`, priority: 0.75, changeFrequency: 'monthly' as const })),
+  { path: '/faq', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/pricing', priority: 0.85, changeFrequency: 'weekly' },
   { path: '/contact', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/careers', priority: 0.5, changeFrequency: 'monthly' },
@@ -71,6 +81,7 @@ async function dynamicEntries(): Promise<MetadataRoute.Sitemap> {
   // Area pages only once they have enough listings to be worth a search
   // result — the same threshold their own robots tag uses.
   const areaEntries = areas.flatMap((a) => [
+    { url: `${BASE}/neighbourhoods/${a.slug}`, lastModified: a.updatedAt ? new Date(a.updatedAt) : new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
     ...(a.rentCount >= MIN_INDEXABLE ? [{ url: `${BASE}/rent/in/${a.slug}`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.85 }] : []),
     ...(a.propertyCount >= MIN_INDEXABLE ? [{ url: `${BASE}/properties/in/${a.slug}`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.85 }] : []),
   ]);

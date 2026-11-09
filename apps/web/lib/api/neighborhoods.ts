@@ -18,6 +18,7 @@ export interface Neighborhood {
   /** Rentals listed in the area (not archived). */
   rentCount?: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 /** Auto-detected surroundings, straight from OpenStreetMap. */

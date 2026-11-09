@@ -1,44 +1,16 @@
 import Link from 'next/link';
 import { Logo } from '../brand/Logo';
+import { FOOTER_COLUMNS } from './footer-links';
 
-const cols = [
-  {
-    heading: 'Platform',
-    links: [
-      { label: 'Browse Properties', href: '/properties' },
-      { label: 'New Developments', href: '/properties?status=off_plan' },
-      { label: '3D Tours', href: '/properties?has3DTour=true' },
-      { label: 'VR Experiences', href: '/properties?hasVRTour=true' },
-    ],
-  },
-  {
-    heading: 'Developers',
-    links: [
-      { label: 'List a Property', href: '/for-developers' },
-      { label: 'Production Packages', href: '/for-developers' },
-      { label: 'For Investors', href: '/for-investors' },
-      { label: 'Pricing', href: '/pricing' },
-    ],
-  },
-  {
-    heading: 'Company',
-    links: [
-      { label: 'About e-resi', href: '/about' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Careers', href: '/careers' },
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-    ],
-  },
-];
+const cols = FOOTER_COLUMNS;
 
 export function Footer() {
   return (
     <footer className="bg-[#080808] border-t border-white/[0.05]">
       <div className="max-w-screen-xl mx-auto px-8 sm:px-14 lg:px-20 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-8 mb-20">
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <div className="mb-4">
               <Logo markSize={30} onDark textClassName="text-chalk text-2xl" />
             </div>
