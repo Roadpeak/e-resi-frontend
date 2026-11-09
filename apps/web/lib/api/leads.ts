@@ -7,6 +7,8 @@ export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'VIEWING' | 'NEGOTI
 
 export interface LeadRow {
   id: string;
+  /** Set when the lead came from a rent listing. */
+  rental?: { id: string; name: string; slug: string };
   kind: LeadKind;
   channel: LeadChannel;
   sourceLabel: string;

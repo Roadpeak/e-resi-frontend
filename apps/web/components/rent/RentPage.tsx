@@ -142,7 +142,7 @@ function HomeView({ all, loading }: { all: RentListing[]; loading: boolean }) {
           </RentSection>
 
           <div className="mt-12 rounded-[22px] bg-[#f7f7f7] p-6">
-            <p className="text-[17px] text-[#1d1d1f]">Want someone to find it for you?</p>
+            <p className="text-[17px] font-semibold text-[#1d1d1f]">Want someone to find it for you?</p>
             <p className="mt-1 text-[14.5px] text-[#5f6368]">Tell a letting agent what you need and they will shortlist homes for you.</p>
             <div className="mt-4"><NeedAgentHelp deal="RENT" /></div>
           </div>
@@ -175,7 +175,7 @@ function Featured({ items }: { items: RentListing[] }) {
           </Link>
           <div className="pointer-events-none absolute bottom-6 left-6 right-6 text-white">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[24px] font-normal sm:text-[28px]">{l.name}</p>
+              <p className="text-[24px] font-semibold sm:text-[28px]">{l.name}</p>
               <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[12.5px] backdrop-blur-sm">
                 {FURNISHINGS.find((f) => f.value === l.furnishing)?.label ?? 'Rent'}
               </span>
@@ -292,7 +292,7 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
   return (
     <div className="rounded-[22px] bg-[#f2f2f2] p-2">
       <div className="flex items-center justify-between px-3 pb-2 pt-1.5">
-        <p className="text-[16px] text-[#1d1d1f]">Filters</p>
+        <p className="text-[16px] font-semibold text-[#1d1d1f]">Filters</p>
       </div>
       <div className="space-y-2">
         <Box title="Furnishing">
@@ -341,7 +341,7 @@ function FilterPanel({ all, onDone }: { all: RentListing[]; onDone?: () => void 
 function Box({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[18px] bg-white p-3.5">
-      <p className="mb-2.5 text-[14px] text-[#5f6368]">{title}</p>
+      <p className="mb-2.5 text-[14px] font-semibold text-[#1d1d1f]">{title}</p>
       {children}
     </div>
   );
@@ -428,7 +428,7 @@ function Empty({ title, body, action, icon }: { title: string; body: string; act
   return (
     <div className="flex flex-col items-center justify-center rounded-[22px] bg-[#f7f7f7] px-6 py-20 text-center">
       {icon && <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#5f6368]">{icon}</span>}
-      <p className="text-[18px] text-[#1d1d1f]">{title}</p>
+      <p className="text-[18px] font-semibold text-[#1d1d1f]">{title}</p>
       <p className="mt-1 text-[14.5px] text-[#5f6368]">{body}</p>
       {action && <div className="mt-5">{action}</div>}
     </div>

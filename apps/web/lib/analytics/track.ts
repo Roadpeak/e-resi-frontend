@@ -18,6 +18,7 @@ import { useAuthStore } from '../stores/auth.store';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export type AnalyticsEventType =
+  | 'CONTACT_CLICK'
   | 'PAGE_VIEW'
   | 'TOUR_START'
   | 'TOUR_COMPLETE'
@@ -89,6 +90,8 @@ function currentUserId(): string | undefined {
 export interface TrackInput {
   type: AnalyticsEventType;
   propertyId?: string;
+  /** A rent listing's page — tracked separately from its development. */
+  rentListingId?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -97,8 +100,8 @@ export interface TrackInput {
  * visitor leaves — TOUR_COMPLETE especially — still arrives after the page
  * has been torn down.
  */
-export function track({ type, propertyId, metadata }: TrackInput): void {
-  if (typeof window === 'undefined' || !propertyId) return;
+export function track({ type, propertyId, rentListingId, metadata }: TrackInput): void {
+  if (typeof window === 'undefined' || (!propertyId && !rentListingId)) return;
 
   // Attached centrally so every event — page views above all — carries the
   // referring agent. The developer's "this agent drove N views of this
@@ -111,7 +114,8 @@ export function track({ type, propertyId, metadata }: TrackInput): void {
 
   const body = JSON.stringify({
     type,
-    propertyId,
+    ...(propertyId && { propertyId }),
+    ...(rentListingId && { rentListingId }),
     ...(agentId && { agentId }),
     ...(userId && { userId }),
     sessionId: sessionId(),

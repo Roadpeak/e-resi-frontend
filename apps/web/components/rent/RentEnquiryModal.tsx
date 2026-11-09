@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { apiClient, ApiError } from '../../lib/api/client';
+import { track } from '../../lib/analytics/track';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { referralPayload } from '../../lib/analytics/referral';
 
@@ -67,6 +68,8 @@ export function RentEnquiryModal({
         await apiClient.post('/bookings', {
           ...referralPayload(),
           propertySlug,
+          // Routes the request to whoever runs this rental.
+          rentListingId: listingId,
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
@@ -87,6 +90,7 @@ export function RentEnquiryModal({
           message: form.message.trim() || `I'm interested in ${listingName}.`,
         });
       }
+      track({ type: isViewing ? 'BOOKING_SUBMITTED' : 'INQUIRY_SUBMITTED', rentListingId: listingId });
       setDone(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');

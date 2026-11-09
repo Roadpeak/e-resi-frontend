@@ -133,6 +133,11 @@ export default function DashboardRentals() {
                             <div className="min-w-0">
                               <p className="font-medium text-[#202124] text-[15px] truncate max-w-48">{listing.name}</p>
                               <p className="text-[13px] text-[#5f6368]">{listing.address.neighborhood}, {listing.address.city}</p>
+                              {listing.stats && (
+                                <p className="mt-0.5 flex items-center gap-1 text-[12.5px] text-[#5f6368]">
+                                  <Eye size={12} /> {listing.stats.views30d} visits (30d) · {listing.stats.leads} lead{listing.stats.leads === 1 ? '' : 's'}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>

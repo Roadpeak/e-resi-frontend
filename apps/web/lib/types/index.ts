@@ -338,6 +338,8 @@ export interface RentListing {
   isFeatured: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Owner's list only: visits and leads. */
+  stats?: { views: number; views30d: number; leads: number };
 }
 
 // ── Rent Filters ──────────────────────────────

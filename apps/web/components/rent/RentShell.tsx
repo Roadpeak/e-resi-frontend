@@ -51,8 +51,8 @@ export function RentShell({ children }: { children: React.ReactNode }) {
               return (
                 <Link key={n.label} href={n.href}
                   className={cn(
-                    'flex items-center gap-3 rounded-full px-4 py-2.5 text-[15px] transition-colors',
-                    on ? 'bg-white font-medium text-[#1d1d1f] shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'text-[#5f6368] hover:bg-white/60 hover:text-[#1d1d1f]',
+                    'flex items-center gap-3 rounded-full px-4 py-2.5 text-[15px] font-medium transition-colors',
+                    on ? 'bg-white font-semibold text-[#1d1d1f] shadow-[0_1px_3px_rgba(0,0,0,0.06)]' : 'text-[#5f6368] hover:bg-white/60 hover:text-[#1d1d1f]',
                   )}>
                   <n.icon size={17} className={on ? 'text-[#1a73e8]' : 'text-[#9aa0a6]'} />
                   {n.label}
@@ -116,7 +116,7 @@ export function RentHeader({ title, children }: { title?: string; children?: Rea
 
   return (
     <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-[28px] font-normal tracking-[-0.02em] text-[#1d1d1f] sm:text-[32px]">{title ?? greeting}</h1>
+      <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[#1d1d1f] sm:text-[32px]">{title ?? greeting}</h1>
       <div className="flex flex-1 items-center justify-end gap-3">
         {children}
         <span className="hidden lg:block">
@@ -138,7 +138,7 @@ export function RentSection({ title, action, children }: { title: string; action
   return (
     <section className="mt-9 first:mt-0">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[17px] font-normal text-[#5f6368]">{title}</h2>
+        <h2 className="text-[18px] font-semibold text-[#1d1d1f]">{title}</h2>
         {action && <Link href={action.href} className="text-[14.5px] font-medium text-[#1d1d1f] hover:underline">{action.label}</Link>}
       </div>
       {children}

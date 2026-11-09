@@ -109,7 +109,7 @@ export default function LeadsPage() {
     return leads.filter((l) =>
       (channel === 'ALL' || l.channel === channel)
       && (!propertyId || l.property?.id === propertyId)
-      && (!needle || [l.name, l.email, l.phone, l.property?.name, l.agent?.displayName, l.sourceLabel]
+      && (!needle || [l.name, l.email, l.phone, l.property?.name, l.rental?.name, l.agent?.displayName, l.sourceLabel]
         .some((v) => v?.toLowerCase().includes(needle))),
     );
   }, [leads, channel, q, propertyId]);
@@ -249,7 +249,7 @@ export default function LeadsPage() {
                         {l.sourceLabel}{l.agent ? ` · ${l.agent.displayName}` : ''}{l.addedBy ? ` · by ${l.addedBy}` : ''}
                       </span>
                     </span>
-                    <span className="truncate text-[13px] text-[#3c4043]">{l.property?.name ?? <span className="text-[#9aa0a6]">Not set</span>}</span>
+                    <span className="truncate text-[13px] text-[#3c4043]">{l.rental ? `${l.rental.name} · rental` : l.property?.name ?? <span className="text-[#9aa0a6]">Not set</span>}</span>
                     <span><span className={cn('inline-block rounded-full px-2.5 py-0.5 text-[12px] font-medium', statusTone(l.status))}>{STATUS_LABEL[l.status] ?? l.status}</span></span>
                     <span className="flex items-center justify-between gap-2 text-[12.5px] text-[#5f6368] md:justify-end">
                       {relDate(l.createdAt)}
@@ -484,6 +484,9 @@ function SiteLeadDrawer({ lead, onClose, onSaved }: { lead: LeadRow; onClose: ()
             {wa && <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-3.5 py-1.5 text-[13px] font-medium text-[#188038] hover:bg-[#f6fbf7]"><MaterialIcon name="chat" size={15} />WhatsApp</a>}
             {lead.email && <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] px-3.5 py-1.5 text-[13px] font-medium text-[#1a73e8] hover:bg-[#f8fbff]"><MaterialIcon name="mail" size={15} />{lead.email}</a>}
           </div>
+          {lead.rental && (
+            <p className="text-[13.5px] text-[#3c4043]"><span className="text-[#5f6368]">Rental: </span>{lead.rental.name}</p>
+          )}
           {lead.property && (
             <p className="text-[13.5px] text-[#3c4043]"><span className="text-[#5f6368]">Development: </span>{lead.property.name}</p>
           )}

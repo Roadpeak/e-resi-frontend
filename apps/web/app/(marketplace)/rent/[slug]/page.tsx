@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ArrowRight, Bath, BedDouble, Box, Building2, CalendarClock, CalendarDays, Check, CheckCircle2,
-  Film, Heart, Images, KeyRound, Loader2, MapPin, Maximize2, PawPrint, Play, Plus, Share2, Sofa, View, X,
+  Film, Heart, Images, KeyRound, Loader2, MapPin, Maximize2, PawPrint, Phone, Play, Plus, Share2, Sofa, View, X,
 } from 'lucide-react';
 import { RentShell, useSavedRentals } from '../../../../components/rent/RentShell';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
@@ -19,6 +19,7 @@ import { formatPrice, cn } from '../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
 import { referralPayload } from '../../../../lib/analytics/referral';
+import { track } from '../../../../lib/analytics/track';
 import type { RentUnit } from '../../../../lib/types';
 
 const PropertyMiniMap = dynamic(
@@ -54,7 +55,7 @@ function range(nums: number[], unit = '', studio = false): string | null {
 type Raw = any;
 
 const card = 'rounded-[20px] border border-[#ececec] bg-[#fafafa] p-5 sm:p-6';
-const cardTitle = 'mb-4 text-[14px] text-[#5f6368]';
+const cardTitle = 'mb-4 text-[16px] font-semibold text-[#1d1d1f]';
 
 /**
  * A rental listing, laid out like an app detail screen: one large photo with
@@ -93,6 +94,12 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   const isPhoto = (m: { url: string; title?: string; type?: string }) => m?.url && m.title !== '__logo__' && (!m.type || m.type === 'PHOTO' || m.type === 'DRONE_PHOTO');
   const photos = [listing?.heroImageUrl, ...ownMedia.filter(isPhoto).map((m) => m.url), ...propertyMedia.filter(isPhoto).map((m) => m.url)]
     .filter((u, i, a): u is string => !!u && a.indexOf(u) === i);
+
+  // One visit per page load; the rental's own numbers, not the building's.
+  const listingId = listing?.id;
+  useEffect(() => {
+    if (listingId) track({ type: 'PAGE_VIEW', rentListingId: listingId });
+  }, [listingId]);
 
   useEffect(() => {
     if (photos.length < 2 || lightbox !== null) return;
@@ -136,6 +143,13 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
     : r?.developer
       ? { name: r.developer.companyName, role: 'Developer', image: r.developer.logoUrl }
       : null;
+  // WhatsApp of whoever runs the letting: the agent, else the developer.
+  const waRaw: string | null = agent ? (agent.whatsapp || null) : (r?.developer?.whatsapp || null);
+  const phoneRaw: string | null = agent ? (agent.phone || null) : (r?.developer?.phone || null);
+  const waDigits = waRaw ? waRaw.replace(/[^\d]/g, '').replace(/^0/, '254') : null;
+  const waHref = waDigits
+    ? `https://wa.me/${waDigits}?text=${encodeURIComponent(`Hi, I'm interested in ${listing.name} on e-resi: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`
+    : null;
   const saved = has(listing.id);
   const where = [listing.address.neighborhood, listing.address.city].filter(Boolean).join(', ');
   const plans = floorPlans as { id: string; name: string; imageUrl: string; bedrooms?: number | null; bathrooms?: number | null; sqm?: number | null }[];
@@ -211,13 +225,13 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               <span className="rounded-full bg-white px-3 py-1 text-[12.5px] text-[#1d1d1f]">{STATUS[listing.status] ?? 'For rent'}</span>
               <span className="rounded-full bg-white/20 px-3 py-1 text-[12.5px] backdrop-blur-sm">{FURNISHING[listing.furnishing] ?? 'Rent'}</span>
             </div>
-            <h1 className="text-[26px] font-normal leading-tight tracking-[-0.01em] sm:text-[34px]">
+            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.01em] sm:text-[34px]">
               {listing.name}
               {listing.priceFrom > 0 && (
                 <span className="text-white/85"> · {formatPrice(listing.priceFrom, listing.currency)}<span className="text-[0.6em] text-white/70"> / month</span></span>
               )}
             </h1>
-            {where && <p className="mt-1 flex items-center gap-1.5 text-[15px] text-white/80"><MapPin size={15} /> {where}</p>}
+            {where && <p className="mt-1 flex items-center gap-1.5 text-[15px] font-medium text-white/85"><MapPin size={15} /> {where}</p>}
           </div>
           <div className="pointer-events-auto flex gap-2">
             {property.slug && property.has3DTour && (
@@ -243,8 +257,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               <div key={f.label} className={cn('flex items-center gap-3 px-5 py-4', i % 2 === 1 && 'border-l border-[#ececec]', i > 1 && 'border-t border-[#ececec] sm:border-t-0', i === 2 && 'sm:border-l')}>
                 <f.icon size={20} strokeWidth={1.6} className="shrink-0 text-[#9aa0a6]" />
                 <div className="min-w-0">
-                  <p className="truncate text-[16px] text-[#1d1d1f]">{f.value}</p>
-                  <p className="text-[12.5px] text-[#5f6368]">{f.label}</p>
+                  <p className="truncate text-[16.5px] font-semibold text-[#1d1d1f]">{f.value}</p>
+                  <p className="text-[13px] font-medium text-[#5f6368]">{f.label}</p>
                 </div>
               </div>
             ))}
@@ -253,7 +267,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {/* Description */}
           <section className={card}>
             <p className={cardTitle}>Description</p>
-            <p className="whitespace-pre-line text-[15.5px] leading-[1.7] text-[#3c4043]">
+            <p className="whitespace-pre-line text-[15.5px] leading-[1.7] text-[#202124]">
               {listing.description || listing.tagline || `${listing.name} offers ${beds ?? ''} homes to rent${where ? ` in ${where}` : ''}.`}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -266,7 +280,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   : 'Move in now',
                 ...listing.tags.map((t) => t.replace(/-/g, ' ')),
               ].filter(Boolean).map((t) => (
-                <span key={t as string} className="rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] capitalize text-[#3c4043]">{t}</span>
+                <span key={t as string} className="rounded-full border border-[#e3e3e3] bg-white px-3.5 py-1.5 text-[13px] font-medium capitalize text-[#3c4043]">{t}</span>
               ))}
             </div>
           </section>
@@ -275,8 +289,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {units.length > 0 && (
             <section className={card}>
               <div className="mb-4 flex items-baseline justify-between gap-3">
-                <p className="text-[14px] text-[#5f6368]">Units to rent</p>
-                <p className="text-[13.5px] text-[#5f6368]"><span className="text-[#1d1d1f]">{totalAvailable}</span> of {totalUnits} available</p>
+                <p className="text-[16px] font-semibold text-[#1d1d1f]">Units to rent</p>
+                <p className="text-[13.5px] font-medium text-[#5f6368]"><span className="font-semibold text-[#1d1d1f]">{totalAvailable}</span> of {totalUnits} available</p>
               </div>
               <div className="space-y-3">
                 {units.map((u) => <UnitRow key={u.id} unit={u} propertySlug={listing.propertySlug} />)}
@@ -293,10 +307,10 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 { title: 'In the building', items: buildingFeatures },
               ].filter((g) => g.items.length).map((g, gi) => (
                 <div key={g.title} className={gi ? 'mt-5' : ''}>
-                  {homeFeatures.length > 0 && buildingFeatures.length > 0 && <p className="mb-2.5 text-[13px] text-[#9aa0a6]">{g.title}</p>}
+                  {homeFeatures.length > 0 && buildingFeatures.length > 0 && <p className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-[#9aa0a6]">{g.title}</p>}
                   <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
                     {g.items.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-[15px] capitalize text-[#1d1d1f]">
+                      <li key={f} className="flex items-center gap-2.5 text-[15px] font-medium capitalize text-[#1d1d1f]">
                         <Plus size={14} className="shrink-0 text-[#1a73e8]" /> {f.replace(/-/g, ' ')}
                       </li>
                     ))}
@@ -341,7 +355,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {videos.length > 0 && (
             <section className={card}>
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-[14px] text-[#5f6368]">Video</p>
+                <p className="text-[16px] font-semibold text-[#1d1d1f]">Video</p>
                 {property.slug && property.hasCinematicTour && (
                   <Link href={`/${property.slug}/tour/cinematic`} className="text-[13.5px] text-[#1d1d1f] hover:underline">Full cinematic tour</Link>
                 )}
@@ -420,7 +434,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                   {contact.image ? <Image src={contact.image} alt="" fill className="object-cover" sizes="48px" unoptimized /> : <Building2 size={18} className="text-[#9aa0a6]" />}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-[16px] text-[#1d1d1f]">{contact.name}</p>
+                  <p className="truncate text-[16.5px] font-semibold text-[#1d1d1f]">{contact.name}</p>
                   <p className="text-[13px] text-[#5f6368]">{contact.role}</p>
                 </div>
               </div>
@@ -428,27 +442,41 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             <dl className={cn('space-y-2.5 text-[14px]', contact && 'pt-4')}>
               <div className="flex justify-between gap-3">
                 <dt className="text-[#5f6368]">Rent</dt>
-                <dd className="text-right text-[#1d1d1f]">
+                <dd className="text-right font-semibold text-[#1d1d1f]">
                   {listing.priceFrom > 0 ? formatPrice(listing.priceFrom, listing.currency) : 'On request'}
                   {listing.priceTo > listing.priceFrom && <span className="text-[#5f6368]"> – {formatPrice(listing.priceTo, listing.currency)}</span>}
                   <span className="text-[#5f6368]"> / mo</span>
                 </dd>
               </div>
               {totalUnits > 0 && (
-                <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Available</dt><dd className="text-[#1d1d1f]">{totalAvailable} of {totalUnits} units</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Available</dt><dd className="font-medium text-[#1d1d1f]">{totalAvailable} of {totalUnits} units</dd></div>
               )}
-              <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Furnishing</dt><dd className="text-[#1d1d1f]">{FURNISHING[listing.furnishing] ?? '—'}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Furnishing</dt><dd className="font-medium text-[#1d1d1f]">{FURNISHING[listing.furnishing] ?? '—'}</dd></div>
               {listing.availableFrom && (
                 <div className="flex justify-between gap-3"><dt className="text-[#5f6368]">Move in</dt>
-                  <dd className="text-[#1d1d1f]">{new Date(listing.availableFrom) > new Date() ? new Date(listing.availableFrom).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Now'}</dd></div>
+                  <dd className="font-medium text-[#1d1d1f]">{new Date(listing.availableFrom) > new Date() ? new Date(listing.availableFrom).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Now'}</dd></div>
               )}
             </dl>
             <div className="mt-5 space-y-2">
-              <button onClick={() => setModal('VIEWING')} className="w-full rounded-full bg-[#1d1d1f] py-3 text-[14.5px] text-white hover:bg-black">Book a viewing</button>
+              <button onClick={() => setModal('VIEWING')} className="w-full rounded-full bg-[#1d1d1f] py-3 text-[14.5px] font-semibold text-white hover:bg-black">Book a viewing</button>
               <div className="flex gap-2">
-                <button onClick={() => setModal('ENQUIRY')} className="flex-1 rounded-full border border-[#e3e3e3] bg-white py-3 text-[14.5px] text-[#1d1d1f] hover:bg-[#f2f2f2]">Send enquiry</button>
+                <button onClick={() => setModal('ENQUIRY')} className="flex-1 rounded-full border border-[#e3e3e3] bg-white py-3 text-[14.5px] font-semibold text-[#1d1d1f] hover:bg-[#f2f2f2]">Send enquiry</button>
                 <ChatWithDeveloper rentListingSlug={listing.slug} variant="icon" label={agent ? 'Chat with agent' : 'Chat'} />
               </div>
+              {waHref && (
+                <a href={waHref} target="_blank" rel="noopener noreferrer"
+                  onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25d366] py-3 text-[14.5px] font-semibold text-white hover:bg-[#1ebe5b]">
+                  <WhatsAppIcon /> WhatsApp {agent ? 'the agent' : 'the developer'}
+                </a>
+              )}
+              {phoneRaw && (
+                <a href={`tel:${phoneRaw.replace(/\s/g, '')}`}
+                  onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'phone' } })}
+                  className="flex w-full items-center justify-center gap-2 py-1.5 text-[14px] font-medium text-[#1d1d1f] hover:underline">
+                  <Phone size={15} /> {phoneRaw}
+                </a>
+              )}
             </div>
           </div>
 
@@ -459,7 +487,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[12.5px] text-[#5f6368]">Part of</span>
-                <span className="block truncate text-[15px] text-[#1d1d1f]">{property.name}</span>
+                <span className="block truncate text-[15px] font-semibold text-[#1d1d1f]">{property.name}</span>
               </span>
               <ArrowRight size={16} className="mr-1 text-[#9aa0a6]" />
             </Link>
@@ -467,7 +495,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
           {property.slug && (property.hasCinematicTour || property.has3DTour || property.hasVRTour) && (
             <div className="rounded-[20px] border border-[#ececec] bg-[#fafafa] p-4">
-              <p className="mb-2.5 text-[14px] text-[#5f6368]">Tour it from home</p>
+              <p className="mb-2.5 text-[15px] font-semibold text-[#1d1d1f]">Tour it from home</p>
               <div className="flex flex-wrap gap-2">
                 {property.hasCinematicTour && <TourChip href={`/${property.slug}/tour/cinematic`} icon={<Film size={14} />} label="Cinematic" />}
                 {property.has3DTour && <TourChip href={`/${property.slug}/tour/3d`} icon={<Box size={14} />} label="3D" />}
@@ -481,10 +509,17 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
       {/* ── Phone booking bar (above the tab bar) ── */}
       <div className="fixed inset-x-0 bottom-[58px] z-30 flex items-center justify-between gap-3 border-t border-black/[0.06] bg-white px-4 py-2.5 lg:hidden">
         <div className="min-w-0">
-          <p className="truncate text-[15.5px] text-[#1d1d1f]">{listing.priceFrom > 0 ? `${formatPrice(listing.priceFrom, listing.currency)} / mo` : 'Rent on request'}</p>
+          <p className="truncate text-[15.5px] font-bold text-[#1d1d1f]">{listing.priceFrom > 0 ? `${formatPrice(listing.priceFrom, listing.currency)} / mo` : 'Rent on request'}</p>
           <p className="truncate text-[12.5px] text-[#5f6368]">{totalUnits ? `${totalAvailable} of ${totalUnits} available` : STATUS[listing.status]}</p>
         </div>
-        <button onClick={() => setModal('VIEWING')} className="shrink-0 rounded-full bg-[#1d1d1f] px-5 py-2.5 text-[14px] text-white">Book a viewing</button>
+        <div className="flex shrink-0 items-center gap-2">
+          {waHref && (
+            <a href={waHref} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+              onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25d366] text-white"><WhatsAppIcon /></a>
+          )}
+          <button onClick={() => setModal('VIEWING')} className="rounded-full bg-[#1d1d1f] px-5 py-2.5 text-[14px] font-semibold text-white">Book a viewing</button>
+        </div>
       </div>
 
       {/* ── Lightbox ── */}
@@ -550,7 +585,7 @@ function UnitRow({ unit, propertySlug }: { unit: RentUnit; propertySlug?: string
     <div className={cn('rounded-2xl bg-white p-4 sm:p-5', soldOut && 'opacity-60')}>
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[16px] text-[#1d1d1f]">
+          <p className="text-[16.5px] font-semibold text-[#1d1d1f]">
             {unit.unitType || unit.label}
             {unit.unitType && unit.label !== unit.unitType && <span className="text-[#9aa0a6]"> · {unit.label}</span>}
             {unit.floor != null && <span className="text-[#9aa0a6]"> · {ordinalFloor(unit.floor)}</span>}
@@ -569,7 +604,7 @@ function UnitRow({ unit, propertySlug }: { unit: RentUnit; propertySlug?: string
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <p className="text-[18px] text-[#1d1d1f]">{formatPrice(unit.pricePerMonth, unit.currency)}<span className="text-[13px] text-[#5f6368]"> / mo</span></p>
+          <p className="text-[18px] font-bold text-[#1d1d1f]">{formatPrice(unit.pricePerMonth, unit.currency)}<span className="text-[13px] text-[#5f6368]"> / mo</span></p>
           <Reserve unit={unit} />
         </div>
       </div>
@@ -616,10 +651,18 @@ function Reserve({ unit }: { unit: RentUnit }) {
   return (
     <>
       <button onClick={reserve} disabled={busy || soldOut}
-        className="inline-flex items-center gap-1.5 rounded-full bg-[#1d1d1f] px-4 py-2 text-[13px] text-white hover:bg-black disabled:opacity-40">
+        className="inline-flex items-center gap-1.5 rounded-full bg-[#1d1d1f] px-4 py-2 text-[13px] font-semibold text-white hover:bg-black disabled:opacity-40">
         {busy ? 'Reserving…' : soldOut ? 'Fully let' : <><KeyRound size={13} /> Reserve</>}
       </button>
       {error && <span className="text-[12px] text-[#d93025]">{error}</span>}
     </>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.75-.72 2-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 0 1-4.82-1.32l-.35-.2-3.58.94.96-3.49-.23-.36a9.43 9.43 0 0 1-1.45-5.03c0-5.22 4.25-9.47 9.48-9.47 2.53 0 4.91.99 6.7 2.78a9.4 9.4 0 0 1 2.77 6.7c0 5.22-4.25 9.46-9.47 9.46zm8.06-17.52A11.32 11.32 0 0 0 12.04.64C5.76.64.64 5.75.64 12.04c0 2.01.53 3.97 1.52 5.7L.55 23.62l6.03-1.58a11.37 11.37 0 0 0 5.45 1.39h.01c6.28 0 11.4-5.12 11.4-11.4 0-3.05-1.19-5.91-3.34-8.06z" />
+    </svg>
   );
 }

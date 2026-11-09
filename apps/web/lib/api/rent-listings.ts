@@ -170,4 +170,21 @@ export const rentListingsApi = {
 
   removeUnit: (listingId: string, unitId: string) =>
     apiClient.delete<unknown>(`/rent-listings/${listingId}/units/${unitId}`),
+
+  /** Visits, contact taps and leads for one rental (its manager only). */
+  stats: (id: string, days = 30) => apiClient.get<RentalStats>(`/rent-listings/${id}/stats?days=${days}`),
 };
+
+export interface RentalStats {
+  days: number;
+  totals: {
+    views: number; visitors: number; signedInVisitors: number; whatsapp: number; calls: number;
+    enquiries: number; viewings: number; reservations: number;
+  };
+  daily: { date: string; views: number; leads: number }[];
+  sources: { source: string; count: number }[];
+  leads: {
+    id: string; kind: 'ENQUIRY' | 'VIEWING'; name: string; email?: string | null; phone?: string | null;
+    note?: string | null; status: string; createdAt: string;
+  }[];
+}

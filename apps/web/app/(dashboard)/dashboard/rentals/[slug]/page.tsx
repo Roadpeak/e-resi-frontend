@@ -11,6 +11,7 @@ import { rentListingsApi } from '../../../../../lib/api/rent-listings';
 import { ApiError } from '../../../../../lib/api/client';
 import { formatPrice, cn } from '../../../../../lib/utils';
 import { AreaSearchInput } from '../../../../../components/dashboard/AreaSearchInput';
+import { RentalStats } from '../../../../../components/dashboard/RentalStats';
 
 const inputCls =
   'w-full rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-[15px] text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20';
@@ -180,6 +181,8 @@ export default function EditRentalPage() {
 
       {toast && <p className="rounded-2xl bg-[#e6f4ea] px-4 py-3 text-[14px] text-[#188038]">{toast}</p>}
       {error && <p className="rounded-2xl bg-[#fce8e6] px-4 py-3 text-[14px] text-[#c5221f]">{error}</p>}
+
+      <RentalStats id={listing.id} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
