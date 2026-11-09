@@ -183,6 +183,7 @@ export default async function PropertyPage({ params }: Props) {
     units: (
       <PropertyUnits
         units={property.units}
+        unitTypes={property.unitTypes}
         currency={property.currency}
         propertySlug={property.slug}
         priceDisplay={branding.unitPriceDisplay}

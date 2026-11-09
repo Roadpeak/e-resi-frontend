@@ -56,6 +56,7 @@ function toProperty(raw: any) {
     })),
     floorPlans: raw.floorPlans ?? [],
     units: raw.units ?? [],
+    unitTypes: raw.unitTypes ?? [],
     amenities: raw.amenities ?? [],
     constructionUpdates: raw.constructionUpdates ?? [],
   };
@@ -318,6 +319,6 @@ export function useMyRentListings(params: { page?: number; limit?: number } = {}
       const res = await rentListingsApi.listMine(params);
       return { items: res.data.map(toRentListing), total: res.meta.total };
     },
-    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'ADMIN'),
+    enabled: isAuthenticated && (user?.role === 'DEVELOPER' || user?.role === 'AGENT' || user?.role === 'ADMIN'),
   });
 }

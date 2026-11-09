@@ -152,6 +152,7 @@ export default async function PropertyPreviewPage({ params, searchParams }: Prop
     units: (
       <PropertyUnits
         units={property.units}
+        unitTypes={property.unitTypes}
         currency={property.currency}
         propertySlug={property.slug}
         priceDisplay={branding.unitPriceDisplay}

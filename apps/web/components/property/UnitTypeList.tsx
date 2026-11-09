@@ -15,6 +15,7 @@ import {
   type PriceDisplay,
 } from '../../lib/units/unit-types';
 import { unitStatus } from './templates/hooks';
+import { leftLabel, typeSize as declaredSize, type PublicUnitType } from '../../lib/api/unit-types';
 
 /**
  * The development's typology: what layouts it offers and what each costs.
@@ -52,6 +53,11 @@ export interface UnitTypeListProps {
    */
   variant?: 'card' | 'editorial';
   className?: string;
+  /**
+   * Layouts the developer declared, each with its own count. They lead the
+   * list; units linked to one of them are not grouped again below.
+   */
+  declared?: PublicUnitType[] | null;
 }
 
 export function UnitTypeList({
@@ -63,11 +69,16 @@ export function UnitTypeList({
   radius = 'rounded-2xl',
   variant = 'card',
   className,
+  declared,
 }: UnitTypeListProps) {
-  const types = groupUnitsByType(units, currency);
+  const declaredTypes = declared ?? [];
+  const types = groupUnitsByType(
+    declaredTypes.length ? units.filter((u) => !u.unitTypeId) : units,
+    currency,
+  );
   // Nothing to group means nothing to show — the caller renders its own empty
   // state, which it words to match its own template.
-  if (types.length === 0) return null;
+  if (types.length === 0 && declaredTypes.length === 0) return null;
 
   const editorial = variant === 'editorial';
 
@@ -79,6 +90,18 @@ export function UnitTypeList({
         className,
       )}
     >
+      {declaredTypes.map((t) => (
+        <DeclaredRow
+          key={t.id}
+          type={t}
+          propertySlug={propertySlug}
+          currency={currency}
+          hidePrice={priceDisplayFor(`type:${t.id}`, priceDisplay) === 'hidden'}
+          onDark={onDark}
+          radius={radius}
+          editorial={editorial}
+        />
+      ))}
       {types.map((type) => (
         <TypeRow
           key={type.key}
@@ -399,5 +422,96 @@ function TypeRow({
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+/**
+ * A declared layout: described once, sold many times over. Leads with what a
+ * buyer asks first — how many are left — and links to the layout's own page
+ * with its photos, video and tours.
+ */
+function DeclaredRow({
+  type: t, propertySlug, currency, hidePrice, onDark, radius, editorial,
+}: {
+  type: PublicUnitType; propertySlug: string; currency?: string | null; hidePrice: boolean;
+  onDark: boolean; radius: string; editorial: boolean;
+}) {
+  const c = t.counts;
+  const soldOut = c.total > 0 && c.available === 0;
+  const border = onDark ? 'border-white/12' : 'border-neutral-200';
+  const heading = onDark ? 'text-white' : 'text-neutral-900';
+  const muted = onDark ? 'text-white/55' : 'text-neutral-500';
+  const cover = t.coverImageUrl || t.media.find((m) => m.type === 'PHOTO')?.url;
+  const cur = currency || 'KES';
+  const price = hidePrice || !t.priceFrom
+    ? null
+    : t.priceTo && t.priceTo !== t.priceFrom
+      ? `From ${formatPrice(t.priceFrom, cur)}`
+      : formatPrice(t.priceFrom, cur);
+  const size = declaredSize(t);
+  const pct = (n: number) => `${c.total ? (n / c.total) * 100 : 0}%`;
+
+  return (
+    <Link
+      href={`/${propertySlug}/types/${t.id}`}
+      className={cn(
+        'group flex flex-col gap-4 transition-colors sm:flex-row sm:items-center sm:gap-6',
+        editorial ? cn('border-b py-7', border) : cn('border p-4 sm:p-5', radius, border, onDark ? 'bg-white/[0.03]' : 'bg-white'),
+        onDark ? 'hover:bg-white/[0.05]' : 'hover:bg-neutral-50',
+        soldOut && 'opacity-65',
+      )}
+    >
+      <div className={cn('relative aspect-[4/3] w-full shrink-0 overflow-hidden sm:w-36', editorial ? '' : 'rounded-xl', onDark ? 'bg-white/10' : 'bg-neutral-100')}>
+        {cover && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt={t.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(editorial ? 'text-[21px]' : 'text-[17px] font-semibold', heading)}
+            style={editorial ? { fontFamily: 'var(--tpl-font-heading)', fontWeight: 'var(--tpl-heading-weight)' as unknown as number } : undefined}
+          >
+            {t.name}
+          </span>
+          {soldOut && (
+            <span className={cn('rounded-full border px-2 py-0.5 text-[11px] font-medium', onDark ? 'border-white/20 text-white/60' : 'border-neutral-300 text-neutral-500')}>
+              Sold out
+            </span>
+          )}
+        </div>
+        <div className={cn('mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]', muted)}>
+          <span className="inline-flex items-center gap-1.5"><BedDouble size={13} /> {t.bedrooms === 0 ? 'Studio' : `${t.bedrooms} bed`}</span>
+          <span className="inline-flex items-center gap-1.5"><Bath size={13} /> {t.bathrooms} bath</span>
+          {size && <span className="inline-flex items-center gap-1.5"><Maximize2 size={13} /> {size}</span>}
+        </div>
+
+        {c.total > 0 && (
+          <div className="mt-3 max-w-sm">
+            <div aria-hidden className={cn('flex h-1.5 overflow-hidden rounded-full', onDark ? 'bg-white/12' : 'bg-neutral-200')}>
+              <span style={{ width: pct(c.available), background: onDark ? 'rgba(255,255,255,0.85)' : 'var(--brand)' }} />
+              <span style={{ width: pct(c.reserved), background: onDark ? 'rgba(255,255,255,0.4)' : 'color-mix(in srgb, var(--brand) 40%, white)' }} />
+            </div>
+            <p className={cn('mt-1.5 text-[12.5px]', muted)}>
+              <span className={cn('font-semibold', heading)}>{leftLabel(c)}</span>
+              {' · '}{c.sold} sold · {c.reserved} reserved
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
+        {price ? (
+          <span className={cn('block', editorial ? 'text-[22px]' : 'text-[19px] font-bold tracking-[-0.01em]', heading)}>{price}</span>
+        ) : (
+          <span className={cn('block text-[13px]', muted)}>Price on request</span>
+        )}
+        <span className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-medium" style={{ color: onDark ? 'rgba(255,255,255,0.75)' : 'var(--brand)' }}>
+          View layout <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </Link>
   );
 }

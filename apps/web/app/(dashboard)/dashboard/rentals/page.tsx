@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Eye, Pencil, Film, Box, Home, MoreHorizontal, Loader2 } from 'lucide-react';
 import { Button } from '../../../../components/ui/Button';
@@ -33,6 +34,7 @@ function formatRent(price: number) {
 }
 
 export default function DashboardRentals() {
+  const base = usePathname().startsWith('/agent') ? '/agent' : '/dashboard';
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
   const queryClient = useQueryClient();
@@ -67,7 +69,7 @@ export default function DashboardRentals() {
           <h2 className="text-[26px] sm:text-[28px] font-normal text-[#202124]">Rent listings</h2>
           <p className="text-base text-[#5f6368] mt-0.5">{listings.length} active listing{listings.length !== 1 ? 's' : ''}</p>
         </div>
-        <Link href="/dashboard/rentals/new">
+        <Link href={`${base}/rentals/new`}>
           <Button icon={<Plus size={15} />} className="rounded-full bg-[#1a73e8] hover:bg-[#1765cc] text-[15px] font-medium shadow-none">
             New Listing
           </Button>
@@ -79,7 +81,7 @@ export default function DashboardRentals() {
           <Home size={32} className="mx-auto mb-3 text-[#dadce0]" />
           <p className="text-base font-medium text-[#202124]">No rent listings yet</p>
           <p className="text-base text-[#5f6368] mt-1">Create a rent listing and connect it to your property with available unit types.</p>
-          <Link href="/dashboard/rentals/new">
+          <Link href={`${base}/rentals/new`}>
             <Button className="mt-5 rounded-full bg-[#1a73e8] hover:bg-[#1765cc] text-[15px] font-medium shadow-none" icon={<Plus size={14} />}>
               New Listing
             </Button>
@@ -186,7 +188,7 @@ export default function DashboardRentals() {
                               <Eye size={14} />
                             </a>
                             <Link
-                              href={`/dashboard/rentals/${listing.slug}`}
+                              href={`${base}/rentals/${listing.slug}`}
                               className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#f1f3f4] transition-colors"
                               title="Edit"
                             >
@@ -202,7 +204,7 @@ export default function DashboardRentals() {
                               {menuOpen === listing.id && (
                                 <div className="absolute right-0 top-9 z-20 w-48 overflow-hidden rounded-2xl border border-[#dadce0] bg-white py-1 shadow-lg">
                                   <Link
-                                    href={`/dashboard/rentals/${listing.slug}`}
+                                    href={`${base}/rentals/${listing.slug}`}
                                     onClick={() => setMenuOpen(null)}
                                     className="block w-full px-4 py-2.5 text-left text-sm text-[#3c4043] hover:text-[#202124] hover:bg-[#f8f9fa] transition-colors"
                                   >
@@ -244,7 +246,7 @@ export default function DashboardRentals() {
           <div className="rounded-3xl border border-dashed border-[#dadce0] bg-white p-10 text-center">
             <Home size={32} className="mx-auto mb-3 text-[#dadce0]" />
             <p className="text-base font-medium text-[#202124]">Ready to add another listing?</p>
-            <Link href="/dashboard/rentals/new">
+            <Link href={`${base}/rentals/new`}>
               <Button className="mt-5 rounded-full bg-[#1a73e8] hover:bg-[#1765cc] text-[15px] font-medium shadow-none" icon={<Plus size={14} />}>
                 New Listing
               </Button>

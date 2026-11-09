@@ -1,5 +1,6 @@
 'use client';
 
+import type { PublicUnitType } from '../../lib/api/unit-types';
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -15,6 +16,8 @@ interface Props {
   propertySlug: string;
   /** Per-unit-type price presentation chosen by the developer. */
   priceDisplay?: Record<string, string> | null;
+  /** Declared layouts with their own counts. */
+  unitTypes?: PublicUnitType[];
 }
 
 /**
@@ -55,23 +58,25 @@ const statusConfig = {
  */
 type View = 'types' | 'all';
 
-export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: Props) {
+export function PropertyUnits({ units, currency, propertySlug, priceDisplay, unitTypes = [] }: Props) {
   const [view, setView] = useState<View>('types');
   /** Show only what a buyer can still act on. Off by default — hiding stock
       without being asked would misrepresent the development's size. */
   const [availableOnly, setAvailableOnly] = useState(false);
 
   const statusOf = (u: Unit) => (u.status ?? '').toLowerCase();
-  const availableCount = units.filter((u) => statusOf(u) === 'available').length;
+  // Hand-counted types add to what is for sale; types counted from linked
+  // units are already in `units`.
+  const availableCount = units.filter((u) => statusOf(u) === 'available').length
+    + unitTypes.filter((t) => t.counts.source === 'manual').reduce((n, t) => n + t.counts.available, 0);
 
   // The figures that orient a buyer before they read a single row: how much of
   // this is still for sale, what it costs to get in, and what layouts exist.
-  const availablePrices = units
-    .filter((u) => statusOf(u) === 'available')
-    .map((u) => u.price)
-    .filter((p): p is number => typeof p === 'number' && Number.isFinite(p) && p > 0);
-  const beds = units
-    .map((u) => u.bedrooms)
+  const availablePrices = [
+    ...units.filter((u) => statusOf(u) === 'available').map((u) => u.price),
+    ...unitTypes.filter((t) => t.counts.available > 0).map((t) => t.priceFrom ?? 0),
+  ].filter((p): p is number => typeof p === 'number' && Number.isFinite(p) && p > 0);
+  const beds = [...units.map((u) => u.bedrooms), ...unitTypes.map((t) => t.bedrooms)]
     .filter((n): n is number => typeof n === 'number' && Number.isFinite(n));
   const bedLabel = beds.length
     ? (() => {
@@ -128,7 +133,7 @@ export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: P
         <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1">
           {([
             { key: 'types' as View, label: 'By type' },
-            { key: 'all' as View, label: `All units (${units.length})` },
+            ...(units.length ? [{ key: 'all' as View, label: `All units (${units.length})` }] : []),
           ]).map((v) => (
             <button
               key={v.key}
@@ -150,7 +155,7 @@ export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: P
         </div>
 
         {/* Only offered when it would change anything. */}
-        {availableCount > 0 && availableCount < units.length && (
+        {units.length > 0 && availableCount > 0 && availableCount < units.length && (
           <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-gray-600">
             <input
               type="checkbox"
@@ -170,6 +175,7 @@ export function PropertyUnits({ units, currency, propertySlug, priceDisplay }: P
           propertySlug={propertySlug}
           currency={currency}
           priceDisplay={priceDisplay}
+          declared={availableOnly ? unitTypes.filter((t) => t.counts.available > 0) : unitTypes}
         />
       )}
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, BedDouble, Eye, Loader2, Trash2, Check,
@@ -30,6 +30,7 @@ const FURNISHINGS = ['FURNISHED', 'SEMI_FURNISHED', 'UNFURNISHED'];
 const toDateInput = (v?: string | null) => (v ? v.slice(0, 10) : '');
 
 export default function EditRentalPage() {
+  const base = usePathname().startsWith('/agent') ? '/agent' : '/dashboard';
   const { slug } = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
 
@@ -128,7 +129,7 @@ export default function EditRentalPage() {
       <div className="py-16 text-center">
         <p className="text-[15px] text-[#5f6368]">This rental listing could not be found.</p>
         <Link
-          href="/dashboard/rentals"
+          href={`${base}/rentals`}
           className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1a73e8] hover:text-[#1765cc]"
         >
           <ArrowLeft size={15} /> All rentals
@@ -144,7 +145,7 @@ export default function EditRentalPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
-            href="/dashboard/rentals"
+            href={`${base}/rentals`}
             className="inline-flex items-center gap-1 text-[13px] text-[#5f6368] transition-colors hover:text-[#202124]"
           >
             <ArrowLeft size={16} /> All rentals
@@ -370,7 +371,7 @@ export default function EditRentalPage() {
               <>
                 <p className="text-[14px] text-[#202124]">{listing.property.name}</p>
                 <Link
-                  href={`/dashboard/properties/${listing.property.slug}`}
+                  href={base === '/agent' ? `/agent/listings/${listing.property.slug}` : `/dashboard/properties/${listing.property.slug}`}
                   className="mt-2 inline-block text-[13px] font-medium text-[#1a73e8] hover:underline"
                 >
                   Manage the development

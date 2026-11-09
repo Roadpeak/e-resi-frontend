@@ -16,6 +16,7 @@ import { UnitTypeList } from '../UnitTypeList';
 import { unitCurrency } from '../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../chat/ChatWithDeveloper';
 import { Reveal } from './shared';
+import type { PublicUnitType } from '../../../lib/api/unit-types';
 
 /**
  * A parameterised section kit.
@@ -355,6 +356,7 @@ export function KitUnits({
   style,
   copy,
   priceDisplay,
+  unitTypes,
 }: {
   units: Unit[];
   currency: string;
@@ -362,13 +364,14 @@ export function KitUnits({
   style: KitStyle;
   copy?: SectionCopy;
   priceDisplay?: Record<string, string> | null;
+  unitTypes?: PublicUnitType[];
 }) {
   const t = tone(style);
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
   // The typology leads, as on the default template: what a buyer is choosing
   // between is layouts, not apartment numbers.
   const [byType, setByType] = useState(true);
-  if (!units?.length) return null;
+  if (!units?.length && !unitTypes?.length) return null;
 
   const Filter = (
     <div className={`flex gap-1 border ${t.borderStrong} ${style.radius} p-1`}>
@@ -379,7 +382,7 @@ export function KitUnits({
       >
         <span className={byType ? '' : t.muted}>By type</span>
       </button>
-      {(['all', 'available'] as const).map((f) => {
+      {(units.length ? (['all', 'available'] as const) : []).map((f) => {
         const active = !byType && filter === f;
         return (
           <button
@@ -413,6 +416,7 @@ export function KitUnits({
           propertySlug={propertySlug}
           currency={currency}
           priceDisplay={priceDisplay}
+          declared={unitTypes}
           onDark={style.onDark}
           radius={style.radius}
           // The templates that set their sections as an editorial schedule —

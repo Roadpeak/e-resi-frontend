@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { partnershipsApi } from '../../../../../lib/api/partnerships';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, DoorOpen, Loader2,
@@ -13,6 +15,9 @@ import { useMyProperties } from '../../../../../lib/api/queries';
 
 interface PropertyUnit {
   id: string;
+  /** Set when this row is a unit type rather than one physical unit. */
+  typeId?: string;
+  defaultTotal?: number;
   name: string;
   floor?: number | null;
   bedrooms: number;
@@ -57,8 +62,24 @@ const inputCls =
 const labelCls = 'mb-1.5 block text-[13px] font-medium text-[#5f6368]';
 
 export default function NewRentListingPage() {
+  const base = usePathname().startsWith('/agent') ? '/agent' : '/dashboard';
   const { data: propertiesData, isLoading } = useMyProperties({ limit: 50 });
-  const properties = propertiesData?.items ?? [];
+  // Agents can also let developments a developer assigned to them for letting.
+  const { data: assigned } = useQuery({
+    queryKey: ['agent', 'assignments', 'rent'],
+    queryFn: () => partnershipsApi.myAssignments({ limit: 50 }),
+    enabled: base === '/agent',
+  });
+  const properties = [
+    ...(propertiesData?.items ?? []),
+    ...(assigned?.data ?? [])
+      .filter((a) => a.kind === 'RENT' && !(propertiesData?.items ?? []).some((p) => p.id === a.property.id))
+      .map((a) => ({
+        id: a.property.id, slug: a.property.slug, name: a.property.name,
+        heroImageUrl: a.property.heroImageUrl ?? undefined,
+        address: { city: a.property.city },
+      })),
+  ];
 
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, UnitSelection>>({});
@@ -77,6 +98,10 @@ export default function NewRentListingPage() {
     queryKey: ['dash-property', selectedSlug],
     queryFn: () => apiClient.get<{
       units: PropertyUnit[];
+      unitTypes?: {
+        id: string; name: string; bedrooms: number; bathrooms: number; sqm?: number | null;
+        priceFrom?: number | null; counts: { available: number; total: number };
+      }[];
       heroImageUrl?: string | null;
       neighborhood?: string | null;
       city?: string | null;
@@ -84,7 +109,16 @@ export default function NewRentListingPage() {
     }>(`/properties/${selectedSlug}`),
     enabled: !!selectedSlug,
   });
-  const units = detail?.units ?? [];
+  // Unit types first — one row lets a whole layout ("3 Bedroom · 200 sqft,
+  // 12 available") instead of ticking twelve identical units.
+  const units: PropertyUnit[] = [
+    ...(detail?.unitTypes ?? []).map((t) => ({
+      id: `type:${t.id}`, typeId: t.id, name: t.name, floor: null,
+      bedrooms: t.bedrooms, bathrooms: t.bathrooms, sqm: t.sqm ?? null,
+      price: t.priceFrom ?? 0, status: 'AVAILABLE', defaultTotal: t.counts.available || 1,
+    })),
+    ...(detail?.units ?? []),
+  ];
 
   function pickProperty(slug: string, name: string) {
     setSelectedSlug(slug);
@@ -101,7 +135,7 @@ export default function NewRentListingPage() {
         next[unit.id] = {
           rent: '',
           furnishing: 'UNFURNISHED',
-          total: '1',
+          total: String(unit.defaultTotal ?? 1),
           unitType: defaultUnitType(unit.bedrooms),
           showCinematicTour: false,
           show3DTour: false,
@@ -145,7 +179,7 @@ export default function NewRentListingPage() {
         await apiClient.post(`/rent-listings/${listing.id}/units`, {
           label: u.name,
           // links the offer to the physical unit so it can be reserved
-          unitId: u.id,
+          unitId: u.typeId ? undefined : u.id,
           unitType: sel.unitType,
           showCinematicTour: sel.showCinematicTour,
           show3DTour: sel.show3DTour,
@@ -190,7 +224,7 @@ export default function NewRentListingPage() {
             View live listing <ArrowRight size={15} />
           </Link>
           <Link
-            href="/dashboard/rentals"
+            href={`${base}/rentals`}
             className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
           >
             Back to rentals
@@ -202,7 +236,7 @@ export default function NewRentListingPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <Link href="/dashboard/rentals" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
+      <Link href={`${base}/rentals`} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
         <ArrowLeft size={14} /> Rentals
       </Link>
       <h1 className="mt-3 text-[26px] sm:text-[28px] font-normal text-[#202124]">List units for rent</h1>
@@ -220,7 +254,7 @@ export default function NewRentListingPage() {
         ) : properties.length === 0 ? (
           <div className="mt-3 rounded-3xl border border-dashed border-[#dadce0] p-8 text-center">
             <p className="text-base text-[#5f6368]">You have no developments yet.</p>
-            <Link href="/dashboard/developments/new" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors">
+            <Link href={base === '/agent' ? '/agent/listings/new' : '/dashboard/developments/new'} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors">
               Add a development <ArrowRight size={14} />
             </Link>
           </div>
@@ -288,7 +322,7 @@ export default function NewRentListingPage() {
                   {selectedProperty?.name} has no units yet — add them first, then list them for rent.
                 </p>
                 <Link
-                  href={`/dashboard/properties/${selectedSlug}`}
+                  href={base === '/agent' ? `/agent/listings/${selectedSlug}/units` : `/dashboard/properties/${selectedSlug}/units`}
                   className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1a73e8] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] transition-colors"
                 >
                   Add units <ArrowRight size={14} />
@@ -320,7 +354,9 @@ export default function NewRentListingPage() {
                                   u.bedrooms ? `${u.bedrooms} bed` : null,
                                   u.bathrooms ? `${u.bathrooms} bath` : null,
                                   u.sqm ? `${u.sqm} m²` : null,
-                                  `sale price ${formatPrice(u.price, detail?.currency ?? 'KES')}`,
+                                  u.typeId
+                                    ? `unit type · ${u.defaultTotal ?? 0} available`
+                                    : `sale price ${formatPrice(u.price, detail?.currency ?? 'KES')}`,
                                 ].filter(Boolean).join(' · ')}
                               </p>
                             </div>

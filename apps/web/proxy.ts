@@ -19,7 +19,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const SITE_HOST = new URL(SITE_URL).hostname;
 
 /** Sections of a development's site that live under /<slug>/. */
-const SITE_SECTIONS = ['/tour', '/units', '/opengraph-image'];
+const SITE_SECTIONS = ['/tour', '/units', '/types', '/opengraph-image'];
 
 /** e-resi's own subdomains; any other <name>.e-resi.com is a development. */
 const OWN_SUBDOMAINS = new Set(['www', 'app', 'api']);

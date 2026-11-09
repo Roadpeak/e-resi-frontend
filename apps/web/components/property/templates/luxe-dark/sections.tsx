@@ -14,6 +14,7 @@ import { UnitTypeList } from '../../UnitTypeList';
 import { unitCurrency } from '../../../../lib/units/unit-types';
 import { ChatWithDeveloper } from '../../../chat/ChatWithDeveloper';
 import { Reveal } from '../shared';
+import type { PublicUnitType } from '../../../../lib/api/unit-types';
 
 /**
  * Dark Luxury sections.
@@ -221,18 +222,20 @@ export function LuxeUnits({
   propertySlug,
   copy,
   priceDisplay,
+  unitTypes,
 }: {
   units: Unit[];
   currency: string;
   propertySlug: string;
   copy?: SectionCopy;
   priceDisplay?: Record<string, string> | null;
+  unitTypes?: PublicUnitType[];
 }) {
   const { filter, setFilter, displayed, availableCount, total } = useUnits(units);
   // Typology first: a buyer at this end of the market is choosing a residence
   // type before they are choosing a floor.
   const [byType, setByType] = useState(true);
-  if (!units?.length) return null;
+  if (!units?.length && !unitTypes?.length) return null;
 
   return (
     <div>
@@ -249,7 +252,7 @@ export function LuxeUnits({
           >
             By type
           </button>
-          {(['all', 'available'] as const).map((f) => {
+          {(units.length ? (['all', 'available'] as const) : []).map((f) => {
             const active = !byType && filter === f;
             return (
               <button
@@ -278,6 +281,7 @@ export function LuxeUnits({
           propertySlug={propertySlug}
           currency={currency}
           priceDisplay={priceDisplay}
+          declared={unitTypes}
           onDark
           radius="rounded-none"
           className="mt-8"

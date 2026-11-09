@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowUpRight, Building2, CalendarDays, Check, Globe, Handshake, MessageSquare, Phone, Star, Users,
+  ArrowUpRight, Building2, CalendarDays, Check, Globe, Handshake, KeyRound, MessageSquare, Phone, Star, Users,
 } from 'lucide-react';
 import { agentsApi } from '../../../lib/api/agents';
 import { partnershipsApi } from '../../../lib/api/partnerships';
@@ -11,7 +11,8 @@ import { chatApi } from '../../../lib/api/chat';
 import { leadsApi, type LeadRow } from '../../../lib/api/leads';
 import { agentContentApi, agentSiteApi } from '../../../lib/api/agent-site';
 import { AgentStatusBanner } from '../../../components/agent/AgentStatusBanner';
-import { cn } from '../../../lib/utils';
+import { cn, formatPrice } from '../../../lib/utils';
+import { useMyRentListings } from '../../../lib/api/queries';
 
 /**
  * The agent's home: headline numbers, their website at a glance, what is
@@ -55,6 +56,7 @@ export default function AgentOverview() {
   const { data: site } = useQuery({ queryKey: ['agent-site'], queryFn: agentSiteApi.mine });
   const { data: templates } = useQuery({ queryKey: ['agent-templates'], queryFn: agentSiteApi.templates });
   const { data: content } = useQuery({ queryKey: ['agent-content'], queryFn: agentContentApi.list });
+  const { data: rentals } = useMyRentListings({ limit: 6 });
 
   const leads = leadsData?.leads ?? [];
   const ownListings = leadsData?.properties.length ?? 0;
@@ -93,15 +95,18 @@ export default function AgentOverview() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/agent/listings/new" className="rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Add a listing</Link>
+          <Link href="/agent/rentals/new" className="rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">List a rental</Link>
           <Link href="/agent/leads" className="rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">Open leads</Link>
         </div>
       </div>
 
       <AgentStatusBanner />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
         <Stat icon={<Building2 size={18} />} label="Listings" value={ownListings + assigned}
           sub={`${ownListings} yours · ${assigned} assigned`} href="/agent/listings" />
+        <Stat icon={<KeyRound size={18} />} label="Rentals" value={rentals?.total ?? 0}
+          sub={`${(rentals?.items ?? []).filter((r) => r.status === 'available').length} open to tenants`} href="/agent/rentals" />
         <Stat icon={<Users size={18} />} label="New leads" value={newLeads.length} sub={`${thisWeek} this week`} href="/agent/leads" accent={newLeads.length > 0} />
         <Stat icon={<MessageSquare size={18} />} label="Unread messages" value={unread?.count ?? 0} href="/agent/messages" accent={(unread?.count ?? 0) > 0} />
         <Stat icon={<Handshake size={18} />} label="Active partners" value={partners?.meta.total ?? 0} href="/agent/partners" />
@@ -250,6 +255,46 @@ export default function AgentOverview() {
           )}
         </section>
       </div>
+
+      <section className={card}>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-[18px] font-normal text-[#202124]"><KeyRound size={18} className="text-[#5f6368]" /> Your rentals</h2>
+          <div className="flex items-center gap-4">
+            <Link href="/agent/rentals/new" className="text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">List a rental</Link>
+            <Link href="/agent/rentals" className="text-[14px] text-[#5f6368] hover:text-[#202124]">View all</Link>
+          </div>
+        </div>
+        {!rentals?.items.length ? (
+          <p className="py-6 text-center text-[14px] text-[#5f6368]">
+            No rentals yet. Let units on your own developments, or ones a developer assigned you for letting.
+          </p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {rentals.items.map((r) => {
+              const open = r.units.reduce((n, u) => n + (u.available ?? 0), 0);
+              return (
+                <li key={r.id}>
+                  <Link href={`/agent/rentals/${r.slug}`} className="flex gap-3 rounded-2xl border border-[#f1f3f4] p-3 hover:bg-[#f8f9fa]">
+                    <div className="h-14 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f1f3f4]">
+                      {r.heroImageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.heroImageUrl} alt="" className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[14.5px] font-medium text-[#202124]">{r.name}</p>
+                      <p className="truncate text-[13px] text-[#5f6368]">
+                        {r.priceFrom ? `From ${formatPrice(r.priceFrom, r.currency)}/mo` : 'Rent on request'}
+                      </p>
+                      <p className="text-[12.5px] text-[#80868b]">{open} unit{open === 1 ? '' : 's'} open · {r.status}</p>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

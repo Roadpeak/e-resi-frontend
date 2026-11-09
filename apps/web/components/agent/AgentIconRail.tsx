@@ -17,6 +17,8 @@ const NAV = [
   { label: 'My Listings', href: '/agent/listings', icon: 'apartment' },
   // Developers' developments assigned to them through a partnership.
   { label: 'Partner Listings', href: '/agent/properties', icon: 'corporate_fare' },
+  // Rentals they list or were engaged to let.
+  { label: 'Rentals', href: '/agent/rentals', icon: 'key' },
   { label: 'Partners', href: '/agent/partners', icon: 'handshake' },
   { label: 'Deals', href: '/agent/deals', icon: 'payments' },
   { label: 'Reservations', href: '/agent/reservations', icon: 'vpn_key' },

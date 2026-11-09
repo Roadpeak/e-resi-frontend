@@ -181,6 +181,8 @@ export interface Unit {
   status: UnitStatus;
   floorPlanId?: string;
   features: string[];
+  /** The declared unit type this unit is one of, if any. */
+  unitTypeId?: string | null;
 }
 
 export interface ConstructionUpdate {
@@ -230,6 +232,8 @@ export interface Property {
   media: MediaAsset[];
   floorPlans: FloorPlan[];
   units: Unit[];
+  /** Declared layouts with how many of each are left. */
+  unitTypes?: import('../api/unit-types').PublicUnitType[];
   amenities: Amenity[];
   constructionUpdates: ConstructionUpdate[];
   totalUnits: number;

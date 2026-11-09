@@ -499,9 +499,10 @@ export function KitTemplate({
         address={[property.address?.neighborhood, property.address?.city].filter(Boolean).join(', ')}
       />
     ),
-    units: property.units?.length ? (
+    units: property.units?.length || property.unitTypes?.length ? (
       <KitUnits
         units={property.units}
+        unitTypes={property.unitTypes}
         currency={property.currency}
         propertySlug={property.slug}
         style={style}

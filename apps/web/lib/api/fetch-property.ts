@@ -65,14 +65,18 @@ function normaliseProperty(raw: any): Property {
     // null, which they are on every development whose counts were never
     // backfilled. Coercing straight to 0 made a page advertise "0 available"
     // beside a unit list showing four for sale.
+    // Hand-counted unit types add to the inventory; types counted from their
+    // linked units are already in raw.units, so they are not added twice.
     availableUnits:
       raw.availableUnits
       ?? (Array.isArray(raw.units)
         ? raw.units.filter((u: any) => String(u?.status ?? '').toLowerCase() === 'available').length
+          + manualTypes(raw).reduce((n: number, t: any) => n + (t.counts?.available ?? 0), 0)
         : undefined)
       ?? raw._count?.units
       ?? 0,
-    totalUnits: raw.totalUnits ?? (Array.isArray(raw.units) ? raw.units.length : 0),
+    totalUnits: raw.totalUnits ?? ((Array.isArray(raw.units) ? raw.units.length : 0)
+      + manualTypes(raw).reduce((n: number, t: any) => n + (t.counts?.total ?? 0), 0)),
     currency: raw.currency ?? 'KES',
     // Kept as the API sends it (UPPER_SNAKE). It used to be lowercased here,
     // which is why the frontend grew a parallel status vocabulary that no
@@ -94,9 +98,15 @@ function normaliseProperty(raw: any): Property {
     })),
     floorPlans: raw.floorPlans ?? [],
     units: raw.units ?? [],
+    unitTypes: raw.unitTypes ?? [],
     amenities: raw.amenities ?? [],
     constructionUpdates: raw.constructionUpdates ?? [],
   };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function manualTypes(raw: any): any[] {
+  return (raw.unitTypes ?? []).filter((t: any) => t?.counts?.source === 'manual');
 }
 
 export async function fetchProperty(slug: string): Promise<Property | null> {
