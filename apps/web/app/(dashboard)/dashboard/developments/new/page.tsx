@@ -16,6 +16,14 @@ import { toCategory } from '../../../../../lib/onboarding/development-types';
 import { propertiesApi } from '../../../../../lib/api/properties';
 import { uploadFile } from '../../../../../lib/api/media';
 import { usePropertyPaths } from '../../../../../components/dashboard/PropertyBase';
+import { unitTypesApi } from '../../../../../lib/api/unit-types';
+import type { UnitLayoutDraft } from '../../../../../lib/stores/development.store';
+
+/** The entry price across the layouts, when no starting price was typed. */
+function layoutPriceFrom(layouts?: UnitLayoutDraft[]): number | undefined {
+  const prices = (layouts ?? []).map((l) => Number(l.priceFrom.replace(/[^\d.]/g, ''))).filter((p) => p > 0);
+  return prices.length ? Math.min(...prices) : undefined;
+}
 
 const STEPS = ['Development details', 'Media & services', 'Review & costs'];
 
@@ -91,7 +99,7 @@ export default function NewDevelopmentPage() {
         // Parsed from the "lat, lng" field — without these the property can't
         // be plotted on the marketplace map.
         ...parseCoordinates(development.gpsCoordinates),
-        priceFrom: parsePrice(development.startingPrice),
+        priceFrom: parsePrice(development.startingPrice) ?? layoutPriceFrom(development.unitLayouts),
         currency: development.currency || 'KES',
         tags: development.unitTypes ?? [],
         // What the development itself has. These were collected by the wizard
@@ -142,6 +150,33 @@ export default function NewDevelopmentPage() {
         } catch {
           // Non-fatal: reported below the success message rather than thrown.
           setError('The development was saved, but the nearby places could not be added. You can add them from the development page.');
+        }
+      }
+
+      // Unit types entered in the wizard become real unit types with their
+      // counts and photos. Non-fatal per layout: the development is saved.
+      const layouts = (development.unitLayouts ?? []).filter((l) => l.name.trim());
+      if (slug && layouts.length) {
+        let failedTypes = 0;
+        for (const l of layouts) {
+          try {
+            const n = (v: string) => (v.trim() ? Number(v.replace(/[^\d.]/g, '')) : undefined);
+            const created = await unitTypesApi.create(slug, {
+              name: l.name.trim(),
+              bedrooms: n(l.bedrooms), bathrooms: n(l.bathrooms), sqm: n(l.sqm), sqft: n(l.sqft),
+              priceFrom: n(l.priceFrom), priceTo: n(l.priceTo),
+              availableCount: n(l.available) ?? 0, reservedCount: n(l.reserved) ?? 0, soldCount: n(l.sold) ?? 0,
+              coverImageUrl: l.photos[0]?.url,
+            });
+            for (const ph of l.photos) {
+              await unitTypesApi.addMedia(slug, created.id, { type: 'PHOTO', url: ph.url, title: ph.name });
+            }
+          } catch {
+            failedTypes += 1;
+          }
+        }
+        if (failedTypes) {
+          setError(`The development was saved, but ${failedTypes} unit type${failedTypes === 1 ? '' : 's'} couldn't be added. Add them under Units & floor plans.`);
         }
       }
 
@@ -248,7 +283,7 @@ export default function NewDevelopmentPage() {
               href={`${base}/${createdSlug}`}
               className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2.5 text-[15px] font-medium text-[#1a73e8] hover:bg-[#f8fbff] transition-colors"
             >
-              Add units &amp; media
+              Add photos, tours &amp; units
             </Link>
           )}
           <button
@@ -427,7 +462,18 @@ function ReviewAndCosts() {
             ].join(', '),
           ],
           ['Units', dev.numberOfUnits],
-          ['Unit types', (dev.unitTypes ?? []).join(', ')],
+          [
+            'Unit types',
+            (dev.unitLayouts ?? []).length
+              ? (dev.unitLayouts ?? [])
+                .filter((l) => l.name.trim())
+                .map((l) => {
+                  const total = [l.available, l.reserved, l.sold].reduce((n, v) => n + (Number(v) || 0), 0);
+                  return `${l.name.trim()} (${Number(l.available) || 0} of ${total} available)`;
+                })
+                .join(', ')
+              : (dev.unitTypes ?? []).join(', '),
+          ],
           ['Currency', dev.currency],
           ['Starting price', dev.startingPrice],
           ['Payment plans', (dev.paymentPlans ?? []).join(', ')],

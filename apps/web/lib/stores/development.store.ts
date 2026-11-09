@@ -18,6 +18,26 @@ export interface NearbyPlace {
   distance: string;
 }
 
+/**
+ * A layout entered during creation: described once, with how many there are.
+ * Created as a UnitType on submit, so a 300-unit tower is a few rows here
+ * rather than 300 units added one by one afterwards.
+ */
+export interface UnitLayoutDraft {
+  key: string;
+  name: string;
+  bedrooms: string;
+  bathrooms: string;
+  sqm: string;
+  sqft: string;
+  priceFrom: string;
+  priceTo: string;
+  available: string;
+  reserved: string;
+  sold: string;
+  photos: UploadedAsset[];
+}
+
 export interface DevelopmentInfo {
   name: string;
   heroImageUrl: string;
@@ -35,6 +55,8 @@ export interface DevelopmentInfo {
   nearbyPlaces: NearbyPlace[];
   numberOfUnits: string;
   unitTypes: string[];
+  /** Layouts with counts; may be empty (then units are added later). */
+  unitLayouts: UnitLayoutDraft[];
   bedrooms: string;
   bathrooms: string;
   parking: string;
@@ -96,7 +118,7 @@ const emptyDevelopment: DevelopmentInfo = {
   name: '', heroImageUrl: '', type: '', category: '', status: '', expectedCompletion: '',
   country: 'Kenya', county: '', city: '', area: '', mapsPin: '', gpsCoordinates: '',
   nearbyPlaces: [],
-  numberOfUnits: '', unitTypes: [], bedrooms: '', bathrooms: '', parking: '',
+  numberOfUnits: '', unitTypes: [], unitLayouts: [], bedrooms: '', bathrooms: '', parking: '',
   amenities: [], securityFeatures: [], utilities: [],
   startingPrice: '', currency: 'KES', priceRange: '', paymentPlans: [], mortgageOptions: '',
   shortDescription: '', fullDescription: '',

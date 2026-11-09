@@ -14,6 +14,7 @@ import {
   Checkbox, ChipGroup, Field, FieldGrid, SectionCard, Select, TextArea, TextInput,
 } from '../onboarding/ui';
 import { ImageUpload } from '../dashboard/ImageUpload';
+import { UnitLayoutsField, layoutTotal } from './UnitLayoutsField';
 import { DetectLocationButton } from '../dashboard/DetectLocationButton';
 import { AreaSearchInput } from '../dashboard/AreaSearchInput';
 
@@ -343,8 +344,14 @@ export function StepDevelopment() {
 
       <SectionCard title={devType?.built === false ? 'Plot information' : 'Property information'}>
         <FieldGrid cols={3}>
-          <Field label={devType?.unitCountLabel ?? 'Number of units'} required>
-            <TextInput type="number" min={1} value={dev.numberOfUnits} onChange={(e) => patch({ numberOfUnits: e.target.value })} />
+          <Field
+            label={devType?.unitCountLabel ?? 'Number of units'}
+            required
+            hint={(dev.unitLayouts ?? []).length ? 'Totalled from your unit types' : undefined}
+          >
+            <TextInput type="number" min={1} value={dev.numberOfUnits}
+              readOnly={(dev.unitLayouts ?? []).length > 0}
+              onChange={(e) => patch({ numberOfUnits: e.target.value })} />
           </Field>
           {/* Bedroom/bathroom counts only mean something for homes. */}
           {devType?.residential !== false && (
@@ -358,11 +365,25 @@ export function StepDevelopment() {
             </>
           )}
         </FieldGrid>
-        <Field label={devType?.built === false ? 'Plot sizes' : 'Unit types'}>
-          <ChipGroup
-            options={devType?.unitTypes ?? []}
-            value={dev.unitTypes}
-            onChange={(unitTypes) => patch({ unitTypes })}
+        <Field
+          label={devType?.built === false ? 'Plot sizes & availability' : 'Unit types & availability'}
+          hint="Each layout once, with how many are available, reserved and sold"
+        >
+          <UnitLayoutsField
+            layouts={dev.unitLayouts ?? []}
+            presets={devType?.unitTypes ?? []}
+            currency={dev.currency || 'KES'}
+            plots={devType?.built === false}
+            onChange={(unitLayouts) => {
+              const total = unitLayouts.reduce((n, l) => n + layoutTotal(l), 0);
+              patch({
+                unitLayouts,
+                // Tags and the unit count follow the layouts, so the two
+                // can't disagree.
+                unitTypes: [...new Set(unitLayouts.map((l) => l.name.trim()).filter(Boolean))],
+                ...(unitLayouts.length ? { numberOfUnits: total ? String(total) : '' } : {}),
+              });
+            }}
           />
         </Field>
         {devType?.built !== false && (
