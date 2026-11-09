@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { RentShell } from '../../../../components/rent/RentShell';
-import { RentPage } from '../../../../components/rent/RentPage';
+import { RentServerPage } from '../../../../components/rent/RentServerPage';
 
 export const metadata: Metadata = {
   title: 'Rent Villas in Kenya',
@@ -18,12 +16,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Rendered per request so the listings (and the ?view= state) are in the HTML.
+export const dynamic = 'force-dynamic';
+
 export default function RentVillas() {
-  return (
-    <Suspense>
-      <RentShell>
-        <RentPage lockedCategory="VILLA" heading="Villas to rent" />
-      </RentShell>
-    </Suspense>
-  );
+  return <RentServerPage path="/rent/villas" label="Villas to rent" category="VILLA" heading="Villas to rent" />;
 }

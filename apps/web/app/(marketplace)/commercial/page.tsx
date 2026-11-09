@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavbar';
 import { PropertiesPage } from '../../../components/marketplace/PropertiesPage';
+import { PropertyDirectory } from '../../../components/marketplace/PropertyDirectory';
 
 export const metadata: Metadata = {
   title: 'Buy Commercial Property in Kenya',
@@ -22,6 +23,7 @@ export default function Commercial() {
     <div className="min-h-screen bg-gray-50">
       <PropertiesNavbar />
       <PropertiesPage lockedCategory="COMMERCIAL" heading="Commercial property for sale" />
+      <PropertyDirectory title="All commercial developments in Kenya" path="/commercial" label="Commercial property for sale in Kenya" category="COMMERCIAL" />
     </div>
   );
 }

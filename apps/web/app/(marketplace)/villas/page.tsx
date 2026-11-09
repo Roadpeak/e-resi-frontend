@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavbar';
 import { PropertiesPage } from '../../../components/marketplace/PropertiesPage';
+import { PropertyDirectory } from '../../../components/marketplace/PropertyDirectory';
 
 export const metadata: Metadata = {
   title: 'Buy Villas in Kenya',
@@ -22,6 +23,7 @@ export default function Villas() {
     <div className="min-h-screen bg-gray-50">
       <PropertiesNavbar />
       <PropertiesPage lockedCategory="VILLA" heading="Villas for sale" />
+      <PropertyDirectory title="All villa developments in Kenya" path="/villas" label="Villas for sale in Kenya" category="VILLA" />
     </div>
   );
 }

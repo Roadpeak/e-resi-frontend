@@ -116,7 +116,16 @@ export function RentHeader({ title, children }: { title?: string; children?: Rea
 
   return (
     <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-      <h1 className="rent-greeting text-[28px] font-medium tracking-[-0.04em] text-[#52525b] sm:text-[32px]">{title ?? greeting}</h1>
+      {title ? (
+        <h1 className="rent-greeting text-[28px] font-medium tracking-[-0.04em] text-[#52525b] sm:text-[32px]">{title}</h1>
+      ) : (
+        // The greeting changes by hour and person, so it is not the heading a
+        // search engine files the page under; the line below it is.
+        <div>
+          <p className="rent-greeting text-[28px] font-medium tracking-[-0.04em] text-[#52525b] sm:text-[32px]">{greeting}</p>
+          <h1 className="mt-0.5 text-[15px] text-[#71717a]">Houses and apartments for rent in Nairobi</h1>
+        </div>
+      )}
       <div className="flex flex-1 items-center justify-end gap-3">
         {children}
         <span className="hidden lg:block">
