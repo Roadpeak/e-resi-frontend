@@ -21,7 +21,7 @@ import { useAuthStore } from '../stores/auth.store';
  * The backend returns flat address fields (neighborhood, city, county, latitude, longitude)
  * while the frontend type expects a nested address object.
  */
-function toProperty(raw: any) {
+export function toProperty(raw: any) {
   return {
     ...raw,
     // Build nested address from flat backend fields

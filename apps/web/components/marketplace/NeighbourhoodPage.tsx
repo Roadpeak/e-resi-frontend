@@ -113,6 +113,17 @@ export function NeighbourhoodPage({ slug }: { slug: string }) {
                 </span>
               </div>
 
+              {/* The area's buy and rent pages — the guide is how most
+                  visitors (and crawlers) reach them. */}
+              <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[14px]">
+                <Link href={`/properties/in/${hood.slug}`} className="text-gray-900 underline underline-offset-2">
+                  Property for sale in {hood.name}
+                </Link>
+                <Link href={`/rent/in/${hood.slug}`} className="text-gray-900 underline underline-offset-2">
+                  Rentals in {hood.name}{hood.rentCount ? ` (${hood.rentCount})` : ''}
+                </Link>
+              </p>
+
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   href="#properties"

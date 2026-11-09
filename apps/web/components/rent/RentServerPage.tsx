@@ -4,6 +4,8 @@ import { rentListingsApi, toRentListing } from '../../lib/api/rent-listings';
 import { RentShell } from './RentShell';
 import { RentPage } from './RentPage';
 import { JsonLd, breadcrumbs, itemList } from '../seo/JsonLd';
+import { AreaLinks } from '../seo/AreaSections';
+import { fetchAreas } from '../../lib/seo/areas';
 
 /**
  * A rent browse page, rendered on the server with its listings already in
@@ -17,6 +19,7 @@ export async function RentServerPage({
   category, heading, path, label,
 }: { category?: string; heading?: string; path: string; label: string }) {
   const qc = new QueryClient();
+  const areasP = fetchAreas();
   const params = { limit: 100, ...(category ? { category } : {}) };
   await qc.prefetchQuery({
     queryKey: ['rent-listings', params],
@@ -27,6 +30,7 @@ export async function RentServerPage({
   });
   const items = qc.getQueryData<{ items: ReturnType<typeof toRentListing>[] }>(['rent-listings', params])?.items ?? [];
 
+  const areas = await areasP;
   const trail = [{ name: 'Home', path: '/' }, { name: 'Rent', path: '/rent' }];
   if (path !== '/rent') trail.push({ name: label, path });
 
@@ -38,6 +42,7 @@ export async function RentServerPage({
         <Suspense>
           <RentShell>
             <RentPage lockedCategory={category} heading={heading} />
+            <AreaLinks areas={areas} kind="rent" />
           </RentShell>
         </Suspense>
       </HydrationBoundary>

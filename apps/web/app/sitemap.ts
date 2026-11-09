@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { MIN_INDEXABLE, fetchAreas } from '../lib/seo/areas';
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://e-resi.com';
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.e-resi.com/api';
@@ -61,12 +62,21 @@ async function fetchAll(
 }
 
 async function dynamicEntries(): Promise<MetadataRoute.Sitemap> {
-  const [properties, rentals] = await Promise.all([
+  const [properties, rentals, areas] = await Promise.all([
     fetchAll('properties'),
     fetchAll('rent-listings'),
+    fetchAreas(),
+  ]);
+
+  // Area pages only once they have enough listings to be worth a search
+  // result — the same threshold their own robots tag uses.
+  const areaEntries = areas.flatMap((a) => [
+    ...(a.rentCount >= MIN_INDEXABLE ? [{ url: `${BASE}/rent/in/${a.slug}`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.85 }] : []),
+    ...(a.propertyCount >= MIN_INDEXABLE ? [{ url: `${BASE}/properties/in/${a.slug}`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.85 }] : []),
   ]);
 
   return [
+    ...areaEntries,
     ...properties.map((p) => ({
       url: `${BASE}/${p.slug}`,
       lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),

@@ -15,6 +15,8 @@ export interface Neighborhood {
   latitude?: number | null;
   longitude?: number | null;
   propertyCount: number;
+  /** Rentals listed in the area (not archived). */
+  rentCount?: number;
   createdAt: string;
 }
 

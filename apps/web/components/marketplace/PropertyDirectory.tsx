@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { JsonLd, PUBLIC_API, breadcrumbs, itemList } from '../seo/JsonLd';
+import { AreaLinks } from '../seo/AreaSections';
+import { fetchAreas } from '../../lib/seo/areas';
 
 interface Row {
   slug: string;
@@ -37,7 +39,7 @@ const price = (r: Row) =>
 export async function PropertyDirectory({
   title, category, path, label,
 }: { title: string; category?: string; path: string; label: string }) {
-  const rows = await fetchProperties(category);
+  const [rows, areas] = await Promise.all([fetchProperties(category), fetchAreas()]);
   const trail = [{ name: 'Home', path: '/' }, { name: label, path }];
 
   const byCity = new Map<string, Row[]>();
@@ -71,6 +73,7 @@ export async function PropertyDirectory({
                 </div>
               ))}
             </div>
+            <AreaLinks areas={areas} kind="buy" />
           </div>
         </section>
       )}
