@@ -2,152 +2,94 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, BedDouble, Maximize2, Film, Box, Calendar, Users } from 'lucide-react';
+import { Bath, BedDouble, Box, Heart, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { RentListing } from '../../lib/types';
+import { useSavedRentals } from './RentShell';
 
-function formatRent(price: number, currency: string) {
-  if (price >= 1_000_000) return `${currency} ${(price / 1_000_000).toFixed(1)}M`;
-  if (price >= 1_000) return `${currency} ${(price / 1_000).toFixed(0)}K`;
-  return `${currency} ${price.toLocaleString()}`;
+export function formatRent(price: number, currency: string) {
+  return `${currency} ${Math.round(price).toLocaleString()}`;
 }
 
-/** "available" reads as plain blue text — no pill background; the other two
- *  statuses keep their pastel badge treatment. */
-const STATUS_STYLES: Record<string, string> = {
-  available:           'text-[#4A80F5]',
-  partially_available: 'bg-orange-100 text-orange-600',
-  fully_let:           'bg-gray-100 text-gray-500',
+const FURNISHING: Record<string, string> = {
+  furnished: 'Furnished',
+  semi_furnished: 'Semi-furnished',
+  unfurnished: 'Unfurnished',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  available:           'Available',
-  partially_available: 'Partially Available',
-  fully_let:           'Fully Let',
-};
-
-const FURNISHING_LABELS: Record<string, string> = {
-  furnished:       'Furnished',
-  semi_furnished:  'Semi-Furnished',
-  unfurnished:     'Unfurnished',
-};
-
-interface Props {
-  listing: RentListing;
-  index?: number;
+/** "1–3" / "Studio" / "2" — or null when the listing has no units yet. */
+export function rangeOf(nums: number[], studio = false): string | null {
+  const n = nums.filter((x) => Number.isFinite(x));
+  if (!n.length) return null;
+  const lo = Math.min(...n);
+  const hi = Math.max(...n);
+  const one = (v: number) => (studio && v === 0 ? 'Studio' : String(v));
+  return lo === hi ? one(lo) : `${one(lo)}–${hi}`;
 }
 
-export function RentCard({ listing }: Props) {
+/**
+ * A rental as a photo-first card: rounded image with the furnishing chip and
+ * a featured star on the left, 3D and save on the right; then the name, the
+ * monthly rent, and where it is with beds and baths.
+ */
+export function RentCard({ listing }: { listing: RentListing; index?: number }) {
+  const { has, toggle } = useSavedRentals();
+  const saved = has(listing.id);
   const units = listing.units ?? [];
-  const totalAvailable = units.reduce((s, u) => s + u.available, 0);
-
-  /**
-   * A listing can exist before its units are entered, and Math.min of nothing
-   * is Infinity — which rendered as "Infinity–-Infinity Bed" on the card.
-   * Both the bed range and the floor area are omitted when there is nothing
-   * to derive them from.
-   */
-  const beds = units.map((u) => u.bedrooms).filter((n) => Number.isFinite(n));
-  const minBeds = beds.length ? Math.min(...beds) : null;
-  const maxBeds = beds.length ? Math.max(...beds) : null;
-  const bedLabel = minBeds === null || maxBeds === null
-    ? null
-    : minBeds === maxBeds
-      ? (minBeds === 0 ? 'Studio' : `${minBeds} Bed`)
-      : `${minBeds === 0 ? 'Studio' : minBeds}–${maxBeds} Bed`;
-
-  // Smallest unit that actually states a size, rather than units[0] — which
-  // showed "0m²+" whenever the first unit happened to have none.
-  const sizes = units.map((u) => u.sqm).filter((n): n is number => typeof n === 'number' && n > 0);
-  const minSqm = sizes.length ? Math.min(...sizes) : null;
+  const beds = rangeOf(units.map((u) => u.bedrooms), true);
+  const baths = rangeOf(units.map((u) => u.bathrooms));
+  const left = units.reduce((s, u) => s + (u.available ?? 0), 0);
+  const letOut = listing.status === 'fully_let';
 
   return (
-    <Link href={`/rent/${listing.slug}`} className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-      {/* Image */}
-      <div className="relative aspect-[16/10] overflow-hidden">
-        <Image
-          src={listing.heroImageUrl}
-          alt={listing.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        {/* Tour badges */}
-        <div className="absolute right-2 top-2 flex gap-1">
-          {listing.showCinematicTour && (
-            <span className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
-              <Film size={10} /> Cinematic
-            </span>
-          )}
-          {listing.show3DTour && (
-            <span className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
-              <Box size={10} /> 3D
+    <Link href={`/rent/${listing.slug}`} className="group block">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] bg-[#f2f2f2]">
+        {listing.heroImageUrl && (
+          <Image src={listing.heroImageUrl} alt={listing.name} fill
+            className={cn('object-cover transition-transform duration-500 group-hover:scale-[1.04]', letOut && 'grayscale-[40%]')}
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw" />
+        )}
+        <div className="absolute left-3 top-3 flex items-center gap-1.5">
+          <span className="rounded-full bg-white px-3 py-1 text-[12.5px] font-medium text-[#1d1d1f]">
+            {letOut ? 'Fully let' : FURNISHING[listing.furnishing] ?? 'Rent'}
+          </span>
+          {listing.isFeatured && (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white" title="Featured">
+              <Star size={14} className="fill-[#e8710a] text-[#e8710a]" />
             </span>
           )}
         </div>
-        {/* Featured */}
-        {listing.isFeatured && (
-          <div className="absolute bottom-2 left-2">
-            <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Featured</span>
-          </div>
+        <div className="absolute right-3 top-3 flex items-center gap-1.5">
+          {listing.show3DTour && (
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm" title="3D tour">
+              <Box size={14} />
+            </span>
+          )}
+          <button type="button" aria-label={saved ? 'Remove from saved' : 'Save'} aria-pressed={saved}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
+            className={cn('flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors',
+              saved ? 'bg-white text-[#d93025]' : 'bg-black/30 text-white hover:bg-black/45')}>
+            <Heart size={15} className={saved ? 'fill-current' : ''} />
+          </button>
+        </div>
+        {!letOut && left > 0 && left <= 3 && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[12px] text-white backdrop-blur-sm">
+            {left} unit{left === 1 ? '' : 's'} left
+          </span>
         )}
       </div>
-
-      {/* Content */}
-      <div className="p-3">
-        {/* Location + status */}
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1 text-[12px] text-gray-400">
-            <MapPin size={12} className="shrink-0" />
-            <span className="truncate">{listing.address.neighborhood}, {listing.address.city}</span>
-          </div>
-          <span
-            className={cn(
-              'shrink-0 text-[10px] font-semibold uppercase tracking-wide',
-              listing.status === 'available' ? '' : 'rounded-full px-2 py-0.5',
-              STATUS_STYLES[listing.status],
-            )}
-          >
-            {STATUS_LABELS[listing.status]}
-          </span>
-        </div>
-
-        <h3 className="mb-2 truncate text-[15px] font-semibold leading-tight text-gray-900">
-          {listing.name}
-        </h3>
-
-        {/* Specs row */}
-        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-gray-500">
-          {bedLabel && (
-            <span className="flex items-center gap-1"><BedDouble size={13} /> {bedLabel}</span>
-          )}
-          {minSqm !== null && (
-            <span className="flex items-center gap-1"><Maximize2 size={13} /> {minSqm}m²+</span>
-          )}
-          {totalAvailable > 0 && (
-            <span className="flex items-center gap-1"><Users size={13} /> {totalAvailable}</span>
-          )}
-        </div>
-
-        {/* Furnishing + available from */}
-        <div className="mb-2 flex items-center gap-1.5">
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
-            {FURNISHING_LABELS[listing.furnishing]}
-          </span>
-          <span className="flex items-center gap-1 text-[10px] text-gray-400">
-            <Calendar size={10} />
-            {new Date(listing.availableFrom).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
-          </span>
-        </div>
-
-        {/* Price */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-          <div className="min-w-0">
-            <span className="text-[16px] font-bold text-gray-900">{formatRent(listing.priceFrom, listing.currency)}</span>
-            <span className="ml-0.5 text-[11px] text-gray-400">/mo</span>
-          </div>
-          <span className="text-[10px] text-gray-400">{listing.minLeaseTerm}mo min</span>
-        </div>
+      <div className="px-0.5 pt-3">
+        <h3 className="truncate text-[16.5px] font-normal text-[#1d1d1f]">{listing.name}</h3>
+        <p className="mt-1 text-[15px] text-[#1d1d1f]">
+          {listing.priceFrom ? (
+            <>{units.length > 1 && listing.priceTo > listing.priceFrom ? 'From ' : ''}{formatRent(listing.priceFrom, listing.currency)} <span className="text-[#5f6368]">/ month</span></>
+          ) : 'Rent on request'}
+        </p>
+        <p className="mt-1 flex items-center gap-2 text-[14px] text-[#5f6368]">
+          <span className="truncate">{listing.address.neighborhood || listing.address.city}</span>
+          {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
+          {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}
+        </p>
       </div>
     </Link>
   );

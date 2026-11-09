@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { RentNavbar } from '../../../../components/rent/RentNavbar';
+import { Suspense } from 'react';
+import { RentShell } from '../../../../components/rent/RentShell';
 import { RentPage } from '../../../../components/rent/RentPage';
 
 export const metadata: Metadata = {
@@ -19,15 +20,10 @@ export const metadata: Metadata = {
 
 export default function RentApartments() {
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: 'linear-gradient(135deg, #e8e6f0 0%, #f5f3ee 40%, #f0ece4 70%, #f5e8d8 100%)',
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      <RentNavbar />
-      <RentPage lockedCategory="APARTMENT" heading="Apartments to rent" />
-    </div>
+    <Suspense>
+      <RentShell>
+        <RentPage lockedCategory="APARTMENT" heading="Apartments to rent" />
+      </RentShell>
+    </Suspense>
   );
 }

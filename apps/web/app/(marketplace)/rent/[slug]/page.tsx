@@ -1,17 +1,16 @@
 'use client';
 
-import { use, useState } from 'react';
+import { Suspense, use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Building2, MapPin, BedDouble, Bath, Maximize2, Calendar, Film, Box,
-  ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Home, Loader2, Sofa,
+  ArrowLeft, ArrowRight, CheckCircle2, Heart, Loader2, Sofa,
   X, Images, KeyRound, CalendarClock, DoorOpen,
 } from 'lucide-react';
-import { RentNavbar } from '../../../../components/rent/RentNavbar';
-import { UnitSectionNav } from '../../../../components/property/UnitSectionNav';
+import { RentShell, useSavedRentals } from '../../../../components/rent/RentShell';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
 import { floorPlansApi } from '../../../../lib/api/floor-plans';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
@@ -111,11 +110,6 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
     enabled: !!listing?.propertySlug,
   });
 
-  const sections = [
-    { id: 'overview', label: 'Overview' },
-    ...(units.length ? [{ id: 'units', label: 'Units' }] : []),
-    ...(floorPlans.length ? [{ id: 'floorplans', label: 'Floor plans' }] : []),
-  ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const amenities: { id?: string; name: string; distance?: string }[] =
@@ -133,8 +127,9 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pt-16 font-listing text-[16px]">
-      <RentNavbar />
+    <Suspense>
+    <RentShell>
+    <div className="font-listing text-[16px]">
 
       {isLoading && (
         <div className="flex items-center justify-center py-32">
@@ -153,17 +148,14 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
       {listing && (
         <>
-        <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
-          {/* ── Trail ── */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13.5px] text-[#6b6b70]">
-            <Link href="/" aria-label="Home" className="transition-colors hover:text-[#111112]"><Home size={14} /></Link>
-            <ChevronRight size={13} className="text-[#b9b9be]" />
-            <Link href="/rent" className="transition-colors hover:text-[#111112]">Rent</Link>
-            <ChevronRight size={13} className="text-[#b9b9be]" />
-            <span className="text-[#6b6b70]">{listing.address.city}</span>
-            <ChevronRight size={13} className="text-[#b9b9be]" />
-            <span className="max-w-[40vw] truncate font-medium text-[#111112]">{listing.name}</span>
-          </nav>
+        <div>
+          {/* ── Back + save ── */}
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/rent" className="inline-flex items-center gap-2 rounded-full bg-[#f2f2f2] px-4 py-2 text-[14px] text-[#1d1d1f] hover:bg-[#e8e8e8]">
+              <ArrowLeft size={15} /> Rentals
+            </Link>
+            <SaveButton id={listing.id} />
+          </div>
 
           {/* ── Masthead ──
               The name, where it is, and what it costs — before a single
@@ -226,7 +218,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               stack; with fewer, the hero takes the whole band. No mosaic cell
               is ever left as dead gray space. */}
           <div className={cn(
-            'mt-5 grid h-[320px] gap-2 overflow-hidden rounded-3xl sm:h-[440px]',
+            'mt-5 grid h-[320px] gap-2 overflow-hidden rounded-[24px] sm:h-[460px]',
             photos.length >= 3 ? 'sm:grid-cols-[2fr_1fr] sm:grid-rows-2' : photos.length === 2 ? 'sm:grid-cols-2' : '',
           )}>
             <button
@@ -281,16 +273,12 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
 
-        <div className="mt-6">
-          <UnitSectionNav sections={sections} />
-        </div>
-
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6 lg:px-8">
+        <div className="pb-10 pt-8">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* ── Left: one flat sheet, hairline-partitioned ── */}
             <div className="min-w-0">
               {/* Facts strip */}
-              <section id="overview" className="scroll-mt-36">
+              <section id="overview" className="scroll-mt-6">
                 <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-4">
                   {[
                     { icon: BedDouble, label: 'Bedrooms', value: bedroomRange },
@@ -327,7 +315,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
               {/* ── Units ── */}
               {units.length > 0 && (
-                <section id="units" className="mt-10 scroll-mt-36 border-t border-gray-200 pt-10">
+                <section id="units" className="mt-10 scroll-mt-6 border-t border-gray-200 pt-10">
                   <div className="flex items-baseline justify-between gap-4">
                     <h2 className="font-display text-[26px] font-light tracking-tight text-gray-900 sm:text-[30px]">
                       Choose your unit
@@ -347,7 +335,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
               {/* ── Floor plans ── */}
               {floorPlans.length > 0 && (
-                <section id="floorplans" className="mt-10 scroll-mt-36 border-t border-gray-200 pt-10">
+                <section id="floorplans" className="mt-10 scroll-mt-6 border-t border-gray-200 pt-10">
                   <h2 className="font-display text-[26px] font-light tracking-tight text-gray-900 sm:text-[30px]">
                     Floor plans
                   </h2>
@@ -388,7 +376,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
 
             {/* ── Right: sticky action rail ── */}
             <div>
-              <div className="sticky top-36 space-y-4">
+              <div className="sticky top-6 space-y-4">
                 <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_8px_30px_rgba(17,17,18,0.06)]">
                   <div className="border-b border-gray-100 p-6">
                     <div className="flex items-baseline justify-between gap-3">
@@ -558,6 +546,8 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         />
       )}
     </div>
+    </RentShell>
+    </Suspense>
   );
 }
 
@@ -711,5 +701,17 @@ function ReserveUnitButton({
       )}
       {error && <span className="text-[11.5px] text-red-600">{error}</span>}
     </div>
+  );
+}
+
+function SaveButton({ id }: { id: string }) {
+  const { has, toggle } = useSavedRentals();
+  const on = has(id);
+  return (
+    <button type="button" onClick={() => toggle(id)} aria-pressed={on}
+      className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-[14px] transition-colors',
+        on ? 'bg-[#fce8e6] text-[#d93025]' : 'bg-[#f2f2f2] text-[#1d1d1f] hover:bg-[#e8e8e8]')}>
+      <Heart size={15} className={on ? 'fill-current' : ''} /> {on ? 'Saved' : 'Save'}
+    </button>
   );
 }
