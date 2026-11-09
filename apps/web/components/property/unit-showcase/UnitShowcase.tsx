@@ -71,6 +71,8 @@ export interface ShowcaseData {
     neighborhood?: string | null;
     brandColor?: string | null;
     ownerName?: string | null;
+    /** The owner's public profile. */
+    ownerHref?: string | null;
     logoUrl?: string | null;
     completionDate?: string | null;
     hasCinematicTour: boolean;
@@ -484,7 +486,10 @@ export function UnitShowcase({ data: d }: { data: ShowcaseData }) {
               </div>
               {p.ownerName && (
                 <p className="mt-4 text-center text-[12.5px] text-gray-500">
-                  {p.agentListed ? 'Marketed by' : 'Developed by'} <span className="font-medium text-gray-700">{p.ownerName}</span>
+                  {p.agentListed ? 'Marketed by' : 'Developed by'}{' '}
+                  {p.ownerHref
+                    ? <Link href={p.ownerHref} className="font-medium text-gray-700 underline-offset-2 hover:underline">{p.ownerName}</Link>
+                    : <span className="font-medium text-gray-700">{p.ownerName}</span>}
                 </p>
               )}
             </div>

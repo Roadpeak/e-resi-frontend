@@ -102,6 +102,7 @@ export default function UnitTypePage({ params }: { params: Promise<{ slug: strin
       brandColor: p.brandColor,
       logoUrl: p.media.find((m) => m.title === '__logo__')?.url ?? p.developer?.logoUrl,
       ownerName: p.developer?.companyName ?? p.listedByAgent?.displayName ?? p.developerName,
+      ownerHref: p.developer?.id ? `/developers/${p.developer.id}` : p.listedByAgent?.id ? `/agents/${p.listedByAgent.id}` : null,
       completionDate: p.completionDate,
       hasCinematicTour: p.hasCinematicTour, has3DTour: p.has3DTour, hasVRTour: p.hasVRTour,
       unitFeatures: p.unitFeatures ?? [], features: p.features ?? [],

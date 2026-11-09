@@ -57,8 +57,8 @@ export interface UnitTypeDetail extends PublicUnitType {
     heroImageUrl?: string | null; currency?: string | null; completionDate?: string | null; category?: string | null;
     hasCinematicTour: boolean; has3DTour: boolean; hasVRTour: boolean;
     unitFeatures: string[]; features: string[]; brandColor?: string | null;
-    developer?: { companyName?: string | null; logoUrl?: string | null } | null;
-    listedByAgent?: { displayName?: string | null; logoUrl?: string | null; photoUrl?: string | null } | null;
+    developer?: { id?: string | null; companyName?: string | null; logoUrl?: string | null } | null;
+    listedByAgent?: { id?: string | null; displayName?: string | null; logoUrl?: string | null; photoUrl?: string | null } | null;
     developerName?: string | null;
     media: { id: string; url: string; title?: string | null; type: string }[];
     cinematicScenes: TourScene[];

@@ -35,8 +35,8 @@ interface UnitDetail {
     completionDate?: string | null; brandColor?: string | null; developerName?: string | null;
     unitFeatures?: string[]; features?: string[];
     listedByAgentId?: string | null;
-    developer?: { companyName?: string | null; logoUrl?: string | null } | null;
-    listedByAgent?: { displayName?: string | null } | null;
+    developer?: { id?: string | null; companyName?: string | null; logoUrl?: string | null } | null;
+    listedByAgent?: { id?: string | null; displayName?: string | null } | null;
     media: Media[];
     cinematicScenes: TourScene[];
     tourSections3D?: { id: string; label: string; scenes: TourScene[] }[];
@@ -132,6 +132,7 @@ export default function UnitPage({ params }: { params: Promise<{ slug: string; u
       slug: p.slug, name: p.name, tagline: p.tagline, city: p.city, neighborhood: p.neighborhood,
       brandColor: p.brandColor, logoUrl,
       ownerName: p.developer?.companyName ?? p.listedByAgent?.displayName ?? p.developerName,
+      ownerHref: p.developer?.id ? `/developers/${p.developer.id}` : p.listedByAgent?.id ? `/agents/${p.listedByAgent.id}` : null,
       completionDate: p.completionDate,
       hasCinematicTour: p.hasCinematicTour, has3DTour: p.has3DTour, hasVRTour: p.hasVRTour,
       unitFeatures: p.unitFeatures ?? [], features: p.features ?? [],
