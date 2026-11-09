@@ -5,6 +5,7 @@ import { MapLocationsPage } from '../../../../components/directory/MapLocationsP
 export const metadata: Metadata = {
   title: 'Map of Developments',
   description: 'Explore live developments across Kenya on the map, with pricing and photos.',
+  alternates: { canonical: '/map/locations' },
 };
 
 export default function MapLocationsRoute() {

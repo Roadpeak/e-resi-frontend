@@ -11,7 +11,7 @@ export const FOOTER_COLUMNS: { heading: string; links: { label: string; href: st
       { label: 'Apartments for sale', href: '/apartments' },
       { label: 'Villas for sale', href: '/villas' },
       { label: 'Commercial property', href: '/commercial' },
-      { label: 'Property map', href: '/map' },
+      { label: 'Property map', href: '/map/locations' },
       { label: 'Developers', href: '/developers' },
     ],
   },

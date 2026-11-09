@@ -27,7 +27,7 @@ const STATIC: { path: string; priority: number; changeFrequency: MetadataRoute.S
   { path: '/for-agents', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/list-agency', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/list-development', priority: 0.8, changeFrequency: 'monthly' },
-  { path: '/map', priority: 0.7, changeFrequency: 'daily' },
+  { path: '/map/locations', priority: 0.7, changeFrequency: 'daily' },
   // Content hubs — informational searches that lead into the browse pages.
   { path: '/neighbourhoods', priority: 0.85, changeFrequency: 'weekly' },
   { path: '/guides', priority: 0.75, changeFrequency: 'monthly' },
