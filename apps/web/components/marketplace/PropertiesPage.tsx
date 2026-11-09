@@ -186,6 +186,9 @@ export function PropertiesPage({
   return (
     <div className="min-h-screen pt-20 pb-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        {/* The page's heading for search engines and screen readers; the same
+            words show in the breadcrumb, the banner's "Search in" is a control. */}
+        <h1 className="sr-only">{heading ? `${heading} in Kenya` : 'Properties for sale in Kenya'}</h1>
         <BrowseBreadcrumbs group="buy" label={heading ?? 'Properties for sale in Kenya'} />
 
         {/* ── Hero banner ── */}
@@ -507,7 +510,7 @@ function HeroBanner({
       <div className="absolute inset-y-0 left-0 w-[85%] bg-gradient-to-r sm:w-[55%] from-brand-700/90 via-brand-600/70 to-transparent" />
 
       <div className="relative z-10 flex h-full flex-col justify-center px-7 pb-8 sm:px-12">
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Search in</h1>
+        <p className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Search in</p>
         <div className="relative mt-2 inline-flex w-fit items-center gap-1.5 cursor-pointer">
           <span className="text-lg font-medium text-white/85 sm:text-xl">
             {city ?? 'All cities'}
