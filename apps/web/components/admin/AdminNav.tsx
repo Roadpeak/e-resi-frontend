@@ -21,6 +21,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Users', href: '/admin/users', icon: 'group' },
   { label: 'Developers', href: '/admin/developers', icon: 'apartment' },
   { label: 'Agents', href: '/admin/agents', icon: 'support_agent' },
+  { label: 'Invites', href: '/admin/invites', icon: 'mail' },
   { label: 'Properties', href: '/admin/properties', icon: 'domain' },
   { label: 'Neighbourhoods', href: '/admin/neighbourhoods', icon: 'map' },
   { label: 'Operations', href: '/admin/rentals', icon: 'key' },

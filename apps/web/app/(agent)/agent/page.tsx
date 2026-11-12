@@ -11,6 +11,7 @@ import { chatApi } from '../../../lib/api/chat';
 import { leadsApi, type LeadRow } from '../../../lib/api/leads';
 import { agentContentApi, agentSiteApi } from '../../../lib/api/agent-site';
 import { AgentStatusBanner } from '../../../components/agent/AgentStatusBanner';
+import { WelcomeTemplateModal } from '../../../components/agent/WelcomeTemplateModal';
 import { cn, formatPrice } from '../../../lib/utils';
 import { useMyRentListings } from '../../../lib/api/queries';
 
@@ -88,6 +89,7 @@ export default function AgentOverview() {
 
   return (
     <div className="space-y-6">
+      <WelcomeTemplateModal />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[26px] font-normal text-[#202124]">{me ? me.displayName : 'Your agency'}</h1>

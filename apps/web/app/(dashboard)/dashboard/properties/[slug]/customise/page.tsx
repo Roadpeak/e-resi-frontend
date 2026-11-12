@@ -110,6 +110,21 @@ export default function TemplateGallery() {
     onSettled: () => setApplying(null),
   });
 
+  // An invited developer picked a look in the welcome prompt before they had
+  // any development. Honour it the first time a development without a
+  // template is customised, then forget it so it never overrides a choice.
+  const preferredApplied = useRef(false);
+  useEffect(() => {
+    if (!property || saved?.templateKey || preferredApplied.current) return;
+    let preferred: string | null = null;
+    try { preferred = localStorage.getItem('e-resi-preferred-template'); } catch { preferred = null; }
+    if (!preferred || !PICKER_TEMPLATES.some((t) => t.key === preferred)) return;
+    preferredApplied.current = true;
+    try { localStorage.removeItem('e-resi-preferred-template'); } catch { /* ignore */ }
+    apply.mutate(preferred);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [property, saved?.templateKey]);
+
   if (isLoading) {
     return <p className="py-16 text-center text-[14px] text-[#5f6368]">Loading…</p>;
   }

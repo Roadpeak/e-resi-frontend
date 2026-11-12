@@ -13,6 +13,7 @@ import { propertiesApi } from '../../../lib/api/properties';
 import { LISTING_FEE_MONTHLY, fmtUsd } from '../../../lib/onboarding/catalog';
 import { useCatalog } from '../../../lib/onboarding/useCatalog';
 import { useAuthStore } from '../../../lib/stores/auth.store';
+import { WelcomeDeveloperModal } from '../../../components/dashboard/WelcomeDeveloperModal';
 import {
   useDeveloperStats, useDeveloperEngagement, useMyProperties, useMyRentListings,
   useDeveloperInquiries, useDeveloperBookings,
@@ -192,6 +193,7 @@ export default function DashboardOverview() {
 
   return (
     <div>
+      <WelcomeDeveloperModal />
       {/* ── Gradient hero ── */}
       <section className="dash-hero relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-300 px-6 py-10 sm:px-10">
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_380px]">
