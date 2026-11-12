@@ -10,6 +10,7 @@ import {
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
 import { apiClient } from '../../lib/api/client';
+import { agentsApi } from '../../lib/api/agents';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { CommandPalette } from './CommandPalette';
 import { NotificationBell } from '../notifications/NotificationBell';
@@ -25,11 +26,21 @@ export function DashboardTopnav() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // The same bar serves the developer dashboard and the agent portal; every
+  // link, the verification chip and the account picture follow the portal.
+  const isAgent = pathname.startsWith('/agent');
+  const base = isAgent ? '/agent' : '/dashboard';
+
   // KYB status chip
-  const { data: profile } = useQuery({
+  const { data: developer } = useQuery({
     queryKey: ['developer-profile'],
     queryFn: () => apiClient.get<{ companyName: string; kybStatus: string; logoUrl?: string | null }>('/users/developers/me'),
+    enabled: !isAgent,
   });
+  const { data: agentMe } = useQuery({ queryKey: ['agent', 'me'], queryFn: () => agentsApi.me(), enabled: isAgent });
+  const profile = isAgent
+    ? (agentMe && { companyName: agentMe.displayName, kybStatus: agentMe.kybStatus, logoUrl: agentMe.logoUrl ?? agentMe.photoUrl, kind: agentMe.kind })
+    : (developer && { ...developer, kind: 'COMPANY' as const });
 
 
   useEffect(() => {
@@ -54,7 +65,7 @@ export function DashboardTopnav() {
 
 
 
-  const section = pathname === '/dashboard' ? 'Overview' : pathname.split('/')[2]?.replace('-', ' ');
+  const section = pathname === base ? 'Overview' : pathname.split('/')[2]?.replace('-', ' ');
   const initials = user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : '';
   const kyb = profile?.kybStatus;
 
@@ -62,14 +73,14 @@ export function DashboardTopnav() {
     <header className="flex h-16 shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
       {/* Logo + section + verification chip */}
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-        <Link href="/dashboard" aria-label="Dashboard home" className="shrink-0">
+        <Link href={base} aria-label="Dashboard home" className="shrink-0">
           <Logo markSize={26} textClassName="hidden sm:inline-flex text-gray-900 text-[1.15rem]" />
         </Link>
         <span className="h-5 w-px shrink-0 bg-gray-200" />
         <span className="truncate text-sm font-medium capitalize text-gray-500">{section}</span>
         {kyb && (
           <Link
-            href="/dashboard/profile"
+            href={`${base}/profile`}
             className={cn(
               'hidden md:inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors',
               kyb === 'APPROVED' && 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
@@ -88,6 +99,9 @@ export function DashboardTopnav() {
           logoUrl={profile?.logoUrl}
           isStaff={user?.isStaff}
           self={user?.isStaff ? { name: `${user.firstName} ${user.lastName}`.trim(), email: user.email, photo: user.avatarUrl } : undefined}
+          // Agents have no staff logins; their team lives on the website.
+          href={isAgent ? '/agent/website/content#team' : undefined}
+          withMembers={!isAgent}
         />
       </div>
 
@@ -113,10 +127,10 @@ export function DashboardTopnav() {
         </button>
 
         <Link
-          href="/dashboard/developments/new"
+          href={isAgent ? '/agent/listings/new' : '/dashboard/developments/new'}
           className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-gray-700 transition-colors"
         >
-          <Plus size={14} /> Add Development
+          <Plus size={14} /> {isAgent ? 'Add listing' : 'Add Development'}
         </Link>
 
         {/* Help */}
@@ -162,11 +176,14 @@ export function DashboardTopnav() {
                 <p className="text-xs text-gray-400 truncate">{user?.email}</p>
               </div>
               {[
-                { label: 'My profile', href: '/dashboard/my-profile', icon: UserRound },
+                { label: 'My profile', href: `${base}/my-profile`, icon: UserRound },
                 // Company-level pages are the owner's; a team member can't open them.
                 ...(user?.isStaff ? [] : [
-                  { label: 'Company Profile', href: '/dashboard/profile', icon: ShieldCheck },
-                  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+                  {
+                    label: isAgent ? (profile?.kind === 'INDIVIDUAL' ? 'Agent profile' : 'Agency profile') : 'Company Profile',
+                    href: `${base}/profile`, icon: ShieldCheck,
+                  },
+                  { label: 'Settings', href: `${base}/settings`, icon: Settings },
                 ]),
                 { label: 'Visit Site', href: '/', icon: Globe },
               ].map(({ label, href, icon: Icon }) => (
@@ -193,7 +210,7 @@ export function DashboardTopnav() {
         </div>
       </div>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} agent={isAgent} />
     </header>
   );
 }

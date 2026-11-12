@@ -33,6 +33,8 @@ const NAV = [
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
   { label: 'Website', href: '/agent/website', icon: 'language' },
   { label: 'Site content', href: '/agent/website/content', icon: 'article' },
+  // The agency's people, shown on the website. Agents have no staff logins.
+  { label: 'Team', href: '/agent/website/content#team', icon: 'group' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
   { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
 ];
@@ -131,7 +133,7 @@ export function AgentIconRail() {
             {...item}
             // Exact match for the index, prefix for the rest, so /agent does
             // not stay lit while a sub-page is open.
-            active={item.href === '/agent' ? pathname === '/agent' : pathname.startsWith(item.href)}
+            active={item.href === '/agent' ? pathname === '/agent' : item.href.includes('#') ? false : pathname.startsWith(item.href)}
             badge={badgeFor(item.href)}
           />
         ))}

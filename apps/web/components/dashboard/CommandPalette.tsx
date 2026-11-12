@@ -27,8 +27,28 @@ const PAGES = [
   { label: 'Add Development', href: '/dashboard/developments/new', icon: Plus },
 ];
 
+/** The agent portal's pages, for the same palette on /agent. */
+const AGENT_PAGES = [
+  { label: 'Overview', href: '/agent', icon: LayoutDashboard },
+  { label: 'My Listings', href: '/agent/listings', icon: Building2 },
+  { label: 'Partner Listings', href: '/agent/properties', icon: Building2 },
+  { label: 'Rentals', href: '/agent/rentals', icon: Home },
+  { label: 'Messages', href: '/agent/messages', icon: MessagesSquare },
+  { label: 'Leads', href: '/agent/leads', icon: UserSearch },
+  { label: 'Inquiries', href: '/agent/inquiries', icon: MessageSquare },
+  { label: 'Viewings', href: '/agent/bookings', icon: CalendarDays },
+  { label: 'Analytics', href: '/agent/analytics', icon: BarChart3 },
+  { label: 'Website', href: '/agent/website', icon: Home },
+  { label: 'Site content', href: '/agent/website/content', icon: FileText },
+  { label: 'Billing', href: '/agent/billing', icon: Receipt },
+  { label: 'My Profile', href: '/agent/profile', icon: BadgeCheck },
+  { label: 'Settings', href: '/agent/settings', icon: Settings },
+  { label: 'Add listing', href: '/agent/listings/new', icon: Plus },
+  { label: 'List a rental', href: '/agent/rentals/new', icon: Plus },
+];
+
 /** ⌘K palette — jump to pages or your own properties. */
-export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CommandPalette({ open, onClose, agent = false }: { open: boolean; onClose: () => void; agent?: boolean }) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -45,10 +65,10 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const pages = PAGES
+    const pages = (agent ? AGENT_PAGES : PAGES)
       .filter((p) => !q || p.label.toLowerCase().includes(q))
       .map((p) => ({ kind: 'page' as const, label: p.label, sub: 'Page', href: p.href, icon: p.icon }));
-    const props = (propertiesData?.items ?? [])
+    const props = (agent ? [] : propertiesData?.items ?? [])
       .filter((p) => q && p.name.toLowerCase().includes(q))
       .slice(0, 5)
       .map((p) => ({
@@ -59,7 +79,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         icon: Building2,
       }));
     return [...props, ...pages].slice(0, 9);
-  }, [query, propertiesData]);
+  }, [query, propertiesData, agent]);
 
   useEffect(() => setActive(0), [results.length]);
 

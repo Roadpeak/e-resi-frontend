@@ -289,6 +289,11 @@ export default function AgentSiteContentPage() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['agent-content'], queryFn: agentContentApi.list });
   const [tab, setTab] = useState<ContentType>('TESTIMONIAL');
+  // /agent/website/content#team (from the top bar and the rail) opens that tab.
+  useEffect(() => {
+    const want = window.location.hash.replace('#', '').toUpperCase();
+    if (TYPES.some((t) => t.type === want)) setTab(want as ContentType);
+  }, []);
   const [editing, setEditing] = useState<ContentItem | 'new' | null>(null);
   const [err, setErr] = useState('');
   const def = TYPES.find((t) => t.type === tab)!;

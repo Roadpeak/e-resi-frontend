@@ -33,18 +33,22 @@ function memberName(m: StaffMember) {
 const MAX = 4;
 
 export function TeamAvatars({
-  companyName, logoUrl, isStaff, self,
+  companyName, logoUrl, isStaff, self, href, withMembers = true,
 }: {
   companyName?: string;
   logoUrl?: string | null;
   isStaff?: boolean;
   /** For a team member: themselves, shown after the company. */
   self?: { name: string; email: string; photo?: string | null };
+  /** Where the cluster opens; the developer Team page by default. */
+  href?: string;
+  /** Load invited members (developer accounts only — agents have none). */
+  withMembers?: boolean;
 }) {
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
     queryFn: staffApi.list,
-    enabled: !isStaff,
+    enabled: !isStaff && withMembers,
     retry: false,
     staleTime: 60_000,
   });
@@ -59,7 +63,7 @@ export function TeamAvatars({
 
   return (
     <Link
-      href={isStaff ? '/dashboard' : '/dashboard/team'}
+      href={href ?? (isStaff ? '/dashboard' : '/dashboard/team')}
       className="hidden shrink-0 items-center md:flex"
       aria-label={isStaff ? company : `Team: ${company} and ${members.length} member${members.length === 1 ? '' : 's'}`}
     >
