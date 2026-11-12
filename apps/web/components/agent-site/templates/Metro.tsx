@@ -56,14 +56,15 @@ export function MetroTemplate({ data }: { data: AgentSiteData }) {
   const shown = search.apply(f.shown);
   const areas = areasOf(data);
   const stats = statsFor(data, 3);
-  const nav = navFor(data, order).filter((n) => n.href !== '#listings');
+  const nav = navFor(data, order).filter((n) => n.href !== '#listings' && n.href !== '#rentals');
   const scrolled = useScrolled(60);
   const [drop, setDrop] = useState(false);
   const steps = stepsFor(data, 'BUYERS').slice(0, 4);
   const theme: SiteTheme = { ink: INK, muted: MUTED, accent, card: '#ffffff', line: 'rgba(0,0,0,0.1)', radius: 16 };
   const has = (id: SiteSectionId) => order.includes(id);
   const menuItems = [
-    { href: '#listings', title: 'Buy a home', text: 'Browse every listing' },
+    has('listings') && { href: '#listings', title: 'Buy a home', text: 'Browse every listing' },
+    has('rentals') && { href: '#rentals', title: 'Rent a home', text: 'Homes available to let now' },
     has('valuation') && kit?.forms.valuation && { href: '#valuation', title: 'Sell your property', text: 'Free valuation and listing' },
     has('packages') && data.content?.packages?.length && { href: '#packages', title: 'Let or manage', text: 'Landlord packages and fees' },
     has('calculator') && kit?.forms.calculator && { href: '#calculator', title: 'Mortgage calculator', text: 'Estimate your monthly payment' },

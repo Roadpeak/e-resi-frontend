@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { formatPrice } from '../../lib/utils';
-import type { AgentSiteData, AgentSiteListing, SiteSectionId } from './types';
+import type { AgentSiteData, AgentSiteListing, AgentSiteRental, SiteSectionId } from './types';
 
 /** Helpers every agent-site template shares: icons, links, filters, sections. */
 
@@ -54,9 +54,30 @@ export function statusLabel(l: AgentSiteListing) {
 
 export const hasTour = (l: AgentSiteListing) => l.has3DTour || l.hasVRTour || l.hasCinematicTour;
 
+export const FURNISHING: Record<string, string> = { UNFURNISHED: 'Unfurnished', SEMI_FURNISHED: 'Semi-furnished', FURNISHED: 'Furnished' };
+
+/** "KES 85K / month", or the open range. */
+export function rentLabel(r: AgentSiteRental) {
+  if (!r.priceFrom) return 'Rent on request';
+  const cur = r.currency ?? 'KES';
+  const range = r.priceTo && r.priceTo > r.priceFrom ? `${formatPrice(r.priceFrom, cur)} – ${formatPrice(r.priceTo, cur)}` : formatPrice(r.priceFrom, cur);
+  return `${range} / month`;
+}
+
+export function bedsLabel(r: AgentSiteRental) {
+  if (r.bedroomsFrom == null) return null;
+  const f = r.bedroomsFrom, t = r.bedroomsTo ?? r.bedroomsFrom;
+  const one = (n: number) => (n === 0 ? 'Studio' : `${n} bed`);
+  return f === t ? one(f) : `${one(f)} – ${one(t)}`;
+}
+
+/** Everything the agent offers, sale and rent, for counts and photos. */
+export const rentalsOf = (data: AgentSiteData): AgentSiteRental[] => data.rentals ?? [];
+
 /** The photo at the top of the site: the agent's cover, else a listing photo. */
 export function heroImage(data: AgentSiteData) {
-  return data.agent.siteHeroUrl ?? data.listings.find((l) => l.heroImageUrl)?.heroImageUrl ?? null;
+  return data.agent.siteHeroUrl ?? data.listings.find((l) => l.heroImageUrl)?.heroImageUrl
+    ?? rentalsOf(data).find((r) => r.heroImageUrl)?.heroImageUrl ?? null;
 }
 
 export function firstSentence(text: string | null, max = 180) {
@@ -71,13 +92,18 @@ export function orderedSections(data: AgentSiteData, supported: readonly SiteSec
   const order = saved.filter((s) => s.visible && supported.includes(s.id)).map((s) => s.id);
   // A section the template supports but the saved list predates goes last.
   for (const id of supported) if (!saved.some((s) => s.id === id)) order.push(id);
-  return order;
+  // An agent who only lets should not open with an empty "for sale" block,
+  // and one who only sells gets no empty rentals block.
+  const rentals = rentalsOf(data);
+  return order.filter((id) =>
+    (id !== 'listings' || data.listings.length > 0 || rentals.length === 0)
+    && (id !== 'rentals' || rentals.length > 0));
 }
 
 /** Areas the agent works, with how many listings each has. */
 export function areasOf(data: AgentSiteData) {
   const counts = new Map<string, number>();
-  for (const l of data.listings) {
+  for (const l of [...data.listings, ...rentalsOf(data)]) {
     const k = l.neighborhood || l.city;
     if (k) counts.set(k, (counts.get(k) ?? 0) + 1);
   }

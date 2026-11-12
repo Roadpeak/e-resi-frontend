@@ -239,6 +239,7 @@ export function MeridianTemplate({ data }: { data: AgentSiteData }) {
 
   const nav = [
     order.includes('listings') && listings.length && { href: '#listings', label: 'Residences' },
+    order.includes('rentals') && { href: '#rentals', label: 'Rentals' },
     order.includes('about') && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Communities' },
     order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },

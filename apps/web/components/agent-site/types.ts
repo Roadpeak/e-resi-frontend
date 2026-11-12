@@ -8,14 +8,27 @@ export interface AgentSiteListing {
   developerName: string | null; units: number; kind: 'OWN' | 'PARTNER'; href: string;
 }
 
+/** A home to rent, listed or managed by the agent. priceFrom/To are monthly rent. */
+export interface AgentSiteRental {
+  id: string; slug: string; name: string; tagline: string | null; heroImageUrl: string | null;
+  city: string | null; neighborhood: string | null; category: string; status: string;
+  furnishing: 'UNFURNISHED' | 'SEMI_FURNISHED' | 'FURNISHED' | string;
+  priceFrom: number | null; priceTo: number | null; currency: string | null;
+  availableFrom: string | null; minLeaseTerm: number;
+  has3DTour: boolean; hasCinematicTour: boolean; isFeatured: boolean; tags: string[];
+  /** Units open to let right now. */
+  units: number; bedroomsFrom: number | null; bedroomsTo: number | null; href: string;
+}
+
 export type SiteSectionId =
-  | 'stats' | 'listings' | 'services' | 'packages' | 'process' | 'valuation' | 'calculator' | 'about' | 'team' | 'sold' | 'cases'
+  | 'stats' | 'listings' | 'rentals' | 'services' | 'packages' | 'process' | 'valuation' | 'calculator' | 'about' | 'team' | 'sold' | 'cases'
   | 'testimonials' | 'areas' | 'guides' | 'awards' | 'journal' | 'careers' | 'faq' | 'newsletter' | 'contact';
 export type SiteSection = { id: SiteSectionId; visible: boolean };
 
 export const SECTION_LABELS: Record<SiteSectionId, string> = {
   stats: 'Numbers',
-  listings: 'Listings',
+  listings: 'Homes for sale',
+  rentals: 'Homes to rent',
   services: 'Services',
   packages: 'Landlord packages',
   process: 'How it works',
@@ -66,6 +79,7 @@ export interface AgentSiteContent {
 export interface AgentSiteStats {
   listings: number; own: number; partnered: number; units: number;
   cities: number; withTours: number; onPlatformSince: number;
+  rentals?: number; rentUnits?: number;
 }
 
 export interface AgentSiteData {
@@ -82,6 +96,8 @@ export interface AgentSiteData {
     siteTagline: string | null; siteAccent: string | null; siteHeroUrl: string | null;
   };
   listings: AgentSiteListing[];
+  /** Homes to rent; older payloads omit it. */
+  rentals?: AgentSiteRental[];
   content?: AgentSiteContent;
   legal?: { licenceNo: string | null; footerNote: string | null };
   /** Which website forms are on. */

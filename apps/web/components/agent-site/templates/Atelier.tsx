@@ -77,6 +77,7 @@ export function AtelierTemplate({ data }: { data: AgentSiteData }) {
 
   const links = [
     order.includes('listings') && { href: '#listings', label: 'Listings' },
+    order.includes('rentals') && { href: '#rentals', label: 'Rentals' },
     order.includes('about') && agent.bio && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Areas' },
     order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },

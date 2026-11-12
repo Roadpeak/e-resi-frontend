@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../../lib/utils';
 import type {
-  AgentSiteData, Award, Faq, PastSale, PostSummary, Service, SiteSectionId, Step, TeamMember, Testimonial,
+  AgentSiteData, AgentSiteRental, Award, Faq, PastSale, PostSummary, Service, SiteSectionId, Step, TeamMember, Testimonial,
 } from './types';
-import { Icon, ICON, Img } from './shared';
+import { bedsLabel, FURNISHING, Icon, ICON, Img, rentLabel } from './shared';
 import { EASE, Marquee, motion, Reveal, Stagger } from './motion';
 import { CareersSection, NewsletterSection, ValuationSection } from './kit';
 import { CalculatorSection, CasesSection, GuidesSection, PackagesSection } from './guides';
@@ -202,6 +202,137 @@ export function SoldSection({ items, theme }: { items: PastSale[]; theme: SiteTh
           </article>
         ))}
       </Stagger>
+    </Wrap>
+  );
+}
+
+// ─── Homes to rent ───────────────────────────────────────────────────────
+
+/**
+ * The agent's rentals, drawn by every template. Separate from the sale
+ * listings because the questions differ: monthly rent, furnishing,
+ * bedrooms and when it is free, not price-from and construction status.
+ */
+export function RentalsSection({ items, theme }: { items: AgentSiteRental[]; theme: SiteTheme }) {
+  const [city, setCity] = useState('');
+  const [furnishing, setFurnishing] = useState('');
+  const [beds, setBeds] = useState('');
+  const [budget, setBudget] = useState('');
+  const cities = useMemo(() => [...new Set(items.map((r) => r.city).filter(Boolean) as string[])].sort(), [items]);
+  const furnishings = useMemo(() => [...new Set(items.map((r) => r.furnishing))], [items]);
+  const bedOptions = useMemo(() => {
+    const set = new Set<number>();
+    for (const r of items) if (r.bedroomsFrom != null) for (let b = r.bedroomsFrom; b <= (r.bedroomsTo ?? r.bedroomsFrom); b++) set.add(b);
+    return [...set].sort((a, b) => a - b);
+  }, [items]);
+  const budgets = [
+    { key: '0-50000', label: 'Under 50K' }, { key: '50000-100000', label: '50K – 100K' },
+    { key: '100000-200000', label: '100K – 200K' }, { key: '200000-', label: '200K+' },
+  ].filter((b) => {
+    const [lo, hi] = b.key.split('-').map((n) => (n === '' ? Infinity : Number(n)));
+    return items.some((r) => r.priceFrom != null && r.priceFrom >= lo && r.priceFrom < hi);
+  });
+  if (!items.length) return null;
+  const shown = items.filter((r) => {
+    if (city && r.city !== city) return false;
+    if (furnishing && r.furnishing !== furnishing) return false;
+    if (beds !== '') {
+      const b = Number(beds);
+      if (r.bedroomsFrom == null || b < r.bedroomsFrom || b > (r.bedroomsTo ?? r.bedroomsFrom)) return false;
+    }
+    if (budget) {
+      const [lo, hi] = budget.split('-').map((n) => (n === '' ? Infinity : Number(n)));
+      if (r.priceFrom == null || r.priceFrom < lo || r.priceFrom >= hi) return false;
+    }
+    return true;
+  });
+  const active = !!(city || furnishing || beds !== '' || budget);
+  const units = items.reduce((n, r) => n + r.units, 0);
+  const select = 'rounded-full border px-4 py-2 text-[13px] outline-none';
+  const selectStyle = { borderColor: theme.line, background: theme.card, color: theme.ink };
+  const available = (r: AgentSiteRental) => {
+    if (r.status === 'PARTIALLY_AVAILABLE' && r.units) return `${r.units} left`;
+    if (r.availableFrom && new Date(r.availableFrom) > new Date()) {
+      return `From ${new Date(r.availableFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+    }
+    return 'Available now';
+  };
+
+  return (
+    <Wrap id="rentals" theme={theme}>
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <SectionHead theme={theme} eyebrow="To rent" title="Homes to rent"
+          intro={`${items.length} ${items.length === 1 ? 'home' : 'homes'} available to let${units > items.length ? `, ${units} units open` : ''}. Viewings in person or by live guided tour.`} />
+        {(cities.length > 1 || furnishings.length > 1 || bedOptions.length > 1 || budgets.length > 1) && (
+          <div className="flex flex-wrap gap-2">
+            {cities.length > 1 && (
+              <select value={city} onChange={(e) => setCity(e.target.value)} aria-label="Area" className={select} style={selectStyle}>
+                <option value="">Anywhere</option>
+                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
+            {bedOptions.length > 1 && (
+              <select value={beds} onChange={(e) => setBeds(e.target.value)} aria-label="Bedrooms" className={select} style={selectStyle}>
+                <option value="">Any bedrooms</option>
+                {bedOptions.map((b) => <option key={b} value={b}>{b === 0 ? 'Studio' : `${b} bed`}</option>)}
+              </select>
+            )}
+            {furnishings.length > 1 && (
+              <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} aria-label="Furnishing" className={select} style={selectStyle}>
+                <option value="">Any furnishing</option>
+                {furnishings.map((f) => <option key={f} value={f}>{FURNISHING[f] ?? f}</option>)}
+              </select>
+            )}
+            {budgets.length > 1 && (
+              <select value={budget} onChange={(e) => setBudget(e.target.value)} aria-label="Monthly budget" className={select} style={selectStyle}>
+                <option value="">Any rent</option>
+                {budgets.map((b) => <option key={b.key} value={b.key}>{b.label} / month</option>)}
+              </select>
+            )}
+          </div>
+        )}
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="mt-10 p-10 text-center text-[15px]" style={{ background: theme.card, borderRadius: theme.radius, color: theme.muted }}>
+          {active ? 'No homes match these filters.' : 'New rentals are on the way. Get in touch to hear about them first.'}
+        </p>
+      ) : (
+        <Stagger className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {shown.map((r) => (
+            <a key={r.id} href={r.href} className="group block overflow-hidden transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+              style={{ background: theme.card, borderRadius: theme.radius }}>
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <Img src={r.heroImageUrl} alt={r.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <span className="absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white" style={{ background: theme.accent }}>
+                  To rent
+                </span>
+                {(r.has3DTour || r.hasCinematicTour) && (
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-black">
+                    <Icon d={ICON.cube} size={12} /> Tour
+                  </span>
+                )}
+                <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-[11.5px] font-medium text-black">{available(r)}</span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-[17px] leading-snug" style={{ fontFamily: theme.display, fontWeight: theme.weight ?? 500, color: theme.ink }}>{r.name}</h3>
+                <p className="mt-1 flex items-center gap-1.5 text-[13.5px]" style={{ color: theme.muted }}>
+                  <Icon d={ICON.pin} size={13} /> {[r.neighborhood, r.city].filter(Boolean).join(', ') || 'Kenya'}
+                </p>
+                <p className="mt-2 text-[13px]" style={{ color: theme.muted }}>
+                  {[bedsLabel(r), FURNISHING[r.furnishing] ?? null, r.minLeaseTerm ? `${r.minLeaseTerm}-month min` : null].filter(Boolean).join(' · ')}
+                </p>
+                <div className="mt-4 flex items-center justify-between border-t pt-4" style={{ borderColor: theme.line }}>
+                  <span className="text-[15.5px] font-medium" style={{ color: theme.ink }}>{rentLabel(r)}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full transition-colors group-hover:text-white" style={{ background: `${theme.accent}1a`, color: theme.ink }}>
+                    <Icon d={ICON.arrowUpRight} size={15} />
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </Stagger>
+      )}
     </Wrap>
   );
 }
@@ -402,6 +533,7 @@ export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Re
       } />
     ),
     newsletter: <NewsletterSection theme={theme} />,
+    rentals: <RentalsSection items={data.rentals ?? []} theme={theme} />,
     careers: (
       <CareersSection theme={theme} roles={c?.roles ?? []}
         head={<SectionHead theme={theme} eyebrow="Careers" title="Join the team" intro="We’re growing. If you love property and people, we’d like to hear from you." />} />
@@ -435,6 +567,6 @@ export function contentBlocks(data: AgentSiteData, theme: SiteTheme): Partial<Re
 }
 
 export const ALL_SECTIONS: readonly SiteSectionId[] = [
-  'stats', 'listings', 'services', 'packages', 'process', 'valuation', 'calculator', 'about', 'team', 'sold', 'cases',
+  'stats', 'listings', 'rentals', 'services', 'packages', 'process', 'valuation', 'calculator', 'about', 'team', 'sold', 'cases',
   'testimonials', 'areas', 'guides', 'awards', 'journal', 'careers', 'faq', 'newsletter', 'contact',
 ];

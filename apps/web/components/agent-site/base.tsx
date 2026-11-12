@@ -23,7 +23,8 @@ export function statsFor(data: AgentSiteData, max = 4): Stat[] {
   const { agent, listings } = data;
   return ([
     agent.yearsExperience ? { v: agent.yearsExperience, s: '+', label: 'Years of experience' } : null,
-    { v: listings.length, s: '', label: listings.length === 1 ? 'Development on offer' : 'Developments on offer' },
+    listings.length ? { v: listings.length, s: '', label: listings.length === 1 ? 'Development on offer' : 'Developments on offer' } : null,
+    (data.rentals?.length ?? 0) > 0 ? { v: data.rentals!.length, s: '', label: data.rentals!.length === 1 ? 'Home to rent' : 'Homes to rent' } : null,
     agent.dealsCompleted > 0 ? { v: agent.dealsCompleted, s: '+', label: 'Deals closed' } : null,
     agent.ratingCount > 0 && agent.ratingAverage != null ? { v: agent.ratingAverage, s: '', d: 1, label: `Rating from ${agent.ratingCount} reviews` } : null,
     (data.stats?.units ?? 0) > 0 ? { v: data.stats!.units, s: '', label: 'Homes available' } : null,
@@ -37,6 +38,7 @@ export function navFor(data: AgentSiteData, order: SiteSectionId[], labels: Part
   const c = data.content;
   const has: Partial<Record<SiteSectionId, boolean>> = {
     listings: data.listings.length > 0,
+    rentals: (data.rentals?.length ?? 0) > 0,
     about: !!data.agent.bio,
     services: !!c?.services.length,
     team: !!c?.team.length,
@@ -46,9 +48,9 @@ export function navFor(data: AgentSiteData, order: SiteSectionId[], labels: Part
     testimonials: !!c?.testimonials.length,
   };
   const defaults: Partial<Record<SiteSectionId, string>> = {
-    listings: 'Homes', about: 'About', services: 'Services', team: 'Team', guides: 'Areas', journal: 'Journal', packages: 'Landlords', testimonials: 'Reviews',
+    listings: 'Buy', rentals: 'Rent', about: 'About', services: 'Services', team: 'Team', guides: 'Areas', journal: 'Journal', packages: 'Landlords', testimonials: 'Reviews',
   };
-  const want: SiteSectionId[] = ['listings', 'about', 'services', 'guides', 'team', 'journal'];
+  const want: SiteSectionId[] = ['listings', 'rentals', 'about', 'services', 'guides', 'team', 'journal'];
   return want
     .filter((id) => order.includes(id) && has[id])
     .slice(0, 5)

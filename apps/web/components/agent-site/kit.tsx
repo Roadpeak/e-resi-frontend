@@ -616,6 +616,12 @@ export function SiteKitLayer({ theme, hideDock = false, chatClassName = 'bottom-
   const openChat = useOpenChat();
   const panel = useRef<HTMLDivElement>(null);
   const modal = kit?.modal ?? null;
+  // "Explore homes" buttons point at #listings. A letting-only agent has no
+  // sale section, so send those to the rentals section instead of nowhere.
+  useEffect(() => {
+    if (document.getElementById('listings') || !document.getElementById('rentals')) return;
+    document.querySelectorAll<HTMLAnchorElement>('a[href="#listings"]').forEach((a) => { a.href = '#rentals'; });
+  }, []);
   useEffect(() => {
     if (!modal) return;
     const prev = document.body.style.overflow;

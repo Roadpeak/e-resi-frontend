@@ -212,7 +212,8 @@ export function HavenTemplate({ data }: { data: AgentSiteData }) {
   };
 
   const nav = [
-    order.includes('listings') && { href: '#listings', label: 'Homes' },
+    order.includes('listings') && { href: '#listings', label: 'Buy' },
+    order.includes('rentals') && { href: '#rentals', label: 'Rent' },
     order.includes('about') && agent.bio && { href: '#about', label: 'About' },
     order.includes('areas') && areas.length && { href: '#areas', label: 'Areas' },
     order.includes('team') && data.content?.team.length && { href: '#team', label: 'Team' },
