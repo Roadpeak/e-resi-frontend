@@ -37,12 +37,16 @@ const STATE_STYLE: Record<InviteState, string> = {
 };
 const STATE_LABEL: Record<InviteState, string> = { pending: 'Not opened', opened: 'Opened', signed_up: 'Signed up', revoked: 'Revoked' };
 
-function suggestMessage(kind: InviteKind, name: string, contact: string) {
-  const who = name.trim() || (kind === 'AGENT' ? 'your agency' : 'your company');
+function suggestMessage(kind: InviteKind, name: string, contact: string, agentKind: 'COMPANY' | 'INDIVIDUAL' = 'COMPANY') {
+  const who = name.trim();
   const hi = contact.trim() ? `Hi ${contact.trim().split(' ')[0]},` : 'Hello,';
-  return kind === 'AGENT'
-    ? `${hi}\n\nWe have been following ${who}'s work and the way you present homes to clients stands out. e-resi was built for agents like you — not another listing site, but a tool that makes selling and letting faster: your own branded website in seconds, every property you list ready to share, and every person who opens your link turned into a lead with their full details.\n\nNo commissions. 100% free to start. We would love to have you on board.`
-    : `${hi}\n\nThe team at e-resi has admired what ${who} has been building. We built e-resi to help developers sell off-plan faster: a branded website for every development in seconds, 3D and VR tours buyers can walk through from anywhere, live guided tours, chat and document sharing with buyers, and every interested buyer delivered to you as a lead with full details.\n\nNo commissions. 100% free to start. We would love to have you on board.`;
+  if (kind === 'DEVELOPER') {
+    return `${hi}\n\nAs one of the leading property developers in the market${who ? `, ${who} is exactly who we built e-resi for` : ', you are exactly who we built e-resi for'}. We would like to invite you to sell your developments faster on e-resi.\n\nEvery development gets its own branded website in seconds, with 3D and VR tours buyers can walk through from anywhere, live guided tours, chat and document sharing, and every interested buyer delivered to you as a lead with full details. Sell off-plan, before a single brick is laid.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
+  }
+  const lead = agentKind === 'INDIVIDUAL'
+    ? `As one of the leading property agents in the market${who ? `, ${who}` : ''}, you are exactly who we built e-resi for`
+    : `As one of the leading property agencies in the market${who ? `, ${who} is exactly who we built e-resi for` : ', you are exactly who we built e-resi for'}`;
+  return `${hi}\n\n${lead}. We would like to invite you to increase your sales and lettings on e-resi.\n\nThis is not another listing site. You get your own premium website in seconds, every property you sell or let ready to share with one link, and every person who opens it turned into a lead with their full details — plus developer partnerships and discovery across e-resi.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
 }
 
 function fmtDate(iso: string | null) {
@@ -68,8 +72,8 @@ function CreateInvite({ onCreated, lastReferrer }: { onCreated: (inv: PartnerInv
 
   // Keep the suggested note in step with the name until it is edited by hand.
   useEffect(() => {
-    if (!touchedMessage) setForm((f) => ({ ...f, message: suggestMessage(f.kind, f.name, f.contactName ?? '') }));
-  }, [form.kind, form.name, form.contactName, touchedMessage]);
+    if (!touchedMessage) setForm((f) => ({ ...f, message: suggestMessage(f.kind, f.name, f.contactName ?? '', f.agentKind) }));
+  }, [form.kind, form.agentKind, form.name, form.contactName, touchedMessage]);
 
   async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -188,7 +192,7 @@ function CreateInvite({ onCreated, lastReferrer }: { onCreated: (inv: PartnerInv
         <div className="flex flex-col">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-[13px] font-medium text-[#3c4043]" htmlFor="inv-message">Personal message</label>
-            <button type="button" onClick={() => { setTouchedMessage(false); set('message', suggestMessage(form.kind, form.name, form.contactName ?? '')); }}
+            <button type="button" onClick={() => { setTouchedMessage(false); set('message', suggestMessage(form.kind, form.name, form.contactName ?? '', form.agentKind)); }}
               className="text-[12.5px] font-medium text-[#1a73e8] hover:underline">Reset to suggested</button>
           </div>
           <textarea id="inv-message" className={cn(field, 'min-h-[260px] flex-1 resize-y leading-relaxed')} value={form.message}
