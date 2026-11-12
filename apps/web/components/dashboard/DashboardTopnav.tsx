@@ -99,9 +99,7 @@ export function DashboardTopnav() {
           logoUrl={profile?.logoUrl}
           isStaff={user?.isStaff}
           self={user?.isStaff ? { name: `${user.firstName} ${user.lastName}`.trim(), email: user.email, photo: user.avatarUrl } : undefined}
-          // Agents have no staff logins; their team lives on the website.
-          href={isAgent ? '/agent/website/content#team' : undefined}
-          withMembers={!isAgent}
+          href={isAgent ? '/agent/team' : undefined}
         />
       </div>
 

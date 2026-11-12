@@ -19,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         <div className="flex flex-1">
           <DashboardIconRail />
-          <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6">
+          <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-5 pb-24 sm:px-6 md:py-6">
             <StaffPageGuard>{children}</StaffPageGuard>
           </main>
         </div>

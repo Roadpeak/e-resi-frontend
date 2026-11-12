@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, Loader2, Mail, Plus, ShieldOff, UserRound,
@@ -16,7 +17,7 @@ const STATUS_STYLES: Record<StaffStatus, string> = {
   REVOKED: 'bg-[#fce8e6] text-[#c5221f]',
 };
 
-const PAGE_LABELS: Record<string, string> = {
+const DEVELOPER_PAGE_LABELS: Record<string, string> = {
   properties: 'Properties', units: 'Units', reservations: 'Reservations',
   rentals: 'Rentals', messages: 'Messages', partners: 'Agent Partners',
   deals: 'Agent Deals', mandates: 'Mandates', inquiries: 'Inquiries', leads: 'Leads',
@@ -25,6 +26,18 @@ const PAGE_LABELS: Record<string, string> = {
   team: 'Team',
 };
 
+/** The agent portal's pages (keys = /agent/<key>). */
+const AGENT_PAGE_LABELS: Record<string, string> = {
+  listings: 'My Listings', properties: 'Partner Listings', rentals: 'Rentals', partners: 'Partners',
+  deals: 'Deals', reservations: 'Reservations', leads: 'Leads', inquiries: 'Inquiries',
+  bookings: 'Viewings', clients: 'Client Rooms', mandates: 'Mandate Pool', lettings: 'Lettings',
+  messages: 'Messages', analytics: 'Analytics', reviews: 'Reviews', website: 'Website',
+  billing: 'Billing', profile: 'Agency Profile', team: 'Team',
+};
+
+// Same page, two portals: labels follow whichever one it is rendered in.
+let PAGE_LABELS: Record<string, string> = DEVELOPER_PAGE_LABELS;
+
 /**
  * The developer's team: who can operate the dashboard, which pages they can
  * open, how to bring someone new in — and what each person has actually
@@ -32,6 +45,8 @@ const PAGE_LABELS: Record<string, string> = {
  */
 export default function TeamPage() {
   const qc = useQueryClient();
+  const isAgent = usePathname().startsWith('/agent');
+  PAGE_LABELS = isAgent ? AGENT_PAGE_LABELS : DEVELOPER_PAGE_LABELS;
   const { data: staff, isLoading } = useQuery({ queryKey: ['staff'], queryFn: staffApi.list });
   const { data: pageData } = useQuery({ queryKey: ['staff', 'pages'], queryFn: staffApi.pages });
   const allPages = pageData?.pages ?? Object.keys(PAGE_LABELS);
@@ -48,7 +63,7 @@ export default function TeamPage() {
         <div>
           <h2 className="text-[26px] font-normal text-[#202124] sm:text-[28px]">Team</h2>
           <p className="mt-0.5 text-base text-[#5f6368]">
-            Invite staff to operate this dashboard — they see only the pages you tick.
+            Invite staff to operate this {isAgent ? 'portal' : 'dashboard'} — they see only the pages you tick.
           </p>
         </div>
         <button

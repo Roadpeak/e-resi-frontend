@@ -9,6 +9,8 @@ import { chatApi } from '../../lib/api/chat';
 import { supportApi } from '../../lib/api/support';
 import { partnershipsApi } from '../../lib/api/partnerships';
 import { MaterialIcon } from '../dashboard/MaterialIcon';
+import { MobileNav } from '../dashboard/MobileNav';
+import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn } from '../../lib/utils';
 
 const NAV = [
@@ -33,8 +35,8 @@ const NAV = [
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
   { label: 'Website', href: '/agent/website', icon: 'language' },
   { label: 'Site content', href: '/agent/website/content', icon: 'article' },
-  // The agency's people, shown on the website. Agents have no staff logins.
-  { label: 'Team', href: '/agent/website/content#team', icon: 'group' },
+  // The agency's staff logins, like a developer's team.
+  { label: 'Team', href: '/agent/team', icon: 'group' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
   { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
 ];
@@ -94,6 +96,15 @@ function RailItem({
  */
 export function AgentIconRail() {
   const pathname = usePathname();
+  const user = useAuthStore((st) => st.user);
+
+  // A staff member sees only what the agency ticked. Overview always shows.
+  const nav = user?.isStaff
+    ? NAV.filter((item) => {
+        const key = item.href.split('/')[2] ?? '';
+        return key === '' || (user.staffPages ?? []).includes(key);
+      })
+    : NAV;
 
   const { data: unread } = useQuery({
     queryKey: ['chat', 'unread'],
@@ -122,18 +133,22 @@ export function AgentIconRail() {
     return undefined;
   }
 
+  const badges = Object.fromEntries([...nav, ...BOTTOM].map((i) => [i.href, badgeFor(i.href)]));
+
   return (
-    <nav className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-2 border-r border-gray-100 py-3 sm:flex">
+    <>
+    <MobileNav items={nav} bottom={BOTTOM} badges={badges} home="/agent" />
+    <nav className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-2 border-r border-gray-100 py-3 md:flex">
       {/* Scrolls when the viewport is shorter than the rail, so the bottom
           links never fall off-screen. */}
       <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <RailItem
             key={item.href}
             {...item}
             // Exact match for the index, prefix for the rest, so /agent does
             // not stay lit while a sub-page is open.
-            active={item.href === '/agent' ? pathname === '/agent' : item.href.includes('#') ? false : pathname.startsWith(item.href)}
+            active={item.href === '/agent' ? pathname === '/agent' : pathname.startsWith(item.href)}
             badge={badgeFor(item.href)}
           />
         ))}
@@ -144,5 +159,6 @@ export function AgentIconRail() {
         ))}
       </div>
     </nav>
+    </>
   );
 }

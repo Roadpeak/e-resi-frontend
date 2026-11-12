@@ -104,7 +104,7 @@ export default function AgentOverview() {
 
       <AgentStatusBanner />
 
-      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
         <Stat icon={<Building2 size={18} />} label="Listings" value={ownListings + assigned}
           sub={`${ownListings} yours · ${assigned} assigned`} href="/agent/listings" />
         <Stat icon={<KeyRound size={18} />} label="Rentals" value={rentals?.total ?? 0}
@@ -348,13 +348,15 @@ function Stat({
   icon: React.ReactNode; label: string; value: number | string; href: string; sub?: string; accent?: boolean;
 }) {
   return (
-    <Link href={href} className="rounded-3xl border border-[#dadce0] bg-white p-5 transition-colors hover:bg-[#f8f9fa]">
-      <span className={cn('flex h-9 w-9 items-center justify-center rounded-full', accent ? 'bg-[#1a73e8] text-white' : 'bg-[#e8f0fe] text-[#1967d2]')}>
-        {icon}
-      </span>
-      <p className="mt-3 text-[24px] font-normal text-[#202124]">{value}</p>
-      <p className="text-[13px] text-[#5f6368]">{label}</p>
-      {sub && <p className="mt-0.5 text-[12px] text-[#80868b]">{sub}</p>}
+    <Link href={href} className="rounded-2xl border border-[#dadce0] bg-white p-3.5 transition-colors hover:bg-[#f8f9fa] sm:rounded-3xl sm:p-5">
+      <div className="flex items-center justify-between gap-2 sm:block">
+        <span className={cn('flex h-8 w-8 items-center justify-center rounded-full sm:h-9 sm:w-9', accent ? 'bg-[#1a73e8] text-white' : 'bg-[#e8f0fe] text-[#1967d2]')}>
+          {icon}
+        </span>
+        <p className="text-[22px] font-normal leading-none text-[#202124] sm:mt-3 sm:text-[24px]">{value}</p>
+      </div>
+      <p className="mt-2 text-[12.5px] text-[#5f6368] sm:mt-1 sm:text-[13px]">{label}</p>
+      {sub && <p className="mt-0.5 truncate text-[11.5px] text-[#80868b] sm:text-[12px]">{sub}</p>}
     </Link>
   );
 }

@@ -14,12 +14,14 @@ export function StaffPageGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const key = pathname.split('/')[2] ?? '';
+  // Works for /dashboard/* and /agent/*: the first segment is the portal.
+  const [, portal, key = ''] = pathname.split('/');
+  const home = `/${portal}`;
   const blocked = !!user?.isStaff && key !== '' && key !== 'support' && key !== 'my-profile' && !(user.staffPages ?? []).includes(key);
 
   useEffect(() => {
-    if (blocked) router.replace('/dashboard');
-  }, [blocked, router]);
+    if (blocked) router.replace(home);
+  }, [blocked, router, home]);
 
   if (blocked) return null;
   return <>{children}</>;

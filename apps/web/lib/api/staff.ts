@@ -43,7 +43,7 @@ export const staffApi = {
 
   /** Public: the accept-invite pages. */
   inviteDetails: (token: string) =>
-    apiClient.get<{ email: string; name?: string | null; pages: string[]; company: string; logoUrl?: string | null }>(
+    apiClient.get<{ email: string; name?: string | null; pages: string[]; kind?: 'DEVELOPER' | 'AGENT'; company: string; logoUrl?: string | null }>(
       `/staff/invite/${token}`,
     ),
   acceptInvite: (token: string, body: { password: string; firstName: string; lastName: string; avatarUrl: string }) =>

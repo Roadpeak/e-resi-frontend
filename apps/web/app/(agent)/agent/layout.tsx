@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DashboardTopnav } from '../../../components/dashboard/DashboardTopnav';
 import { AgentIconRail } from '../../../components/agent/AgentIconRail';
 import { RequireAuth } from '../../../components/auth/RequireAuth';
+import { StaffPageGuard } from '../../../components/dashboard/StaffPageGuard';
 
 export const metadata: Metadata = {
   title: { default: 'Agent', template: '%s — e-resi Agent' },
@@ -18,8 +19,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
         </div>
         <div className="flex flex-1">
           <AgentIconRail />
-          <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 sm:px-6">
-            {children}
+          <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-5 pb-24 sm:px-6 md:py-6">
+            <StaffPageGuard>{children}</StaffPageGuard>
           </main>
         </div>
       </div>

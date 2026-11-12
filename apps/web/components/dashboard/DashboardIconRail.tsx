@@ -11,6 +11,7 @@ import { supportApi } from '../../lib/api/support';
 import { useDeveloperInquiries } from '../../lib/api/queries';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { MaterialIcon } from './MaterialIcon';
+import { MobileNav } from './MobileNav';
 
 const NAV = [
   { label: 'Overview', href: '/dashboard', icon: 'dashboard' },
@@ -130,7 +131,15 @@ export function DashboardIconRail() {
     return () => window.removeEventListener('resize', checkOverflow);
   }, [checkOverflow, nav.length]);
 
+  const badges = {
+    '/dashboard/inquiries': newInquiries?.total ?? 0,
+    '/dashboard/messages': chatUnread?.count ?? 0,
+    '/dashboard/support': supportUnread?.count ?? 0,
+  };
+
   return (
+    <>
+    <MobileNav items={nav} bottom={bottom} badges={badges} home="/dashboard" />
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-1.5 border-r border-[#f1f3f4] py-2 md:flex">
       {/* The page list scrolls when the viewport is shorter than the rail,
           so Settings and Visit Site below never fall off-screen. */}
@@ -179,5 +188,6 @@ export function DashboardIconRail() {
         ))}
       </nav>
     </aside>
+    </>
   );
 }
