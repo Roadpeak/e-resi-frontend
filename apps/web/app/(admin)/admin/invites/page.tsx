@@ -38,15 +38,12 @@ const STATE_STYLE: Record<InviteState, string> = {
 const STATE_LABEL: Record<InviteState, string> = { pending: 'Not opened', opened: 'Opened', signed_up: 'Signed up', revoked: 'Revoked' };
 
 function suggestMessage(kind: InviteKind, name: string, contact: string, agentKind: 'COMPANY' | 'INDIVIDUAL' = 'COMPANY') {
-  const who = name.trim();
   const hi = contact.trim() ? `Hi ${contact.trim().split(' ')[0]},` : 'Hello,';
   if (kind === 'DEVELOPER') {
-    return `${hi}\n\nAs one of the leading property developers in the market${who ? `, ${who} is exactly who we built e-resi for` : ', you are exactly who we built e-resi for'}. We would like to invite you to sell your developments faster on e-resi.\n\nEvery development gets its own branded website in seconds, with 3D and VR tours buyers can walk through from anywhere, live guided tours, chat and document sharing, and every interested buyer delivered to you as a lead with full details. Sell off-plan, before a single brick is laid.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
+    return `${hi}\n\nAs one of the leading property developers in the market, we would like to invite you to sell your developments faster on e-resi.\n\nEvery development gets its own branded website in seconds, with 3D and VR tours buyers can walk through from anywhere, live guided tours, chat and document sharing, and every interested buyer delivered to you as a lead with full details. Sell off-plan, before a single brick is laid.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
   }
-  const lead = agentKind === 'INDIVIDUAL'
-    ? `As one of the leading property agents in the market${who ? `, ${who}` : ''}, you are exactly who we built e-resi for`
-    : `As one of the leading property agencies in the market${who ? `, ${who} is exactly who we built e-resi for` : ', you are exactly who we built e-resi for'}`;
-  return `${hi}\n\n${lead}. We would like to invite you to increase your sales and lettings on e-resi.\n\nThis is not another listing site. You get your own premium website in seconds, every property you sell or let ready to share with one link, and every person who opens it turned into a lead with their full details — plus developer partnerships and discovery across e-resi.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
+  const who = agentKind === 'INDIVIDUAL' ? 'property agents' : 'property agencies';
+  return `${hi}\n\nAs one of the leading ${who} in the market, we would like to invite you to increase your sales and lettings on e-resi.\n\nThis is not another listing site. You get your own premium website in seconds, every property you sell or let ready to share with one link, and every person who opens it turned into a lead with their full details — plus developer partnerships and discovery across e-resi.\n\nNo commissions. 100% free to start. Your account is already approved — just complete the signup below.`;
 }
 
 function fmtDate(iso: string | null) {
