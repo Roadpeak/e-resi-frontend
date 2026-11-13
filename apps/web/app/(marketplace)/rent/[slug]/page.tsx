@@ -16,6 +16,7 @@ import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listing
 import { floorPlansApi } from '../../../../lib/api/floor-plans';
 import { ChatWithDeveloper } from '../../../../components/chat/ChatWithDeveloper';
 import { RentEnquiryModal } from '../../../../components/rent/RentEnquiryModal';
+import { PhoneGate, revealedContact } from '../../../../components/agents/PhoneGate';
 import { formatPrice, cn } from '../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../lib/api/client';
 import { useAuthStore } from '../../../../lib/stores/auth.store';
@@ -108,6 +109,9 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   const [plan, setPlan] = useState(0);
   const [copied, setCopied] = useState(false);
   const [mapShown, setMapShown] = useState(false);
+  // An agent's number is behind the contact gate until the visitor leaves theirs.
+  const [gate, setGate] = useState(false);
+  const [agentRevealed, setAgentRevealed] = useState(false);
   const { has, toggle } = useSavedRentals();
 
   const { data: floorPlans = [] } = useQuery({
@@ -166,6 +170,9 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   const lat = r?.latitude ?? property.latitude;
   const lng = r?.longitude ?? property.longitude;
   const agent = r?.managerKind === 'AGENT' ? r?.managingAgent : null;
+  const agentId: string | null = agent?.id ?? null;
+  useEffect(() => { if (agentId) setAgentRevealed(!!revealedContact(agentId)); }, [agentId]);
+  const gated = !!agentId && !agentRevealed;
   // Links to the public profile, never a dashboard.
   const contact = agent
     ? { name: agent.displayName, role: 'Letting agent', image: agent.photoUrl || agent.logoUrl, href: `/agents/${agent.id}` }
@@ -521,22 +528,33 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
                 <button onClick={() => setModal('ENQUIRY')} className="flex-1 rounded-full border border-[#e3e3e3] bg-white py-3 text-[14.5px] font-medium text-[#18181b] hover:bg-[#f2f2f2]">Send enquiry</button>
                 <ChatWithDeveloper rentListingSlug={listing.slug} variant="icon" label={agent ? 'Chat with agent' : 'Chat'} />
               </div>
-              {waHref && (
-                <a href={waHref} target="_blank" rel="noopener noreferrer"
-                  onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25d366] py-3 text-[14.5px] font-medium text-white hover:bg-[#1ebe5b]">
-                  <WhatsAppIcon /> WhatsApp {agent ? 'the agent' : 'the developer'}
-                </a>
-              )}
-              {phoneRaw && (
-                <a href={`tel:${phoneRaw.replace(/\s/g, '')}`}
-                  onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'phone' } })}
-                  className="flex w-full items-center justify-center gap-2 py-1.5 text-[14px] font-medium text-[#18181b] hover:underline">
-                  <Phone size={15} /> {phoneRaw}
-                </a>
-              )}
+              {gated ? (
+                <button type="button" onClick={() => { track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'reveal' } }); setGate(true); }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#18181b] py-3 text-[14.5px] font-medium text-white hover:bg-black">
+                  <Phone size={15} /> Show phone &amp; WhatsApp
+                </button>
+              ) : (<>
+                {waHref && (
+                  <a href={waHref} target="_blank" rel="noopener noreferrer"
+                    onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'whatsapp' } })}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25d366] py-3 text-[14.5px] font-medium text-white hover:bg-[#1ebe5b]">
+                    <WhatsAppIcon /> WhatsApp {agent ? 'the agent' : 'the developer'}
+                  </a>
+                )}
+                {phoneRaw && (
+                  <a href={`tel:${phoneRaw.replace(/\s/g, '')}`}
+                    onClick={() => track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'phone' } })}
+                    className="flex w-full items-center justify-center gap-2 py-1.5 text-[14px] font-medium text-[#18181b] hover:underline">
+                    <Phone size={15} /> {phoneRaw}
+                  </a>
+                )}
+              </>)}
             </div>
           </div>
+          {agentId && (
+            <PhoneGate open={gate} onClose={() => setGate(false)} agentId={agentId} agentName={agent?.displayName}
+              context={{ rentListingId: listing.id, label: listing.name }} onRevealed={() => setAgentRevealed(true)} />
+          )}
 
           {property.slug && (
             <Link href={`/${property.slug}`} className="flex items-center gap-3 rounded-[20px] border border-[#ececec] bg-[#fafafa] p-3 hover:bg-[#f4f4f4]">

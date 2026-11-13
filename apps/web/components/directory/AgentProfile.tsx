@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, BadgeCheck, Box, Building2, ChevronRight, Clapperboard, Headset,
-  Home, Loader2, MapPin, User,
+  Home, Loader2, MapPin, Phone, User,
 } from 'lucide-react';
 import { apiClient } from '../../lib/api/client';
 import {
   agentsApi, SPECIALTY_LABELS,
-  type Agent, type AgentProperty, type AgentRentListing,
+  type Agent, type AgentProperty, type AgentRentListing, type RevealedContact,
 } from '../../lib/api/agents';
+import { PhoneGate, revealedContact } from '../agents/PhoneGate';
 import { formatPrice } from '../../lib/utils';
 import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimitives';
 import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
@@ -265,16 +266,7 @@ function AgentHeader({
             agentId={agent.id}
             className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-[15px] font-semibold text-[#111112] transition-colors hover:bg-white/85 disabled:opacity-50"
           />
-          {agent.whatsapp && (
-            <a
-              href={waLink(agent.whatsapp)}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              <WhatsAppIcon size={16} /> WhatsApp
-            </a>
-          )}
+          {(agent.whatsapp || agent.phone) && <GatedContact agent={agent} />}
         </div>
       </div>
 
@@ -453,5 +445,33 @@ function AgentRentUnits({ agent, rentals }: { agent: Agent; rentals: AgentRentLi
         ))}
       </div>
     </section>
+  );
+}
+
+
+/**
+ * Call / WhatsApp on the profile header. The number itself is behind the
+ * contact gate: a visitor leaves their own first and the agent gets a lead.
+ */
+function GatedContact({ agent }: { agent: Agent }) {
+  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState<RevealedContact | null>(null);
+  useEffect(() => { setShown(revealedContact(agent.id)); }, [agent.id]);
+  const btn = 'inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-white/10';
+  if (shown) {
+    return (
+      <>
+        {shown.phone && <a href={`tel:${shown.phone.replace(/\s/g, '')}`} className={btn}><Phone size={16} /> {shown.phone}</a>}
+        {shown.whatsapp && (
+          <a href={waLink(shown.whatsapp)} target="_blank" rel="noreferrer noopener" className={btn}><WhatsAppIcon size={16} /> WhatsApp</a>
+        )}
+      </>
+    );
+  }
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={`${btn} cursor-pointer`}><Phone size={16} /> Show number</button>
+      <PhoneGate open={open} onClose={() => setOpen(false)} agentId={agent.id} agentName={agent.displayName} onRevealed={setShown} />
+    </>
   );
 }

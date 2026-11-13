@@ -341,7 +341,7 @@ export interface RentListing {
   /** Owner's list only: visits and leads. */
   stats?: { views: number; views30d: number; leads: number };
   /** Public contact of whoever runs the letting, for call / WhatsApp buttons. */
-  contact?: { phone?: string | null; whatsapp?: string | null };
+  contact?: { phone?: string | null; whatsapp?: string | null; agentId?: string | null };
 }
 
 // ── Rent Filters ──────────────────────────────

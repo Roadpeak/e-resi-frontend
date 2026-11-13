@@ -38,7 +38,7 @@ export interface BackendRentListingItem {
   property?: { id: string; slug: string; name: string; heroImageUrl?: string | null } | null;
   media?: Array<{ id?: string; url: string; title?: string | null; type?: string }>;
   managerKind?: string;
-  managingAgent?: { phone?: string | null; whatsapp?: string | null } | null;
+  managingAgent?: { id?: string; phone?: string | null; whatsapp?: string | null } | null;
   developer?: { companyName?: string; phone?: string | null; whatsapp?: string | null } | null;
   rentUnits: Array<{
     id?: string;
@@ -75,7 +75,12 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
   // Whoever runs the letting answers the phone: the managing agent, else the developer.
   const runner = b.managerKind === 'AGENT' && b.managingAgent ? b.managingAgent : b.developer;
   return {
-    contact: { phone: runner?.phone ?? null, whatsapp: runner?.whatsapp ?? null },
+    contact: {
+      phone: runner?.phone ?? null,
+      whatsapp: runner?.whatsapp ?? null,
+      // Set when an agent runs the letting: their number is behind the contact gate.
+      agentId: b.managerKind === 'AGENT' ? b.managingAgent?.id ?? null : null,
+    },
     id: b.id,
     slug: b.slug,
     propertyId: b.property?.id ?? '',

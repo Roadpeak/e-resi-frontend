@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Bath, BedDouble, Box, ChevronLeft, ChevronRight, Heart, MapPin, Phone, Star } from 'lucide-react';
 import { track } from '../../lib/analytics/track';
+import { PhoneGate, revealedContact } from '../agents/PhoneGate';
 import { cn } from '../../lib/utils';
 import type { RentListing } from '../../lib/types';
 import { useSavedRentals } from './RentShell';
@@ -61,10 +62,14 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
 
   // The card is one link, so contact actions are buttons that open the
   // channel themselves rather than nested anchors.
+  const [gate, setGate] = useState(false);
+  const agentId = listing.contact?.agentId ?? null;
   function contact(e: React.MouseEvent, channel: 'phone' | 'whatsapp') {
     e.preventDefault();
     e.stopPropagation();
     track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel } });
+    // An agent's number is shown only to someone who has left theirs.
+    if (agentId && !revealedContact(agentId)) { setGate(true); return; }
     if (channel === 'whatsapp' && waHref) window.open(waHref, '_blank', 'noopener,noreferrer');
     if (channel === 'phone' && phone) window.location.href = `tel:${phone}`;
   }
@@ -137,6 +142,10 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
             {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
             {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}
           </p>
+          {agentId && (
+            <PhoneGate open={gate} onClose={() => setGate(false)} agentId={agentId}
+              context={{ rentListingId: listing.id, label: listing.name }} />
+          )}
           {(waHref || phone) && (
             <span className="flex shrink-0 items-center gap-1.5">
               {phone && (

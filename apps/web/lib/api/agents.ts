@@ -218,7 +218,13 @@ export interface AgentRentListing {
   }[];
 }
 
+export interface RevealedContact { phone: string | null; whatsapp: string | null }
+
 export const agentsApi = {
+  /** Leave a name and number to see the agent's; the agent receives it as a lead. */
+  revealContact: (agentId: string, body: { name: string; phone: string; email?: string; rentListingId?: string; propertySlug?: string }) =>
+    apiClient.post<RevealedContact>(`/agents/${agentId}/reveal-contact`, body),
+
   /** Properties this agent is actively assigned to (sale and rent). Public. */
   properties: (id: string) => apiClient.get<AgentProperty[]>(`/agents/${id}/properties`),
 
