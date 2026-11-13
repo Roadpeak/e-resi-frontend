@@ -91,7 +91,8 @@ export function InviteWelcome({ code }: { code: string }) {
   }
 
   const isAgent = inv.kind === 'AGENT';
-  const first = inv.contactName?.trim().split(' ')[0];
+  const contact = inv.contactName?.trim();
+  const first = contact && contact.toLowerCase() !== inv.name.trim().toLowerCase() ? contact.split(' ')[0] : undefined;
 
   return (
     <Shell>
@@ -110,9 +111,9 @@ export function InviteWelcome({ code }: { code: string }) {
               <div className="mt-4 flex items-center gap-5">
                 <Avatar inv={inv} />
                 <div className="min-w-0">
-                  <h1 className="text-[28px] font-normal leading-tight sm:text-[34px]">{first ? `Hi ${first}, ` : ''}this one is for {inv.name}</h1>
+                  <h1 className="text-[28px] font-normal leading-tight sm:text-[34px]">{inv.name}, you&apos;re invited to e-resi</h1>
                   <p className="mt-1 text-[15px] text-[#5f6368]">
-                    {isAgent ? 'Prepared for your agency by the e-resi team' : 'Prepared for your company by the e-resi team'} · shared by {inv.referrer}
+                    {first ? `Hi ${first}, this is an exclusive invitation from the e-resi team.` : 'An exclusive invitation from the e-resi team.'}
                   </p>
                 </div>
               </div>
