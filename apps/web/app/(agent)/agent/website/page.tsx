@@ -8,7 +8,7 @@ import { billingApi } from '../../../../lib/api/billing';
 import { ApiError } from '../../../../lib/api/client';
 import { ImageUpload } from '../../../../components/dashboard/ImageUpload';
 import { SECTION_LABELS, type SiteSection } from '../../../../components/agent-site/types';
-import { TemplateThumb } from '../../../../components/agent/TemplateThumb';
+import { TemplateLivePreview } from '../../../../components/agent/TemplateLivePreview';
 import { cn } from '../../../../lib/utils';
 
 const card = 'rounded-3xl border border-[#dadce0] bg-white p-6';
@@ -84,7 +84,7 @@ function Templates({ onPreview }: { onPreview: (key: string) => void }) {
             const isCurrent = data.current === t.key;
             return (
               <div key={t.key} className={cn('rounded-3xl border p-3', isCurrent ? 'border-[#1a73e8] ring-1 ring-[#1a73e8]' : 'border-[#e8eaed]')}>
-                <TemplateThumb k={t.key} />
+                <TemplateLivePreview k={t.key} />
                 <div className="mt-3 flex items-start justify-between gap-2 px-1">
                   <div className="min-w-0">
                     <p className="text-[16px] font-medium text-[#202124]">{t.name}</p>

@@ -9,7 +9,7 @@ import { ArrowUpRight, Check, Lock, X } from 'lucide-react';
 import { agentSiteApi, type AgentTemplatesState } from '../../lib/api/agent-site';
 import { ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
-import { TemplateThumb } from './TemplateThumb';
+import { TemplateLivePreview } from './TemplateLivePreview';
 
 /**
  * First-visit prompt for an invited agent: their website is live, now pick
@@ -68,13 +68,13 @@ export function WelcomeTemplateModal() {
               {!data ? (
                 <p className="text-[14px] text-[#5f6368]">Loading templates…</p>
               ) : (
-                <ul className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {templates.map((t) => {
                     const usable = t.free || t.unlocked;
                     const active = current === t.key;
                     return (
                       <li key={t.key} className={cn('rounded-2xl border p-2.5 transition-colors', active ? 'border-[#1a73e8] bg-[#e8f0fe]/40' : 'border-[#e8eaed]')}>
-                        <TemplateThumb k={t.key} />
+                        <TemplateLivePreview k={t.key} />
                         <div className="mt-2.5 flex items-start justify-between gap-2 px-0.5">
                           <div className="min-w-0">
                             <p className="truncate text-[14px] font-medium text-[#202124]">{t.name}</p>
