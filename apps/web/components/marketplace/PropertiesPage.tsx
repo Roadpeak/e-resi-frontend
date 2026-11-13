@@ -241,6 +241,7 @@ export function PropertiesPage({
             side carries the neighbourhood rail instead of empty gutters. */}
         <div className="mt-8 flex items-start gap-8 lg:mt-10">
           <section className="min-w-0 max-w-5xl flex-1">
+            <NeighbourhoodsRail variant="strip" />
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 {/* Same gold kicker as the neighbourhood rail — the two
