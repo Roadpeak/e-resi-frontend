@@ -12,6 +12,7 @@ import { leadsApi, type LeadRow } from '../../../lib/api/leads';
 import { agentContentApi, agentSiteApi } from '../../../lib/api/agent-site';
 import { AgentStatusBanner } from '../../../components/agent/AgentStatusBanner';
 import { WelcomeTemplateModal } from '../../../components/agent/WelcomeTemplateModal';
+import { WhatsAppPrompt } from '../../../components/agent/WhatsAppPrompt';
 import { cn, formatPrice } from '../../../lib/utils';
 import { useMyRentListings } from '../../../lib/api/queries';
 
@@ -90,6 +91,7 @@ export default function AgentOverview() {
   return (
     <div className="space-y-6">
       <WelcomeTemplateModal />
+      <WhatsAppPrompt me={me} />
       <section className="dash-hero relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-300 px-4 py-5 sm:rounded-3xl sm:px-10 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
         <div>
