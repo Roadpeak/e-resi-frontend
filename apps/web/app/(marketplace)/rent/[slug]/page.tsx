@@ -530,7 +530,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               </div>
               {gated ? (
                 <button type="button" onClick={() => { track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel: 'reveal' } }); setGate(true); }}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#18181b] py-3 text-[14.5px] font-medium text-white hover:bg-black">
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#f9ab00] py-3 text-[14.5px] font-medium text-[#18181b] hover:bg-[#e89f00]">
                   <Phone size={15} /> Show phone &amp; WhatsApp
                 </button>
               ) : (<>

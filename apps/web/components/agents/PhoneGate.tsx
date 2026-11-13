@@ -130,10 +130,7 @@ export function PhoneGate({
           <p className="mt-5 flex items-center gap-2 text-[14px] text-[#5f6368]"><Loader2 size={15} className="animate-spin" /> Getting the number…</p>
         ) : (
           <>
-            <h2 id="phone-gate-title" className="mt-4 text-[20px] font-normal text-[#202124]">Leave your number to see {who}&apos;s</h2>
-            <p className="mt-1.5 text-[14px] leading-relaxed text-[#5f6368]">
-              Agents share their number with people they can call back. Yours goes straight to {who} as an enquiry.
-            </p>
+            <h2 id="phone-gate-title" className="mt-4 text-[20px] font-normal text-[#202124]">Verify your phone number to see agent contact</h2>
             <form onSubmit={submit} className="mt-5 space-y-3">
               <div>
                 <label htmlFor="gate-name" className="mb-1.5 block text-[13px] font-medium text-[#5f6368]">Your name</label>
