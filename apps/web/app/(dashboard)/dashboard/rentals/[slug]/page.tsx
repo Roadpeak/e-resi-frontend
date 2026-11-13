@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, BedDouble, Eye, EyeOff, ImagePlus, Loader2, Trash2, Check, X,
+  ArrowLeft, BedDouble, Eye, EyeOff, ImagePlus, Loader2, Pencil, Trash2, Check, X,
 } from 'lucide-react';
 import { rentListingsApi } from '../../../../../lib/api/rent-listings';
 import { ApiError } from '../../../../../lib/api/client';
@@ -147,6 +147,25 @@ export default function EditRentalPage() {
     mutationFn: (mediaId: string) => rentListingsApi.removePhoto(mediaId),
     onSuccess: () => { invalidate(); },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not remove photo'),
+  });
+
+  // One unit type open for editing at a time: rent, available and total.
+  const [editingUnit, setEditingUnit] = useState<string | null>(null);
+  const [unitForm, setUnitForm] = useState({ pricePerMonth: '', available: '', total: '' });
+  const saveUnit = useMutation({
+    mutationFn: (unitId: string) => rentListingsApi.updateUnit(listing!.id, unitId, {
+      pricePerMonth: unitForm.pricePerMonth ? Number(unitForm.pricePerMonth) : undefined,
+      available: unitForm.available !== '' ? Number(unitForm.available) : undefined,
+      total: unitForm.total !== '' ? Number(unitForm.total) : undefined,
+    }),
+    onSuccess: () => {
+      invalidate();
+      setEditingUnit(null);
+      setError('');
+      setToast('Unit type updated');
+      setTimeout(() => setToast(''), 4000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not update unit'),
   });
 
   const removeUnit = useMutation({
@@ -409,6 +428,22 @@ export default function EditRentalPage() {
                         type="button"
                         onClick={() => {
                           setError('');
+                          if (editingUnit === u.id) { setEditingUnit(null); return; }
+                          setEditingUnit(u.id!);
+                          setUnitForm({ pricePerMonth: String(u.pricePerMonth ?? ''), available: String(u.available ?? 0), total: String(u.total ?? 1) });
+                        }}
+                        title={`Edit ${u.label}`}
+                        aria-expanded={editingUnit === u.id}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f6368] transition-colors hover:bg-[#f1f3f4] hover:text-[#202124] cursor-pointer"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                    {u.id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError('');
                           removeUnit.mutate(u.id!);
                         }}
                         disabled={removeUnit.isPending}
@@ -418,14 +453,43 @@ export default function EditRentalPage() {
                         <Trash2 size={14} />
                       </button>
                     )}
+                    {u.id && editingUnit === u.id && (
+                      <div className="mt-1 grid w-full gap-3 rounded-2xl bg-[#f8f9fa] p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                        <div>
+                          <label className={labelCls}>Monthly rent ({u.currency ?? listing.currency})</label>
+                          <input value={unitForm.pricePerMonth} inputMode="numeric"
+                            onChange={(e) => setUnitForm((f) => ({ ...f, pricePerMonth: e.target.value.replace(/[^\d.]/g, '') }))} className={inputCls} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Available now</label>
+                          <input value={unitForm.available} inputMode="numeric"
+                            onChange={(e) => setUnitForm((f) => ({ ...f, available: e.target.value.replace(/\D/g, '') }))} className={inputCls} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Total units</label>
+                          <input value={unitForm.total} inputMode="numeric"
+                            onChange={(e) => setUnitForm((f) => ({ ...f, total: e.target.value.replace(/\D/g, '') }))} className={inputCls} />
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => saveUnit.mutate(u.id!)} disabled={saveUnit.isPending}
+                            className="inline-flex h-[42px] items-center gap-1.5 rounded-full bg-[#1a73e8] px-4 text-[14px] font-medium text-white hover:bg-[#1765cc] disabled:opacity-50">
+                            {saveUnit.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Save
+                          </button>
+                          <button type="button" onClick={() => setEditingUnit(null)}
+                            className="inline-flex h-[42px] items-center rounded-full border border-[#dadce0] bg-white px-4 text-[14px] font-medium text-[#5f6368] hover:bg-[#f1f3f4]">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
             )}
 
             <p className="mt-4 border-t border-[#f1f3f4] pt-3 text-[12px] text-[#5f6368]">
-              Rent and availability per unit type are set when the type is added. To change
-              them, remove the type and add it again from the development.
+              Use the pencil to change a unit type&apos;s rent or how many are available. Set
+              available to 0 when the last one is let.
             </p>
           </section>
         </div>

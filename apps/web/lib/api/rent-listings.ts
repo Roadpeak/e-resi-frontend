@@ -203,6 +203,12 @@ export const rentListingsApi = {
   setStatus: (id: string, status: string) =>
     apiClient.patch<BackendRentListingItem>(`/rent-listings/${id}/status`, { status }),
 
+  updateUnit: (
+    listingId: string,
+    unitId: string,
+    body: Partial<{ pricePerMonth: number; available: number; total: number; label: string; bedrooms: number; bathrooms: number; sqm: number }>,
+  ) => apiClient.patch<unknown>(`/rent-listings/${listingId}/units/${unitId}`, body),
+
   removeUnit: (listingId: string, unitId: string) =>
     apiClient.delete<unknown>(`/rent-listings/${listingId}/units/${unitId}`),
 
