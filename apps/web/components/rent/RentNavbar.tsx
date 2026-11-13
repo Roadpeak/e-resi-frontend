@@ -5,7 +5,7 @@ import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, User } from 'lucide-react';
+import { Building2, LogOut, User } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
@@ -60,6 +60,17 @@ export function RentNavbar() {
         {/* Brand */}
         <Link href="/" className="shrink-0" aria-label="e-resi home">
           <Logo markSize={28} textClassName="text-gray-900 text-[1.3rem]" />
+        </Link>
+
+        {/* Back to homes for sale — right after the logo so it is reachable
+            on phones, where the pill's scope switch is hidden. */}
+        <Link
+          href="/properties"
+          className="-ml-1 flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 text-[13.5px] font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          <Building2 size={15} className="text-gray-500" />
+          <span className="hidden sm:inline">For sale</span>
+          <span className="sm:hidden">Buy</span>
         </Link>
 
         {/* Search — the heart of the rent nav, pill-first like the buy bar. */}
