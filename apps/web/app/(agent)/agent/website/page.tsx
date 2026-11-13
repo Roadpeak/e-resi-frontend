@@ -298,6 +298,22 @@ export default function AgentWebsitePage() {
     setHero(data.heroUrl ?? '');
   }, [data]);
 
+  // The sections only exist once the settings load, so the browser's own
+  // #hash jump has nothing to land on. Scroll after the first render instead
+  // (the overview's "Connect your domain" links to #domain).
+  useEffect(() => {
+    if (!data) return;
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [data]);
+
   const done = (msg: string) => (next: AgentSiteSettings) => {
     qc.setQueryData(['agent-site'], next);
     setError(''); setToast(msg); setTimeout(() => setToast(''), 5000);
