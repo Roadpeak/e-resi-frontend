@@ -132,7 +132,7 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
         </p>
         <div className="mt-1.5 flex items-center justify-between gap-3">
           <p className="flex min-w-0 items-center gap-2 text-[16px] text-[#52525b]">
-            <MapPin size={14} className="shrink-0 text-[#9aa0a6]" />
+            <MapPin size={14} className="shrink-0 text-[#f9ab00]" />
             <span className="truncate">{listing.address.neighborhood || listing.address.city}</span>
             {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
             {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}

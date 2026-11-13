@@ -9,6 +9,7 @@ import { Logo } from '../brand/Logo';
 import { UserAvatar } from '../account/UserAvatar';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { homePathFor, homeLabelFor } from '../../lib/auth/role-home';
+import { NotificationBell } from '../notifications/NotificationBell';
 
 /**
  * The rent marketplace's app frame: a quiet grey ground, a sidebar of pill
@@ -36,9 +37,18 @@ export function RentShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f2f2f2] font-google text-[#18181b]">
       {/* ── Phone top bar ── */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-[#f2f2f2] px-4 lg:hidden">
-        <Link href="/" aria-label="e-resi home"><Logo markSize={26} /></Link>
-        <Account isAuthenticated={isAuthenticated} user={user} />
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 bg-[#f2f2f2] px-4 lg:hidden">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link href="/" aria-label="e-resi home" className="shrink-0"><Logo markSize={26} /></Link>
+          {/* Back to homes for sale — the sidebar's "Buy off-plan" link has no room on a phone. */}
+          <Link href="/properties" className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 text-[13px] font-medium text-[#18181b] hover:bg-white/80">
+            <Building size={14} className="text-[#9aa0a6]" /> For sale
+          </Link>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <NotificationBell size={34} />
+          <Account isAuthenticated={isAuthenticated} user={user} />
+        </div>
       </header>
 
       <div className="flex gap-0 lg:gap-5 lg:p-4">
@@ -65,9 +75,12 @@ export function RentShell({ children }: { children: React.ReactNode }) {
               <Building size={16} className="text-[#9aa0a6]" /> Buy off-plan
             </Link>
             {isAuthenticated && user ? (
-              <Link href={homePathFor(user.role)} className="flex items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#52525b] hover:bg-white/60 hover:text-[#18181b]">
-                <UserAvatar user={user} size={22} /> {homeLabelFor(user.role)}
-              </Link>
+              <div className="flex items-center justify-between gap-2 pr-1">
+                <Link href={homePathFor(user.role)} className="flex min-w-0 flex-1 items-center gap-3 rounded-full px-3 py-2 text-[14px] text-[#52525b] hover:bg-white/60 hover:text-[#18181b]">
+                  <UserAvatar user={user} size={22} /> <span className="truncate">{homeLabelFor(user.role)}</span>
+                </Link>
+                <NotificationBell size={34} />
+              </div>
             ) : (
               <Link href="/login?redirect=/rent" className="flex items-center justify-center rounded-full bg-[#18181b] px-4 py-2.5 text-[14px] font-medium text-white hover:bg-black">
                 Sign in
