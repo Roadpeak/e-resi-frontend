@@ -90,19 +90,21 @@ export default function AgentOverview() {
   return (
     <div className="space-y-6">
       <WelcomeTemplateModal />
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <section className="dash-hero relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-300 px-4 py-5 sm:rounded-3xl sm:px-10 sm:py-10">
+      <div className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
         <div>
-          <h1 className="text-[26px] font-normal text-[#202124]">{me ? me.displayName : 'Your agency'}</h1>
-          <p className="text-[14px] text-[#5f6368]">Your listings, website, leads and partners in one place.</p>
+          <h1 className="text-[24px] font-medium leading-tight text-[#202124] sm:text-[2.5rem]">{me ? me.displayName : 'Your agency'}</h1>
+          <p className="mt-1 text-[14px] text-[#3c4043] sm:mt-3 sm:text-base">Your listings, website, leads and partners in one place.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/agent/listings/new" className="rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Add a listing</Link>
-          <Link href="/agent/rentals/new" className="rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">List a rental</Link>
+          <Link href="/agent/listings/new" className="rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Add a listing</Link>
+          <Link href="/agent/rentals/new" className="rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">List a rental</Link>
           <Link href="/agent/leads" className="rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">Open leads</Link>
-          <a href="/properties" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><Building2 size={15} className="text-[#5f6368]" />Properties for sale</a>
-          <a href="/rent" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><KeyRound size={15} className="text-[#5f6368]" />Properties for rent</a>
+          <a href="/properties" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><Building2 size={15} className="text-[#5f6368]" />Properties for sale</a>
+          <a href="/rent" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><KeyRound size={15} className="text-[#5f6368]" />Properties for rent</a>
         </div>
       </div>
+      </section>
 
       <AgentStatusBanner />
 
