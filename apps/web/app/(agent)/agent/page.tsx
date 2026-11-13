@@ -133,6 +133,9 @@ export default function AgentOverview() {
                 ) : (
                   <p className="text-[14px] text-[#5f6368]">{site ? 'Not live yet' : 'Loading…'}</p>
                 )}
+                {site?.url && !site.customDomain && (
+                  <p className="mt-0.5 text-[12.5px] text-[#5f6368]">On your free e-resi address. Add your own domain, like www.youragency.co.ke.</p>
+                )}
               </div>
             </div>
             {site?.url && <span className="shrink-0 rounded-full bg-[#e6f4ea] px-3 py-1 text-[12.5px] font-medium text-[#188038]">Live</span>}
@@ -165,6 +168,9 @@ export default function AgentOverview() {
             </Link>
             <Link href="/agent/website/content" className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Site content</Link>
             <a href="/site/agent-preview" target="_blank" rel="noreferrer" className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Preview</a>
+            {site?.url && !site.customDomain && (
+              <Link href="/agent/website#domain" className="rounded-full border border-[#dadce0] px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Connect your domain</Link>
+            )}
           </div>
         </section>
 

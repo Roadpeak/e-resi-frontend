@@ -375,7 +375,7 @@ export default function AgentWebsitePage() {
       </section>
 
       {/* Custom domain */}
-      <section className={card}>
+      <section id="domain" className={cn(card, 'scroll-mt-24')}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[18px] font-normal text-[#202124]">Your own domain</h2>
           {d.status === 'ACTIVE' && <Status tone="green">Live</Status>}
