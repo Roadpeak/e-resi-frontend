@@ -55,19 +55,13 @@ export function RentEnquiryModal({
     e.preventDefault();
     setError('');
 
-    if (isViewing && !propertySlug) {
-      // Bookings are keyed to a development; without one there is nothing to
-      // book against, so say so rather than failing with a 400.
-      setError('This rental is not linked to a development yet, so viewings cannot be booked. Send an enquiry instead.');
-      return;
-    }
-
     setBusy(true);
     try {
       if (isViewing) {
         await apiClient.post('/bookings', {
           ...referralPayload(),
-          propertySlug,
+          // A standalone rental has no development; the booking is keyed to the rental alone.
+          ...(propertySlug && { propertySlug }),
           // Routes the request to whoever runs this rental.
           rentListingId: listingId,
           name: form.name.trim(),

@@ -6,12 +6,13 @@ import { usePathname } from 'next/navigation';
 import { partnershipsApi } from '../../../../../lib/api/partnerships';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, DoorOpen, Loader2,
+  ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, DoorOpen, Home, Loader2,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { cn, formatPrice } from '../../../../../lib/utils';
 import { apiClient, ApiError } from '../../../../../lib/api/client';
 import { useMyProperties } from '../../../../../lib/api/queries';
+import { StandaloneRentalForm } from '../../../../../components/dashboard/StandaloneRentalForm';
 
 interface PropertyUnit {
   id: string;
@@ -81,6 +82,9 @@ export default function NewRentListingPage() {
       })),
   ];
 
+  // Two ways to list: one home on its own (BuyRentKenya-style, with its own
+  // photos and a private exact location), or units inside a development.
+  const [mode, setMode] = useState<'standalone' | 'development' | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, UnitSelection>>({});
   const [listingName, setListingName] = useState('');
@@ -234,15 +238,53 @@ export default function NewRentListingPage() {
     );
   }
 
+  const modes = [
+    {
+      key: 'standalone' as const, icon: Home, title: 'A single home',
+      body: 'One apartment or house with its own photos. Keep the exact location private until tenants contact you.',
+    },
+    {
+      key: 'development' as const, icon: Building2, title: 'Units in a development',
+      body: 'Offer unit types from one of your developments, with its tours and gallery.',
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-4xl">
       <Link href={`${base}/rentals`} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8] hover:text-[#1765cc]">
         <ArrowLeft size={14} /> Rentals
       </Link>
-      <h1 className="mt-3 text-[26px] sm:text-[28px] font-normal text-[#202124]">List units for rent</h1>
+      <h1 className="mt-3 text-[26px] sm:text-[28px] font-normal text-[#202124]">List a rental</h1>
       <p className="mt-1 text-base text-[#5f6368]">
-        Pick one of your developments, choose which units to offer, set the monthly rent — done.
+        {mode === 'development'
+          ? 'Pick one of your developments, choose which units to offer, set the monthly rent — done.'
+          : 'List one home on its own, or offer units from a development.'}
       </p>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {modes.map((m) => {
+          const active = mode === m.key;
+          return (
+            <button key={m.key} type="button" onClick={() => setMode(m.key)}
+              className={cn(
+                'flex items-start gap-3 rounded-3xl border p-4 text-left transition-all cursor-pointer',
+                active ? 'border-[#1a73e8] ring-1 ring-[#1a73e8] bg-[#e8f0fe]/40' : 'border-[#dadce0] bg-white hover:bg-[#f8f9fa]',
+              )}>
+              <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', active ? 'bg-[#1a73e8] text-white' : 'bg-[#f1f3f4] text-[#5f6368]')}>
+                <m.icon size={18} />
+              </span>
+              <span>
+                <span className="block text-[15px] font-medium text-[#202124]">{m.title}</span>
+                <span className="mt-0.5 block text-[13px] text-[#5f6368]">{m.body}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {mode === 'standalone' && <StandaloneRentalForm base={base as '/agent' | '/dashboard'} />}
+
+      {mode === 'development' && (<>
 
       {/* ── Step 1: property ── */}
       <div className="mt-8">
@@ -498,6 +540,7 @@ export default function NewRentListingPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </>)}
     </div>
   );
 }

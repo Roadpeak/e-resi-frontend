@@ -133,7 +133,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
     ...(listing.showCinematicTour ? (property.cinematicScenes ?? []).filter((s: Raw) => s.videoUrl).map((s: Raw) => ({ url: s.videoUrl, poster: s.thumbnailUrl, label: s.label })) : []),
   ];
   const homeFeatures: string[] = [...new Set([...(units.flatMap((u) => u.features ?? [])), ...(property.unitFeatures ?? [])])] as string[];
-  const buildingFeatures: string[] = property.features ?? [];
+  const buildingFeatures: string[] = [...new Set([...(property.features ?? []), ...(r?.features ?? [])])] as string[];
   const nearby: { id?: string; name: string; distance?: string }[] = property.amenities ?? [];
   const lat = r?.latitude ?? property.latitude;
   const lng = r?.longitude ?? property.longitude;
@@ -387,12 +387,20 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           )}
 
           {/* Map + nearby */}
-          {(lat && lng) || nearby.length ? (
+          {(lat && lng) || nearby.length || r?.hideExactLocation ? (
             <section className={card}>
               <p className={cardTitle}>Location</p>
               {lat && lng ? (
                 <div className="h-[300px] overflow-hidden rounded-2xl">
                   <PropertyMiniMap latitude={lat} longitude={lng} label={listing.name} className="h-full w-full" />
+                </div>
+              ) : r?.hideExactLocation ? (
+                <div className="flex items-start gap-3 rounded-2xl bg-white p-4">
+                  <MapPin size={18} className="mt-0.5 shrink-0 text-[#1a73e8]" />
+                  <div>
+                    <p className="text-[15px] font-medium text-[#18181b]">{where || listing.address.city}</p>
+                    <p className="mt-0.5 text-[14px] text-[#52525b]">The exact location is shared by the {agent ? 'agent' : 'landlord'} once you get in touch.</p>
+                  </div>
                 </div>
               ) : null}
               {nearby.length > 0 && (

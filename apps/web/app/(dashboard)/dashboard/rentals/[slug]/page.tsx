@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, BedDouble, Eye, Loader2, Trash2, Check,
+  ArrowLeft, BedDouble, Eye, EyeOff, ImagePlus, Loader2, Trash2, Check, X,
 } from 'lucide-react';
 import { rentListingsApi } from '../../../../../lib/api/rent-listings';
 import { ApiError } from '../../../../../lib/api/client';
@@ -42,10 +42,12 @@ export default function EditRentalPage() {
   });
 
   const [form, setForm] = useState({
-    name: '', tagline: '', neighborhood: '', city: '',
+    name: '', tagline: '', description: '', neighborhood: '', city: '',
     priceFrom: '', priceTo: '', minLeaseTerm: '', availableFrom: '',
-    furnishing: 'UNFURNISHED',
+    furnishing: 'UNFURNISHED', features: '',
   });
+  const [uploading, setUploading] = useState('');
+  const fileInput = useRef<HTMLInputElement>(null);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
 
@@ -54,6 +56,7 @@ export default function EditRentalPage() {
     setForm({
       name: listing.name ?? '',
       tagline: listing.tagline ?? '',
+      description: listing.description ?? '',
       neighborhood: listing.neighborhood ?? '',
       city: listing.city ?? '',
       priceFrom: listing.priceFrom != null ? String(listing.priceFrom) : '',
@@ -61,6 +64,7 @@ export default function EditRentalPage() {
       minLeaseTerm: listing.minLeaseTerm != null ? String(listing.minLeaseTerm) : '',
       availableFrom: toDateInput(listing.availableFrom),
       furnishing: listing.furnishing ?? 'UNFURNISHED',
+      features: (listing.features ?? []).join(', '),
     });
   }, [listing]);
 
@@ -74,6 +78,8 @@ export default function EditRentalPage() {
       rentListingsApi.update(listing!.id, {
         name: form.name.trim() || undefined,
         tagline: form.tagline.trim() || undefined,
+        description: form.description.trim() || undefined,
+        features: form.features.split(',').map((f) => f.trim()).filter(Boolean),
         neighborhood: form.neighborhood.trim() || undefined,
         city: form.city.trim() || undefined,
         furnishing: form.furnishing,
@@ -105,6 +111,42 @@ export default function EditRentalPage() {
       setTimeout(() => setToast(''), 4000);
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not change status'),
+  });
+
+  const toggleLocation = useMutation({
+    mutationFn: () => rentListingsApi.update(listing!.id, { hideExactLocation: !listing!.hideExactLocation }),
+    onSuccess: (l) => {
+      invalidate();
+      setToast(l.hideExactLocation ? 'Exact location is now private' : 'Exact location is now shown');
+      setTimeout(() => setToast(''), 4000);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not save'),
+  });
+
+  async function addPhotos(list: FileList | null) {
+    if (!list || !listing) return;
+    const files = Array.from(list).filter((f) => f.type.startsWith('image/'));
+    const existing = (listing.media ?? []).length;
+    setError('');
+    try {
+      for (let i = 0; i < files.length; i++) {
+        setUploading(`Uploading ${i + 1} of ${files.length}…`);
+        await rentListingsApi.addPhoto(listing.id, files[i], !listing.heroImageUrl && i === 0, existing + i);
+      }
+      invalidate();
+      setToast(`${files.length} photo${files.length === 1 ? '' : 's'} added`);
+      setTimeout(() => setToast(''), 4000);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not upload');
+    } finally {
+      setUploading('');
+    }
+  }
+
+  const removePhoto = useMutation({
+    mutationFn: (mediaId: string) => rentListingsApi.removePhoto(mediaId),
+    onSuccess: () => { invalidate(); },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not remove photo'),
   });
 
   const removeUnit = useMutation({
@@ -207,6 +249,27 @@ export default function EditRentalPage() {
                   className={inputCls}
                 />
               </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={4}
+                  placeholder="Layout, light, finishes, what's nearby"
+                  className={inputCls}
+                />
+              </div>
+              {!listing.property && (
+                <div className="sm:col-span-2">
+                  <label className={labelCls}>Features (comma-separated)</label>
+                  <input
+                    value={form.features}
+                    onChange={(e) => setForm({ ...form, features: e.target.value })}
+                    placeholder="Parking, Borehole, Backup generator, CCTV"
+                    className={inputCls}
+                  />
+                </div>
+              )}
               <div>
                 <label className={labelCls}>Neighbourhood</label>
                 <AreaSearchInput
@@ -279,6 +342,37 @@ export default function EditRentalPage() {
           </section>
 
           {/* Unit types */}
+          <section className={cardCls}>
+            <div className="mb-4 flex items-baseline justify-between gap-3">
+              <h2 className="text-[16px] font-medium text-[#202124]">Photos</h2>
+              <span className="text-[13px] text-[#5f6368]">{uploading || `${(listing.media ?? []).length} photo${(listing.media ?? []).length === 1 ? '' : 's'}`}</span>
+            </div>
+            <input ref={fileInput} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { void addPhotos(e.target.files); e.target.value = ''; }} />
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              {(listing.media ?? []).filter((m) => m.title !== '__logo__').map((m) => (
+                <div key={m.id ?? m.url} className="relative aspect-square overflow-hidden rounded-2xl bg-[#f1f3f4]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={m.url} alt="" className="h-full w-full object-cover" />
+                  {m.url === listing.heroImageUrl && <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-[#202124]">Cover</span>}
+                  {m.id && (
+                    <button type="button" onClick={() => removePhoto.mutate(m.id!)} aria-label="Remove photo"
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => fileInput.current?.click()} disabled={!!uploading}
+                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#dadce0] text-[#5f6368] hover:bg-[#f8f9fa] disabled:opacity-50">
+                {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={20} />}
+                <span className="text-[12.5px] font-medium">Add photos</span>
+              </button>
+            </div>
+            {listing.property && (listing.media ?? []).length === 0 && (
+              <p className="mt-3 text-[13px] text-[#5f6368]">Without photos of its own, the listing shows the development&apos;s gallery.</p>
+            )}
+          </section>
+
           <section className={cardCls}>
             <div className="mb-4 flex items-baseline justify-between gap-3">
               <h2 className="text-[16px] font-medium text-[#202124]">Unit types</h2>
@@ -369,6 +463,23 @@ export default function EditRentalPage() {
           </section>
 
           <section className={cardCls}>
+            <h2 className="mb-1 text-[16px] font-medium text-[#202124]">Exact location</h2>
+            <p className="mb-3 text-[13px] text-[#5f6368]">
+              {listing.hideExactLocation
+                ? 'Private. Tenants see the area only and contact you for the exact spot.'
+                : 'Shown on the listing with a map.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => toggleLocation.mutate()}
+              disabled={toggleLocation.isPending}
+              className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa] disabled:opacity-50"
+            >
+              {listing.hideExactLocation ? <><Eye size={15} /> Show exact location</> : <><EyeOff size={15} /> Keep exact location private</>}
+            </button>
+          </section>
+
+          <section className={cardCls}>
             <h2 className="mb-4 text-[16px] font-medium text-[#202124]">Development</h2>
             {listing.property ? (
               <>
@@ -381,7 +492,7 @@ export default function EditRentalPage() {
                 </Link>
               </>
             ) : (
-              <p className="text-[14px] text-[#5f6368]">Not linked to a development.</p>
+              <p className="text-[14px] text-[#5f6368]">A standalone home — not part of a development on e-resi.</p>
             )}
           </section>
         </div>

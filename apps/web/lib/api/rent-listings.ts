@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { uploadFile } from './media';
 import type { RentListing } from '../types';
 
 // Shape returned by the backend list endpoint
@@ -25,9 +26,17 @@ export interface BackendRentListingItem {
   isFeatured: boolean;
   tags: string[];
   createdAt: string;
-  /** Present on the single-listing endpoint — the development this belongs to. */
+  description?: string | null;
+  /** Standalone listings carry their own kind; in-development ones use the property's. */
+  category?: string | null;
+  /** Only the area is public; the exact spot is shared on enquiry. */
+  hideExactLocation?: boolean;
+  features?: string[];
+  latitude?: number | null;
+  longitude?: number | null;
+  /** Present on the single-listing endpoint — the development this belongs to. Null for a standalone rental. */
   property?: { id: string; slug: string; name: string; heroImageUrl?: string | null } | null;
-  media?: Array<{ url: string; title?: string | null }>;
+  media?: Array<{ id?: string; url: string; title?: string | null; type?: string }>;
   rentUnits: Array<{
     id?: string;
     label: string;
@@ -67,7 +76,7 @@ export function toRentListing(b: BackendRentListingItem): RentListing {
     propertySlug: b.property?.slug ?? '',
     name: b.name,
     tagline: b.tagline ?? '',
-    description: '',
+    description: b.description ?? '',
     address: {
       neighborhood: b.neighborhood ?? b.city,
       city: b.city,
@@ -163,8 +172,27 @@ export const rentListingsApi = {
       availableFrom: string;
       minLeaseTerm: number;
       tags: string[];
+      category: string;
+      hideExactLocation: boolean;
+      features: string[];
+      latitude: number;
+      longitude: number;
+      county: string;
     }>,
   ) => apiClient.patch<BackendRentListingItem>(`/rent-listings/${id}`, body),
+
+  /** Upload one photo and attach it; optionally make it the cover. */
+  addPhoto: async (listingId: string, file: File, makeHero: boolean, order = 0) => {
+    const uploaded = await uploadFile(file, 'rentals');
+    await apiClient.post(`/media/rent-listings/${listingId}`, {
+      type: 'PHOTO', url: uploaded.url, order, isFeatured: makeHero,
+      sizeBytes: uploaded.sizeBytes, mimeType: file.type,
+    });
+    if (makeHero) await apiClient.patch(`/rent-listings/${listingId}`, { heroImageUrl: uploaded.url });
+    return uploaded;
+  },
+
+  removePhoto: (mediaId: string) => apiClient.delete<unknown>(`/media/${mediaId}`),
 
   setStatus: (id: string, status: string) =>
     apiClient.patch<BackendRentListingItem>(`/rent-listings/${id}/status`, { status }),
