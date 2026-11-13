@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell, BellOff, CalendarDays, CheckCheck, Loader2, MessageSquare, ShieldCheck, Sparkles,
@@ -50,7 +50,7 @@ function destination(role: string | undefined, n: AppNotification): string | nul
 
 /**
  * Bell with unread badge and a dropdown of recent notifications, for any
- * signed-in account. Renders nothing when signed out.
+ * signed-in account. Signed out, it asks the visitor to sign in instead.
  */
 export function NotificationBell({ size = 40 }: { size?: number }) {
   const router = useRouter();
@@ -75,7 +75,7 @@ export function NotificationBell({ size = 40 }: { size?: number }) {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user) return <SignedOutBell size={size} />;
 
   async function markAllRead() {
     await notificationsApi.markAllRead().catch(() => {});
@@ -169,6 +169,55 @@ export function NotificationBell({ size = 40 }: { size?: number }) {
               See all notifications
             </Link>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The bell for visitors: tapping it explains that notifications need an account. */
+function SignedOutBell({ size }: { size: number }) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const next = encodeURIComponent(pathname || '/');
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:text-gray-900 cursor-pointer"
+        style={{ width: size, height: size }}
+        aria-label="Notifications"
+        aria-expanded={open}
+      >
+        <Bell size={Math.round(size * 0.42)} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-gray-200 bg-white p-4 shadow-lg">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600"><BellOff size={16} /></span>
+          <p className="mt-3 text-[15px] font-medium text-gray-900">Sign in to get notified</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
+            Replies to your enquiries, viewing confirmations and price changes on homes you save land here.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <Link href={`/login?redirect=${next}`} onClick={() => setOpen(false)}
+              className="flex-1 rounded-full bg-gray-900 py-2 text-center text-[14px] font-medium text-white hover:bg-gray-700">
+              Sign in
+            </Link>
+            <Link href="/register" onClick={() => setOpen(false)}
+              className="flex-1 rounded-full border border-gray-200 py-2 text-center text-[14px] font-medium text-gray-700 hover:bg-gray-100">
+              Create account
+            </Link>
+          </div>
         </div>
       )}
     </div>

@@ -7,8 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, ArrowRight, Bath, BedDouble, Box, Building2, CalendarClock, CalendarDays, Check, CheckCircle2,
-  Film, Heart, Images, KeyRound, Loader2, MapPin, Maximize2, PawPrint, Phone, Play, Plus, Share2, Sofa, View, X,
+  ArrowLeft, ArrowRight, Baby, Bath, BedDouble, Box, Building2, CalendarClock, CalendarDays, Car, Check, CheckCircle2,
+  DoorOpen, Droplets, Dumbbell, Eye, Film, Heart, Images, KeyRound, Loader2, MapPin, Maximize2, MoveVertical, PawPrint, Phone, Play,
+  Share2, ShieldCheck, Snowflake, Sofa, Sun, TreePine, Tv, Utensils, View, WashingMachine, Waves, Wifi, X, Zap,
 } from 'lucide-react';
 import { RentShell, useSavedRentals } from '../../../../components/rent/RentShell';
 import { rentListingsApi, toRentListing } from '../../../../lib/api/rent-listings';
@@ -54,6 +55,32 @@ function range(nums: number[], unit = '', studio = false): string | null {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = any;
 
+/** A line icon for an amenity, matched on its wording; a tick when nothing fits. */
+const AMENITY_ICONS: [RegExp, typeof Check][] = [
+  [/park|garage|carport/i, Car],
+  [/pool|swim/i, Waves],
+  [/gym|fitness/i, Dumbbell],
+  [/secur|cctv|guard|gate|alarm|intercom/i, ShieldCheck],
+  [/generator|backup|power|electric/i, Zap],
+  [/borehole|water|tank/i, Droplets],
+  [/lift|elevator/i, MoveVertical],
+  [/wifi|internet|fibre|fiber|broadband/i, Wifi],
+  [/garden|lawn|green|tree/i, TreePine],
+  [/balcon|terrace|rooftop|solar|sun/i, Sun],
+  [/pet|dog|cat/i, PawPrint],
+  [/kid|child|play/i, Baby],
+  [/dsq|servant|staff|store|study/i, DoorOpen],
+  [/laundr|wash/i, WashingMachine],
+  [/kitchen|cook|oven|fridge/i, Utensils],
+  [/air ?con|ac\b|cool/i, Snowflake],
+  [/tv|dstv|cable|satellite/i, Tv],
+  [/furnish|wardrobe|sofa|closet/i, Sofa],
+  [/bath|shower|ensuite|en-suite/i, Bath],
+];
+function amenityIcon(name: string) {
+  return AMENITY_ICONS.find(([re]) => re.test(name))?.[1] ?? Check;
+}
+
 const card = 'rounded-[20px] border border-[#ececec] bg-[#fafafa] p-5 sm:p-6';
 const cardTitle = 'mb-4 text-[16px] font-medium text-[#52525b]';
 
@@ -80,6 +107,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
   const [playing, setPlaying] = useState<string | null>(null);
   const [plan, setPlan] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [mapShown, setMapShown] = useState(false);
   const { has, toggle } = useSavedRentals();
 
   const { data: floorPlans = [] } = useQuery({
@@ -204,22 +232,6 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         )}
         <span className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-        {photos.length > 1 && (
-          <div className="absolute right-0 top-0 hidden gap-1.5 rounded-bl-[20px] bg-white p-1.5 sm:flex">
-            {photos.slice(0, 4).map((p, i) => (
-              <button key={p} onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`}
-                className={cn('relative h-14 w-[74px] overflow-hidden rounded-xl transition-opacity', i === active ? 'ring-2 ring-[#18181b]' : 'opacity-75 hover:opacity-100')}>
-                <Image src={p} alt="" fill className="object-cover" sizes="74px" />
-              </button>
-            ))}
-            {photos.length > 4 && (
-              <button onClick={() => setLightbox(4)} className="flex h-14 w-[74px] items-center justify-center rounded-xl bg-[#f2f2f2] text-[13.5px] text-[#18181b] hover:bg-[#e8e8e8]">
-                +{photos.length - 4}
-              </button>
-            )}
-          </div>
-        )}
-
         <div className="pointer-events-none absolute bottom-5 left-5 right-5 flex flex-wrap items-end justify-between gap-4 sm:bottom-7 sm:left-7 sm:right-7">
           <div className="min-w-0 text-white">
             <div className="mb-2 flex flex-wrap gap-1.5">
@@ -248,6 +260,19 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
       </div>
+
+      {/* ── Thumbnails: tap one to show it above ── */}
+      {photos.length > 1 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {photos.map((p, i) => (
+            <button key={p} onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} aria-current={i === active}
+              className={cn('relative h-16 w-[88px] shrink-0 overflow-hidden rounded-xl transition-opacity sm:h-20 sm:w-28',
+                i === active ? 'ring-2 ring-[#18181b] ring-offset-2' : 'opacity-70 hover:opacity-100')}>
+              <Image src={p} alt="" fill className="object-cover" sizes="112px" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Body ── */}
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -309,12 +334,18 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
               ].filter((g) => g.items.length).map((g, gi) => (
                 <div key={g.title} className={gi ? 'mt-5' : ''}>
                   {homeFeatures.length > 0 && buildingFeatures.length > 0 && <p className="mb-2.5 text-[13px] font-medium uppercase tracking-[0.06em] text-[#9aa0a6]">{g.title}</p>}
-                  <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {g.items.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-[16px] font-medium capitalize text-[#18181b]">
-                        <Plus size={14} className="shrink-0 text-[#1a73e8]" /> {f.replace(/-/g, ' ')}
-                      </li>
-                    ))}
+                  <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                    {g.items.map((f) => {
+                      const Icon = amenityIcon(f);
+                      return (
+                        <li key={f} className="flex items-center gap-3 rounded-2xl bg-white px-3.5 py-2.5 text-[15px] font-medium capitalize text-[#18181b]">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f2f2f2] text-[#18181b]">
+                            <Icon size={17} strokeWidth={1.8} />
+                          </span>
+                          <span className="min-w-0 truncate">{f.replace(/-/g, ' ')}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -391,8 +422,18 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             <section className={card}>
               <p className={cardTitle}>Location</p>
               {lat && lng ? (
-                <div className="h-[300px] overflow-hidden rounded-2xl">
-                  <PropertyMiniMap latitude={lat} longitude={lng} label={listing.name} className="h-full w-full" />
+                <div className={cn('relative overflow-hidden rounded-2xl transition-all', mapShown ? 'h-[300px]' : 'h-[180px]')}>
+                  <div className={cn('h-full w-full', !mapShown && 'pointer-events-none blur-[6px] scale-105')}>
+                    <PropertyMiniMap latitude={lat} longitude={lng} label={listing.name} className="h-full w-full" />
+                  </div>
+                  {!mapShown && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/20">
+                      <button onClick={() => setMapShown(true)}
+                        className="flex h-11 items-center gap-2 rounded-full bg-[#18181b] px-5 text-[14.5px] font-medium text-white shadow-lg hover:bg-black">
+                        <Eye size={16} /> View location
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : r?.hideExactLocation ? (
                 <div className="flex items-start gap-3 rounded-2xl bg-white p-4">
