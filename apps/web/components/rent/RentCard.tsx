@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bath, BedDouble, Box, Heart, Star } from 'lucide-react';
+import { Bath, BedDouble, Box, Heart, MapPin, Phone, Star } from 'lucide-react';
+import { track } from '../../lib/analytics/track';
 import { cn } from '../../lib/utils';
 import type { RentListing } from '../../lib/types';
 import { useSavedRentals } from './RentShell';
@@ -40,6 +41,21 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
   const baths = rangeOf(units.map((u) => u.bathrooms));
   const left = units.reduce((s, u) => s + (u.available ?? 0), 0);
   const letOut = listing.status === 'fully_let';
+  const phone = listing.contact?.phone?.replace(/\s/g, '') || null;
+  const waDigits = listing.contact?.whatsapp ? listing.contact.whatsapp.replace(/[^\d]/g, '').replace(/^0/, '254') : null;
+  const waHref = waDigits
+    ? `https://wa.me/${waDigits}?text=${encodeURIComponent(`Hi, I'm interested in ${listing.name} on e-resi: https://e-resi.com/rent/${listing.slug}`)}`
+    : null;
+
+  // The card is one link, so contact actions are buttons that open the
+  // channel themselves rather than nested anchors.
+  function contact(e: React.MouseEvent, channel: 'phone' | 'whatsapp') {
+    e.preventDefault();
+    e.stopPropagation();
+    track({ type: 'CONTACT_CLICK', rentListingId: listing.id, metadata: { channel } });
+    if (channel === 'whatsapp' && waHref) window.open(waHref, '_blank', 'noopener,noreferrer');
+    if (channel === 'phone' && phone) window.location.href = `tel:${phone}`;
+  }
 
   return (
     <Link href={`/rent/${listing.slug}`} className="group block">
@@ -85,11 +101,32 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
             <>{units.length > 1 && listing.priceTo > listing.priceFrom ? 'From ' : ''}{formatRent(listing.priceFrom, listing.currency)} <span className="text-[#18181b]">/ month</span></>
           ) : 'Rent on request'}
         </p>
-        <p className="mt-1.5 flex items-center gap-2 text-[16px] text-[#52525b]">
-          <span className="truncate">{listing.address.neighborhood || listing.address.city}</span>
-          {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
-          {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}
-        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-3">
+          <p className="flex min-w-0 items-center gap-2 text-[16px] text-[#52525b]">
+            <MapPin size={14} className="shrink-0 text-[#9aa0a6]" />
+            <span className="truncate">{listing.address.neighborhood || listing.address.city}</span>
+            {beds && <><span aria-hidden>•</span><span className="inline-flex shrink-0 items-center gap-1"><BedDouble size={14} /> {beds}</span></>}
+            {baths && <span className="inline-flex shrink-0 items-center gap-1"><Bath size={14} /> {baths}</span>}
+          </p>
+          {(waHref || phone) && (
+            <span className="flex shrink-0 items-center gap-1.5">
+              {phone && (
+                <button type="button" onClick={(e) => contact(e, 'phone')} aria-label="Call"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e3e3e3] bg-white text-[#18181b] transition-colors hover:bg-[#f2f2f2]">
+                  <Phone size={15} />
+                </button>
+              )}
+              {waHref && (
+                <button type="button" onClick={(e) => contact(e, 'whatsapp')} aria-label="WhatsApp"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25d366] text-white transition-colors hover:bg-[#1ebe5b]">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                    <path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.97L2 22l5.2-1.5A9.93 9.93 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.2-1.15l-.3-.18-3.08.9.9-3-.2-.31A8.22 8.22 0 1 1 12.04 20.1Zm4.5-6.13c-.25-.12-1.46-.72-1.69-.8-.23-.09-.39-.13-.56.12-.16.25-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.04-.38-1.98-1.22a7.4 7.4 0 0 1-1.37-1.7c-.14-.25-.02-.38.1-.5.12-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.16.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.2.88 2.37 1 2.53.12.17 1.73 2.64 4.2 3.7.59.26 1.05.41 1.4.52.59.19 1.13.16 1.56.1.47-.07 1.46-.6 1.66-1.18.2-.57.2-1.07.14-1.17-.06-.1-.22-.16-.47-.28Z" />
+                  </svg>
+                </button>
+              )}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );

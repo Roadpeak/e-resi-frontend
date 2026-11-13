@@ -37,6 +37,9 @@ export interface BackendRentListingItem {
   /** Present on the single-listing endpoint — the development this belongs to. Null for a standalone rental. */
   property?: { id: string; slug: string; name: string; heroImageUrl?: string | null } | null;
   media?: Array<{ id?: string; url: string; title?: string | null; type?: string }>;
+  managerKind?: string;
+  managingAgent?: { phone?: string | null; whatsapp?: string | null } | null;
+  developer?: { companyName?: string; phone?: string | null; whatsapp?: string | null } | null;
   rentUnits: Array<{
     id?: string;
     label: string;
@@ -69,7 +72,10 @@ function lower(v?: string | null): string | undefined {
 }
 
 export function toRentListing(b: BackendRentListingItem): RentListing {
+  // Whoever runs the letting answers the phone: the managing agent, else the developer.
+  const runner = b.managerKind === 'AGENT' && b.managingAgent ? b.managingAgent : b.developer;
   return {
+    contact: { phone: runner?.phone ?? null, whatsapp: runner?.whatsapp ?? null },
     id: b.id,
     slug: b.slug,
     propertyId: b.property?.id ?? '',
