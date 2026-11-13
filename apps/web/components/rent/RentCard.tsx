@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bath, BedDouble, Box, Heart, MapPin, Phone, Star } from 'lucide-react';
+import { useState } from 'react';
+import { Bath, BedDouble, Box, ChevronLeft, ChevronRight, Heart, MapPin, Phone, Star } from 'lucide-react';
 import { track } from '../../lib/analytics/track';
 import { cn } from '../../lib/utils';
 import type { RentListing } from '../../lib/types';
@@ -41,6 +42,17 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
   const baths = rangeOf(units.map((u) => u.bathrooms));
   const left = units.reduce((s, u) => s + (u.available ?? 0), 0);
   const letOut = listing.status === 'fully_let';
+  // The cover first, then the listing's own gallery, so the arrows page
+  // through the photos without opening the listing.
+  const photos = [listing.heroImageUrl, ...(listing.galleryImages ?? [])]
+    .filter((u, i, a): u is string => !!u && a.indexOf(u) === i)
+    .slice(0, 8);
+  const [photo, setPhoto] = useState(0);
+  function step(e: React.MouseEvent, dir: 1 | -1) {
+    e.preventDefault();
+    e.stopPropagation();
+    setPhoto((i) => (i + dir + photos.length) % photos.length);
+  }
   const phone = listing.contact?.phone?.replace(/\s/g, '') || null;
   const waDigits = listing.contact?.whatsapp ? listing.contact.whatsapp.replace(/[^\d]/g, '').replace(/^0/, '254') : null;
   const waHref = waDigits
@@ -60,10 +72,27 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
   return (
     <Link href={`/rent/${listing.slug}`} className="group block">
       <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] bg-[#f2f2f2]">
-        {listing.heroImageUrl && (
-          <Image src={listing.heroImageUrl} alt={listing.name} fill
+        {photos[photo] && (
+          <Image key={photos[photo]} src={photos[photo]} alt={listing.name} fill
             className={cn('object-cover transition-transform duration-500 group-hover:scale-[1.04]', letOut && 'grayscale-[40%]')}
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw" />
+        )}
+        {photos.length > 1 && (
+          <>
+            <button type="button" onClick={(e) => step(e, -1)} aria-label="Previous photo"
+              className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#18181b] shadow-sm transition-opacity hover:bg-white sm:opacity-0 sm:group-hover:opacity-100">
+              <ChevronLeft size={16} />
+            </button>
+            <button type="button" onClick={(e) => step(e, 1)} aria-label="Next photo"
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#18181b] shadow-sm transition-opacity hover:bg-white sm:opacity-0 sm:group-hover:opacity-100">
+              <ChevronRight size={16} />
+            </button>
+            <span className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1">
+              {photos.map((u, i) => (
+                <span key={u} className={cn('h-1.5 rounded-full bg-white transition-all', i === photo ? 'w-3.5 opacity-100' : 'w-1.5 opacity-60')} />
+              ))}
+            </span>
+          </>
         )}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <span className="rounded-full bg-white px-3 py-1 text-[12px] font-medium text-[#18181b]">
