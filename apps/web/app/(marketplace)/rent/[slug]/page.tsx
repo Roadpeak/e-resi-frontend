@@ -218,6 +218,23 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         </div>
       </div>
 
+      {/* ── Property info, above the photos ── */}
+      <div className="mb-4">
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          <span className="rounded-full bg-[#18181b] px-3 py-1 text-[12px] font-medium text-white">{STATUS[listing.status] ?? 'For rent'}</span>
+          <span className="rounded-full bg-[#f2f2f2] px-3 py-1 text-[12px] font-medium text-[#18181b]">{FURNISHING[listing.furnishing] ?? 'Rent'}</span>
+        </div>
+        <h1 className="text-[24px] font-medium leading-tight tracking-[-0.01em] text-[#18181b] sm:text-[30px]">{listing.name}</h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+          {listing.priceFrom > 0 && (
+            <p className="text-[18px] font-medium text-[#18181b] sm:text-[20px]">
+              {formatPrice(listing.priceFrom, listing.currency)}<span className="text-[14px] font-normal text-[#52525b]"> / month</span>
+            </p>
+          )}
+          {where && <p className="flex items-center gap-1.5 text-[15px] text-[#52525b]"><MapPin size={15} className="text-[#9aa0a6]" /> {where}</p>}
+        </div>
+      </div>
+
       {/* ── Hero ── */}
       <div className="relative h-[340px] overflow-hidden rounded-[24px] bg-[#18181b] sm:h-[520px]">
         {photos.length ? (
@@ -230,30 +247,16 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
         ) : (
           <div className="flex h-full items-center justify-center text-white/40"><Building2 size={44} strokeWidth={1.2} /></div>
         )}
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-        <div className="pointer-events-none absolute bottom-5 left-5 right-5 flex flex-wrap items-end justify-between gap-4 sm:bottom-7 sm:left-7 sm:right-7">
-          <div className="min-w-0 text-white">
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-white px-3 py-1 text-[12px] text-[#18181b]">{STATUS[listing.status] ?? 'For rent'}</span>
-              <span className="rounded-full bg-white/20 px-3 py-1 text-[12px] backdrop-blur-sm">{FURNISHING[listing.furnishing] ?? 'Rent'}</span>
-            </div>
-            <h1 className="text-[24px] font-medium leading-tight">
-              {listing.name}
-              {listing.priceFrom > 0 && (
-                <span className="text-white/85"> · {formatPrice(listing.priceFrom, listing.currency)}<span className="text-[0.6em] text-white/70"> / month</span></span>
-              )}
-            </h1>
-            {where && <p className="mt-1 flex items-center gap-1.5 text-[16px] font-medium text-white"><MapPin size={15} /> {where}</p>}
-          </div>
+        <div className="pointer-events-none absolute bottom-4 right-4 flex gap-2 sm:bottom-5 sm:right-5">
           <div className="pointer-events-auto flex gap-2">
             {property.slug && property.has3DTour && (
-              <Link href={`/${property.slug}/tour/3d`} className="flex h-10 items-center gap-1.5 rounded-full bg-white/20 px-4 text-[13.5px] text-white backdrop-blur-sm hover:bg-white/30">
+              <Link href={`/${property.slug}/tour/3d`} className="flex h-10 items-center gap-1.5 rounded-full bg-white/90 px-4 text-[13.5px] text-[#18181b] shadow-sm backdrop-blur-sm hover:bg-white">
                 <Box size={15} /> 3D tour
               </Link>
             )}
             {photos.length > 0 && (
-              <button onClick={() => setLightbox(active)} className="flex h-10 items-center gap-1.5 rounded-full bg-white/20 px-4 text-[13.5px] text-white backdrop-blur-sm hover:bg-white/30">
+              <button onClick={() => setLightbox(active)} className="flex h-10 items-center gap-1.5 rounded-full bg-white/90 px-4 text-[13.5px] text-[#18181b] shadow-sm backdrop-blur-sm hover:bg-white">
                 <Images size={15} /> {photos.length}
               </button>
             )}
