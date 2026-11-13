@@ -43,7 +43,7 @@ export function StandaloneRentalForm({ base }: { base: '/agent' | '/dashboard' }
   const [form, setForm] = useState({
     name: '', category: 'APARTMENT', bedrooms: '2', bathrooms: '1', sqm: '',
     furnishing: 'UNFURNISHED', rent: '', neighborhood: '', city: '', county: '',
-    description: '', minLease: '12', availableFrom: '',
+    description: '', minLease: '12', availableFrom: '', units: '1',
   });
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [hideLocation, setHideLocation] = useState(true);
@@ -71,6 +71,8 @@ export function StandaloneRentalForm({ base }: { base: '/agent' | '/dashboard' }
     if (!form.city.trim()) return setError('Which city or town is the home in?');
     if (!Number.isFinite(rent) || rent <= 0) return setError('Set the monthly rent.');
     if (files.length === 0) return setError('Add at least one photo — listings without photos get no enquiries.');
+    const unitsAvailable = Number.parseInt(form.units, 10);
+    if (!Number.isFinite(unitsAvailable) || unitsAvailable < 1) return setError('How many units are available? At least 1.');
 
     setSubmitting(true);
     try {
@@ -100,8 +102,8 @@ export function StandaloneRentalForm({ base }: { base: '/agent' | '/dashboard' }
         bathrooms: Number.parseInt(form.bathrooms, 10) || 1,
         sqm: form.sqm ? Number.parseFloat(form.sqm) : undefined,
         pricePerMonth: rent,
-        available: 1,
-        total: 1,
+        available: unitsAvailable,
+        total: unitsAvailable,
         furnishing: form.furnishing,
       });
 
@@ -192,10 +194,15 @@ export function StandaloneRentalForm({ base }: { base: '/agent' | '/dashboard' }
 
       <section className={cardCls}>
         <h2 className="mb-4 text-[16px] font-medium text-[#202124]">Rent & availability</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label className={labelCls}>Monthly rent (KES)</label>
             <input value={form.rent} onChange={(e) => setForm((f) => ({ ...f, rent: e.target.value.replace(/[^\d.]/g, '') }))} inputMode="numeric" placeholder="85000" className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Units available</label>
+            <input value={form.units} onChange={(e) => setForm((f) => ({ ...f, units: e.target.value.replace(/\D/g, '') }))} inputMode="numeric" placeholder="1" className={inputCls} />
+            <p className="mt-1 text-[12px] text-[#80868b]">Same home type in one block? Enter how many are vacant.</p>
           </div>
           <div>
             <label className={labelCls}>Minimum lease</label>
