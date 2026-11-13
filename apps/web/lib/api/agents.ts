@@ -200,7 +200,10 @@ export interface AgentRentListing {
   currency: string;
   heroImageUrl?: string | null;
   createdAt: string;
-  property: { name: string; city: string; neighborhood?: string | null };
+  city?: string | null;
+  neighborhood?: string | null;
+  /** Null for a standalone rental listed without a development. */
+  property: { name: string; city: string; neighborhood?: string | null } | null;
   rentUnits: {
     id: string;
     label: string;

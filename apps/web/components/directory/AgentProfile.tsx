@@ -433,7 +433,7 @@ function AgentRentUnits({ agent, rentals }: { agent: Agent; rentals: AgentRentLi
                 <p className="truncate text-[16px] font-medium text-[#111112]">{r.name}</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-[13.5px] text-[#6b6b70]">
                   <MapPin size={13} className="shrink-0" />
-                  {[r.property.neighborhood, r.property.city].filter(Boolean).join(', ')}
+                  {[r.neighborhood ?? r.property?.neighborhood, r.city ?? r.property?.city].filter(Boolean).join(', ')}
                 </p>
                 <ul className="mt-3 space-y-1.5 border-t border-black/5 pt-3">
                   {r.rentUnits.map((u) => (
