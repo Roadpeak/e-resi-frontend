@@ -334,7 +334,8 @@ export function HeroSection() {
             items are blocks either way); the trailing spaces only give the
             heading readable text, and collapse at the end of each word box. */}
         <h1 ref={headlineRef} className="overflow-hidden mb-6 font-normal">
-          <span className="flex flex-wrap gap-x-5 gap-y-0">
+          {/* Capped on wide screens so the line wraps before the "Verified listings" badge at the right. */}
+          <span className="flex flex-wrap gap-x-5 gap-y-0 lg:max-w-[76%]">
             {words.map((word, i) => (
               <span key={i} className="block overflow-hidden leading-none">
                 <span
