@@ -93,7 +93,7 @@ export function Navbar() {
                 href={l.href}
                 className={cn(
                   'text-xs tracking-[0.15em] uppercase transition-colors duration-300',
-                  pathname === l.href ? 'text-chalk' : 'text-stone/50 hover:text-chalk',
+                  pathname === l.href ? 'text-chalk' : 'text-chalk/80 hover:text-chalk',
                 )}
               >
                 {l.label}
@@ -107,25 +107,25 @@ export function Navbar() {
               <>
                 <Link
                   href={homePathFor(user.role)}
-                  className="text-xs tracking-[0.15em] uppercase text-stone/50 hover:text-chalk transition-colors duration-300"
+                  className="text-xs tracking-[0.15em] uppercase text-chalk/80 hover:text-chalk transition-colors duration-300"
                 >
                   {user.firstName}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-xs tracking-[0.15em] uppercase text-stone/50 hover:text-chalk transition-colors duration-300 cursor-pointer"
+                  className="text-xs tracking-[0.15em] uppercase text-chalk/80 hover:text-chalk transition-colors duration-300 cursor-pointer"
                 >
                   Sign Out
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="text-xs tracking-[0.15em] uppercase text-stone/50 hover:text-chalk transition-colors duration-300">
+                <Link href="/login" className="text-xs tracking-[0.15em] uppercase text-chalk/80 hover:text-chalk transition-colors duration-300">
                   Sign In
                 </Link>
                 <Link
                   href="/list-development"
-                  className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-2.5 hover:bg-chalk/5 transition-all duration-300"
+                  className="border border-chalk/40 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-2.5 hover:bg-chalk/5 transition-all duration-300"
                 >
                   List Property
                 </Link>
@@ -162,8 +162,8 @@ export function Navbar() {
           </Link>
         ))}
         <div className="h-px bg-white/8 my-2" />
-        <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-stone/50">Sign In</Link>
-        <Link href="/list-development" onClick={() => setMenuOpen(false)} className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
+        <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-chalk/80">Sign In</Link>
+        <Link href="/list-development" onClick={() => setMenuOpen(false)} className="border border-chalk/40 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
       </div>
     </>
   );
