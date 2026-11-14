@@ -23,6 +23,7 @@ import { useAuthStore } from '../../../../lib/stores/auth.store';
 import { referralPayload } from '../../../../lib/analytics/referral';
 import { track } from '../../../../lib/analytics/track';
 import type { RentUnit } from '../../../../lib/types';
+import { cdnImage } from '../../../../lib/media/cdn';
 
 const PropertyMiniMap = dynamic(
   () => import('../../../../components/property/PropertyMiniMap').then((m) => m.PropertyMiniMap),
@@ -491,7 +492,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             {contact && (
               <div className="flex items-center gap-3 border-b border-[#ececec] pb-4">
                 <ContactLink href={contact.href} className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
-                  {contact.image ? <Image src={contact.image} alt="" fill className="object-cover" sizes="48px" unoptimized /> : <Building2 size={18} className="text-[#9aa0a6]" />}
+                  {contact.image ? <Image src={cdnImage(contact.image, 48, 48, 'fit')} alt="" fill className="object-cover" sizes="48px" unoptimized /> : <Building2 size={18} className="text-[#9aa0a6]" />}
                 </ContactLink>
                 <div className="min-w-0 flex-1">
                   <ContactLink href={contact.href} className="block truncate text-[18px] font-medium tracking-[-0.01em] text-[#18181b] hover:underline">{contact.name}</ContactLink>

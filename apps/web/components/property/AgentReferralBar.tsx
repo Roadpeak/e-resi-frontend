@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { agentsApi } from '../../lib/api/agents';
 import { getReferral } from '../../lib/analytics/referral';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * The co-branded storefront bar.
@@ -56,7 +57,7 @@ export function AgentReferralBar() {
             // Unoptimized: agents upload avatars from anywhere, and next/image
             // throws outright on a hostname next.config doesn't list — a
             // stranger's avatar must never be able to crash a property page.
-            <Image src={avatar} alt={agent.displayName} width={40} height={40} unoptimized
+            <Image src={cdnImage(avatar, 40)} alt={agent.displayName} width={40} height={40} unoptimized
               className="h-10 w-10 shrink-0 rounded-full object-cover" />
           ) : (
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[15px] font-medium text-[#1967d2]">

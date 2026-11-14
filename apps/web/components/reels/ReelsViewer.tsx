@@ -11,6 +11,7 @@ import { compactCount, reelPoster, reelsApi, type FeedParams, type Reel } from '
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn, formatPrice } from '../../lib/utils';
 import { ReelComments } from './ReelComments';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * The full-screen reels feed: one vertical video per screen, swipe or
@@ -257,7 +258,7 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
                       <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white text-[13px] font-medium text-black">
                         {r.owner.imageUrl
                           // eslint-disable-next-line @next/next/no-img-element
-                          ? <img src={r.owner.imageUrl} alt="" className="h-full w-full object-cover" />
+                          ? <img src={cdnImage(r.owner.imageUrl, 32)} alt="" className="h-full w-full object-cover" />
                           : r.owner.name.slice(0, 1)}
                       </span>
                       <span className="text-[14.5px] font-semibold">{r.owner.name}</span>

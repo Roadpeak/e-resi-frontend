@@ -143,7 +143,7 @@ function HomeView({ all, loading }: { all: RentListing[]; loading: boolean }) {
                 const COLS = 4;
                 return (
                   <Fragment key={l.id}>
-                    <RentCard listing={l} />
+                    <RentCard listing={l} priority={i === 0} />
                     {i === 0 && <div className="col-span-full sm:hidden"><ReelsStrip deal="RENT" /></div>}
                     {i === 1 && <div className="col-span-full hidden sm:block xl:hidden"><ReelsStrip deal="RENT" /></div>}
                     {i === COLS - 1 && <div className="col-span-full hidden xl:block"><ReelsStrip deal="RENT" /></div>}
@@ -284,7 +284,7 @@ function SearchView({ all, loading, heading, category, initialPage = 1, basePath
                   const COLS = 3;
                   return (
                     <Fragment key={l.id}>
-                      <RentCard listing={l} />
+                      <RentCard listing={l} priority={i === 0} />
                       {i === 0 && <div className="col-span-full sm:hidden"><ReelsStrip deal="RENT" /></div>}
                       {i === 1 && <div className="col-span-full hidden sm:block xl:hidden"><ReelsStrip deal="RENT" /></div>}
                       {i === COLS - 1 && <div className="col-span-full hidden xl:block"><ReelsStrip deal="RENT" /></div>}

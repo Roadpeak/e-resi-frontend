@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Building2 } from 'lucide-react';
 import type { DeveloperCard as DeveloperCardData } from '../../lib/api/developers';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * A developer as a gallery piece: a large sharp-edged square, their newest
@@ -44,7 +45,7 @@ export function DeveloperCard({ developer }: { developer: DeveloperCardData }) {
         {/* Mark */}
         <span className="flex h-12 w-12 items-center justify-center overflow-hidden bg-white">
           {developer.logoUrl ? (
-            <Image src={developer.logoUrl} alt="" width={48} height={48} className="h-full w-full object-cover" unoptimized />
+            <Image src={cdnImage(developer.logoUrl, 48, 48, 'fit')} alt="" width={48} height={48} className="h-full w-full object-cover" unoptimized />
           ) : (
             <Building2 size={20} className="text-[#8a8a90]" />
           )}

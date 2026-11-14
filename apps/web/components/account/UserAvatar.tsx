@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * The account's picture: their photo, or their company logo for developers
@@ -36,7 +37,7 @@ export function UserAvatar({
       {src && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          src={cdnImage(src, size, size, isLogo ? 'fit' : 'cover')}
           alt=""
           onError={() => setBroken(true)}
           className={isLogo ? 'h-full w-full object-contain p-1' : 'h-full w-full object-cover'}

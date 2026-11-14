@@ -8,6 +8,7 @@ import type { AgentSiteData, SiteSectionId } from './types';
 import {
   areasOf, CATEGORY, Icon, ICON, orderedSections, priceLabel, specialtyLabel, useListingFilter, waLink,
 } from './shared';
+import { cdnImage } from '../../lib/media/cdn';
 
 export type { AgentSiteData, AgentSiteListing } from './types';
 
@@ -105,7 +106,7 @@ export function AgentSiteView({ data }: { data: AgentSiteData }) {
             <h2 className="text-[26px] font-semibold tracking-tight">About</h2>
             {agent.photoUrl && agent.kind === 'INDIVIDUAL' && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={agent.photoUrl} alt={agent.displayName} className="mt-5 h-40 w-40 rounded-2xl object-cover" />
+              <img src={cdnImage(agent.photoUrl, 160)} alt={agent.displayName} className="mt-5 h-40 w-40 rounded-2xl object-cover" />
             )}
           </div>
           <div>

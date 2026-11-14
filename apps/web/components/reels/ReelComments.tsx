@@ -9,6 +9,7 @@ import { reelsApi, type ReelComment } from '../../lib/api/reels';
 import { ApiError } from '../../lib/api/client';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn } from '../../lib/utils';
+import { cdnImage } from '../../lib/media/cdn';
 
 function ago(iso: string) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -66,7 +67,7 @@ export function ReelComments({
       <span className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f1f3f4] text-[12px] font-medium text-[#5f6368]', reply ? 'h-7 w-7' : 'h-8 w-8')}>
         {c.author.avatarUrl
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={c.author.avatarUrl} alt="" className="h-full w-full object-cover" />
+          ? <img src={cdnImage(c.author.avatarUrl, 32)} alt="" className="h-full w-full object-cover" />
           : c.author.name.slice(0, 1).toUpperCase()}
       </span>
       <div className="min-w-0 flex-1">

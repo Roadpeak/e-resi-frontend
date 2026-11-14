@@ -35,7 +35,7 @@ export function rangeOf(nums: number[], studio = false): string | null {
  * a featured star on the left, 3D and save on the right; then the name, the
  * monthly rent, and where it is with beds and baths.
  */
-export function RentCard({ listing }: { listing: RentListing; index?: number }) {
+export function RentCard({ listing, priority = false }: { listing: RentListing; index?: number; /** The first card on the page: its photo is what paints first, so it loads ahead of the rest. */ priority?: boolean }) {
   const { has, toggle } = useSavedRentals();
   const saved = has(listing.id);
   const units = listing.units ?? [];
@@ -78,7 +78,7 @@ export function RentCard({ listing }: { listing: RentListing; index?: number }) 
     <Link href={`/rent/${listing.slug}`} className="group block">
       <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] bg-[#f2f2f2]">
         {photos[photo] && (
-          <Image key={photos[photo]} src={photos[photo]} alt={listing.name} fill
+          <Image key={photos[photo]} src={photos[photo]} alt={listing.name} fill priority={priority && photo === 0}
             className={cn('object-cover transition-transform duration-500 group-hover:scale-[1.04]', letOut && 'grayscale-[40%]')}
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw" />
         )}

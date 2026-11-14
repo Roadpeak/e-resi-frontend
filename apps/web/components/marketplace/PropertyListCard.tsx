@@ -13,6 +13,7 @@ import { formatPrice, getStatusLabel, cn } from '../../lib/utils';
 import type { TourKind } from '../property/TourMarks';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useSavedProperties, useSaveProperty, useRemoveSavedProperty } from '../../lib/api/queries';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * A development as a listing row: photography left, everything else right.
@@ -314,7 +315,7 @@ export function PropertyListCard({
           <div className="flex min-w-0 items-center gap-2.5">
             {property.developer?.logoUrl ? (
               <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-gray-100">
-                <Image src={property.developer.logoUrl} alt="" fill className="object-cover" sizes="28px" unoptimized />
+                <Image src={cdnImage(property.developer.logoUrl, 28, 28, 'fit')} alt="" fill className="object-cover" sizes="28px" unoptimized />
               </span>
             ) : (
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">

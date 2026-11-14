@@ -8,6 +8,7 @@ import { DirectoryCard } from './DirectoryPrimitives';
 import { StarRating } from './StarRating';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { SPECIALTY_LABELS, type Agent } from '../../lib/api/agents';
+import { cdnImage } from '../../lib/media/cdn';
 
 function waLink(whatsapp: string) {
   return `https://wa.me/${whatsapp.replace(/\D/g, '')}`;
@@ -38,7 +39,7 @@ export function AgentCard({ agent, compact = false }: { agent: Agent; compact?: 
       } ${compact ? 'h-14 w-14' : 'h-20 w-20'}`}
     >
       {avatar ? (
-        <Image src={avatar} alt="" width={80} height={80} className="h-full w-full object-cover" unoptimized />
+        <Image src={cdnImage(avatar, 80)} alt="" width={80} height={80} className="h-full w-full object-cover" unoptimized />
       ) : (
         <FallbackIcon size={compact ? 22 : 28} className="text-[#8a8a90]" />
       )}

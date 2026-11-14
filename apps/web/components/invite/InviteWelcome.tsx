@@ -17,6 +17,7 @@ import { ALL_SPECIALTIES, SPECIALTY_LABELS, type AgentSpecialty } from '../../li
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn } from '../../lib/utils';
 import { BuildingSite } from './BuildingSite';
+import { cdnImage } from '../../lib/media/cdn';
 
 /**
  * The page behind a personal invite link.
@@ -57,7 +58,7 @@ function Avatar({ inv, size = 72 }: { inv: Invite; size?: number }) {
     <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#e8eaed] bg-[#f8f9fa]" style={{ width: size, height: size }}>
       {inv.logoUrl
         // eslint-disable-next-line @next/next/no-img-element
-        ? <img src={inv.logoUrl} alt={inv.name} className="h-full w-full object-cover" />
+        ? <img src={cdnImage(inv.logoUrl, 96, 96, 'fit')} alt={inv.name} className="h-full w-full object-cover" />
         : <span className="text-[26px] font-medium text-[#5f6368]">{inv.name.slice(0, 1).toUpperCase()}</span>}
     </div>
   );

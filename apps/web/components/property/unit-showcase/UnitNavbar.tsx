@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Check, Share2 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { useArrivedFromMarketplace } from '../../../lib/branding/use-arrived-from-marketplace';
+import { cdnImage } from '../../../lib/media/cdn';
 
 /**
  * The navbar for a unit or layout page.
@@ -96,7 +97,7 @@ export function UnitNavbar({
           <Link href={`/${propertySlug}`} className="flex min-w-0 items-center gap-2.5">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-black/[0.06]" />
+              <img src={cdnImage(logoUrl, 36, 36, 'fit')} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-black/[0.06]" />
             ) : (
               <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[15px] font-medium"
                 style={{ background: 'var(--brand, #18191a)', color: 'var(--brand-on, #fff)' }}>
