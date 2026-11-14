@@ -45,7 +45,6 @@ const SECTIONS: { heading: string; links: { href: string; label: string; icon: L
   {
     heading: 'Discover',
     links: [
-      { href: '/reels', label: 'Property reels', icon: Clapperboard },
       { href: '/developers', label: 'Developers', icon: HardHat },
       { href: '/agents', label: 'Agents', icon: Users },
       { href: '/map/locations', label: 'Map', icon: Map },
@@ -153,6 +152,16 @@ export function MarketplaceMobileMenu() {
                 )}
 
                 <nav className="space-y-5">
+                  {/* Reels lead the menu on phones: the navbar has no room for it beside the search. */}
+                  <Link href="/reels" onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-2xl bg-[#18181b] px-4 py-3 text-white hover:bg-black">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f9ab00] text-[#18181b]"><Clapperboard size={17} /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-semibold">Property reels</span>
+                      <span className="block text-[12.5px] text-white/70">Short videos of homes</span>
+                    </span>
+                    <ChevronRight size={17} className="text-white/60" />
+                  </Link>
                   {SECTIONS.map((section, si) => (
                     <motion.div
                       key={section.heading}

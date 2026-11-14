@@ -184,7 +184,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
   function pick(f?: File | null) {
     if (!f) return;
     if (!f.type.startsWith('video/')) { setErr('Choose a video file.'); return; }
-    if (f.size > 500 * 1024 * 1024) { setErr('That video is over 500 MB. Trim it or export at 1080p.'); return; }
+    if (f.size > 1024 * 1024 * 1024) { setErr('That video is over 1 GB. Export it at 1080p and try again.'); return; }
     setErr('');
     setFile(f);
     if (preview) URL.revokeObjectURL(preview);
@@ -202,7 +202,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
       await reelsApi.create({
         videoUrl: up.url,
         caption: caption.trim() || undefined,
-        durationSec: duration,
+        durationSec: duration !== undefined ? Math.min(duration, 45) : undefined,
         ...(chosen?.deal === 'SALE' && { propertyId: chosen.id }),
         ...(chosen?.deal === 'RENT' && { rentListingId: chosen.id }),
         ...(!chosen && area.trim() && { neighborhood: area.trim() }),
@@ -250,7 +250,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
             >
               <Upload size={22} />
               <span className="text-[13.5px] font-medium">Choose video</span>
-              <span className="px-4 text-center text-[12px] text-[#80868b]">Upright 9:16, up to a minute works best</span>
+              <span className="px-4 text-center text-[12px] text-[#80868b]">Up to 45 seconds. Landscape videos are cropped to upright 9:16.</span>
             </button>
           )}
         </div>
@@ -279,6 +279,11 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
             </select>
             <span className="mt-1 block text-[12px] text-[#80868b]">Viewers get a button that opens the listing straight from the reel.</span>
           </label>
+          {duration !== undefined && duration > 45 && (
+            <p className="rounded-xl bg-[#fef7e0] px-3 py-2 text-[13px] text-[#b06000]">
+              This video is {Math.round(duration)} seconds. Reels are up to 45 seconds, so only the first 45 seconds will be shown.
+            </p>
+          )}
           {!link && (
             <label className="block">
               <span className="mb-1.5 block text-[13px] font-medium text-[#5f6368]">Area</span>

@@ -35,7 +35,6 @@ const GROUPS = [
 ];
 
 const TRAILING_LINKS = [
-  { href: '/reels', label: 'Reels' },
   { href: '/developers', label: 'Developers' },
   { href: '/agents', label: 'Agents' },
 ];
