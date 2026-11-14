@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -73,14 +74,23 @@ function formatShortPrice(v: number) {
 export function PropertiesPage({
   lockedCategory,
   heading,
+  initialPage = 1,
+  basePath,
 }: {
   lockedCategory?: PropertyCategory;
   heading?: string;
+  /** The page in the URL (`?page=N`), so a crawled or shared page opens where it says. */
+  initialPage?: number;
+  /** The route's path; with it, unfiltered page buttons become real `?page=N` links. */
+  basePath?: string;
 } = {}) {
   const { filters, setFilter, resetFilters } = useFiltersStore();
+  const router = useRouter();
   const [showFullMap, setShowFullMap] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
+  // Following a page link re-renders this with the new page.
+  useEffect(() => { setPage(initialPage); }, [initialPage]);
   const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
   // The filter store is global and survives navigation, so a stale category
@@ -130,8 +140,14 @@ export function PropertiesPage({
 
   // Narrowing the filters can leave the current page out of range.
   const filterKey = JSON.stringify(query);
+  const firstFilterRun = useRef(true);
   useEffect(() => {
+    // Not on mount: that would throw away the page the URL asked for.
+    if (firstFilterRun.current) { firstFilterRun.current = false; return; }
     setPage(1);
+    // A filtered list has no page URLs, so drop a stale ?page= from the address.
+    if (basePath && initialPage > 1) router.replace(basePath, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
 
   // Unfiltered set — used to derive city / neighborhood options (query dedup'd by react-query)
@@ -304,6 +320,8 @@ export function PropertiesPage({
                 <Pagination
                   page={page}
                   totalPages={totalPages}
+                  // Unfiltered pages have their own URLs; filtered ones page in place.
+                  hrefBase={basePath && !hasActiveFilters ? basePath : undefined}
                   onChange={(p) => {
                     setPage(p);
                     window.scrollTo({ top: 0, behavior: 'smooth' });

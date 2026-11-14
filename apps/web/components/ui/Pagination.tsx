@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -19,23 +20,60 @@ function pageItems(current: number, total: number): (number | 'gap')[] {
   return items;
 }
 
+/**
+ * Page controls. With `hrefBase`, every control is a real link to
+ * `?page=N` (page 1 at the bare path), so crawlers can follow the pages and
+ * the back button works; the parent follows the URL. Without it they are
+ * in-page buttons calling `onChange`, for filtered views whose pages have
+ * no URL of their own.
+ */
 export function Pagination({
   page,
   totalPages,
   onChange,
+  hrefBase,
   className,
 }: {
   page: number;
   totalPages: number;
-  onChange: (page: number) => void;
+  onChange?: (page: number) => void;
+  hrefBase?: string;
   className?: string;
 }) {
   if (totalPages <= 1) return null;
 
   const go = (p: number) => {
     const next = Math.min(Math.max(1, p), totalPages);
-    if (next !== page) onChange(next);
+    if (next !== page) onChange?.(next);
   };
+  const href = (p: number) => (p <= 1 ? hrefBase! : `${hrefBase}?page=${p}`);
+  const navBtn = 'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200';
+  const numCls = (active: boolean) => cn(
+    'flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-medium transition-colors',
+    active ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:text-gray-900',
+  );
+
+  if (hrefBase) {
+    return (
+      <nav aria-label="Pagination" className={cn('mt-10 flex items-center justify-center gap-1.5', className)}>
+        {page > 1
+          ? <Link href={href(page - 1)} rel="prev" aria-label="Previous page" className={navBtn}><ChevronLeft size={16} /></Link>
+          : <span aria-hidden className={cn(navBtn, 'cursor-not-allowed opacity-40')}><ChevronLeft size={16} /></span>}
+        {pageItems(page, totalPages).map((item, i) =>
+          item === 'gap' ? (
+            <span key={`gap-${i}`} className="px-1 text-sm text-gray-400">…</span>
+          ) : (
+            <Link key={item} href={href(item)} aria-current={item === page ? 'page' : undefined} className={numCls(item === page)}>
+              {item}
+            </Link>
+          ),
+        )}
+        {page < totalPages
+          ? <Link href={href(page + 1)} rel="next" aria-label="Next page" className={navBtn}><ChevronRight size={16} /></Link>
+          : <span aria-hidden className={cn(navBtn, 'cursor-not-allowed opacity-40')}><ChevronRight size={16} /></span>}
+      </nav>
+    );
+  }
 
   return (
     <nav

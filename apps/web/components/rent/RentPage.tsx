@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -22,6 +22,7 @@ const FURNISHINGS: { value: FurnishingType; label: string }[] = [
   { value: 'unfurnished', label: 'Unfurnished' },
 ];
 const PAGE_SIZE = 12;
+export const RENT_PAGE_SIZE = PAGE_SIZE;
 const PRICE_STEPS = [30_000, 50_000, 80_000, 120_000, 200_000, 350_000, 500_000, 1_000_000];
 
 function applyClientFilters(listings: RentListing[], filters: RentFilters): RentListing[] {
@@ -48,7 +49,7 @@ function applyClientFilters(listings: RentListing[], filters: RentFilters): Rent
  * Rent listings have no category of their own; `lockedCategory` filters on
  * the parent development's.
  */
-export function RentPage({ lockedCategory, heading }: { lockedCategory?: string; heading?: string } = {}) {
+export function RentPage({ lockedCategory, heading, initialPage = 1, basePath }: { lockedCategory?: string; heading?: string; initialPage?: number; basePath?: string } = {}) {
   const params = useSearchParams();
   const view = lockedCategory ? 'search' : params.get('view') === 'search' ? 'search' : params.get('view') === 'saved' ? 'saved' : 'home';
   const { filters } = useRentFiltersStore();
@@ -62,7 +63,7 @@ export function RentPage({ lockedCategory, heading }: { lockedCategory?: string;
   const all = useMemo(() => data?.items ?? [], [data]);
 
   if (view === 'saved') return <SavedView all={all} loading={isLoading} />;
-  if (view === 'search') return <SearchView all={all} loading={isLoading} heading={heading} category={lockedCategory} />;
+  if (view === 'search') return <SearchView all={all} loading={isLoading} heading={heading} category={lockedCategory} initialPage={initialPage} basePath={basePath} />;
   return <HomeView all={all} loading={isLoading} />;
 }
 
@@ -225,15 +226,31 @@ function Featured({ items }: { items: RentListing[] }) {
 
 /* ── Search ────────────────────────────────────────────────── */
 
-function SearchView({ all, loading, heading, category }: { all: RentListing[]; loading: boolean; heading?: string; category?: string }) {
+function SearchView({ all, loading, heading, category, initialPage = 1, basePath }: {
+  all: RentListing[]; loading: boolean; heading?: string; category?: string;
+  /** The page in the URL, so a crawled or shared ?page=N opens where it says. */
+  initialPage?: number;
+  /** Set on category routes: unfiltered page buttons become real ?page=N links. */
+  basePath?: string;
+}) {
   const { filters, resetFilters } = useRentFiltersStore();
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const [page, setPage] = useState(initialPage);
+  useEffect(() => { setPage(initialPage); }, [initialPage]);
   const [panel, setPanel] = useState(false);
   const results = useMemo(() => applyClientFilters(all, filters), [all, filters]);
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const filterKey = JSON.stringify(filters);
-  useEffect(() => { setPage(1); }, [filterKey]);
+  const firstFilterRun = useRef(true);
+  useEffect(() => {
+    // Not on mount: that would throw away the page the URL asked for.
+    if (firstFilterRun.current) { firstFilterRun.current = false; return; }
+    setPage(1);
+    if (basePath && initialPage > 1) router.replace(basePath, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
+  const pristine = Object.entries(filters).every(([k, v]) => k === 'sortBy' || v === undefined || v === '');
   const active = Object.entries(filters).filter(([k, v]) => k !== 'sortBy' && k !== 'query' && v !== undefined && v !== '').length;
 
   return (
@@ -275,7 +292,8 @@ function SearchView({ all, loading, heading, category }: { all: RentListing[]; l
                   );
                 })}
               </div>
-              <Pagination page={page} totalPages={totalPages} onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+              <Pagination page={page} totalPages={totalPages} hrefBase={basePath && pristine ? basePath : undefined}
+                onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
             </>
           )}
           <div className="mt-10"><NeedAgentHelp category={category} deal="RENT" /></div>

@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
 import { rentListingsApi, toRentListing } from '../../lib/api/rent-listings';
 import { RentShell } from './RentShell';
-import { RentPage } from './RentPage';
+import { RENT_PAGE_SIZE, RentPage } from './RentPage';
 import { JsonLd, breadcrumbs, itemList } from '../seo/JsonLd';
 import { AreaLinks } from '../seo/AreaSections';
 import { fetchAreas } from '../../lib/seo/areas';
@@ -16,8 +17,8 @@ import { fetchAreas } from '../../lib/seo/areas';
  * filters, so the browser picks the data up without a second request.
  */
 export async function RentServerPage({
-  category, heading, path, label,
-}: { category?: string; heading?: string; path: string; label: string }) {
+  category, heading, path, label, page = 1,
+}: { category?: string; heading?: string; path: string; label: string; page?: number }) {
   const qc = new QueryClient();
   const areasP = fetchAreas();
   const params = { limit: 100, ...(category ? { category } : {}) };
@@ -30,6 +31,9 @@ export async function RentServerPage({
   });
   const items = qc.getQueryData<{ items: ReturnType<typeof toRentListing>[] }>(['rent-listings', params])?.items ?? [];
 
+  // Category pages page through their rentals at ?page=N; past the end is a 404.
+  if (category && page > Math.max(1, Math.ceil(items.length / RENT_PAGE_SIZE))) notFound();
+
   const areas = await areasP;
   const trail = [{ name: 'Home', path: '/' }, { name: 'Rent', path: '/rent' }];
   if (path !== '/rent') trail.push({ name: label, path });
@@ -41,7 +45,7 @@ export async function RentServerPage({
       <HydrationBoundary state={dehydrate(qc)}>
         <Suspense>
           <RentShell>
-            <RentPage lockedCategory={category} heading={heading} />
+            <RentPage lockedCategory={category} heading={heading} initialPage={page} basePath={category ? path : undefined} />
             <AreaLinks areas={areas} kind="rent" />
           </RentShell>
         </Suspense>

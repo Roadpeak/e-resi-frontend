@@ -1,20 +1,31 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { pageFrom, pagedMetadata } from '../../../lib/seo/paging';
 import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavbar';
 import { PropertiesPage } from '../../../components/marketplace/PropertiesPage';
 import { PropertyDirectory } from '../../../components/marketplace/PropertyDirectory';
 
-export const metadata: Metadata = {
+const BASE: Metadata = {
   title: "Buy Kenya's Top Properties",
   description: "Buy Kenya's top properties. Discover verified developments with immersive cinematic, 3D and VR tours — invest in Kenya's properties digitally, from anywhere.",
   alternates: { canonical: '/properties' },
 };
 
-export default function Properties() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+/** Page N of the list lives at ?page=N with its own canonical and title. */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  return pagedMetadata(BASE, '/properties', pageFrom(await searchParams) ?? 1);
+}
+
+export default async function Properties({ searchParams }: Props) {
+  const page = pageFrom(await searchParams);
+  if (page === null) notFound();
   return (
     <div className="min-h-screen bg-gray-50">
       <PropertiesNavbar />
-      <PropertiesPage />
-      <PropertyDirectory title="All developments for sale in Kenya" path="/properties" label="Properties for sale in Kenya" />
+      <PropertiesPage initialPage={page} basePath="/properties" />
+      <PropertyDirectory page={page} title="All developments for sale in Kenya" path="/properties" label="Properties for sale in Kenya" />
     </div>
   );
 }
