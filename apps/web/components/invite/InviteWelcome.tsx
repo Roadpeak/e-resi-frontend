@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight, Building2, Check, Eye, EyeOff, Globe, Handshake, LayoutDashboard, Lock, Mail, MessageSquare,
-  Phone, Radar, Search, ShieldCheck, User, Users, Video,
+  Phone, Radar, Search, ShieldCheck, User, Users, Video, Clapperboard,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Input } from '../ui/Input';
@@ -30,6 +30,7 @@ import { BuildingSite } from './BuildingSite';
 
 const AGENT_PERKS = [
   { icon: Globe, title: 'Your own premium website, free', body: 'yourname.e-resi.com, ready in seconds, with every property you sell or let.' },
+  { icon: Clapperboard, title: 'Property reels', body: 'Post short videos of your homes; viewers open the listing straight from the reel, and you reply to their comments.' },
   { icon: LayoutDashboard, title: 'Your management dashboard', body: 'Listings, rentals, viewings, deals and messages in one place.' },
   { icon: Radar, title: 'Automated lead generation', body: 'Full details of every interested client who views your site or a listing.' },
   { icon: Users, title: 'Tracked link opens', body: 'Share your link anywhere and see who opened it and what they viewed.' },
@@ -41,6 +42,7 @@ const AGENT_PERKS = [
 const DEVELOPER_PERKS = [
   { icon: Globe, title: 'A branded website for every development, free', body: 'Launch each project on its own address in seconds and sell off-plan from it.' },
   { icon: Video, title: '3D, VR and cinematic tours', body: 'Buyers walk through units from anywhere; run live guided tours in a call.' },
+  { icon: Clapperboard, title: 'Property reels', body: 'Short videos of your developments in the e-resi reels feed, each opening the development in one tap.' },
   { icon: LayoutDashboard, title: 'Your developer dashboard', body: 'Units, availability, reservations, bookings and construction updates.' },
   { icon: MessageSquare, title: 'Chat and document sharing', body: 'Brochures, floor plans and agreements shared with buyers in one thread.' },
   { icon: Radar, title: 'Automated lead generation', body: 'Every interested buyer delivered with full details, with tracked link opens.' },

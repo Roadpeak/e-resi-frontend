@@ -110,6 +110,19 @@ const GROUPS: AudienceGroup[] = [
     ],
   },
   {
+    id: 'reels',
+    label: 'Property reels',
+    title: 'Short videos that open straight into your listings.',
+    intro: 'Film a walkthrough on your phone and post it as a reel. It shows in the e-resi reels feed and on the sale and rent pages, to people interested in that area.',
+    items: [
+      { icon: Clapperboard, title: 'Post reels', body: 'Upload a vertical video up to 45 seconds; it is cropped and compressed for fast playback.' },
+      { icon: Link2, title: 'Linked to the listing', body: 'Attach a home for sale or to rent, and viewers open it from the reel in one tap.' },
+      { icon: Target, title: 'Shown to the right people', body: 'The feed learns what each viewer likes and where they are looking, and shows your reels to them.' },
+      { icon: MessageCircle, title: 'Likes and comments', body: 'See views and likes, and reply to comments from buyers and tenants.' },
+      { icon: UserRound, title: 'On your profile', body: 'Your reels appear on your agent profile for anyone who visits it.' },
+    ],
+  },
+  {
     id: 'commission',
     label: 'Commission',
     title: 'Commission you can track.',

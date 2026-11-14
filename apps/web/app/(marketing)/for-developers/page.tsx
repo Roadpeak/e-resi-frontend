@@ -68,6 +68,7 @@ const STEPS = [
 
 const CAPABILITIES = [
   ['Branded development page', 'Your own page with hero media, gallery, floor plans and location — not a row in a list.'],
+  ['Property reels', 'Post short videos of each development to the e-resi reels feed. Viewers open the development in one tap, and you answer their comments.'],
   ['Unit-level control', 'Every unit with its floor, size, price and availability. Mark units reserved or sold as they move.'],
   ['Rentals alongside sales', 'List unit types for rent with availability counts, and let tenants reserve one directly.'],
   ['Immersive tours per unit type', 'Choose which cinematic, 3D or VR tour appears against each layout, so a studio and a penthouse show their own rooms.'],
