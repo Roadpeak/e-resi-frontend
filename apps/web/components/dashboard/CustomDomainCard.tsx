@@ -37,10 +37,13 @@ export function CustomDomainCard({
   slug,
   current,
   published,
+  seoPrimary = false,
 }: {
   slug: string;
   current?: string | null;
   published: boolean;
+  /** Whether this domain is the address search engines treat as the original. */
+  seoPrimary?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(!current);
@@ -202,6 +205,10 @@ export function CustomDomainCard({
       )}
 
       {error && <p className="mt-3 text-[13px] text-[#c5221f]">{error}</p>}
+
+      {current && !editing && (
+        <SearchAddress slug={slug} domain={current} live={!!status.data?.live} on={seoPrimary} />
+      )}
     </div>
   );
 }
@@ -381,5 +388,57 @@ function PriceNote({ status }: { status?: DomainStatus }) {
       {price.mode === 'MONTHLY' ? ' per month' : ' one-time'} + VAT. We invoice you when you connect, and the domain
       goes live once it&apos;s paid.
     </p>
+  );
+}
+
+/**
+ * Which address Google treats as the original. e-resi.com by default
+ * (marketplace-first); the owner can make their own domain primary once it
+ * is live. Until then the switch is off and explains why.
+ */
+function SearchAddress({ slug, domain, live, on }: { slug: string; domain: string; live: boolean; on: boolean }) {
+  const queryClient = useQueryClient();
+  const [value, setValue] = useState(on);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  async function toggle() {
+    const next = !value;
+    setBusy(true);
+    setErr('');
+    try {
+      await propertiesApi.updateBranding(slug, { seoPrimaryDomain: next });
+      setValue(next);
+      queryClient.invalidateQueries({ queryKey: ['dash-property', slug] });
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Could not save');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-5 border-t border-[#f1f3f4] pt-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[14px] font-medium text-[#202124]">Primary address on Google</p>
+          <p className="mt-0.5 text-[13px] text-[#5f6368]">
+            {value && live
+              ? <>Google treats <b>{domain}</b> as this development&apos;s main page. The e-resi.com page points to it.</>
+              : <>Google treats the e-resi.com page as the main one{live ? '' : ', and will until your domain is live'}. Turn this on to make <b>{domain}</b> the main address instead.</>}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={value}
+          aria-label="Make my domain the primary address on Google"
+          disabled={busy || (!live && !value)}
+          onClick={toggle}
+          className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${value ? 'bg-[#1a73e8]' : 'bg-[#dadce0]'}`}
+        >
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${value ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
+      </div>
+      {err && <p className="mt-2 text-[13px] text-[#c5221f]">{err}</p>}
+    </div>
   );
 }

@@ -100,11 +100,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // (…/opengraph-image-1t04xb) that it injects automatically. Hardcoding
   // "/<slug>/opengraph-image" produced a 404 — and a broken share preview is
   // invisible until someone actually pastes the link into WhatsApp.
-  // On its own domain the development's site is the original and e-resi's
-  // copy the duplicate, so search engines are pointed there.
-  const customDomain = (property as { customDomain?: string | null }).customDomain;
-  const canonical = customDomain ? `https://${customDomain}/` : `/${slug}`;
+  // Marketplace-first: e-resi.com/<slug> is the original unless the owner
+  // chose their own domain as the primary search address — and even then
+  // only while that domain is live, so a canonical never points at an
+  // address that does not yet resolve.
+  const p = property as { customDomain?: string | null; domainStatus?: string | null; seoPrimaryDomain?: boolean; status?: string };
+  const domainFirst = !!(p.customDomain && p.seoPrimaryDomain && p.domainStatus === 'ACTIVE');
+  const canonical = domainFirst ? `https://${p.customDomain}/` : `/${slug}`;
+  // Not live yet (draft, awaiting its listing fee) or paused for an unpaid
+  // fee: reachable by its link, never in search results. Sold out stays
+  // indexed with its status shown.
+  const hidden = p.status === 'DRAFT' || p.status === 'PENDING_PAYMENT' || p.status === 'PAUSED';
   return {
+    ...(hidden && { robots: { index: false, follow: true } }),
     title: { absolute: `${property.name}${city ? ` — ${city}` : ''}` },
     description,
     alternates: { canonical },

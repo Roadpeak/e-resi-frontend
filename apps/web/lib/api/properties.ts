@@ -87,6 +87,8 @@ export const propertiesApi = {
       navbarTheme: string;
       heroOverlay: boolean;
       customDomain: string;
+      /** Make the custom domain the primary search address (marketplace-first when false). */
+      seoPrimaryDomain: boolean;
       /** Free address: <subdomain>.e-resi.com */
       subdomain: string;
       whiteLabel: boolean;

@@ -14,7 +14,8 @@ export default function PropertyDomainPage({ params }: { params: Promise<{ slug:
         return (
           <div className="space-y-6">
             <EresiAddressCard slug={p.slug} current={p.subdomain} published={published} />
-            <CustomDomainCard slug={p.slug} current={p.customDomain} published={published} />
+            <CustomDomainCard slug={p.slug} current={p.customDomain} published={published}
+              seoPrimary={(p as { seoPrimaryDomain?: boolean }).seoPrimaryDomain ?? false} />
           </div>
         );
       }}
