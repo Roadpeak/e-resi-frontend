@@ -23,9 +23,9 @@ export default function Image() {
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 84px 76px', width: '100%' }}>
           <div style={{ display: 'flex', width: 56, height: 2, background: '#c9a46a', marginBottom: 30 }} />
           <div style={{ display: 'flex', flexWrap: 'wrap', fontSize: 82, color: '#f4f1ea', lineHeight: 1.02, letterSpacing: -2, maxWidth: 900 }}>
-            <span style={{ marginRight: 22 }}>Experience</span>
-            <span style={{ marginRight: 22, color: '#c9a46a' }}>Living</span>
-            <span>Before You Arrive</span>
+            <span style={{ marginRight: 22 }}>Find and</span>
+            <span style={{ marginRight: 22, color: '#c9a46a' }}>experience</span>
+            <span>your next home</span>
           </div>
           <div style={{ display: 'flex', fontSize: 28, color: '#cfc9bf', marginTop: 24 }}>Off-plan, for sale and to rent in Kenya — toured in cinematic, 3D and VR.</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 40 }}>

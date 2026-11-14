@@ -284,7 +284,9 @@ export function HeroSection() {
     };
   }, []);
 
-  const words = ['Experience', 'Living', 'Before', 'You', 'Arrive'];
+  const words = ['Find', 'and', 'experience', 'your', 'next', 'home'];
+  // The warm accent sits on the word the line turns on.
+  const ACCENT = 2;
 
   return (
     <section
@@ -339,7 +341,7 @@ export function HeroSection() {
                   className="hero-word inline-block font-display font-light tracking-tight text-chalk"
                   style={{ fontSize: 'clamp(3.5rem, 9vw, 9rem)', lineHeight: 1.0 }}
                 >
-                  {i === 1 ? <em className="not-italic text-warm-400">{word}</em> : word}
+                  {i === ACCENT ? <em className="not-italic text-warm-400">{word}</em> : word}
                 </span>{' '}
               </span>
             ))}
