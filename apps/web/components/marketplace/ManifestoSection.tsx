@@ -7,7 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  { value: '4+', label: 'Active Listings' },
+  { value: 'Live', label: 'Verified listings' },
   { value: '3D', label: 'Immersive Tours' },
   { value: 'VR', label: 'Headset Ready' },
   { value: '∞', label: 'Possibilities' },

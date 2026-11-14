@@ -40,6 +40,7 @@ export const FOOTER_COLUMNS: { heading: string; links: { label: string; href: st
     heading: 'Resources',
     links: [
       { label: 'Area guides', href: '/neighbourhoods' },
+      { label: 'Property reels', href: '/reels' },
       { label: 'Guides', href: '/guides' },
       { label: 'Buying off-plan in Kenya', href: '/guides/buying-off-plan-in-kenya' },
       { label: 'Renting in Nairobi', href: '/guides/renting-in-nairobi' },

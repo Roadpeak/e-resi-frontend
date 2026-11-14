@@ -157,10 +157,11 @@ const ORGANIZATION_JSON_LD = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.svg`,
   description:
-    "E-resi is Kenya's immersive property platform for developers. We produce cinematic, 3D "
-    + 'and VR tours of new developments and give developers a branded mini-site plus one '
-    + 'dashboard for units, leads, viewings and reservations — so buyers, investors and '
-    + 'tenants can tour a home before it is built.',
+    "E-resi is Kenya's immersive property platform. Buyers, investors and tenants tour "
+    + 'off-plan developments, homes for sale and rentals in cinematic, 3D and VR before they '
+    + 'visit, and deal directly with verified developers and agents. Developers and agents '
+    + 'get tour production, branded websites, property reels and one dashboard for listings, '
+    + 'leads, viewings and reservations.',
   areaServed: { '@type': 'Country', name: 'Kenya' },
   // Naming the service explicitly gives Google something concrete to attach
   // to developer-intent queries, which a generic company description does not.
@@ -186,11 +187,6 @@ const WEBSITE_JSON_LD = {
   alternateName: 'e-resi',
   url: SITE_URL,
   publisher: { '@id': `${SITE_URL}/#organization` },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/properties?query={search_term_string}` },
-    'query-input': 'required name=search_term_string',
-  },
 };
 
 export const viewport: Viewport = {

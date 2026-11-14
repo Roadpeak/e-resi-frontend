@@ -12,7 +12,7 @@ export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const ctxRef = useRef<gsap.Context | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const headlineRef = useRef<HTMLDivElement>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
   const subRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -45,6 +45,19 @@ export function HeroSection() {
   // Scroll restoration is deliberately not handled here — SmoothScroll owns
   // Lenis and so can reset the window and Lenis's own position together, where
   // this component could only ever reset the window.
+  // The scrubbed film is 9.8 MB and every scroll step is a decoder seek —
+  // heavy for a phone on mobile data, and the cause of scroll stutter there.
+  // Phones (and anyone with data saver on) keep the poster, which is the
+  // film's first frame; the scroll-driven text phases run the same. The
+  // source is attached after mount, so the HTML never starts the download.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || video.getAttribute('src')) return;
+    const wide = window.matchMedia('(min-width: 768px)').matches;
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (wide && !saveData) video.src = '/videos/hero1.mp4';
+  }, []);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -298,7 +311,6 @@ export function HeroSection() {
       */}
       <video
         ref={videoRef}
-        src="/videos/hero1.mp4"
         poster="/videos/hero1-poster.jpg"
         muted
         playsInline
@@ -316,20 +328,23 @@ export function HeroSection() {
       <div className="relative z-10 flex flex-col justify-end h-full px-8 sm:px-14 lg:px-20 pb-20">
         <div ref={lineRef} className="w-12 h-px bg-warm-500 mb-8" />
 
-        <div ref={headlineRef} className="overflow-hidden mb-6">
-          <div className="flex flex-wrap gap-x-5 gap-y-0">
+        {/* The page's one H1. Spans keep the exact layout of the old divs (flex
+            items are blocks either way); the trailing spaces only give the
+            heading readable text, and collapse at the end of each word box. */}
+        <h1 ref={headlineRef} className="overflow-hidden mb-6 font-normal">
+          <span className="flex flex-wrap gap-x-5 gap-y-0">
             {words.map((word, i) => (
-              <div key={i} className="overflow-hidden leading-none">
+              <span key={i} className="block overflow-hidden leading-none">
                 <span
                   className="hero-word inline-block font-display font-light tracking-tight text-chalk"
                   style={{ fontSize: 'clamp(3.5rem, 9vw, 9rem)', lineHeight: 1.0 }}
                 >
                   {i === 1 ? <em className="not-italic text-warm-400">{word}</em> : word}
-                </span>
-              </div>
+                </span>{' '}
+              </span>
             ))}
-          </div>
-        </div>
+          </span>
+        </h1>
 
         <p
           ref={subRef}
@@ -412,7 +427,7 @@ export function HeroSection() {
               experience the views before a single brick is laid.
             </p>
             <Link
-              href="/properties?filter=vr"
+              href="/properties?hasVRTour=true"
               className="group inline-flex items-center gap-3 text-warm-400 text-xs tracking-[0.15em] uppercase mt-auto hover:text-chalk transition-colors duration-300"
             >
               Browse VR
@@ -441,7 +456,7 @@ export function HeroSection() {
               and finishes with precision — from anywhere.
             </p>
             <Link
-              href="/properties?filter=3d"
+              href="/properties?has3DTour=true"
               className="group inline-flex items-center gap-3 text-warm-400 text-xs tracking-[0.15em] uppercase mt-auto hover:text-chalk transition-colors duration-300"
             >
               Browse 3D
@@ -470,7 +485,7 @@ export function HeroSection() {
               amenities, aerial views and unit types, all individually selectable.
             </p>
             <Link
-              href="/properties?filter=cinematic"
+              href="/properties"
               className="group inline-flex items-center gap-3 text-warm-400 text-xs tracking-[0.15em] uppercase mt-auto hover:text-chalk transition-colors duration-300"
             >
               Browse Cinematic
@@ -492,8 +507,8 @@ export function HeroSection() {
 
       {/* ── Property count badge ── */}
       <div className="absolute top-1/2 right-8 sm:right-14 lg:right-20 z-10 -translate-y-1/2 hidden lg:flex flex-col items-end gap-1">
-        <span className="font-display text-6xl font-light text-chalk/10">4+</span>
-        <span className="text-[10px] text-stone/40 tracking-[0.2em] uppercase">Premium Listings</span>
+        <span className="font-display text-6xl font-light text-chalk/10">Live</span>
+        <span className="text-[10px] text-stone/40 tracking-[0.2em] uppercase">Verified listings</span>
       </div>
     </section>
   );

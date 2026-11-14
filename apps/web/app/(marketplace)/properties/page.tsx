@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { pageFrom, pagedMetadata } from '../../../lib/seo/paging';
+import { pageFrom, pagedMetadata, propertyFiltersFrom } from '../../../lib/seo/paging';
 import { PropertiesNavbar } from '../../../components/marketplace/PropertiesNavbar';
 import { PropertiesPage } from '../../../components/marketplace/PropertiesPage';
 import { PropertyDirectory } from '../../../components/marketplace/PropertyDirectory';
@@ -19,12 +19,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function Properties({ searchParams }: Props) {
-  const page = pageFrom(await searchParams);
+  const sp = await searchParams;
+  const page = pageFrom(sp);
   if (page === null) notFound();
+  const initialFilters = propertyFiltersFrom(sp);
   return (
     <div className="min-h-screen bg-gray-50">
       <PropertiesNavbar />
-      <PropertiesPage initialPage={page} basePath="/properties" />
+      <PropertiesPage initialPage={page} basePath="/properties" initialFilters={initialFilters} />
       <PropertyDirectory page={page} title="All developments for sale in Kenya" path="/properties" label="Properties for sale in Kenya" />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { BROWSE_PAGE_SIZE } from '../../lib/seo/paging';
+import type { PropertyFilters } from '../../lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -77,6 +78,7 @@ export function PropertiesPage({
   heading,
   initialPage = 1,
   basePath,
+  initialFilters,
 }: {
   lockedCategory?: PropertyCategory;
   heading?: string;
@@ -84,14 +86,21 @@ export function PropertiesPage({
   initialPage?: number;
   /** The route's path; with it, unfiltered page buttons become real `?page=N` links. */
   basePath?: string;
+  /** Filters preselected by the link that opened the page (?status=off_plan, ?has3DTour=true, ?hasVRTour=true). */
+  initialFilters?: Partial<PropertyFilters>;
 } = {}) {
-  const { filters, setFilter, resetFilters } = useFiltersStore();
+  const { filters, setFilter, setFilters, resetFilters } = useFiltersStore();
   const router = useRouter();
   const [showFullMap, setShowFullMap] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [page, setPage] = useState(initialPage);
   // Following a page link re-renders this with the new page.
   useEffect(() => { setPage(initialPage); }, [initialPage]);
+  const initialFilterKey = JSON.stringify(initialFilters ?? {});
+  useEffect(() => {
+    if (initialFilters && Object.keys(initialFilters).length) setFilters(initialFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFilterKey]);
   const [focusPropertyId, setFocusPropertyId] = useState<string | null>(null);
 
   // The filter store is global and survives navigation, so a stale category

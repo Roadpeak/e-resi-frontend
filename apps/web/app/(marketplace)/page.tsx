@@ -12,19 +12,19 @@ export const metadata: Metadata = {
   // The homepage title IS the full brand title, so it must bypass the root
   // layout's `%s | E-resi` template (an `absolute` title does that) — a plain
   // string here would render as "E-resi — ... | E-resi".
-  title: { absolute: 'E-resi — Sell Your Development Off-Plan | Kenya' },
+  title: { absolute: 'E-resi — Immersive Property in Kenya: Off-Plan, Sale & Rent' },
   description:
-    'Sell your development off-plan. We produce the cinematic, 3D and VR tours and hand you a '
-    + 'branded page buyers walk before they commit.',
+    'Tour Kenyan homes before you visit. Off-plan developments, homes for sale and to rent, '
+    + 'verified developers and agents — in cinematic, 3D and VR.',
   alternates: { canonical: '/' },
   openGraph: {
     // openGraph is replaced wholesale, not merged, with the layout's — siteName
     // has to be repeated here or it silently drops off this page's OG tags.
     siteName: 'E-resi',
-    title: 'E-resi — Sell Your Development Off-Plan with Cinematic, 3D & VR Tours',
+    title: 'E-resi — Immersive Property in Kenya: Off-Plan, Sale & Rent',
     description:
-      'Production, a branded mini-site and one sales dashboard for Kenyan property developers. '
-      + 'Buyers, investors and tenants tour before they commit.',
+      'Tour Kenyan homes before you visit. Off-plan developments, homes for sale and to rent, '
+      + 'verified developers and agents — in cinematic, 3D and VR.',
     url: '/',
     type: 'website',
   },

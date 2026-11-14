@@ -24,6 +24,20 @@ export function pageFrom(sp: SearchParams): number | null {
   return n >= 1 ? n : null;
 }
 
+/**
+ * Filters a link can preselect on /properties (the homepage's Off-Plan, 3D and
+ * VR links). The page still canonicalises to /properties, so these never
+ * become pages of their own.
+ */
+export function propertyFiltersFrom(sp: SearchParams): { status?: 'OFF_PLAN'; has3DTour?: boolean; hasVRTour?: boolean } {
+  const one = (k: string) => { const v = sp?.[k]; return Array.isArray(v) ? v[0] : v; };
+  const out: { status?: 'OFF_PLAN'; has3DTour?: boolean; hasVRTour?: boolean } = {};
+  if ((one('status') ?? '').toLowerCase() === 'off_plan') out.status = 'OFF_PLAN';
+  if (one('has3DTour') === 'true') out.has3DTour = true;
+  if (one('hasVRTour') === 'true') out.hasVRTour = true;
+  return out;
+}
+
 export function pageHref(path: string, page: number): string {
   return page <= 1 ? path : `${path}?page=${page}`;
 }

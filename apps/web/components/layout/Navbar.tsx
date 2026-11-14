@@ -15,6 +15,9 @@ const links = [
   // The public directory, not /dashboard — that is the signed-in developer's
   // own workspace, so visitors clicking this were sent to a login wall.
   { href: '/developers', label: 'Developers' },
+  { href: '/rent', label: 'Rent' },
+  { href: '/agents', label: 'Agents' },
+  { href: '/reels', label: 'Reels' },
 ];
 
 export function Navbar() {
@@ -83,7 +86,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {links.map((l) => (
               <Link
                 key={l.href}
@@ -99,7 +102,7 @@ export function Navbar() {
           </div>
 
           {/* Right actions */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden lg:flex items-center gap-5">
             {isAuthenticated && user ? (
               <>
                 <Link
@@ -121,7 +124,7 @@ export function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="/onboarding"
+                  href="/list-development"
                   className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-2.5 hover:bg-chalk/5 transition-all duration-300"
                 >
                   List Property
@@ -133,7 +136,7 @@ export function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="md:hidden flex flex-col gap-1.5 p-1 cursor-pointer"
+            className="lg:hidden flex flex-col gap-1.5 p-1 cursor-pointer"
             aria-label="Menu"
           >
             <span className={cn('block w-6 h-px bg-chalk transition-all duration-300', menuOpen && 'rotate-45 translate-y-[5px]')} />
@@ -160,7 +163,7 @@ export function Navbar() {
         ))}
         <div className="h-px bg-white/8 my-2" />
         <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-stone/50">Sign In</Link>
-        <Link href="/onboarding" onClick={() => setMenuOpen(false)} className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
+        <Link href="/list-development" onClick={() => setMenuOpen(false)} className="border border-chalk/15 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
       </div>
     </>
   );
