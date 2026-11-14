@@ -171,6 +171,9 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [duration, setDuration] = useState<number | undefined>();
+  // Where the 45-second reel starts, when the video is longer than that.
+  const [trimStart, setTrimStart] = useState(0);
+  const previewRef = useRef<HTMLVideoElement>(null);
   const [caption, setCaption] = useState('');
   const [link, setLink] = useState('');
   const [area, setArea] = useState('');
@@ -203,6 +206,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
         videoUrl: up.url,
         caption: caption.trim() || undefined,
         durationSec: duration !== undefined ? Math.min(duration, 45) : undefined,
+        trimStartSec: duration !== undefined && duration > 45 ? trimStart : undefined,
         ...(chosen?.deal === 'SALE' && { propertyId: chosen.id }),
         ...(chosen?.deal === 'RENT' && { rentListingId: chosen.id }),
         ...(!chosen && area.trim() && { neighborhood: area.trim() }),
@@ -231,12 +235,18 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
           {preview ? (
             <div className="relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-black">
               <video
+                ref={previewRef}
                 src={preview}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 muted
                 playsInline
                 controls
-                onLoadedMetadata={(e) => setDuration(Math.round(e.currentTarget.duration * 10) / 10)}
+                onLoadedMetadata={(e) => { setDuration(Math.round(e.currentTarget.duration * 10) / 10); setTrimStart(0); }}
+                // The preview loops inside the chosen 45 seconds, so they see exactly what will be posted.
+                onTimeUpdate={(e) => {
+                  const v = e.currentTarget;
+                  if (duration && duration > 45 && (v.currentTime < trimStart - 0.2 || v.currentTime > trimStart + 45)) v.currentTime = trimStart;
+                }}
               />
               {!busy && (
                 <button type="button" onClick={() => fileRef.current?.click()} className="absolute left-2 top-2 rounded-full bg-white/90 px-3 py-1 text-[12px] font-medium text-[#202124]">Change</button>
@@ -250,7 +260,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
             >
               <Upload size={22} />
               <span className="text-[13.5px] font-medium">Choose video</span>
-              <span className="px-4 text-center text-[12px] text-[#80868b]">Up to 45 seconds. Landscape videos are cropped to upright 9:16.</span>
+              <span className="px-4 text-center text-[12px] text-[#80868b]">Up to 45 seconds. Longer videos are trimmed to the part you choose.</span>
             </button>
           )}
         </div>
@@ -280,9 +290,26 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
             <span className="mt-1 block text-[12px] text-[#80868b]">Viewers get a button that opens the listing straight from the reel.</span>
           </label>
           {duration !== undefined && duration > 45 && (
-            <p className="rounded-xl bg-[#fef7e0] px-3 py-2 text-[13px] text-[#b06000]">
-              This video is {Math.round(duration)} seconds. Reels are up to 45 seconds, so only the first 45 seconds will be shown.
-            </p>
+            <div className="rounded-2xl bg-[#fef7e0] px-4 py-3">
+              <p className="text-[13px] font-medium text-[#b06000]">
+                This video is {clock(duration)}. Reels are up to 45 seconds — choose which part to use.
+              </p>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, Math.floor((duration - 45) * 2) / 2)}
+                step={0.5}
+                value={trimStart}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setTrimStart(v);
+                  if (previewRef.current) previewRef.current.currentTime = v;
+                }}
+                aria-label="Start of the 45-second reel"
+                className="mt-2 w-full accent-[#1a73e8]"
+              />
+              <p className="mt-1 text-[12.5px] tabular-nums text-[#3c4043]">Using {clock(trimStart)} – {clock(trimStart + 45)}</p>
+            </div>
           )}
           {!link && (
             <label className="block">
@@ -389,4 +416,10 @@ function ReelRow({ reel: r, onComments }: { reel: Reel; onComments: () => void }
       </div>
     </li>
   );
+}
+
+/** 75 → "1:15" */
+function clock(sec: number) {
+  const s = Math.max(0, Math.round(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }

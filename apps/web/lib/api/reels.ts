@@ -93,7 +93,7 @@ export const reelsApi = {
   unlock: () => apiClient.post<ReelsState>('/reels/me/unlock'),
   linkable: () => apiClient.get<LinkableListing[]>('/reels/me/linkable'),
   mine: () => apiClient.get<Reel[]>('/reels/me'),
-  create: (body: { videoUrl: string; caption?: string; durationSec?: number; propertyId?: string; rentListingId?: string; city?: string; neighborhood?: string }) =>
+  create: (body: { videoUrl: string; caption?: string; durationSec?: number; trimStartSec?: number; propertyId?: string; rentListingId?: string; city?: string; neighborhood?: string }) =>
     apiClient.post<{ id: string }>('/reels', body),
   update: (id: string, body: { caption?: string; propertyId?: string; rentListingId?: string; status?: 'PUBLISHED' | 'HIDDEN' }) =>
     apiClient.patch<unknown>(`/reels/${id}`, body),
@@ -120,7 +120,7 @@ export function compactCount(n: number): string {
 export function reelPoster(r: Pick<Reel, 'thumbnailUrl' | 'videoUrl'>): string | null {
   if (r.thumbnailUrl) return r.thumbnailUrl;
   if (r.videoUrl.includes('res.cloudinary.com') && r.videoUrl.includes('/video/upload/')) {
-    return r.videoUrl.replace('/video/upload/', '/video/upload/so_1,w_540,c_fill,ar_9:16/').replace(/\.[a-z0-9]+(\?.*)?$/i, '.jpg');
+    return r.videoUrl.replace('/video/upload/', '/video/upload/so_1,c_limit,w_720,h_720/').replace(/\.[a-z0-9]+(\?.*)?$/i, '.jpg');
   }
   return null;
 }

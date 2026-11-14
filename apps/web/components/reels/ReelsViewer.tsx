@@ -23,7 +23,12 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const qc = useQueryClient();
-  const [muted, setMuted] = useState(true);
+  // Sound on by default. Browsers only allow that after the visitor has
+  // interacted with the site (tapping a reel to get here counts); on a cold
+  // open we fall back to muted and show a tap-for-sound prompt.
+  const [muted, setMuted] = useState(false);
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const [landscape, setLandscape] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState(0);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [toast, setToast] = useState('');
@@ -75,7 +80,17 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
   useEffect(() => {
     report();
     videos.current.forEach((v, idx) => {
-      if (idx === active) { v.currentTime = 0; void v.play().catch(() => undefined); } else v.pause();
+      if (idx === active) {
+        v.currentTime = 0;
+        v.muted = muted;
+        v.play().catch(() => {
+          // Autoplay with sound refused: play muted and offer to unmute.
+          v.muted = true;
+          setMuted(true);
+          setSoundBlocked(true);
+          void v.play().catch(() => undefined);
+        });
+      } else v.pause();
     });
     if (reels[active]) startedAt.current = { idx: active, at: Date.now() };
     if (hasNextPage && !isFetchingNextPage && active >= reels.length - 3) void fetchNextPage();
@@ -120,7 +135,7 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
           <ArrowLeft size={19} />
         </button>
         <p className="text-[16px] font-medium">Property reels</p>
-        <button type="button" onClick={() => setMuted((m) => !m)} aria-label={muted ? 'Unmute' : 'Mute'}
+        <button type="button" onClick={() => { setSoundBlocked(false); setMuted((m) => !m); }} aria-label={muted ? 'Unmute' : 'Mute'}
           className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20">
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
@@ -145,8 +160,12 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
                   ref={(el) => { if (el) videos.current.set(idx, el); else videos.current.delete(idx); }}
                   src={Math.abs(idx - active) <= 2 ? r.videoUrl : undefined}
                   poster={reelPoster(r) ?? undefined}
-                  className="h-full w-full bg-black object-cover"
-                  playsInline loop muted={muted} preload={idx === active ? 'auto' : 'metadata'}
+                  className={cn('h-full w-full bg-black', landscape[r.id] ? 'object-contain' : 'object-cover')}
+                  onLoadedMetadata={(e) => {
+                    const v = e.currentTarget;
+                    if (v.videoWidth > v.videoHeight && !landscape[r.id]) setLandscape((l) => ({ ...l, [r.id]: true }));
+                  }}
+                  playsInline loop preload={idx === active ? 'auto' : 'metadata'}
                   onClick={(e) => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}
                 />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -209,6 +228,13 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
           ))}
           {isFetchingNextPage && <div className="flex h-24 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/60" /></div>}
         </div>
+      )}
+
+      {soundBlocked && muted && reels.length > 0 && (
+        <button type="button" onClick={() => { setSoundBlocked(false); setMuted(false); const v = videos.current.get(active); if (v) { v.muted = false; void v.play(); } }}
+          className="absolute left-1/2 top-20 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white px-4 py-2 text-[13.5px] font-medium text-black shadow-lg">
+          <VolumeX size={15} /> Tap for sound
+        </button>
       )}
 
       {toast && (
