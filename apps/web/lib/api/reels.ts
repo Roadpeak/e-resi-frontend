@@ -15,6 +15,8 @@ export interface Reel {
   thumbnailUrl: string | null;
   caption: string | null;
   durationSec: number | null;
+  /** Set when the upload could not be trimmed: play from here for 45 seconds. */
+  trimStartSec?: number | null;
   city: string | null;
   neighborhood: string | null;
   status: 'PUBLISHED' | 'HIDDEN' | 'REMOVED';
@@ -93,7 +95,7 @@ export const reelsApi = {
   unlock: () => apiClient.post<ReelsState>('/reels/me/unlock'),
   linkable: () => apiClient.get<LinkableListing[]>('/reels/me/linkable'),
   mine: () => apiClient.get<Reel[]>('/reels/me'),
-  create: (body: { videoUrl: string; caption?: string; durationSec?: number; trimStartSec?: number; propertyId?: string; rentListingId?: string; city?: string; neighborhood?: string }) =>
+  create: (body: { videoUrl: string; thumbnailUrl?: string; caption?: string; durationSec?: number; trimStartSec?: number; propertyId?: string; rentListingId?: string; city?: string; neighborhood?: string }) =>
     apiClient.post<{ id: string }>('/reels', body),
   update: (id: string, body: { caption?: string; propertyId?: string; rentListingId?: string; status?: 'PUBLISHED' | 'HIDDEN' }) =>
     apiClient.patch<unknown>(`/reels/${id}`, body),

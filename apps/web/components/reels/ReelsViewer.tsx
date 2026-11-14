@@ -81,7 +81,7 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
     report();
     videos.current.forEach((v, idx) => {
       if (idx === active) {
-        v.currentTime = 0;
+        v.currentTime = reels[idx]?.trimStartSec ?? 0;
         v.muted = muted;
         v.play().catch(() => {
           // Autoplay with sound refused: play muted and offer to unmute.
@@ -161,8 +161,15 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
                   src={Math.abs(idx - active) <= 2 ? r.videoUrl : undefined}
                   poster={reelPoster(r) ?? undefined}
                   className={cn('h-full w-full bg-black', landscape[r.id] ? 'object-contain' : 'object-cover')}
+                  // Never more than 45 seconds: an untrimmed upload plays its chosen window, then loops it.
+                  onTimeUpdate={(e) => {
+                    const v = e.currentTarget;
+                    const start = r.trimStartSec ?? 0;
+                    if (v.currentTime >= start + 45 || v.currentTime < start - 0.5) v.currentTime = start;
+                  }}
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
+                    if (r.trimStartSec) v.currentTime = r.trimStartSec;
                     if (v.videoWidth > v.videoHeight && !landscape[r.id]) setLandscape((l) => ({ ...l, [r.id]: true }));
                   }}
                   playsInline loop preload={idx === active ? 'auto' : 'metadata'}

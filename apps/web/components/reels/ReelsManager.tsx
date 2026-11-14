@@ -10,6 +10,7 @@ import {
 import { compactCount, reelPoster, reelsApi, type LinkableListing, type Reel, type ReelsState } from '../../lib/api/reels';
 import { billingApi } from '../../lib/api/billing';
 import { uploadFile } from '../../lib/api/media';
+import { captureFrame, trimVideo } from '../../lib/media/trimVideo';
 import { ApiError } from '../../lib/api/client';
 import { cn } from '../../lib/utils';
 import { ReelComments } from './ReelComments';
@@ -178,6 +179,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
   const [link, setLink] = useState('');
   const [area, setArea] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
+  const [stage, setStage] = useState('');
   const [err, setErr] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
@@ -187,7 +189,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
   function pick(f?: File | null) {
     if (!f) return;
     if (!f.type.startsWith('video/')) { setErr('Choose a video file.'); return; }
-    if (f.size > 1024 * 1024 * 1024) { setErr('That video is over 1 GB. Export it at 1080p and try again.'); return; }
+    if (f.size > 1024 * 1024 * 1024) { setErr('That video is over 1 GB. Trim it on your phone first, or export at 1080p.'); return; }
     setErr('');
     setFile(f);
     if (preview) URL.revokeObjectURL(preview);
@@ -200,13 +202,35 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
     setProgress(0);
     abort.current = new AbortController();
     try {
-      const up = await uploadFile(file, 'tours', { onProgress: (p) => setProgress(p.percent), signal: abort.current.signal });
+      const long = duration !== undefined && duration > 45;
+      // Cut the chosen 45 seconds out in the browser, so only the reel is uploaded.
+      let toSend: File = file;
+      let trimmedHere = false;
+      if (long) {
+        const cut = await trimVideo(file, trimStart, 45, (s) => setStage(s === 'loading' ? 'Preparing the trimmer…' : 'Trimming to 45 seconds…'));
+        if (cut) { toSend = cut; trimmedHere = true; }
+      }
+      if (toSend.size > 500 * 1024 * 1024) {
+        throw new Error('This video is too large to upload without trimming. Trim it to 45 seconds on your phone, then try again.');
+      }
+      // A still for the thumbnail, taken from inside the reel.
+      setStage('Making the thumbnail…');
+      let thumbnailUrl: string | undefined;
+      const still = await captureFrame(preview, (long ? trimStart : 0) + 1);
+      if (still) {
+        const img = await uploadFile(new File([still], 'reel-cover.jpg', { type: 'image/jpeg' }), 'tours').catch(() => null);
+        thumbnailUrl = img?.url;
+      }
+      setStage('');
+      const up = await uploadFile(toSend, 'tours', { onProgress: (p) => setProgress(p.percent), signal: abort.current.signal });
       const chosen: LinkableListing | undefined = listings.find((l) => `${l.deal}:${l.id}` === link);
       await reelsApi.create({
         videoUrl: up.url,
+        thumbnailUrl,
         caption: caption.trim() || undefined,
         durationSec: duration !== undefined ? Math.min(duration, 45) : undefined,
-        trimStartSec: duration !== undefined && duration > 45 ? trimStart : undefined,
+        // Only when the browser could not trim: the player then plays this window.
+        trimStartSec: long && !trimmedHere ? trimStart : undefined,
         ...(chosen?.deal === 'SALE' && { propertyId: chosen.id }),
         ...(chosen?.deal === 'RENT' && { rentListingId: chosen.id }),
         ...(!chosen && area.trim() && { neighborhood: area.trim() }),
@@ -215,6 +239,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
     } catch (e) {
       setErr(e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Upload failed');
       setProgress(null);
+      setStage('');
     }
   }
 
@@ -323,7 +348,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
               <div className="h-1.5 overflow-hidden rounded-full bg-[#f1f3f4]">
                 <div className="h-full rounded-full bg-[#1a73e8] transition-all" style={{ width: `${progress}%` }} />
               </div>
-              <p className="mt-1 text-[12.5px] text-[#5f6368]">{(progress ?? 0) < 100 ? `Uploading ${progress}%` : 'Publishing…'}</p>
+              <p className="mt-1 text-[12.5px] text-[#5f6368]">{stage || ((progress ?? 0) < 100 ? `Uploading ${progress}%` : 'Publishing…')}</p>
             </div>
           )}
           <div className="flex gap-2">
