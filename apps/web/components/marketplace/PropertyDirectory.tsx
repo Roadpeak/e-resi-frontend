@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { pageHref } from '../../lib/seo/paging';
+import { BROWSE_PAGE_SIZE, pageHref } from '../../lib/seo/paging';
 import { JsonLd, PUBLIC_API, breadcrumbs, itemList } from '../seo/JsonLd';
 import { AreaLinks } from '../seo/AreaSections';
 import { fetchAreas } from '../../lib/seo/areas';
@@ -16,7 +16,7 @@ interface Row {
 }
 
 /** Same page size and order as the interactive list above, so ?page=N means the same homes in both. */
-export const DIRECTORY_PAGE_SIZE = 12;
+const DIRECTORY_PAGE_SIZE = BROWSE_PAGE_SIZE;
 
 async function fetchProperties(category: string | undefined, page: number): Promise<{ rows: Row[]; total: number | null }> {
   try {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
+import { BROWSE_PAGE_SIZE } from '../../lib/seo/paging';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -58,7 +59,7 @@ const STATUSES: { value: PropertyStatus; label: string }[] = [
  * Rows are compact enough that nine left the page feeling thin. Twelve fills
  * a scroll without pushing pagination so far down that nobody reaches it.
  */
-const PAGE_SIZE = 12;
+const PAGE_SIZE = BROWSE_PAGE_SIZE;
 
 const PRICE_STEPS = [5, 10, 20, 30, 50, 80, 100, 150].map((m) => m * 1_000_000);
 

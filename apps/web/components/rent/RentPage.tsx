@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bath, BedDouble, ChevronDown, ChevronLeft, ChevronRight, Heart, Loader2, Search, SlidersHorizontal, X } from 'lucide-react';
+import { BROWSE_PAGE_SIZE } from '../../lib/seo/paging';
 import { useRentFiltersStore } from '../../lib/stores/rent-filters.store';
 import { useRentListings } from '../../lib/api/queries';
 import { RentCard, formatRent, rangeOf } from './RentCard';
@@ -21,8 +22,7 @@ const FURNISHINGS: { value: FurnishingType; label: string }[] = [
   { value: 'semi_furnished', label: 'Semi-furnished' },
   { value: 'unfurnished', label: 'Unfurnished' },
 ];
-const PAGE_SIZE = 12;
-export const RENT_PAGE_SIZE = PAGE_SIZE;
+const PAGE_SIZE = BROWSE_PAGE_SIZE;
 const PRICE_STEPS = [30_000, 50_000, 80_000, 120_000, 200_000, 350_000, 500_000, 1_000_000];
 
 function applyClientFilters(listings: RentListing[], filters: RentFilters): RentListing[] {

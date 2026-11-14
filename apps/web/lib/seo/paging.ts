@@ -5,6 +5,13 @@ import type { Metadata } from 'next';
  * page 1 at the clean URL, and each page canonicalises to itself.
  */
 
+/**
+ * Listings per page on every browse page. Lives here, not in a client
+ * component: a server component importing a plain value from a 'use client'
+ * module receives a reference, not the number.
+ */
+export const BROWSE_PAGE_SIZE = 12;
+
 type SearchParams = Record<string, string | string[] | undefined> | undefined;
 
 /** The requested page, or null when `?page=` is not a positive whole number (the route 404s). */
