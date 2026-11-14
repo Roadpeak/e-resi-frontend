@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: { default: 'My Account', template: '%s — e-resi' },
+  // Private, signed-in or personal pages: never in search results.
+  robots: { index: false, follow: false },
 };
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {

@@ -6,6 +6,8 @@ import { StaffPageGuard } from '../../../components/dashboard/StaffPageGuard';
 
 export const metadata: Metadata = {
   title: { default: 'Agent', template: '%s — e-resi Agent' },
+  // Private, signed-in or personal pages: never in search results.
+  robots: { index: false, follow: false },
 };
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {

@@ -7,6 +7,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: { default: 'Dashboard', template: '%s — e-resi Dashboard' },
+  // Private, signed-in or personal pages: never in search results.
+  robots: { index: false, follow: false },
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

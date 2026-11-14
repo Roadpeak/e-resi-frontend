@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: { default: 'Account', template: '%s — e-resi' },
+  // Private, signed-in or personal pages: never in search results.
+  robots: { index: false, follow: false },
 };
 
 /**

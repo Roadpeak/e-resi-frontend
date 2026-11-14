@@ -86,6 +86,11 @@ async function slugFor(host: string): Promise<string | null> {
 
 export async function proxy(req: NextRequest) {
   const host = (req.headers.get('host') ?? '').toLowerCase().replace(/:\d+$/, '');
+  // One host for search: www.e-resi.com is a permanent redirect to e-resi.com.
+  if (host === `www.${SITE_HOST}`) {
+    const { pathname, search } = req.nextUrl;
+    return NextResponse.redirect(new URL(`${pathname}${search}`, SITE_URL), 301);
+  }
   if (!host || isOwnHost(host)) return NextResponse.next();
 
   const bare = host.replace(/^www\./, '');

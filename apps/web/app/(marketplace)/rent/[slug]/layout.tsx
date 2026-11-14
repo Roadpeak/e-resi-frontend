@@ -1,23 +1,18 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
+import { apiGet } from '../../../../lib/seo/server-fetch';
 import { JsonLd, SITE_URL, breadcrumbs } from '../../../../components/seo/JsonLd';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.e-resi.com/api';
 
 interface Props { params: Promise<{ slug: string }> }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** One cached fetch shared by the metadata, the structured data and the page. */
 async function load(slug: string): Promise<any | null> {
-  try {
-    const res = await fetch(`${API_BASE}/rent-listings/${slug}`, { next: { revalidate: 120 } });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json && typeof json === 'object' && 'success' in json && 'data' in json ? json.data : json;
-  } catch {
-    return null;
-  }
+  const r = await fetchListing(slug);
+  return r.status === 'ok' ? r.data : null;
 }
+const fetchListing = (slug: string) => apiGet<any>(`/rent-listings/${slug}`, 120);
 
 /** A rental link is shared on its own, so it carries the listing's own title. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -91,7 +86,10 @@ function listingSchema(l: any, slug: string) {
  */
 export default async function RentListingLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const l = await load(slug);
+  const r = await fetchListing(slug);
+  // Removed or never existed: a real 404, not a "Rental" page that says 200.
+  if (r.status === 'missing') notFound();
+  const l = r.status === 'ok' ? r.data : null;
   if (!l) return children;
 
   const qc = new QueryClient();

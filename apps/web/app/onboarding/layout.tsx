@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Logo } from '../../components/brand/Logo';
 
 export const metadata: Metadata = {
+  // Private, signed-in or personal pages: never in search results.
+  robots: { index: false, follow: false },
   title: 'List your development',
   description: 'Developer onboarding — get your development live on e-resi.',
 };
