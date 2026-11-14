@@ -90,7 +90,9 @@ module.exports = {
         sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
         display: ['var(--font-cormorant)', 'Georgia', 'serif'],
-        google: ['"Google Sans"', 'var(--font-roboto)', 'Roboto', 'Arial', 'sans-serif'],
+        // Formerly Google Sans, which is Google's proprietary face and was fetched
+        // from Google at runtime; Inter is its closest open equivalent and is bundled.
+        google: ['var(--font-inter)', 'Inter', 'Roboto', 'Arial', 'sans-serif'],
         /**
          * Listing pages — the unit and rent detail views.
          *

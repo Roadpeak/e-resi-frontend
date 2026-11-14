@@ -1,96 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import {
-  Geist,
-  Geist_Mono,
-  Cormorant_Garamond,
-  Roboto,
-  Plus_Jakarta_Sans,
-  Playfair_Display,
-  Inter,
-  Archivo,
-  Marcellus,
-  Manrope,
-  Unbounded,
-} from 'next/font/google';
+import { ROOT_FONT_VARIABLES } from '../lib/fonts';
 import './global.css';
 import { Providers } from './providers';
-
-const geist = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist',
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-  display: 'swap',
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  variable: '--font-cormorant',
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-});
-
-// Google's UI font — used by the dashboard's `font-google` stack
-const roboto = Roboto({
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  weight: ['400', '500', '700'],
-  display: 'swap',
-});
-
-// ── Mini-site brand fonts ──
-// The customise editor offers these as curated pairings. They must be loaded
-// here or the CSS variables resolve to nothing and every "choice" silently
-// renders as the system default — which is what was happening.
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-jakarta',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const archivo = Archivo({
-  subsets: ['latin'],
-  variable: '--font-archivo',
-  display: 'swap',
-});
-
-// Template faces for the Prestige and Skyline mini-site templates.
-const marcellus = Marcellus({
-  subsets: ['latin'],
-  variable: '--font-marcellus',
-  weight: '400',
-  display: 'swap',
-});
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  display: 'swap',
-});
-
-// Wide display face for the Luxiq mini-site template's name band.
-const unbounded = Unbounded({
-  subsets: ['latin'],
-  variable: '--font-unbounded',
-  display: 'swap',
-});
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://e-resi.com';
 
@@ -197,7 +108,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${cormorant.variable} ${roboto.variable} ${jakarta.variable} ${playfair.variable} ${inter.variable} ${archivo.variable} ${marcellus.variable} ${manrope.variable} ${unbounded.variable}`} suppressHydrationWarning>
+    <html lang="en" className={ROOT_FONT_VARIABLES} suppressHydrationWarning>
       <head>
         {/* Stale-deploy recovery. A tab left open across a deploy can load a
             chunk from the new build into the old runtime ("module factory is
@@ -208,11 +119,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `(function(){var R=/module factory is not available|ChunkLoadError|Loading chunk [\\w-]+ failed|Failed to fetch dynamically imported module|Importing a module script failed/i;function h(m){try{if(!R.test(m||''))return;var k='eresi-stale-reload',t=+sessionStorage.getItem(k)||0;if(Date.now()-t<30000)return;sessionStorage.setItem(k,String(Date.now()));location.reload();}catch(e){}}window.addEventListener('error',function(e){h((e&&e.message)||(e&&e.error&&e.error.message))},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;h(r&&(r.message||String(r)))});})();`,
           }}
-        />
-        {/* Google Sans for the dashboard — falls back to Roboto when unavailable */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,700&display=swap"
         />
         {/* Organization + WebSite structured data — the direct signal Google uses
             to show "E-resi" as the Site Name in search results instead of the

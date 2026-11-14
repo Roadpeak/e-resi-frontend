@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Marcellus } from 'next/font/google';
+import { marcellus } from '../../../../lib/fonts';
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
 import { DeveloperProfilePage } from '../../../../components/directory/DeveloperProfile';
 import { JsonLd, SITE_URL, breadcrumbs } from '../../../../components/seo/JsonLd';
@@ -9,12 +9,6 @@ import type { DeveloperProfileDetail } from '../../../../lib/api/developers';
 
 // Optima-style display face: the developer page reads as the developer's own
 // website, so it gets its own type rather than the marketplace's.
-const marcellus = Marcellus({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-marcellus',
-  display: 'swap',
-});
 
 interface Props {
   params: Promise<{ id: string }>;
