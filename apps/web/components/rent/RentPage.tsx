@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,6 +13,7 @@ import { RentHeader, RentSection, useSavedRentals } from './RentShell';
 import { Pagination } from '../ui/Pagination';
 import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
+import { ReelsStrip } from '../reels/ReelsStrip';
 import type { RentListing, RentFilters, FurnishingType } from '../../lib/types';
 
 const FURNISHINGS: { value: FurnishingType; label: string }[] = [
@@ -137,7 +138,17 @@ function HomeView({ all, loading }: { all: RentListing[]; loading: boolean }) {
 
           <RentSection title="Latest rentals" action={{ label: 'See all listings', href: '/rent?view=search' }}>
             <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-4">
-              {latest.map((l) => <RentCard key={l.id} listing={l} />)}
+              {latest.map((l, i) => {
+                const COLS = 4;
+                return (
+                  <Fragment key={l.id}>
+                    <RentCard listing={l} />
+                    {i === 0 && <div className="col-span-full sm:hidden"><ReelsStrip deal="RENT" /></div>}
+                    {i === 1 && <div className="col-span-full hidden sm:block xl:hidden"><ReelsStrip deal="RENT" /></div>}
+                    {i === COLS - 1 && <div className="col-span-full hidden xl:block"><ReelsStrip deal="RENT" /></div>}
+                  </Fragment>
+                );
+              })}
             </div>
           </RentSection>
 
@@ -252,7 +263,17 @@ function SearchView({ all, loading, heading, category }: { all: RentListing[]; l
           ) : (
             <>
               <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
-                {pageResults.map((l) => <RentCard key={l.id} listing={l} />)}
+                {pageResults.map((l, i) => {
+                  const COLS = 3;
+                  return (
+                    <Fragment key={l.id}>
+                      <RentCard listing={l} />
+                      {i === 0 && <div className="col-span-full sm:hidden"><ReelsStrip deal="RENT" /></div>}
+                      {i === 1 && <div className="col-span-full hidden sm:block xl:hidden"><ReelsStrip deal="RENT" /></div>}
+                      {i === COLS - 1 && <div className="col-span-full hidden xl:block"><ReelsStrip deal="RENT" /></div>}
+                    </Fragment>
+                  );
+                })}
               </div>
               <Pagination page={page} totalPages={totalPages} onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
             </>

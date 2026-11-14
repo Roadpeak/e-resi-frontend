@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Building, Building2, Heart, Home, LayoutGrid, Search, Store, Users } from 'lucide-react';
+import { Building, Building2, Clapperboard, Heart, Home, LayoutGrid, Search, Store, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Logo } from '../brand/Logo';
 import { UserAvatar } from '../account/UserAvatar';
@@ -24,6 +24,7 @@ const NAV = [
   { href: '/rent/villas', label: 'Villas', icon: Home, match: (p: string) => p === '/rent/villas' },
   { href: '/rent/commercial', label: 'Commercial', icon: Store, match: (p: string) => p === '/rent/commercial' },
   { href: '/rent?view=saved', label: 'Saved', icon: Heart, match: (p: string, v: string | null) => p === '/rent' && v === 'saved' },
+  { href: '/reels?deal=RENT', label: 'Reels', icon: Clapperboard, match: () => false },
   { href: '/agents', label: 'Agents', icon: Users, match: () => false },
 ];
 
@@ -46,6 +47,9 @@ export function RentShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Link href="/reels?deal=RENT" aria-label="Property reels" className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-black/[0.08] bg-white">
+            <Clapperboard size={16} className="text-[#f9ab00]" />
+          </Link>
           <NotificationBell size={34} />
           <Account isAuthenticated={isAuthenticated} user={user} />
         </div>

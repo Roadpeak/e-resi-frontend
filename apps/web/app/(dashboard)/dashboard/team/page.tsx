@@ -23,7 +23,7 @@ const DEVELOPER_PAGE_LABELS: Record<string, string> = {
   deals: 'Agent Deals', mandates: 'Mandates', inquiries: 'Inquiries', leads: 'Leads',
   bookings: 'Bookings', performance: 'Performance', analytics: 'Analytics',
   documents: 'Documents', billing: 'Billing', profile: 'Company Profile',
-  team: 'Team',
+  team: 'Team', reels: 'Reels',
 };
 
 /** The agent portal's pages (keys = /agent/<key>). */
@@ -32,7 +32,7 @@ const AGENT_PAGE_LABELS: Record<string, string> = {
   deals: 'Deals', reservations: 'Reservations', leads: 'Leads', inquiries: 'Inquiries',
   bookings: 'Viewings', clients: 'Client Rooms', mandates: 'Mandate Pool', lettings: 'Lettings',
   messages: 'Messages', analytics: 'Analytics', reviews: 'Reviews', website: 'Website',
-  billing: 'Billing', profile: 'Agency Profile', team: 'Team',
+  billing: 'Billing', profile: 'Agency Profile', team: 'Team', reels: 'Reels',
 };
 
 // Same page, two portals: labels follow whichever one it is rendered in.

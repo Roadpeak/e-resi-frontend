@@ -14,6 +14,7 @@ import {
   type Agent, type AgentProperty, type AgentRentListing, type RevealedContact,
 } from '../../lib/api/agents';
 import { PhoneGate, revealedContact } from '../agents/PhoneGate';
+import { ReelsStrip } from '../reels/ReelsStrip';
 import { formatPrice } from '../../lib/utils';
 import { DirectoryCard, DirectoryShell, PillLink, Tag } from './DirectoryPrimitives';
 import { ChatWithAgentButton } from '../agents/ChatWithAgentButton';
@@ -174,6 +175,9 @@ export function AgentProfile({ agentId }: { agentId: string }) {
             )}
           </>
         )}
+
+        {/* Their reels, when they have posted any. */}
+        <ReelsStrip agentId={agent.id} title={`Reels by ${agent.displayName}`} className="mt-6" />
 
         {/* One flat sheet, partitioned by hairlines — the storefront above
             carries the cards; down here rules do the separating. */}

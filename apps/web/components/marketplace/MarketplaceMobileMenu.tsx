@@ -8,7 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight, Building2, ChevronRight, HardHat, Home, KeyRound, LayoutGrid, LogOut,
-  Map, Menu, Store, Users, X, type LucideIcon, Briefcase, Building } from 'lucide-react';
+  Map, Menu, Store, Users, X, type LucideIcon, Briefcase, Building, Clapperboard } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
@@ -45,6 +45,7 @@ const SECTIONS: { heading: string; links: { href: string; label: string; icon: L
   {
     heading: 'Discover',
     links: [
+      { href: '/reels', label: 'Property reels', icon: Clapperboard },
       { href: '/developers', label: 'Developers', icon: HardHat },
       { href: '/agents', label: 'Agents', icon: Users },
       { href: '/map/locations', label: 'Map', icon: Map },

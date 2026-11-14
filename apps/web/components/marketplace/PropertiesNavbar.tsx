@@ -5,7 +5,7 @@ import { UserAvatar } from '../account/UserAvatar';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogOut, User } from 'lucide-react';
+import { Clapperboard, LogOut, User } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { useFiltersStore } from '../../lib/stores/filters.store';
@@ -67,6 +67,16 @@ export function PropertiesNavbar() {
 
         {/* Menu — below xl the section links are hidden, so this is the only
             way to reach Rent, Villas, Developers or Agents. */}
+        {/* Reels — one tap into the video feed, on every screen size. */}
+        <Link
+          href="/reels"
+          aria-label="Property reels"
+          className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 text-[14px] font-semibold text-gray-900 transition-colors hover:bg-gray-100 sm:px-3.5"
+        >
+          <Clapperboard size={17} className="text-[#f9ab00]" />
+          <span className="hidden sm:inline">Reels</span>
+        </Link>
+
         <MarketplaceMobileMenu />
 
         {/* Notifications — signed-in accounts only */}

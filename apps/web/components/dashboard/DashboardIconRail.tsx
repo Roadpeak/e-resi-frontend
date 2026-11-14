@@ -28,6 +28,7 @@ const NAV = [
   { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month' },
   { label: 'Performance', href: '/dashboard/performance', icon: 'query_stats' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring' },
+  { label: 'Reels', href: '/dashboard/reels', icon: 'smart_display' },
   { label: 'Documents', href: '/dashboard/documents', icon: 'description' },
   { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card' },
   { label: 'Company Profile', href: '/dashboard/profile', icon: 'verified' },

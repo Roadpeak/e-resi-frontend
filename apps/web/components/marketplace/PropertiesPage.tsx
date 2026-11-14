@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -28,6 +28,7 @@ import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
 import { BrowseBreadcrumbs } from './BrowseBreadcrumbs';
 import { NeighbourhoodsRail } from './NeighbourhoodsRail';
+import { ReelsStrip, WatchReelsButton } from '../reels/ReelsStrip';
 import type { Property, PropertyCategory, PropertyStatus } from '../../lib/types';
 
 const CATEGORIES: { value: PropertyCategory; label: string }[] = [
@@ -242,6 +243,7 @@ export function PropertiesPage({
         <div className="mt-8 flex items-start gap-8 lg:mt-10">
           <section className="min-w-0 max-w-5xl flex-1">
             <NeighbourhoodsRail variant="strip" />
+            <WatchReelsButton deal="SALE" className="mb-6 xl:hidden" />
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 {/* Same gold kicker as the neighbourhood rail — the two
@@ -285,15 +287,18 @@ export function PropertiesPage({
                     someone comparing developments actually wants. */}
                 <div className="flex flex-col gap-4">
                   {ordered.map((p, i) => (
-                    <PropertyListCard
-                      key={p.id}
-                      property={p}
-                      index={i}
-                      onViewOnMap={() => {
-                        setFocusPropertyId(p.id);
-                        setShowFullMap(true);
-                      }}
-                    />
+                    <Fragment key={p.id}>
+                      <PropertyListCard
+                        property={p}
+                        index={i}
+                        onViewOnMap={() => {
+                          setFocusPropertyId(p.id);
+                          setShowFullMap(true);
+                        }}
+                      />
+                      {/* A shelf of reels after the first result, like the Reels row in a social feed. */}
+                      {i === 0 && <ReelsStrip deal="SALE" />}
+                    </Fragment>
                   ))}
                 </div>
                 <Pagination

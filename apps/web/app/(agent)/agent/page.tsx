@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowUpRight, Building2, CalendarDays, Check, Globe, Handshake, KeyRound, MessageSquare, Phone, Star, Users,
+  ArrowUpRight, Building2, Clapperboard, CalendarDays, Check, Globe, Handshake, KeyRound, MessageSquare, Phone, Star, Users,
 } from 'lucide-react';
 import { agentsApi } from '../../../lib/api/agents';
 import { partnershipsApi } from '../../../lib/api/partnerships';
@@ -102,6 +102,7 @@ export default function AgentOverview() {
           <Link href="/agent/listings/new" className="rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">Add a listing</Link>
           <Link href="/agent/rentals/new" className="rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#1a73e8] hover:bg-[#f8f9fa]">List a rental</Link>
           <Link href="/agent/leads" className="rounded-full bg-[#1a73e8] px-5 py-2 text-[14px] font-medium text-white hover:bg-[#1765cc]">Open leads</Link>
+          <Link href="/agent/reels?new=1" className="inline-flex items-center gap-1.5 rounded-full bg-[#18181b] px-4 py-2 text-[14px] font-medium text-white hover:bg-black"><Clapperboard size={15} className="text-[#f9ab00]" />Create reel</Link>
           <a href="/properties" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><Building2 size={15} className="text-[#5f6368]" />Properties for sale</a>
           <a href="/rent" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#202124] hover:bg-[#f8f9fa]"><KeyRound size={15} className="text-[#5f6368]" />Properties for rent</a>
         </div>

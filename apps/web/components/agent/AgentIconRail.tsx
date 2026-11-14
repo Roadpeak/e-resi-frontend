@@ -32,6 +32,7 @@ const NAV = [
   { label: 'Lettings', href: '/agent/lettings', icon: 'real_estate_agent' },
   { label: 'Messages', href: '/agent/messages', icon: 'chat' },
   { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring' },
+  { label: 'Reels', href: '/agent/reels', icon: 'smart_display' },
   { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
   { label: 'Website', href: '/agent/website', icon: 'language' },
   { label: 'Site content', href: '/agent/website/content', icon: 'article' },

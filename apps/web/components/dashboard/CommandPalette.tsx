@@ -30,6 +30,7 @@ const PAGES = [
 /** The agent portal's pages, for the same palette on /agent. */
 const AGENT_PAGES = [
   { label: 'Overview', href: '/agent', icon: LayoutDashboard },
+  { label: 'Reels', href: '/agent/reels', icon: LayoutDashboard },
   { label: 'My Listings', href: '/agent/listings', icon: Building2 },
   { label: 'Partner Listings', href: '/agent/properties', icon: Building2 },
   { label: 'Rentals', href: '/agent/rentals', icon: Home },
