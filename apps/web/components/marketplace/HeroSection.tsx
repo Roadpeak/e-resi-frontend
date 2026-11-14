@@ -360,21 +360,21 @@ export function HeroSection() {
         <div ref={ctaRef} className="flex flex-wrap items-center gap-4 sm:gap-6">
           <Link
             href="/for-developers"
-            className="btn-glow-chalk group inline-flex items-center gap-3 border border-chalk/30 bg-chalk/5 hover:bg-chalk/10 backdrop-blur-sm text-chalk text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
+            className="btn-glow-blue group inline-flex items-center gap-3 rounded-lg border border-[#4A80F5]/80 bg-[#4A80F5]/10 hover:bg-[#4A80F5]/20 backdrop-blur-sm text-chalk text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
           >
             List Your Development
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
           <Link
             href="/properties"
-            className="btn-glow-warm group inline-flex items-center gap-3 border border-warm-400/40 bg-warm-400/5 hover:bg-warm-400/10 backdrop-blur-sm text-warm-300 text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
+            className="btn-glow-warm group inline-flex items-center gap-3 rounded-lg border border-warm-400/80 bg-warm-400/10 hover:bg-warm-400/20 backdrop-blur-sm text-warm-300 text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
           >
             Buy / Invest
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
           <Link
             href="/rent"
-            className="btn-glow-dim group inline-flex items-center gap-3 border border-white/15 bg-white/4 hover:bg-white/8 text-white/35 hover:text-chalk text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-300"
+            className="btn-glow-blue-late group inline-flex items-center gap-3 rounded-lg border border-[#4A80F5]/80 bg-[#4A80F5]/10 hover:bg-[#4A80F5]/20 backdrop-blur-sm text-chalk text-sm tracking-[0.12em] uppercase px-8 py-4 transition-all duration-500"
           >
             Properties for Rent
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />

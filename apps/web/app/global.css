@@ -135,6 +135,13 @@
 .btn-glow-chalk { animation: glow-pulse-chalk 2.8s ease-in-out infinite; }
 .btn-glow-warm  { animation: glow-pulse-warm  2.8s ease-in-out infinite 0.4s; }
 .btn-glow-dim   { animation: glow-pulse-dim   2.8s ease-in-out infinite 0.8s; }
+/* The logo's blue, for the hero's developer and rent buttons. */
+@keyframes glow-pulse-blue {
+  0%, 100% { box-shadow: 0 0 16px rgba(74,128,245,0.10), 0 0 0 1px rgba(74,128,245,0.22); }
+  50%       { box-shadow: 0 0 34px rgba(74,128,245,0.30), 0 0 0 1px rgba(74,128,245,0.45); }
+}
+.btn-glow-blue       { animation: glow-pulse-blue 2.8s ease-in-out infinite; }
+.btn-glow-blue-late  { animation: glow-pulse-blue 2.8s ease-in-out infinite 0.8s; }
 
 /* ── GSAP clip reveal utility ── */
 @layer utilities {
