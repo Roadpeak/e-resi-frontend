@@ -118,6 +118,18 @@ export function InviteWelcome({ code }: { code: string }) {
                 </div>
               </div>
 
+              {/* Same action as the button further down, so they can start without scrolling. */}
+              <div className="mt-5">
+                {inv.signedUp ? (
+                  <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc]">Sign in <ArrowRight size={16} /></Link>
+                ) : (
+                  <button type="button" onClick={() => setStage('signup')}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc] active:scale-[0.98] transition-all cursor-pointer">
+                    Complete signup <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+
               <blockquote className="mt-8 whitespace-pre-line rounded-3xl border border-[#dadce0] bg-white p-6 text-[16px] leading-relaxed text-[#3c4043] sm:p-8">
                 {inv.message}
                 <footer className="mt-5 text-[14px] text-[#5f6368]">— {inv.referrer}, e-resi team</footer>
