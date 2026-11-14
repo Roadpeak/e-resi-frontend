@@ -12,6 +12,8 @@ export interface ReelLink {
 export interface Reel {
   id: string;
   videoUrl: string;
+  /** Adaptive HLS stream (several qualities) when the reel is on Cloudinary. */
+  hlsUrl?: string | null;
   thumbnailUrl: string | null;
   caption: string | null;
   durationSec: number | null;

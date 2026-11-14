@@ -222,7 +222,7 @@ function CreateReel({ onClose, onCreated }: { onClose: () => void; onCreated: ()
         thumbnailUrl = img?.url;
       }
       setStage('');
-      const up = await uploadFile(toSend, 'tours', { onProgress: (p) => setProgress(p.percent), signal: abort.current.signal });
+      const up = await uploadFile(toSend, 'reels', { onProgress: (p) => setProgress(p.percent), signal: abort.current.signal });
       const chosen: LinkableListing | undefined = listings.find((l) => `${l.deal}:${l.id}` === link);
       await reelsApi.create({
         videoUrl: up.url,

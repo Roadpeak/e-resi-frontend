@@ -9,7 +9,7 @@ export interface UploadedFile {
 }
 
 /** Upload a file (multipart) to the media endpoint — returns its public URL. */
-export type UploadFolder = 'properties' | 'rentals' | 'avatars' | 'logos' | 'documents' | 'tours';
+export type UploadFolder = 'properties' | 'rentals' | 'avatars' | 'logos' | 'documents' | 'tours' | 'reels';
 
 /**
  * Upload the signed-in user's profile photo.

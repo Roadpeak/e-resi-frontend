@@ -36,6 +36,34 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
   const videos = useRef<Map<number, HTMLVideoElement>>(new Map());
   const slides = useRef<Map<number, HTMLElement>>(new Map());
   const startedAt = useRef<{ idx: number; at: number } | null>(null);
+  // Adaptive streaming: hls.js where the browser has no native HLS (Chrome,
+  // Android, Firefox); Safari and iOS play the stream natively. One instance
+  // per nearby reel, destroyed as it scrolls away.
+  type HlsLike = { loadSource(u: string): void; attachMedia(v: HTMLVideoElement): void; destroy(): void };
+  type HlsCtor = { new (cfg: Record<string, unknown>): HlsLike; isSupported(): boolean };
+  const HlsRef = useRef<HlsCtor | null>(null);
+  const hlsByIdx = useRef<Map<number, HlsLike>>(new Map());
+  const [hlsReady, setHlsReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    import('hls.js').then((m) => { if (live) { HlsRef.current = m.default as unknown as HlsCtor; setHlsReady(true); } }).catch(() => { if (live) setHlsReady(true); });
+    const map = hlsByIdx.current;
+    return () => { live = false; map.forEach((h) => h.destroy()); map.clear(); };
+  }, []);
+
+  /** Start the on-screen reel, with sound unless the browser refuses it. */
+  const playActive = useCallback((v: HTMLVideoElement, start: number) => {
+    if (Math.abs(v.currentTime - start) > 0.5) v.currentTime = start;
+    v.muted = muted;
+    v.play().catch((err: unknown) => {
+      // Only an autoplay refusal means "no sound allowed"; a source still loading is not.
+      if ((err as { name?: string })?.name !== 'NotAllowedError') return;
+      v.muted = true;
+      setMuted(true);
+      setSoundBlocked(true);
+      void v.play().catch(() => undefined);
+    });
+  }, [muted]);
 
   const feedKey = ['reels-feed', params];
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -82,20 +110,46 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
     videos.current.forEach((v, idx) => {
       if (idx === active) {
         v.currentTime = reels[idx]?.trimStartSec ?? 0;
-        v.muted = muted;
-        v.play().catch(() => {
-          // Autoplay with sound refused: play muted and offer to unmute.
-          v.muted = true;
-          setMuted(true);
-          setSoundBlocked(true);
-          void v.play().catch(() => undefined);
-        });
+        playActive(v, reels[idx]?.trimStartSec ?? 0);
       } else v.pause();
     });
     if (reels[active]) startedAt.current = { idx: active, at: Date.now() };
     if (hasNextPage && !isFetchingNextPage && active >= reels.length - 3) void fetchNextPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, reels.length]);
+
+  // Attach adaptive streams to the on-screen reel and the next one (so a
+  // swipe starts instantly), and release the rest.
+  useEffect(() => {
+    if (!hlsReady) return;
+    const Hls = HlsRef.current;
+    videos.current.forEach((v, idx) => {
+      const r = reels[idx];
+      if (!r?.hlsUrl) return;
+      const near = idx === active || idx === active + 1;
+      const native = v.canPlayType('application/vnd.apple.mpegurl') !== '';
+      const existing = hlsByIdx.current.get(idx);
+      if (native) {
+        if (near && !v.getAttribute('src')) { v.src = r.hlsUrl; if (idx === active) playActive(v, r.trimStartSec ?? 0); }
+        return;
+      }
+      if (near && !existing) {
+        if (Hls?.isSupported()) {
+          const h = new Hls({ capLevelToPlayerSize: true, startLevel: -1, maxBufferLength: idx === active ? 30 : 8 });
+          h.loadSource(r.hlsUrl);
+          h.attachMedia(v);
+          hlsByIdx.current.set(idx, h);
+        } else if (!v.getAttribute('src')) {
+          v.src = r.videoUrl; // no HLS support at all: the single MP4
+        }
+        if (idx === active) playActive(v, r.trimStartSec ?? 0);
+      } else if (!near && existing && Math.abs(idx - active) > 2) {
+        existing.destroy();
+        hlsByIdx.current.delete(idx);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, reels.length, hlsReady]);
 
   useEffect(() => {
     const onHide = () => { if (document.visibilityState === 'hidden') report(); };
@@ -158,7 +212,8 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
               <div className="relative h-full w-full sm:h-[calc(100dvh-32px)] sm:w-auto sm:aspect-[9/16] sm:overflow-hidden sm:rounded-2xl">
                 <video
                   ref={(el) => { if (el) videos.current.set(idx, el); else videos.current.delete(idx); }}
-                  src={Math.abs(idx - active) <= 2 ? r.videoUrl : undefined}
+                  // Streams are attached in an effect; plain MP4s load for nearby reels.
+                  src={!r.hlsUrl && Math.abs(idx - active) <= 2 ? r.videoUrl : undefined}
                   poster={reelPoster(r) ?? undefined}
                   className={cn('h-full w-full bg-black', landscape[r.id] ? 'object-contain' : 'object-cover')}
                   // Never more than 45 seconds: an untrimmed upload plays its chosen window, then loops it.
@@ -172,7 +227,7 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
                     if (r.trimStartSec) v.currentTime = r.trimStartSec;
                     if (v.videoWidth > v.videoHeight && !landscape[r.id]) setLandscape((l) => ({ ...l, [r.id]: true }));
                   }}
-                  playsInline loop preload={idx === active ? 'auto' : 'metadata'}
+                  playsInline loop preload={idx === active || idx === active + 1 ? 'auto' : 'metadata'}
                   onClick={(e) => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}
                 />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
