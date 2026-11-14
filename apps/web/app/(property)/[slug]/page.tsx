@@ -25,6 +25,8 @@ import { TemplateHero } from '../../../components/property/templates/TemplateHer
 import { LuxeDarkTemplate } from '../../../components/property/templates/luxe-dark/LuxeDarkTemplate';
 import { KitTemplate } from '../../../components/property/templates/KitTemplate';
 import { STUDIO_TEMPLATES } from '../../../components/property/templates/studio';
+import { PhotoAltProvider } from '../../../components/property/templates/studio/primitives';
+import { JsonLd, SITE_URL, breadcrumbs } from '../../../components/seo/JsonLd';
 import { TemplateSection } from '../../../components/property/templates/TemplateShell';
 import type { Metadata } from 'next';
 import type { Property } from '../../../lib/types';
@@ -137,6 +139,68 @@ export async function generateStaticParams() {
   return liveSlugs.map((slug) => ({ slug }));
 }
 
+/** The canonical address, by the same rule as the metadata: marketplace-first unless the owner chose their live domain. */
+function canonicalUrl(property: Property, slug: string) {
+  const p = property as { customDomain?: string | null; domainStatus?: string | null; seoPrimaryDomain?: boolean };
+  return p.customDomain && p.seoPrimaryDomain && p.domainStatus === 'ACTIVE' ? `https://${p.customDomain}/` : `${SITE_URL}/${slug}`;
+}
+
+const RESIDENCE_TYPE: Record<string, string> = {
+  APARTMENT: 'ApartmentComplex', PENTHOUSE: 'ApartmentComplex', VILLA: 'SingleFamilyResidence',
+  TOWNHOUSE: 'House', OFFICE: 'Place', COMMERCIAL: 'Place', LAND: 'Place',
+};
+
+/** Schema.org description of the development: what it is, where, what it costs and whether units are left. */
+function developmentSchema(property: Property, slug: string) {
+  const url = canonicalUrl(property, slug);
+  const images = [property.heroImageUrl, ...(property.galleryImages ?? [])].filter(Boolean).slice(0, 8);
+  const a = property.address;
+  const availability = property.status === 'SOLD_OUT' || property.availableUnits === 0
+    ? 'https://schema.org/SoldOut'
+    : property.status === 'OFF_PLAN' ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock';
+  const seller = property.listedByAgent
+    ? { '@type': 'RealEstateAgent', name: property.listedByAgent.displayName, url: `${SITE_URL}/agents/${property.listedByAgent.id}` }
+    : property.developer?.name
+      ? { '@type': 'Organization', name: property.developer.name, ...(property.developer.id ? { url: `${SITE_URL}/developers/${property.developer.id}` } : {}) }
+      : undefined;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: property.name,
+    url,
+    ...(property.description || property.tagline ? { description: (property.description || property.tagline).slice(0, 500) } : {}),
+    ...(images.length ? { image: images } : {}),
+    ...(property.priceFrom ? {
+      offers: {
+        '@type': 'AggregateOffer',
+        businessFunction: 'http://purl.org/goodrelations/v1#Sell',
+        priceCurrency: property.currency || 'KES',
+        lowPrice: property.priceFrom,
+        ...(property.priceTo && property.priceTo > property.priceFrom ? { highPrice: property.priceTo } : {}),
+        ...(property.availableUnits ? { offerCount: property.availableUnits } : {}),
+        availability,
+        url,
+        ...(seller ? { seller } : {}),
+      },
+    } : {}),
+    about: {
+      '@type': RESIDENCE_TYPE[String(property.category ?? '').toUpperCase()] ?? 'Residence',
+      name: property.name,
+      address: {
+        '@type': 'PostalAddress',
+        ...(a?.neighborhood ? { addressLocality: a.neighborhood } : {}),
+        ...(a?.city ? { addressRegion: a.city } : {}),
+        addressCountry: 'KE',
+      },
+      ...(a?.coordinates?.lat && a?.coordinates?.lng ? { geo: { '@type': 'GeoCoordinates', latitude: a.coordinates.lat, longitude: a.coordinates.lng } } : {}),
+      // The building's own features (amenities on the page are nearby places).
+      ...(property.features?.length ? {
+        amenityFeature: property.features.slice(0, 20).map((f) => ({ '@type': 'LocationFeatureSpecification', name: f.replace(/-/g, ' '), value: true })),
+      } : {}),
+    },
+  };
+}
+
 export default async function PropertyPage({ params }: Props) {
   const { slug } = await params;
 
@@ -230,11 +294,14 @@ export default async function PropertyPage({ params }: Props) {
           fontFamily: 'var(--tpl-font-body)',
         }}
       >
+        <JsonLd data={developmentSchema(property, slug)} />
+        <JsonLd data={breadcrumbs([{ name: 'Home', path: '/' }, { name: 'Properties for sale', path: '/properties' }, { name: property.name, path: `/${slug}` }])} />
         <TrackPageView propertyId={property.id} />
         <GoogleOneTap propertyId={property.id} />
         <AgentReferralBar />
         <FloatingChat propertySlug={property.slug} />
       <BackToBrowse />
+        <PhotoAltProvider name={property.name}>
         {Rendered ? (
           <Rendered
             property={property}
@@ -259,6 +326,7 @@ export default async function PropertyPage({ params }: Props) {
             rentListings={rentListings}
           />
         )}
+        </PhotoAltProvider>
       </main>
       </ChatAudienceProvider>
     );
@@ -276,6 +344,8 @@ export default async function PropertyPage({ params }: Props) {
         fontFamily: 'var(--brand-font-body)',
       }}
     >
+      <JsonLd data={developmentSchema(property, slug)} />
+      <JsonLd data={breadcrumbs([{ name: 'Home', path: '/' }, { name: 'Properties for sale', path: '/properties' }, { name: property.name, path: `/${slug}` }])} />
       <TrackPageView propertyId={property.id} />
         <GoogleOneTap propertyId={property.id} />
         <AgentReferralBar />

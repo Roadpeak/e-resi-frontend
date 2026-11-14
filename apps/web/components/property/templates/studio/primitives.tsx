@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AnimatePresence, motion, useInView, useScroll, useTransform, type MotionValue,
 } from 'framer-motion';
@@ -222,10 +222,20 @@ export function placeOf(property: Property) {
  * Section videos only download and play while on screen — a long page with
  * three looping films must not pull all three on a phone the moment it opens.
  */
+/**
+ * The development's name, so photos the templates place without their own
+ * description still get a meaningful alt ("Riverside Azure — photo") rather
+ * than being marked decorative to screen readers and image search.
+ */
+const PhotoAltContext = createContext<string>('');
+export function PhotoAltProvider({ name, children }: { name: string; children: ReactNode }) {
+  return <PhotoAltContext.Provider value={name ? `${name} — photo` : ''}>{children}</PhotoAltContext.Provider>;
+}
+
 export function MediaFill({
   video,
   image,
-  alt = '',
+  alt: altProp,
   className = '',
   priority = false,
   grayscale = false,
@@ -237,6 +247,8 @@ export function MediaFill({
   priority?: boolean;
   grayscale?: boolean;
 }) {
+  const fallbackAlt = useContext(PhotoAltContext);
+  const alt = altProp ?? fallbackAlt;
   const ref = useRef<HTMLVideoElement>(null);
   const inView = useInView(ref, { amount: 0.1 });
   useEffect(() => {
@@ -399,7 +411,7 @@ export function Rise({
 /** Image that drifts against the scroll, inside a clipped frame. */
 export function ParallaxImage({
   src,
-  alt = '',
+  alt: altProp,
   className = '',
   strength = 60,
   grayscale = false,
@@ -410,6 +422,8 @@ export function ParallaxImage({
   strength?: number;
   grayscale?: boolean;
 }) {
+  const fallbackAlt = useContext(PhotoAltContext);
+  const alt = altProp ?? fallbackAlt;
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], [-strength, strength]);

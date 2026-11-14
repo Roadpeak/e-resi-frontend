@@ -26,12 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${a.displayName} — ${kindLabel(a)}${where}`;
   const description = snippet(a.bio)
     ?? `${a.displayName}, a verified ${kindLabel(a).toLowerCase()}${where}. Homes for sale and to rent, reviews and contact on E-resi.`;
-  const image = a.logoUrl ?? a.photoUrl ?? undefined;
   return {
     title,
     description,
     alternates: { canonical: `/agents/${id}` },
-    openGraph: { siteName: 'E-resi', title: `${a.displayName} — E-resi`, description, url: `/agents/${id}`, type: 'profile', ...(image ? { images: [image] } : {}) },
+    openGraph: { siteName: 'E-resi', title: `${a.displayName} — E-resi`, description, url: `/agents/${id}`, type: 'profile' },
     twitter: { card: 'summary', title: `${a.displayName} — E-resi`, description },
   };
 }

@@ -278,7 +278,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             <button key={p} onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} aria-current={i === active}
               className={cn('relative h-16 w-[88px] shrink-0 overflow-hidden rounded-xl transition-opacity sm:h-20 sm:w-28',
                 i === active ? 'ring-2 ring-[#18181b] ring-offset-2' : 'opacity-70 hover:opacity-100')}>
-              <Image src={p} alt="" fill className="object-cover" sizes="112px" />
+              <Image src={p} alt={`${listing.name} — photo ${i + 1}`} fill className="object-cover" sizes="112px" />
             </button>
           ))}
         </div>
@@ -559,7 +559,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
           {property.slug && (
             <Link href={`/${property.slug}`} className="flex items-center gap-3 rounded-[20px] border border-[#ececec] bg-[#fafafa] p-3 hover:bg-[#f4f4f4]">
               <span className="relative h-14 w-16 shrink-0 overflow-hidden rounded-xl bg-[#efefef]">
-                {property.heroImageUrl && <Image src={property.heroImageUrl} alt="" fill className="object-cover" sizes="64px" />}
+                {property.heroImageUrl && <Image src={property.heroImageUrl} alt={property.name ?? ''} fill className="object-cover" sizes="64px" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[12.5px] text-[#52525b]">Part of</span>
@@ -612,7 +612,7 @@ export default function RentListingPage({ params }: { params: Promise<{ slug: st
             </>
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photos[lightbox]} alt="" className="max-h-[86vh] max-w-[92vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
+          <img src={photos[lightbox]} alt={`${listing.name} — photo ${lightbox + 1}`} className="max-h-[86vh] max-w-[92vw] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
 

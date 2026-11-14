@@ -1,5 +1,6 @@
 import { MIN_INDEXABLE, fetchAreas } from './areas';
 import { GUIDES } from '../guides';
+import { REELS_MIN_INDEXABLE, publishedReelCount } from './reels';
 
 /**
  * The sitemap index and its typed sitemaps.
@@ -53,8 +54,11 @@ const iso = (d?: string) => (d && !Number.isNaN(Date.parse(d)) ? new Date(d).toI
 
 export async function entriesFor(type: SitemapType): Promise<Entry[]> {
   switch (type) {
-    case 'pages':
-      return STATIC_PATHS.map((p) => ({ loc: `${SITE}${p}` }));
+    case 'pages': {
+      // /reels joins once it passes the same threshold its robots tag uses.
+      const reels = (await publishedReelCount()) >= REELS_MIN_INDEXABLE ? ['/reels'] : [];
+      return [...STATIC_PATHS, ...reels].map((p) => ({ loc: `${SITE}${p}` }));
+    }
     case 'developments':
       return (await fetchAll('properties')).filter((r) => r.slug).map((r) => ({ loc: `${SITE}/${r.slug}`, lastmod: iso(r.updatedAt) }));
     case 'rentals':
