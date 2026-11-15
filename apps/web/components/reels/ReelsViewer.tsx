@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, ArrowUpRight, Heart, Loader2, MapPin, MessageCircle, Share2, Volume2, VolumeX, Clapperboard,
+  ArrowLeft, ArrowUpRight, ChevronDown, ChevronUp, Heart, Loader2, MapPin, MessageCircle, Share2, Volume2, VolumeX, Clapperboard,
 } from 'lucide-react';
 import { compactCount, reelPoster, reelsApi, type FeedParams, type Reel } from '../../lib/api/reels';
 import { useAuthStore } from '../../lib/stores/auth.store';
@@ -36,6 +36,19 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
   const [overrides, setOverrides] = useState<Record<string, Partial<Reel>>>({});
   const videos = useRef<Map<number, HTMLVideoElement>>(new Map());
   const slides = useRef<Map<number, HTMLElement>>(new Map());
+  /** Snap to a reel by index — the desktop arrows and keyboard use this. */
+  const goTo = (idx: number) => slides.current.get(idx)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const activeRef = useRef(0);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') { e.preventDefault(); goTo(activeRef.current + 1); }
+      if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'k') { e.preventDefault(); goTo(activeRef.current - 1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const startedAt = useRef<{ idx: number; at: number } | null>(null);
   // Adaptive streaming: hls.js where the browser has no native HLS (Chrome,
   // Android, Firefox); Safari and iOS play the stream natively. One instance
@@ -98,6 +111,7 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
         if (e.isIntersecting && e.intersectionRatio >= 0.6) {
           const idx = Number((e.target as HTMLElement).dataset.idx);
           setActive(idx);
+          activeRef.current = idx;
         }
       }
     }, { threshold: [0.6] });
@@ -206,7 +220,9 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
           <Link href={backHref} className="mt-2 rounded-full bg-white px-5 py-2.5 text-[14px] font-medium text-black">Browse properties</Link>
         </div>
       ) : (
-        <div className="h-full snap-y snap-mandatory overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        // data-lenis-prevent: the site-wide smooth scroller swallows wheel and trackpad
+        // events, so without it this feed could not be scrolled on a computer at all.
+        <div data-lenis-prevent className="h-full snap-y snap-mandatory overflow-y-scroll overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {reels.map((r, idx) => (
             <section key={r.id} data-idx={idx} ref={(el) => { if (el) slides.current.set(idx, el); else slides.current.delete(idx); }}
               className="relative flex h-[100dvh] w-full snap-start snap-always items-center justify-center">
@@ -290,6 +306,20 @@ export function ReelsViewer({ params, backHref = '/properties' }: { params: Omit
             </section>
           ))}
           {isFetchingNextPage && <div className="flex h-24 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/60" /></div>}
+        </div>
+      )}
+
+      {/* Desktop: previous / next buttons beside the reel (keyboard arrows do the same). */}
+      {reels.length > 1 && (
+        <div className="absolute right-6 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-3 md:flex">
+          <button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label="Previous reel"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-30">
+            <ChevronUp size={22} />
+          </button>
+          <button type="button" onClick={() => goTo(active + 1)} disabled={active >= reels.length - 1} aria-label="Next reel"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-30">
+            <ChevronDown size={22} />
+          </button>
         </div>
       )}
 

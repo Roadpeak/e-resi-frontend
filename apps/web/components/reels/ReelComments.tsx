@@ -90,7 +90,7 @@ export function ReelComments({
   );
 
   const list = (
-    <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+    <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4" data-lenis-prevent>
       {isLoading ? (
         <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-[#9aa0a6]" /></div>
       ) : items.length === 0 ? (
