@@ -162,6 +162,19 @@ export interface ShowcaseProperty {
   location: string;
   tag: string;
   imageUrl: string;
+  /** What the development is listed for: units on sale, open rent listings, or both. */
+  deals: Array<'Selling' | 'Renting'>;
+}
+
+/**
+ * Selling unless the development only has rentals: a development is sold by default, and says
+ * Renting as well once it has open rent listings (counted by the API's public list).
+ */
+function dealsOf(p: any): Array<'Selling' | 'Renting'> {
+  const rentals = Number(p._count?.rentListings ?? 0);
+  const units = Number(p._count?.units ?? 0);
+  if (rentals > 0 && units === 0) return ['Renting'];
+  return rentals > 0 ? ['Selling', 'Renting'] : ['Selling'];
 }
 
 /** Title-case an UPPER_SNAKE enum for display ("OFF_PLAN" → "Off Plan"). */
@@ -210,6 +223,7 @@ export async function fetchFeaturedProperties(limit = 6): Promise<ShowcaseProper
           location: location || 'Kenya',
           // Prefer the human tagline; fall back to the category enum.
           tag: p.tagline || (p.category ? humaniseEnum(String(p.category)) : 'Development'),
+          deals: dealsOf(p),
           imageUrl:
             p.heroImageUrl
             || p.galleryImages?.[0]

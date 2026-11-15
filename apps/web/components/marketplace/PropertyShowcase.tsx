@@ -173,6 +173,18 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
               <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
             </div>
 
+            {/* What it is listed for, top left. */}
+            <div className="absolute left-5 top-5 z-10 flex gap-1.5">
+              {property.deals.map((d) => (
+                <span
+                  key={d}
+                  className={`rounded-full px-3 py-1 font-google text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[0_2px_8px_rgba(0,0,0,0.25)] ${d === 'Selling' ? 'bg-[#FFE345] text-[#14120a]' : 'bg-white text-[#0149FE]'}`}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+
             {/* Number — positional, so it stays sequential whatever we fetch. */}
             <span className="absolute top-5 right-5 font-display text-5xl font-light text-chalk/10 z-10">
               {String(i + 1).padStart(2, '0')}
@@ -180,10 +192,7 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
 
             {/* Meta */}
             <div className="card-meta absolute bottom-0 left-0 right-0 p-6 z-10">
-              <span className="inline-block rounded-md border border-[#FFE345] text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 mb-3">
-                {property.tag}
-              </span>
-              <h3 className="font-display font-light text-chalk text-2xl leading-tight mb-1">
+              <h3 className="font-google font-bold tracking-tight text-white text-2xl leading-tight mb-1.5">
                 {property.name}
               </h3>
               <p className="flex items-center gap-1.5 text-white/80 text-sm tracking-wide">
