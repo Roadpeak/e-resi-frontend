@@ -134,7 +134,7 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
           {['Selected', 'Properties'].map((w, i) => (
             <span
               key={i}
-              className="showcase-title-word inline-block font-display font-light text-[#14120a]"
+              className="showcase-title-word inline-block font-google font-bold tracking-tight text-[#14120a]"
               style={{ fontSize: 'clamp(2rem, 4vw, 4rem)' }}
             >
               {w}
