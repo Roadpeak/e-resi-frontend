@@ -4,9 +4,23 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowDown, Headset, Box, ArrowRight, Film } from 'lucide-react';
+import { ArrowDown, Headset, Box, ArrowRight, Film, Building2, KeyRound, PlusCircle, ScanLine, ChevronRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
+
+/** Pinned scroll length in screen heights. Phases 1–2 were designed for BASE; phase 3 uses the rest. */
+const BASE_SCREENS = 5;
+const TOTAL_SCREENS = 6.5;
+const BASE_SCREENS_MOBILE = 2.5;
+const TOTAL_SCREENS_MOBILE = 3.25;
+
+/** The end-of-hero chooser: icons in Google's four colours, one per intent. */
+const INTERESTS = [
+  { href: '/properties', title: 'Buy properties', body: 'Off-plan and ready homes from verified developers', Icon: Building2, tint: '#e8f0fe', ink: '#1a73e8' },
+  { href: '/rent', title: 'Rent', body: 'Apartments, houses and offices with live availability', Icon: KeyRound, tint: '#e6f4ea', ink: '#188038' },
+  { href: '/list-development', title: 'List properties', body: 'For developers and agents — reach buyers and tenants', Icon: PlusCircle, tint: '#fef7e0', ink: '#b06000' },
+  { href: '/for-developers', title: 'Get 3D and VR tours for your property', body: 'We film, scan and publish it for buyers to walk through', Icon: ScanLine, tint: '#fce8e6', ink: '#d93025' },
+] as const;
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -23,6 +37,11 @@ export function HeroSection() {
   const tdCardRef = useRef<HTMLDivElement>(null);
   const cinCardRef = useRef<HTMLDivElement>(null);
   const phase2HeadRef = useRef<HTMLDivElement>(null);
+  // Phase 3: the film gives way to e-resi blue and a plain "what are you here for" chooser.
+  const phase3BgRef = useRef<HTMLDivElement>(null);
+  const phase3Ref = useRef<HTMLDivElement>(null);
+  const phase3HeadRef = useRef<HTMLDivElement>(null);
+  const phase3GridRef = useRef<HTMLDivElement>(null);
 
   // Builds the pinned, scrub-driven hero — immediately, not once the video's
   // duration is known.
@@ -116,6 +135,12 @@ export function HeroSection() {
       gsap.set(vrCardRef.current, { autoAlpha: 0, x: -60 });
       gsap.set(tdCardRef.current, { autoAlpha: 0, x: 60 });
       gsap.set(cinCardRef.current, { autoAlpha: 0, y: 40 });
+
+      // ── Phase 3 hidden initially ──
+      gsap.set(phase3BgRef.current, { autoAlpha: 0 });
+      gsap.set(phase3Ref.current, { autoAlpha: 0 });
+      gsap.set(phase3HeadRef.current, { autoAlpha: 0, y: 30 });
+      gsap.set(phase3GridRef.current, { autoAlpha: 0, y: 40 });
       gsap.set(phase2HeadRef.current, { autoAlpha: 0, y: 30 });
 
       // ── Main scroll driver ──
@@ -192,12 +217,15 @@ export function HeroSection() {
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start: 'top top',
-        end: isMobile ? '+=250%' : '+=500%',
+        end: isMobile ? `+=${TOTAL_SCREENS_MOBILE * 100}%` : `+=${TOTAL_SCREENS * 100}%`,
         pin: true,
         scrub: isMobile ? 0.6 : 1.5,
         onUpdate: (self) => {
           const p = self.progress;
           progressRef.current = p;
+          // Phases 1 and 2 were laid out for a shorter pin; q keeps them at the
+          // same scroll distance they always had, and phase 3 gets the rest.
+          const q = Math.min(1, p * (isMobile ? TOTAL_SCREENS_MOBILE / BASE_SCREENS_MOBILE : TOTAL_SCREENS / BASE_SCREENS));
 
           // Video scrub — full duration across full scroll. Until metadata
           // arrives there is nothing to seek; the poster holds the frame
@@ -205,7 +233,7 @@ export function HeroSection() {
           if (durationRef.current) seekTo(p * durationRef.current);
 
           // ── Phase 1: 0 → 0.28  (headline visible → fades out) ──
-          const p1out = Math.max(0, Math.min(1, (p - 0.18) / 0.12)); // fades 0.18→0.30
+          const p1out = Math.max(0, Math.min(1, (q - 0.18) / 0.12)); // fades 0.18→0.30
           if (headlineRef.current) {
             gsap.set(headlineRef.current, {
               y: p1out * -80,
@@ -215,11 +243,11 @@ export function HeroSection() {
           if (subRef.current)  gsap.set(subRef.current,  { opacity: 1 - p1out * 1.4 });
           if (ctaRef.current)  gsap.set(ctaRef.current,  { opacity: 1 - p1out * 1.4 });
           if (lineRef.current) gsap.set(lineRef.current, { opacity: 1 - p1out });
-          if (scrollIndRef.current) gsap.set(scrollIndRef.current, { opacity: Math.max(0, 1 - p * 6) });
+          if (scrollIndRef.current) gsap.set(scrollIndRef.current, { opacity: Math.max(0, 1 - q * 6) });
 
           // ── Phase 2: 0.32 → 0.72 (VR/3D panel fades in, stays, fades out) ──
-          const p2in  = Math.max(0, Math.min(1, (p - 0.32) / 0.12)); // fade in
-          const p2out = Math.max(0, Math.min(1, (p - 0.62) / 0.12)); // fade out
+          const p2in  = Math.max(0, Math.min(1, (q - 0.32) / 0.12)); // fade in
+          const p2out = Math.max(0, Math.min(1, (q - 0.62) / 0.12)); // fade out
 
           const p2Opacity = p2in * (1 - p2out);
 
@@ -248,6 +276,17 @@ export function HeroSection() {
               y: (1 - p2in) * 40,
             });
           }
+
+          // ── Phase 3: the film gives way to blue, then the chooser rises in and holds ──
+          // Starts as phase 2 leaves (q ≈ 0.70); measured in q-space so it lines up
+          // on phones and desktop alike, then holds to the end of the pin.
+          const p3bg   = Math.max(0, Math.min(1, (q - 0.70) / 0.14));
+          const p3head = Math.max(0, Math.min(1, (q - 0.80) / 0.10));
+          const p3grid = Math.max(0, Math.min(1, (q - 0.86) / 0.12));
+          if (phase3BgRef.current) gsap.set(phase3BgRef.current, { autoAlpha: p3bg });
+          if (phase3Ref.current) gsap.set(phase3Ref.current, { autoAlpha: p3head > 0 ? 1 : 0 });
+          if (phase3HeadRef.current) gsap.set(phase3HeadRef.current, { autoAlpha: p3head, y: (1 - p3head) * 30 });
+          if (phase3GridRef.current) gsap.set(phase3GridRef.current, { autoAlpha: p3grid, y: (1 - p3grid) * 40 });
         },
       });
 
@@ -495,6 +534,52 @@ export function HeroSection() {
             </Link>
           </div>
 
+        </div>
+      </div>
+
+      {/* ── Phase 3: e-resi blue, and what the visitor is here for ── */}
+      {/* Same ground as the /for-developers hero: the 115° navy-to-blue gradient and its top-right bloom. */}
+      <div
+        ref={phase3BgRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[25] overflow-hidden"
+        style={{ visibility: 'hidden', backgroundImage: 'linear-gradient(115deg, #101a3a 0%, #1a234d 32%, #2a45c4 68%, #6e9af8 100%)' }}
+      >
+        <div
+          className="absolute -right-32 -top-40 h-[520px] w-[520px] rounded-full opacity-50 blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(110,154,248,0.60) 0%, transparent 68%)' }}
+        />
+      </div>
+      <div
+        ref={phase3Ref}
+        className="absolute inset-0 z-[26] flex items-center justify-center px-5 sm:px-10"
+        style={{ visibility: 'hidden' }}
+      >
+        <div className="w-full max-w-[880px] font-sans">
+          <div ref={phase3HeadRef} className="mb-8 text-center sm:mb-10">
+            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff]">Get started</p>
+            <h2 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px]" style={{ textWrap: 'balance' }}>
+              What are you interested in?
+            </h2>
+          </div>
+          <div ref={phase3GridRef} className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            {INTERESTS.map(({ href, title, body, Icon, tint, ink }) => (
+              <Link
+                key={href}
+                href={href}
+                className="group flex items-center gap-4 rounded-2xl bg-white px-4 py-4 text-left shadow-[0_1px_2px_rgba(16,26,58,0.12),0_8px_24px_rgba(16,26,58,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(16,26,58,0.14),0_14px_32px_rgba(16,26,58,0.26)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-5 sm:py-5"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: tint, color: ink }}>
+                  <Icon size={20} strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[16px] font-semibold text-[#202124] sm:text-[17px]">{title}</span>
+                  <span className="mt-0.5 block text-[13.5px] leading-snug text-[#5f6368]">{body}</span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-[#9aa0a6] transition-transform group-hover:translate-x-0.5 group-hover:text-[#1a73e8]" />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
