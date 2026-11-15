@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type Ref } from 'react';
 import Link from 'next/link';
 import { announceHeroBlue } from '../../lib/hero-blue';
 import { gsap } from 'gsap';
@@ -24,7 +24,8 @@ const INTERESTS = [
   { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine, tint: '#fce8e6', ink: '#d93025' },
 ] as const;
 
-export function HeroSection() {
+/** Tablet and desktop: the pinned film hero with its three scroll phases. */
+function CinematicHero() {
   const sectionRef = useRef<HTMLElement>(null);
   const ctxRef = useRef<gsap.Context | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -82,6 +83,8 @@ export function HeroSection() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    // Phones get MobileHero instead; this one is display:none there, so pinning it would only add dead scroll.
+    if (window.matchMedia('(max-width: 767px)').matches) return;
 
     video.pause();
     // Paused, scrub-driven video paints nothing until a seek resolves. Ask for
@@ -565,26 +568,7 @@ export function HeroSection() {
         style={{ visibility: 'hidden' }}
       >
         <div className="w-full max-w-[880px] font-sans">
-          <div ref={phase3HeadRef} className="mb-8 text-center sm:mb-10 [@media(max-height:700px)]:mb-4">
-            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff] [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
-            <h2 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
-              What are you interested in?
-            </h2>
-          </div>
-          <div ref={phase3GridRef} className="mx-auto flex max-w-[360px] flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center [@media(max-height:700px)]:gap-2">
-            {INTERESTS.map(({ href, title, Icon, tint, ink }) => (
-              <Link
-                key={href}
-                href={href}
-                className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-white py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9" style={{ background: tint, color: ink }}>
-                  <Icon size={17} strokeWidth={2.2} />
-                </span>
-                {title}
-              </Link>
-            ))}
-          </div>
+          <InterestChooser headRef={phase3HeadRef} gridRef={phase3GridRef} />
         </div>
       </div>
 
@@ -603,5 +587,67 @@ export function HeroSection() {
         <span className="text-[10px] text-stone/40 tracking-[0.2em] uppercase">Verified listings</span>
       </div>
     </section>
+  );
+}
+
+/** "What are you interested in?" with its four buttons: the last step of the desktop hero and the whole hero on phones. */
+function InterestChooser({ headRef, gridRef, as = 'h2' }: { headRef?: Ref<HTMLDivElement>; gridRef?: Ref<HTMLDivElement>; as?: 'h1' | 'h2' }) {
+  const Heading = as;
+  return (
+    <>
+    <div ref={headRef} className="mb-8 text-center sm:mb-10 [@media(max-height:700px)]:mb-4">
+      <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff] [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
+      <Heading className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
+        What are you interested in?
+      </Heading>
+    </div>
+    <div ref={gridRef} className="mx-auto flex max-w-[360px] flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center [@media(max-height:700px)]:gap-2">
+      {INTERESTS.map(({ href, title, Icon, tint, ink }) => (
+        <Link
+          key={href}
+          href={href}
+          className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-white py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9" style={{ background: tint, color: ink }}>
+            <Icon size={17} strokeWidth={2.2} />
+          </span>
+          {title}
+        </Link>
+      ))}
+    </div>
+    </>
+  );
+}
+
+/** Phones: no film and no scroll animation, just the blue chooser as the hero. */
+function MobileHero() {
+  return (
+    <section
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-5 pb-12 pt-24"
+      style={{ backgroundImage: 'linear-gradient(115deg, #101a3a 0%, #1a234d 32%, #2a45c4 68%, #6e9af8 100%)' }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-32 -top-40 h-[520px] w-[520px] rounded-full opacity-50 blur-3xl"
+        style={{ background: 'radial-gradient(circle, rgba(110,154,248,0.60) 0%, transparent 68%)' }}
+      />
+      <div className="hero-rise relative w-full max-w-[880px] font-sans">
+        <InterestChooser />
+      </div>
+    </section>
+  );
+}
+
+/** Desktop and tablet keep the film hero; phones get the blue chooser on its own. Both are server-rendered, CSS shows one. */
+export function HeroSection() {
+  return (
+    <>
+      <div className="md:hidden">
+        <MobileHero />
+      </div>
+      <div className="hidden md:block">
+        <CinematicHero />
+      </div>
+    </>
   );
 }
