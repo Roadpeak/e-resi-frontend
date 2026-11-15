@@ -25,7 +25,7 @@ const SEGMENTS = [
   { href: '/rent', title: 'Rent', Icon: KeyRound },
   { href: '/for-agents', title: 'List', Icon: PlusCircle },
 ] as const;
-const TOURS = { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine } as const;
+const TOURS = { href: '/services', title: 'Get 3D and VR tours for your property', Icon: ScanLine } as const;
 
 /** A magnifying glass with a house in its lens: "find a home". */
 function HomeSearchMark({ className }: { className?: string }) {

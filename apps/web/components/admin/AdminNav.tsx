@@ -26,6 +26,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Neighbourhoods', href: '/admin/neighbourhoods', icon: 'map' },
   { label: 'Operations', href: '/admin/rentals', icon: 'key' },
   { label: 'Production', href: '/admin/production', icon: 'movie' },
+  { label: 'Service requests', href: '/admin/services', icon: 'request_quote' },
   { label: 'Pricing', href: '/admin/pricing', icon: 'sell' },
   { label: 'Billing', href: '/admin/billing', icon: 'payments' },
   { label: 'Invoices', href: '/admin/billing/invoices', icon: 'receipt_long' },
