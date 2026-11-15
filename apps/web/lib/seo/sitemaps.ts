@@ -22,7 +22,7 @@ const STATIC_PATHS = [
   '', '/properties', '/apartments', '/villas', '/commercial',
   '/rent', '/rent/apartments', '/rent/villas', '/rent/commercial',
   '/developers', '/agents', '/neighbourhoods', '/map/locations',
-  '/for-developers', '/for-agents', '/for-investors', '/list-agency', '/list-development', '/services',
+  '/for-developers', '/for-agents', '/for-investors', '/list-agency', '/list-development', '/services', '/3d-demo',
   '/about', '/pricing', '/faq', '/contact', '/careers', '/guides',
   ...GUIDES.map((g) => `/guides/${g.slug}`),
   '/privacy', '/terms',

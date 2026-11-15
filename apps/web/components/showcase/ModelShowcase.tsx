@@ -22,7 +22,14 @@ type View = 'exterior' | 'interior';
  * the model takes the mouse wheel while the pointer is over it; on a phone,
  * a tap starts it so swiping past still scrolls the page.
  */
-export function ModelShowcase({ config, className }: { config: Home3D; className?: string }) {
+export function ModelShowcase({ config, className, size = 'md', demoLink = false }: {
+  config: Home3D;
+  className?: string;
+  /** 'lg': the dedicated /3d-demo page, most of the screen tall. */
+  size?: 'md' | 'lg';
+  /** Show a link to the full /3d-demo page under the viewer. */
+  demoLink?: boolean;
+}) {
   const views = ([['exterior', 'Outside'], ['interior', 'Inside']] as const).filter(([k]) => config[k]);
   const [view, setView] = useState<View>(views[0]?.[0] ?? 'exterior');
   const [near, setNear] = useState(false);
@@ -47,7 +54,7 @@ export function ModelShowcase({ config, className }: { config: Home3D; className
   return (
     <div className={cn('flex flex-col', className)}>
       {/* data-lenis-prevent: the wheel zooms the model instead of the page smooth-scrolling. */}
-      <div ref={box} data-lenis-prevent className="relative h-[420px] overflow-hidden rounded-[28px] border-[1.5px] border-[#FFE345] sm:h-[520px] lg:h-full lg:min-h-[560px]">
+      <div ref={box} data-lenis-prevent className={cn('relative overflow-hidden rounded-[28px] border-[1.5px] border-[#FFE345]', size === 'lg' ? 'h-[70vh] min-h-[460px] sm:h-[78vh] sm:min-h-[600px]' : 'h-[420px] sm:h-[520px] lg:h-full lg:min-h-[560px]')}>
         {/* Backstop: anything else the 3D view throws stays inside this box. */}
         {near && (
           <ShowcaseErrorBoundary key={url}>
@@ -90,10 +97,15 @@ export function ModelShowcase({ config, className }: { config: Home3D; className
           </p>
         )}
       </div>
-      {config.caption && (
-        <p className="mt-4 font-google text-[14px] text-stone/60">
-          {config.link ? <Link href={config.link} className="hover:text-chalk">{config.caption} →</Link> : config.caption}
-        </p>
+      {(config.caption || demoLink) && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 font-google text-[14px]">
+          {config.caption ? (
+            <p className="text-stone/60">
+              {config.link ? <Link href={config.link} className="hover:text-chalk">{config.caption} →</Link> : config.caption}
+            </p>
+          ) : <span />}
+          {demoLink && <Link href="/3d-demo" className="font-medium text-[#FFE345] hover:text-[#fff0a0]">View full demo →</Link>}
+        </div>
       )}
     </div>
   );

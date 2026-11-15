@@ -19,6 +19,8 @@ const links = [
   { href: '/rent', label: 'Rent' },
   { href: '/agents', label: 'Agents' },
   { href: '/reels', label: 'Reels' },
+  // Rendered as a small yellow-outlined pill: the live 3D demo.
+  { href: '/3d-demo', label: '3D Demo' },
 ];
 
 export function Navbar() {
@@ -101,7 +103,9 @@ export function Navbar() {
                 href={l.href}
                 className={cn(
                   'text-xs tracking-[0.15em] uppercase transition-colors duration-300',
-                  pathname === l.href ? 'text-chalk' : 'text-chalk/80 hover:text-chalk',
+                  l.href === '/3d-demo'
+                    ? 'rounded-full border border-[#FFE345] px-3.5 py-1.5 text-[#FFE345] hover:bg-[#FFE345] hover:text-[#14120a]'
+                    : pathname === l.href ? 'text-chalk' : 'text-chalk/80 hover:text-chalk',
                 )}
               >
                 {l.label}

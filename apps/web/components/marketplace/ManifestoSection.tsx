@@ -91,7 +91,7 @@ export function ManifestoSection({ showcase = EMPTY_HOME_3D }: { showcase?: Home
           ))}
         </div>
 
-        {has3d && <ModelShowcase config={showcase} />}
+        {has3d && <ModelShowcase config={showcase} demoLink />}
         </div>
 
         {/* Rule */}
