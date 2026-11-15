@@ -641,7 +641,7 @@ function InterestChooser({ headRef, gridRef }: { headRef?: Ref<HTMLDivElement>; 
 }
 
 /** Phones: no film and no scroll animation, just the blue chooser over a tower photo as the hero. */
-const PHONE_PHOTO = '/images/hero-mobile-nbo.jpg';
+const PHONE_PHOTO = '/images/hero-mobile-rrr.jpg';
 const phoneSrc = (w: number) => `/_next/image?url=${encodeURIComponent(PHONE_PHOTO)}&w=${w}&q=75`;
 /** 1×1 transparent GIF: what wider screens pick, so the phone photo never downloads on desktop. */
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -659,7 +659,7 @@ function MobileHero() {
           src={phoneSrc(828)}
           srcSet={`${phoneSrc(640)} 640w, ${phoneSrc(828)} 828w, ${phoneSrc(1080)} 1080w`}
           sizes="100vw"
-          alt="A Nairobi tower against a clear blue sky"
+          alt="Nairobi towers glowing at dusk"
           fetchPriority="high"
           decoding="async"
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[64%] w-full object-cover object-[50%_30%]"
