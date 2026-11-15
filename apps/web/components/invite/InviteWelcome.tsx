@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ArrowRight, Building2, Check, Eye, EyeOff, Globe, Handshake, LayoutDashboard, Lock, Mail, MessageSquare,
-  Phone, Radar, Search, ShieldCheck, User, Users, Video, Clapperboard,
-} from 'lucide-react';
+import { ArrowRight, Building2, Check, Eye, EyeOff, Globe, Handshake, LayoutDashboard, Lock, Mail, MessageSquare, Phone, Radar, Search, ShieldCheck, User, Users, Video, Clapperboard, ArrowUpRight } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Input } from '../ui/Input';
 import { ApiError } from '../../lib/api/client';
@@ -122,7 +119,7 @@ export function InviteWelcome({ code }: { code: string }) {
               </div>
 
               {/* Same action as the button further down, so they can start without scrolling. */}
-              <div className="mt-5">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 {inv.signedUp ? (
                   <Link href="/login" className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-[15px] font-medium text-white hover:bg-[#1765cc]">Sign in <ArrowRight size={16} /></Link>
                 ) : (
@@ -131,6 +128,11 @@ export function InviteWelcome({ code }: { code: string }) {
                     Complete signup <ArrowRight size={16} />
                   </button>
                 )}
+                {/* A look around first: opens the homepage in a new tab so this invitation stays open. */}
+                <a href="/" target="_blank" rel="noopener"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-6 py-2.5 text-[15px] font-medium text-[#1a73e8] transition-colors hover:bg-[#f8f9fa]">
+                  Check out e-resi <ArrowUpRight size={16} />
+                </a>
               </div>
 
               <blockquote className="mt-8 whitespace-pre-line rounded-3xl border border-[#dadce0] bg-white p-6 text-[16px] leading-relaxed text-[#3c4043] sm:p-8">
