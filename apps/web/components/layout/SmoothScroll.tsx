@@ -27,6 +27,12 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       smoothWheel: true,
+      // Let anything that scrolls on its own (side menus, dropdowns, modals,
+      // chat and notification lists, the reels feed) take the wheel and the
+      // trackpad. Without this Lenis smooth-scrolled the page instead, so
+      // long menus such as the agent portal's could not be scrolled at all
+      // on a computer and their lower items (Team, Billing…) were unreachable.
+      allowNestedScroll: true,
     });
 
     lenisRef.current = lenis;
