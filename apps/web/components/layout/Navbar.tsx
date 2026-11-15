@@ -20,7 +20,7 @@ const links = [
   { href: '/agents', label: 'Agents' },
   { href: '/reels', label: 'Reels' },
   // Rendered as a small yellow-outlined pill: the live 3D demo.
-  { href: '/3d-demo', label: '3D Demo' },
+  { href: '/3d-demo', label: '360-3D Demo' },
 ];
 
 export function Navbar() {
