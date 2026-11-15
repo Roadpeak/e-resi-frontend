@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowUpRight, Building2, Clapperboard, CalendarDays, Check, Globe, Handshake, KeyRound, MessageSquare, Phone, Star, Users,
+  ArrowUpRight, Building2, Clapperboard, CalendarDays, Check, Copy, Globe, Handshake, KeyRound, MessageSquare, Phone, Star, Users,
 } from 'lucide-react';
 import { agentsApi } from '../../../lib/api/agents';
 import { partnershipsApi } from '../../../lib/api/partnerships';
@@ -42,6 +43,38 @@ function relDate(iso: string) {
 
 const isNew = (l: LeadRow) => ['NEW', 'PENDING', 'LEAD'].includes(l.status);
 const waLink = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^0/, '254')}`;
+
+/** Copies the agent's website address, for pasting into WhatsApp, email or social bios. */
+function CopyLinkButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard blocked (older browser, insecure frame): fall back to a hidden textarea.
+      const t = document.createElement('textarea');
+      t.value = url;
+      t.style.position = 'fixed';
+      t.style.opacity = '0';
+      document.body.appendChild(t);
+      t.select();
+      try { document.execCommand('copy'); } catch { /* nothing more to try */ }
+      t.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => void copy()}
+      aria-label="Copy your website link"
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[12.5px] font-medium transition-colors ${copied ? 'border-[#ceead6] bg-[#e6f4ea] text-[#188038]' : 'border-[#dadce0] text-[#3c4043] hover:bg-[#f8f9fa]'}`}
+    >
+      {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy link</>}
+    </button>
+  );
+}
 
 export default function AgentOverview() {
   const { data: me } = useQuery({ queryKey: ['agent', 'me'], queryFn: () => agentsApi.me() });
@@ -132,9 +165,12 @@ export default function AgentOverview() {
               <div>
                 <h2 className="text-[18px] font-normal text-[#202124]">Your website</h2>
                 {site?.url ? (
-                  <a href={site.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[14px] text-[#1a73e8] hover:underline">
-                    {site.url.replace(/^https?:\/\//, '')} <ArrowUpRight size={14} />
-                  </a>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a href={site.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[14px] text-[#1a73e8] hover:underline">
+                      {site.url.replace(/^https?:\/\//, '')} <ArrowUpRight size={14} />
+                    </a>
+                    <CopyLinkButton url={site.url} />
+                  </div>
                 ) : (
                   <p className="text-[14px] text-[#5f6368]">{site ? 'Not live yet' : 'Loading…'}</p>
                 )}

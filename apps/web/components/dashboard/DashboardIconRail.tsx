@@ -1,99 +1,46 @@
 'use client';
 
-import 'material-symbols/rounded.css';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '../../lib/api/chat';
 import { supportApi } from '../../lib/api/support';
 import { useDeveloperInquiries } from '../../lib/api/queries';
 import { useAuthStore } from '../../lib/stores/auth.store';
-import { MaterialIcon } from './MaterialIcon';
-import { MobileNav } from './MobileNav';
+import { SideRail, type SideRailItem } from './SideRail';
 
-const NAV = [
+/**
+ * Grouped by the job each page does. The expanded menu draws a line and a
+ * small heading where the group changes; the collapsed rail keeps the order.
+ */
+const NAV: SideRailItem[] = [
   { label: 'Overview', href: '/dashboard', icon: 'dashboard' },
-  { label: 'Properties', href: '/dashboard/properties', icon: 'apartment' },
-  { label: 'Units', href: '/dashboard/units', icon: 'meeting_room' },
-  { label: 'Reservations', href: '/dashboard/reservations', icon: 'vpn_key' },
-  { label: 'Rentals', href: '/dashboard/rentals', icon: 'home_work' },
-  { label: 'Messages', href: '/dashboard/messages', icon: 'chat' },
-  { label: 'Agent Partners', href: '/dashboard/partners', icon: 'handshake' },
-  { label: 'Agent Deals', href: '/dashboard/deals', icon: 'payments' },
-  { label: 'Mandates', href: '/dashboard/mandates', icon: 'campaign' },
-  { label: 'Leads', href: '/dashboard/leads', icon: 'person_search' },
-  { label: 'Inquiries', href: '/dashboard/inquiries', icon: 'forum' },
-  { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month' },
-  { label: 'Performance', href: '/dashboard/performance', icon: 'query_stats' },
-  { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring' },
-  { label: 'Reels', href: '/dashboard/reels', icon: 'smart_display' },
-  { label: 'Documents', href: '/dashboard/documents', icon: 'description' },
-  { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card' },
-  { label: 'Company Profile', href: '/dashboard/profile', icon: 'verified' },
-  { label: 'Team', href: '/dashboard/team', icon: 'group' },
+  { label: 'Properties', href: '/dashboard/properties', icon: 'apartment', group: 'Projects' },
+  { label: 'Units', href: '/dashboard/units', icon: 'meeting_room', group: 'Projects' },
+  { label: 'Reservations', href: '/dashboard/reservations', icon: 'vpn_key', group: 'Projects' },
+  { label: 'Rentals', href: '/dashboard/rentals', icon: 'home_work', group: 'Projects' },
+  { label: 'Documents', href: '/dashboard/documents', icon: 'description', group: 'Projects' },
+  { label: 'Leads', href: '/dashboard/leads', icon: 'person_search', group: 'Buyers' },
+  { label: 'Inquiries', href: '/dashboard/inquiries', icon: 'forum', group: 'Buyers' },
+  { label: 'Messages', href: '/dashboard/messages', icon: 'chat', group: 'Buyers' },
+  { label: 'Bookings', href: '/dashboard/bookings', icon: 'calendar_month', group: 'Buyers' },
+  { label: 'Agent Partners', href: '/dashboard/partners', icon: 'handshake', group: 'Agents' },
+  { label: 'Agent Deals', href: '/dashboard/deals', icon: 'payments', group: 'Agents' },
+  { label: 'Mandates', href: '/dashboard/mandates', icon: 'campaign', group: 'Agents' },
+  { label: 'Reels', href: '/dashboard/reels', icon: 'smart_display', group: 'Marketing' },
+  { label: 'Performance', href: '/dashboard/performance', icon: 'query_stats', group: 'Marketing' },
+  { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring', group: 'Marketing' },
+  { label: 'Company Profile', href: '/dashboard/profile', icon: 'verified', group: 'Company' },
+  { label: 'Team', href: '/dashboard/team', icon: 'group', group: 'Company' },
+  { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card', group: 'Company' },
 ];
 
-const BOTTOM = [
+const BOTTOM: SideRailItem[] = [
   { label: 'Contact e-resi', href: '/dashboard/support', icon: 'support_agent' },
   { label: 'Settings', href: '/dashboard/settings', icon: 'settings' },
   { label: 'Visit Site', href: '/', icon: 'public' },
 ];
 
-function RailItem({
-  label, href, icon, active, badge,
-}: {
-  label: string;
-  href: string;
-  icon: string;
-  active?: boolean;
-  badge?: number;
-}) {
-  // The tooltip is fixed-positioned from the hovered item's rect: the nav
-  // scrolls when the viewport is short, and an absolutely-positioned label
-  // hanging outside a scroll container would be clipped.
-  const [tipY, setTipY] = useState<number | null>(null);
-
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      onMouseEnter={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        setTipY(r.top + r.height / 2);
-      }}
-      onMouseLeave={() => setTipY(null)}
-      className={cn(
-        // 20 items don't fit a laptop-height rail at 36px; step down on short screens.
-        'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors [@media(max-height:880px)]:h-8 [@media(max-height:880px)]:w-8 [@media(max-height:720px)]:h-7 [@media(max-height:720px)]:w-7',
-        active
-          ? 'bg-[#d3e3fd] text-[#0b57d0]'
-          : 'text-[#3c4043] hover:bg-[#f1f3f4] hover:text-[#202124]',
-      )}
-    >
-      <MaterialIcon name={icon} size={20} fill={active} weight={active ? 500 : 400} />
-      {!!badge && badge > 0 && (
-        <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#ea4335] px-0.5 text-[8px] font-bold text-white">
-          {badge > 9 ? '9+' : badge}
-        </span>
-      )}
-      {/* Tooltip — page name on hover */}
-      {tipY !== null && (
-        <span
-          className="pointer-events-none fixed left-14 z-50 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#3c4043] px-2 py-1 text-xs font-medium tracking-wide text-white shadow-md"
-          style={{ top: tipY }}
-        >
-          {label}
-        </span>
-      )}
-    </Link>
-  );
-}
-
-/** Icon-only left rail — Google Material Symbols, page names on hover. */
+/** The developer dashboard's side menu: collapsed icons, expandable to labelled groups. */
 export function DashboardIconRail() {
-  const pathname = usePathname();
   const user = useAuthStore((st) => st.user);
 
   // A staff member sees only what their employer ticked. Overview always
@@ -117,78 +64,11 @@ export function DashboardIconRail() {
     refetchInterval: 60_000,
   });
 
-  // When the list still overflows, show that more pages sit below instead of
-  // silently clipping the last ones (Team was hidden on laptop screens).
-  const listRef = useRef<HTMLElement>(null);
-  const [moreBelow, setMoreBelow] = useState(false);
-  const checkOverflow = useCallback(() => {
-    const el = listRef.current;
-    if (!el) return;
-    setMoreBelow(el.scrollTop + el.clientHeight < el.scrollHeight - 2);
-  }, []);
-  useEffect(() => {
-    checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
-  }, [checkOverflow, nav.length]);
-
   const badges = {
     '/dashboard/inquiries': newInquiries?.total ?? 0,
     '/dashboard/messages': chatUnread?.count ?? 0,
     '/dashboard/support': supportUnread?.count ?? 0,
   };
 
-  return (
-    <>
-    <MobileNav items={nav} bottom={bottom} badges={badges} home="/dashboard" />
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-16 shrink-0 flex-col items-center justify-between gap-1.5 border-r border-[#f1f3f4] py-2 md:flex">
-      {/* The page list scrolls when the viewport is shorter than the rail,
-          so Settings and Visit Site below never fall off-screen. */}
-      <div className="relative flex min-h-0 w-full flex-1 flex-col">
-      <nav
-        ref={listRef}
-        onScroll={checkOverflow}
-        className="flex min-h-0 flex-1 flex-col items-center gap-0.5 overflow-y-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {nav.map(({ label, href, icon }) => (
-          <RailItem
-            key={href}
-            label={label}
-            href={href}
-            icon={icon}
-            active={pathname === href || (href !== '/dashboard' && pathname.startsWith(href))}
-            badge={
-              href === '/dashboard/inquiries' ? newInquiries?.total ?? 0
-                : href === '/dashboard/messages' ? chatUnread?.count ?? 0
-                : 0
-            }
-          />
-        ))}
-      </nav>
-      {moreBelow && (
-        <button
-          type="button"
-          aria-label="Show more pages"
-          onClick={() => listRef.current?.scrollBy({ top: 160, behavior: 'smooth' })}
-          className="absolute inset-x-0 bottom-0 flex h-8 items-end justify-center bg-gradient-to-t from-white via-white/90 to-transparent pb-0.5 text-[#5f6368] hover:text-[#202124]"
-        >
-          <MaterialIcon name="keyboard_arrow_down" size={18} />
-        </button>
-      )}
-      </div>
-      <nav className="flex shrink-0 flex-col items-center gap-0.5 border-t border-[#f1f3f4] pt-1.5">
-        {bottom.map(({ label, href, icon }) => (
-          <RailItem
-            key={href}
-            label={label}
-            href={href}
-            icon={icon}
-            active={pathname === href}
-            badge={href === '/dashboard/support' ? supportUnread?.count ?? 0 : 0}
-          />
-        ))}
-      </nav>
-    </aside>
-    </>
-  );
+  return <SideRail items={nav} bottom={bottom} badges={badges} home="/dashboard" storageKey="eresi:devRailExpanded" label="Dashboard menu" />;
 }
