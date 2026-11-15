@@ -11,6 +11,7 @@ import {
 } from '../../lib/api/service-requests';
 import { GoogleButton } from '../auth/GoogleButton';
 import { ServiceIcon } from './ServiceIcon';
+import { serviceRequestsBase } from '../../lib/services/portal';
 import { cn } from '../../lib/utils';
 
 /** Survives the trip to sign-in and back (including Google's), per browser. */
@@ -133,7 +134,7 @@ export function ServiceRequestForm({ services }: { services: CatalogService[] })
       };
       const created = await serviceRequestsApi.create(body);
       clearDraft();
-      router.push(`/services/requests/${created.id}?sent=1`);
+      router.push(`${serviceRequestsBase(user?.role)}/${created.id}?sent=1`);
     } catch (e) {
       setSubmitError(e instanceof ApiError ? e.message : 'Could not send your request. Please try again.');
       setSending(false);

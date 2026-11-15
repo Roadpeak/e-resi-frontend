@@ -36,6 +36,7 @@ const NAV: { label: string; href: string; icon: string; group: string }[] = [
   { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring', group: 'Marketing' },
   // The agency's staff logins, like a developer's team.
   { label: 'Team', href: '/agent/team', icon: 'group', group: 'Agency' },
+  { label: 'Production requests', href: '/agent/service-requests', icon: 'movie', group: 'Agency' },
   { label: 'Billing', href: '/agent/billing', icon: 'credit_card', group: 'Agency' },
   { label: 'My Profile', href: '/agent/profile', icon: 'verified', group: 'Agency' },
 ];

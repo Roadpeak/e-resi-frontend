@@ -30,6 +30,7 @@ const NAV: SideRailItem[] = [
   { label: 'Analytics', href: '/dashboard/analytics', icon: 'monitoring', group: 'Marketing' },
   { label: 'Company Profile', href: '/dashboard/profile', icon: 'verified', group: 'Company' },
   { label: 'Team', href: '/dashboard/team', icon: 'group', group: 'Company' },
+  { label: 'Production requests', href: '/dashboard/service-requests', icon: 'movie', group: 'Company' },
   { label: 'Billing', href: '/dashboard/billing', icon: 'credit_card', group: 'Company' },
 ];
 

@@ -1,11 +1,7 @@
-import { PageShell } from '../../../../../components/marketing/PageShell';
-import { ServiceRequestTracker } from '../../../../../components/services/ServiceRequestTracker';
+import { ServiceRequestsRedirect } from '../../../../../components/services/ServiceRequestsRedirect';
 
+/** Forwards emailed and notified links into the user's own portal, keeping the query string. */
 export default async function ServiceRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return (
-    <PageShell eyebrow="Production request" title="Track your request" lede="Your quote, invoice and production progress, all in one place.">
-      <ServiceRequestTracker id={id} />
-    </PageShell>
-  );
+  return <ServiceRequestsRedirect id={id} />;
 }

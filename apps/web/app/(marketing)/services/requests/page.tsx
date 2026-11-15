@@ -1,10 +1,6 @@
-import { PageShell } from '../../../../components/marketing/PageShell';
-import { ServiceRequestList } from '../../../../components/services/ServiceRequestList';
+import { ServiceRequestsRedirect } from '../../../../components/services/ServiceRequestsRedirect';
 
+/** Forwards to the user's own portal, where their production requests now live. */
 export default function ServiceRequestsPage() {
-  return (
-    <PageShell eyebrow="Production services" title="Your production requests" lede="Quotes, invoices and progress for every job you’ve asked us to produce.">
-      <ServiceRequestList />
-    </PageShell>
-  );
+  return <ServiceRequestsRedirect />;
 }

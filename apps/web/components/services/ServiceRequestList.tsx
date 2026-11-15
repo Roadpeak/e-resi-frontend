@@ -6,7 +6,7 @@ import { ChevronRight, Loader2, Plus } from 'lucide-react';
 import { money, serviceRequestsApi, STATUS_LABEL, STATUS_STYLE } from '../../lib/api/service-requests';
 import { cn } from '../../lib/utils';
 
-export function ServiceRequestList() {
+export function ServiceRequestList({ basePath = '/services/requests' }: { basePath?: string }) {
   const { data, isLoading } = useQuery({ queryKey: ['service-requests'], queryFn: () => serviceRequestsApi.mine() });
 
   return (
@@ -25,7 +25,7 @@ export function ServiceRequestList() {
       )}
       <div className="space-y-3">
         {data?.map((r) => (
-          <Link key={r.id} href={`/services/requests/${r.id}`} className="flex items-center gap-4 rounded-[22px] bg-white px-5 py-4 transition hover:shadow-[0_2px_10px_rgba(16,26,58,0.08)] sm:px-6">
+          <Link key={r.id} href={`${basePath}/${r.id}`} className="flex items-center gap-4 rounded-[22px] bg-white px-5 py-4 transition hover:shadow-[0_2px_10px_rgba(16,26,58,0.08)] sm:px-6">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[15px] font-semibold text-[#202124]">{r.number}</span>

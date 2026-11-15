@@ -27,7 +27,7 @@ const dateTime = (v: string) => `${new Date(v).toLocaleDateString('en-GB', { day
 
 const card = 'rounded-[28px] bg-white p-6 sm:p-8';
 
-export function ServiceRequestTracker({ id }: { id: string }) {
+export function ServiceRequestTracker({ id, basePath = '/services/requests' }: { id: string; basePath?: string }) {
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const [toast, setToast] = useState('');
@@ -131,7 +131,7 @@ export function ServiceRequestTracker({ id }: { id: string }) {
     return (
       <div className={cn(card, 'text-center font-google')}>
         <p className="text-[18px] font-semibold text-[#202124]">We couldn’t find that request.</p>
-        <Link href="/services/requests" className="mt-4 inline-block text-[15px] font-medium text-[#1a73e8]">See your requests</Link>
+        <Link href={basePath} className="mt-4 inline-block text-[15px] font-medium text-[#1a73e8]">See your requests</Link>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export function ServiceRequestTracker({ id }: { id: string }) {
 
   return (
     <div className="space-y-5 font-google">
-      <Link href="/services/requests" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8]"><ArrowLeft size={16} /> All requests</Link>
+      <Link href={basePath} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a73e8]"><ArrowLeft size={16} /> All requests</Link>
 
       {sent && (
         <div className="flex items-start gap-3 rounded-[22px] bg-[#e6f4ea] px-5 py-4 text-[15px] text-[#137333]">
