@@ -47,7 +47,7 @@ export function ModelShowcase({ config, className }: { config: Home3D; className
   return (
     <div className={cn('flex flex-col', className)}>
       {/* data-lenis-prevent: the wheel zooms the model instead of the page smooth-scrolling. */}
-      <div ref={box} data-lenis-prevent className="relative h-[420px] sm:h-[520px] lg:h-full lg:min-h-[560px]">
+      <div ref={box} data-lenis-prevent className="relative h-[420px] overflow-hidden rounded-[28px] border-[1.5px] border-[#FFE345] sm:h-[520px] lg:h-full lg:min-h-[560px]">
         {/* Backstop: anything else the 3D view throws stays inside this box. */}
         {near && (
           <ShowcaseErrorBoundary key={url}>
