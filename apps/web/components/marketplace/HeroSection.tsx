@@ -353,9 +353,8 @@ export function HeroSection() {
           ref={subRef}
           className="font-sans text-stone/80 text-base sm:text-lg max-w-md mb-10 leading-relaxed tracking-wide"
         >
-          We produce the cinematic film, 3D walkthrough and VR tour of your
-          development — so buyers, investors and tenants can walk it long
-          before it is built.
+          Off-plan developments, homes for sale and homes to rent across
+          Kenya — toured in cinematic film, 3D and VR before you visit.
         </p>
 
         <div ref={ctaRef} className="flex flex-wrap items-center gap-4 sm:gap-6">
