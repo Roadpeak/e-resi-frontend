@@ -93,6 +93,13 @@ jobs:
           # first; images of running containers are never touched.
           docker image prune -af --filter "until=72h" || true
           docker builder prune -af || true
+          # Age alone was not enough: a busy day ships 20+ releases inside the
+          # 72h window and filled the disk again (2026-11-15). Keep only the
+          # three newest frontend images (the running one plus two to roll
+          # back to); plain `docker rmi` refuses an image a container uses.
+          docker images ghcr.io/roadpeak/e-resi-frontend --format '{{.ID}}' | awk '!seen[$0]++' | tail -n +4 \
+            | xargs -r docker rmi 2>/dev/null || true
+          docker container prune -f || true
           df -h / | tail -1
           docker pull "ghcr.io/roadpeak/e-resi-frontend:$IMAGE_TAG"
           docker compose -f docker-compose.prod.yml up -d --no-deps frontend
