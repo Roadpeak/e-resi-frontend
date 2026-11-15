@@ -16,6 +16,7 @@ import { WelcomeTemplateModal } from '../../../components/agent/WelcomeTemplateM
 import { WhatsAppPrompt } from '../../../components/agent/WhatsAppPrompt';
 import { cn, formatPrice } from '../../../lib/utils';
 import { useMyRentListings } from '../../../lib/api/queries';
+import { ReelsPerformance } from '../../../components/agent/ReelsPerformance';
 
 /**
  * The agent's home: headline numbers, their website at a glance, what is
@@ -306,6 +307,9 @@ export default function AgentOverview() {
           )}
         </section>
       </div>
+
+      {/* How their property reels are doing. */}
+      <ReelsPerformance className={card} />
 
       <section className={card}>
         <div className="mb-3 flex items-center justify-between">

@@ -12,6 +12,7 @@ import {
 import { cn } from '../../../../lib/utils';
 import { viewersApi } from '../../../../lib/api/referrals';
 import { siteFormsApi } from '../../../../lib/api/agent-site';
+import { ViewerCountries } from '../../../../components/dashboard/ViewerCountries';
 
 /**
  * Every lead in one place: inquiries and viewing requests collected from the
@@ -178,6 +179,9 @@ export default function LeadsPage() {
           </div>
         ))}
       </div>
+
+      {/* Where the people opening their listings are, by country. */}
+      <ViewerCountries />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
