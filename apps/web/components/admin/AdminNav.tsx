@@ -24,6 +24,7 @@ const SECTIONS: { label: string; href: string; icon: string; soon?: boolean }[] 
   { label: 'Invites', href: '/admin/invites', icon: 'mail' },
   { label: 'Properties', href: '/admin/properties', icon: 'domain' },
   { label: 'Neighbourhoods', href: '/admin/neighbourhoods', icon: 'map' },
+  { label: 'Homepage 3D', href: '/admin/homepage', icon: 'view_in_ar' },
   { label: 'Operations', href: '/admin/rentals', icon: 'key' },
   { label: 'Production', href: '/admin/production', icon: 'movie' },
   { label: 'Service requests', href: '/admin/services', icon: 'request_quote' },

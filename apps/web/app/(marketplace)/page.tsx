@@ -7,6 +7,7 @@ import { ManifestoSection } from '../../components/marketplace/ManifestoSection'
 import { SplitFeature } from '../../components/marketplace/SplitFeature';
 import { AudienceSection } from '../../components/marketplace/AudienceSection';
 import { fetchFeaturedProperties } from '../../lib/api/fetch-property';
+import { fetchHome3D } from '../../lib/api/site';
 
 export const metadata: Metadata = {
   // The homepage title IS the full brand title, so it must bypass the root
@@ -34,14 +35,14 @@ export default async function HomePage() {
   // Featured developments for the showcase. Fetched here rather than in the
   // component so the cards are server-rendered; returns [] if the API is
   // unreachable, and the showcase drops itself when there is nothing to show.
-  const featured = await fetchFeaturedProperties(6);
+  const [featured, showcase] = await Promise.all([fetchFeaturedProperties(6), fetchHome3D()]);
 
   return (
     <main className="relative bg-ink text-chalk">
       <Navbar />
       <HeroSection />
       <PropertyShowcase properties={featured} />
-      <ManifestoSection />
+      <ManifestoSection showcase={showcase} />
       <SplitFeature />
       <AudienceSection />
       <Footer />

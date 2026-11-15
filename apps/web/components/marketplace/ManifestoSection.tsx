@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ModelShowcase } from '../showcase/ModelShowcase';
+import { EMPTY_HOME_3D, type Home3D } from '../../lib/api/site';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,7 +15,8 @@ const stats = [
   { value: '∞', label: 'Possibilities' },
 ];
 
-export function ManifestoSection() {
+export function ManifestoSection({ showcase = EMPTY_HOME_3D }: { showcase?: Home3D }) {
+  const has3d = !!(showcase.exterior || showcase.interior);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -68,8 +71,9 @@ export function ManifestoSection() {
         {/* Eyebrow */}
         <p className="text-stone/40 text-[10px] tracking-[0.25em] uppercase mb-12">Our Vision</p>
 
-        {/* Manifesto text */}
-        <div className="manifesto-text mb-20">
+        {/* Manifesto text, with the 3D showcase beside it when one is set. */}
+        <div className={has3d ? 'mb-20 grid items-stretch gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16' : ''}>
+        <div className={has3d ? 'manifesto-text self-center' : 'manifesto-text mb-20'}>
           {[
             'Property is not',
             'a transaction —',
@@ -79,12 +83,15 @@ export function ManifestoSection() {
             <div key={i} className="manifesto-line overflow-hidden">
               <div
                 className="font-display font-light text-chalk leading-[1.05]"
-                style={{ fontSize: 'clamp(2.8rem, 7vw, 7rem)' }}
+                style={{ fontSize: has3d ? 'clamp(2.6rem, 5.4vw, 6rem)' : 'clamp(2.8rem, 7vw, 7rem)' }}
               >
                 {line}
               </div>
             </div>
           ))}
+        </div>
+
+        {has3d && <ModelShowcase config={showcase} />}
         </div>
 
         {/* Rule */}
