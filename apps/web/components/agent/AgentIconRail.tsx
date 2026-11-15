@@ -1,7 +1,7 @@
 'use client';
 
 import 'material-symbols/rounded.css';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -13,33 +13,37 @@ import { MobileNav } from '../dashboard/MobileNav';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { cn } from '../../lib/utils';
 
-const NAV = [
-  { label: 'Overview', href: '/agent', icon: 'dashboard' },
+/**
+ * Grouped by the job each page does. The expanded menu draws a line and a
+ * small heading where the group changes; the collapsed rail keeps the order.
+ */
+const NAV: { label: string; href: string; icon: string; group: string }[] = [
+  { label: 'Overview', href: '/agent', icon: 'dashboard', group: '' },
   // Developments the agent lists and owns themselves.
-  { label: 'My Listings', href: '/agent/listings', icon: 'apartment' },
+  { label: 'My Listings', href: '/agent/listings', icon: 'apartment', group: 'Listings' },
   // Developers' developments assigned to them through a partnership.
-  { label: 'Partner Listings', href: '/agent/properties', icon: 'corporate_fare' },
+  { label: 'Partner Listings', href: '/agent/properties', icon: 'corporate_fare', group: 'Listings' },
   // Rentals they list or were engaged to let.
-  { label: 'Rentals', href: '/agent/rentals', icon: 'key' },
-  { label: 'Partners', href: '/agent/partners', icon: 'handshake' },
-  { label: 'Deals', href: '/agent/deals', icon: 'payments' },
-  { label: 'Reservations', href: '/agent/reservations', icon: 'vpn_key' },
-  { label: 'Leads', href: '/agent/leads', icon: 'person_search' },
-  { label: 'Inquiries', href: '/agent/inquiries', icon: 'forum' },
-  { label: 'Viewings', href: '/agent/bookings', icon: 'calendar_month' },
-  { label: 'Client Rooms', href: '/agent/clients', icon: 'collections_bookmark' },
-  { label: 'Mandate Pool', href: '/agent/mandates', icon: 'storefront' },
-  { label: 'Lettings', href: '/agent/lettings', icon: 'real_estate_agent' },
-  { label: 'Messages', href: '/agent/messages', icon: 'chat' },
-  { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring' },
-  { label: 'Reels', href: '/agent/reels', icon: 'smart_display' },
-  { label: 'Reviews', href: '/agent/reviews', icon: 'star' },
-  { label: 'Website', href: '/agent/website', icon: 'language' },
-  { label: 'Site content', href: '/agent/website/content', icon: 'article' },
+  { label: 'Rentals', href: '/agent/rentals', icon: 'key', group: 'Listings' },
+  { label: 'Lettings', href: '/agent/lettings', icon: 'real_estate_agent', group: 'Listings' },
+  { label: 'Mandate Pool', href: '/agent/mandates', icon: 'storefront', group: 'Listings' },
+  { label: 'Leads', href: '/agent/leads', icon: 'person_search', group: 'Clients' },
+  { label: 'Inquiries', href: '/agent/inquiries', icon: 'forum', group: 'Clients' },
+  { label: 'Messages', href: '/agent/messages', icon: 'chat', group: 'Clients' },
+  { label: 'Viewings', href: '/agent/bookings', icon: 'calendar_month', group: 'Clients' },
+  { label: 'Client Rooms', href: '/agent/clients', icon: 'collections_bookmark', group: 'Clients' },
+  { label: 'Partners', href: '/agent/partners', icon: 'handshake', group: 'Sales' },
+  { label: 'Deals', href: '/agent/deals', icon: 'payments', group: 'Sales' },
+  { label: 'Reservations', href: '/agent/reservations', icon: 'vpn_key', group: 'Sales' },
+  { label: 'Website', href: '/agent/website', icon: 'language', group: 'Marketing' },
+  { label: 'Site content', href: '/agent/website/content', icon: 'article', group: 'Marketing' },
+  { label: 'Reels', href: '/agent/reels', icon: 'smart_display', group: 'Marketing' },
+  { label: 'Reviews', href: '/agent/reviews', icon: 'star', group: 'Marketing' },
+  { label: 'Analytics', href: '/agent/analytics', icon: 'monitoring', group: 'Marketing' },
   // The agency's staff logins, like a developer's team.
-  { label: 'Team', href: '/agent/team', icon: 'group' },
-  { label: 'Billing', href: '/agent/billing', icon: 'credit_card' },
-  { label: 'My Profile', href: '/agent/profile', icon: 'verified' },
+  { label: 'Team', href: '/agent/team', icon: 'group', group: 'Agency' },
+  { label: 'Billing', href: '/agent/billing', icon: 'credit_card', group: 'Agency' },
+  { label: 'My Profile', href: '/agent/profile', icon: 'verified', group: 'Agency' },
 ];
 
 const BOTTOM = [
@@ -213,14 +217,21 @@ export function AgentIconRail() {
           onScroll={measure}
           className={cn('flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', expanded ? 'items-stretch' : 'items-center')}
         >
-          {nav.map((item) => (
-            <RailItem
-              key={item.href}
-              {...item}
-              expanded={expanded}
-              active={item.href === activeHref}
-              badge={badgeFor(item.href)}
-            />
+          {nav.map((item, i) => (
+            <Fragment key={item.href}>
+              {/* Expanded: a line and a small heading where each group starts. */}
+              {expanded && item.group && item.group !== nav[i - 1]?.group && (
+                <div className="mt-2 border-t border-[#e8eaed] px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#5f6368]">
+                  {item.group}
+                </div>
+              )}
+              <RailItem
+                {...item}
+                expanded={expanded}
+                active={item.href === activeHref}
+                badge={badgeFor(item.href)}
+              />
+            </Fragment>
           ))}
         </div>
 
@@ -243,7 +254,7 @@ export function AgentIconRail() {
         )}
       </div>
 
-      <div className={cn('flex shrink-0 flex-col gap-1 pt-2', expanded ? 'items-stretch' : 'items-center border-t border-[#f1f3f4]')}>
+      <div className={cn('flex shrink-0 flex-col gap-1 border-t pt-2', expanded ? 'items-stretch border-[#e8eaed]' : 'items-center border-[#f1f3f4]')}>
         {BOTTOM.map((item) => (
           <RailItem key={item.href} {...item} expanded={expanded} active={pathname === item.href} badge={badgeFor(item.href)} />
         ))}
