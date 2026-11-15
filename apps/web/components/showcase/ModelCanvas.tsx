@@ -42,7 +42,7 @@ function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url, true);
   return (
     // Fit the model to the view whatever size it was exported at.
-    <Bounds fit clip observe margin={1.15}>
+    <Bounds fit clip observe margin={1.35}>
       <Center>
         <primitive object={scene} />
       </Center>
