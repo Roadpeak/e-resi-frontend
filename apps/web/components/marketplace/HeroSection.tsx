@@ -15,6 +15,10 @@ const TOTAL_SCREENS = 6.5;
 const BASE_SCREENS_MOBILE = 2.5;
 const TOTAL_SCREENS_MOBILE = 3.25;
 
+/** The blue chooser's ground: electric blue at the top fading to white, colour-sampled from a reference down its full height. */
+const HERO_BLUE_GRADIENT =
+  'linear-gradient(180deg, #0149FE 0%, #205EFE 12.5%, #4B7EFE 29%, #749CFE 46%, #9FBAFF 62.5%, #B5CBFF 71%, #DAE4FE 79%, #F2F4FF 87.5%, #FFFFFF 100%)';
+
 /** The end-of-hero chooser: icons in Google's four colours, one per intent. */
 
 const INTERESTS = [
@@ -550,17 +554,13 @@ function CinematicHero() {
       </div>
 
       {/* ── Phase 3: e-resi blue, and what the visitor is here for ── */}
-      {/* Same ground as the /for-developers hero: the 115° navy-to-blue gradient and its top-right bloom. */}
+      {/* Electric blue fading to white, sampled from the reference David chose. */}
       <div
         ref={phase3BgRef}
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-[25] overflow-hidden"
-        style={{ visibility: 'hidden', backgroundImage: 'linear-gradient(115deg, #101a3a 0%, #1a234d 32%, #2a45c4 68%, #6e9af8 100%)' }}
+        style={{ visibility: 'hidden', backgroundImage: HERO_BLUE_GRADIENT }}
       >
-        <div
-          className="absolute -right-32 -top-40 h-[520px] w-[520px] rounded-full opacity-50 blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(110,154,248,0.60) 0%, transparent 68%)' }}
-        />
       </div>
       <div
         ref={phase3Ref}
@@ -596,7 +596,7 @@ function InterestChooser({ headRef, gridRef, as = 'h2' }: { headRef?: Ref<HTMLDi
   return (
     <>
     <div ref={headRef} className="mb-8 text-center sm:mb-10 [@media(max-height:700px)]:mb-4">
-      <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff] [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
+      <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-white/85 [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
       <Heading className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
         What are you interested in?
       </Heading>
@@ -624,13 +624,8 @@ function MobileHero() {
   return (
     <section
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-5 pb-12 pt-24"
-      style={{ backgroundImage: 'linear-gradient(115deg, #101a3a 0%, #1a234d 32%, #2a45c4 68%, #6e9af8 100%)' }}
+      style={{ backgroundImage: HERO_BLUE_GRADIENT }}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-32 -top-40 h-[520px] w-[520px] rounded-full opacity-50 blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(110,154,248,0.60) 0%, transparent 68%)' }}
-      />
       <div className="hero-rise relative w-full max-w-[880px] font-sans">
         <InterestChooser />
       </div>
