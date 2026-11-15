@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MapPin } from 'lucide-react';
 import type { ShowcaseProperty } from '../../lib/api/fetch-property';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -120,7 +120,7 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
   return (
     <section
       ref={sectionRef}
-      className="relative w-full overflow-hidden bg-ink"
+      className="relative w-full overflow-hidden bg-white"
       // Own compositing layer — same reason as the hero: while pinned this is
       // position:fixed at a sub-pixel offset, and without its own layer the
       // browser can stop painting it after a client-side navigation, leaving a
@@ -129,12 +129,12 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
     >
       {/* Section header — above the scroll track */}
       <div ref={titleRef} className="absolute top-12 left-8 sm:left-14 lg:left-20 z-10">
-        <p className="text-stone/40 text-[10px] tracking-[0.25em] uppercase mb-3">Featured Developments</p>
+        <p className="text-[#5f6368] text-[10px] tracking-[0.25em] uppercase mb-3">Featured Developments</p>
         <div className="overflow-hidden flex gap-3">
           {['Selected', 'Properties'].map((w, i) => (
             <span
               key={i}
-              className="showcase-title-word inline-block font-display font-light text-chalk"
+              className="showcase-title-word inline-block font-display font-light text-[#14120a]"
               style={{ fontSize: 'clamp(2rem, 4vw, 4rem)' }}
             >
               {w}
@@ -154,7 +154,7 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
           <Link
             key={property.slug}
             href={`/${property.slug}`}
-            className="showcase-card group relative overflow-hidden flex-shrink-0 cursor-pointer"
+            className="showcase-card group relative overflow-hidden flex-shrink-0 cursor-pointer rounded-2xl shadow-[0_2px_6px_rgba(16,26,58,0.08),0_16px_40px_rgba(16,26,58,0.14)] [isolation:isolate]"
             style={{
               width: i === 0 ? '42vw' : i % 2 === 0 ? '28vw' : '34vw',
               height: i === 0 ? '70vh' : i % 2 === 0 ? '55vh' : '63vh',
@@ -180,18 +180,22 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
 
             {/* Meta */}
             <div className="card-meta absolute bottom-0 left-0 right-0 p-6 z-10">
-              <span className="inline-block border border-warm-500/30 text-warm-400 text-[10px] tracking-[0.2em] uppercase px-3 py-1 mb-3">
+              <span className="inline-block rounded-md border border-[#FFE345] text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 mb-3">
                 {property.tag}
               </span>
               <h3 className="font-display font-light text-chalk text-2xl leading-tight mb-1">
                 {property.name}
               </h3>
-              <p className="text-stone/60 text-sm tracking-wide">{property.location}</p>
+              <p className="flex items-center gap-1.5 text-white/80 text-sm tracking-wide">
+                <MapPin size={14} className="shrink-0 text-[#FFE345]" aria-hidden="true" />
+                {property.location}
+              </p>
 
-              <div className="flex items-center gap-2 mt-4 text-warm-400/0 group-hover:text-warm-400 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                <span className="text-xs tracking-[0.15em] uppercase">View Property</span>
-                <ArrowRight size={12} />
-              </div>
+              {/* Always shown: phones have no hover to reveal it. */}
+              <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#FFE345] px-4 py-2 text-[#14120a] shadow-[0_4px_14px_rgba(0,0,0,0.25)] transition-colors duration-200 group-hover:bg-[#FFDB1F]">
+                <span className="text-xs font-semibold tracking-[0.15em] uppercase">View Property</span>
+                <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </span>
             </div>
           </Link>
         ))}
