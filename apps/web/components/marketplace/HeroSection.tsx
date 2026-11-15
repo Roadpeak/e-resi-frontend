@@ -23,7 +23,7 @@ const HERO_BLUE_GRADIENT =
 const SEGMENTS = [
   { href: '/properties', title: 'Buy', Icon: Building2 },
   { href: '/rent', title: 'Rent', Icon: KeyRound },
-  { href: '/list-development', title: 'List', Icon: PlusCircle },
+  { href: '/for-agents', title: 'List', Icon: PlusCircle },
 ] as const;
 const TOURS = { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine } as const;
 
