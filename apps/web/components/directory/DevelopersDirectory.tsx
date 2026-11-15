@@ -28,14 +28,17 @@ export function DevelopersDirectory() {
             the display face, one quiet line beneath. */}
         <div className="mb-10 pt-4">
           <p className="text-[12px] font-semibold uppercase tracking-[0.35em] text-gold-500">
-            The developers
-          </p>
-          <h1 className="mt-3 font-display text-[40px] font-light leading-[1.05] tracking-tight text-[#111112] sm:text-[52px]">
             Kenya&apos;s finest, building now
+          </p>
+          {/* The heading names what people search for; the tagline sits above it. */}
+          <h1 className="mt-3 font-display text-[40px] font-light leading-[1.05] tracking-tight text-[#111112] sm:text-[52px]">
+            Property developers in Kenya
           </h1>
           <p className="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-[#6b6b70]">
-            Verified developers with live developments you can walk through in
-            cinematic, 3D and VR — explore their portfolios and reach them directly.
+            Verified real estate developers building off-plan apartments, villas and
+            commercial projects in Nairobi and across Kenya. Walk through their
+            developments in cinematic film, 3D and VR, compare their portfolios, and
+            contact each developer&apos;s sales team directly — no middlemen.
           </p>
         </div>
 
