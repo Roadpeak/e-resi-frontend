@@ -10,7 +10,7 @@ import { cdnImage } from '../../lib/media/cdn';
  * How the agent's property reels are doing: totals across live reels and the
  * best performers by views. Locked accounts get the way to start instead.
  */
-export function ReelsPerformance({ className }: { className?: string }) {
+export function ReelsPerformance({ className, manageHref = '/agent/reels' }: { className?: string; /** The owner's reels page: /agent/reels or /dashboard/reels. */ manageHref?: string }) {
   const { data: state } = useQuery({ queryKey: ['reels', 'state'], queryFn: () => reelsApi.state() });
   const { data: reels, isLoading } = useQuery({
     queryKey: ['reels', 'mine'],
@@ -33,7 +33,7 @@ export function ReelsPerformance({ className }: { className?: string }) {
           <Clapperboard size={18} className="text-[#5f6368]" /> Your reels
         </h2>
         <div className="flex gap-2">
-          <Link href="/agent/reels" className="text-[14px] font-medium text-[#1a73e8] hover:underline">Manage reels</Link>
+          <Link href={manageHref} className="text-[14px] font-medium text-[#1a73e8] hover:underline">Manage reels</Link>
         </div>
       </div>
 
@@ -42,14 +42,14 @@ export function ReelsPerformance({ className }: { className?: string }) {
           <p className="max-w-[60ch] text-[14px] text-[#3c4043]">
             Short vertical videos of your homes, shown in the reels feed and on your listings. Unlock reels to start posting and see how they perform here.
           </p>
-          <Link href="/agent/reels" className="rounded-full bg-[#202124] px-5 py-2 text-[14px] font-medium text-white hover:bg-black">Create a reel</Link>
+          <Link href={manageHref} className="rounded-full bg-[#202124] px-5 py-2 text-[14px] font-medium text-white hover:bg-black">Create a reel</Link>
         </div>
       ) : isLoading || !state ? (
         <p className="py-6 text-center text-[14px] text-[#5f6368]">Loading…</p>
       ) : live.length === 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[#f8f9fa] px-5 py-4">
           <p className="text-[14px] text-[#3c4043]">No live reels yet. Post one and its views, likes and comments show up here.</p>
-          <Link href="/agent/reels" className="rounded-full bg-[#202124] px-5 py-2 text-[14px] font-medium text-white hover:bg-black">Create a reel</Link>
+          <Link href={manageHref} className="rounded-full bg-[#202124] px-5 py-2 text-[14px] font-medium text-white hover:bg-black">Create a reel</Link>
         </div>
       ) : (
         <>

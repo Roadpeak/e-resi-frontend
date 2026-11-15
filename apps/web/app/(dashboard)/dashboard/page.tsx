@@ -18,6 +18,7 @@ import {
   useDeveloperStats, useDeveloperEngagement, useMyProperties, useMyRentListings,
   useDeveloperInquiries, useDeveloperBookings,
 } from '../../../lib/api/queries';
+import { ReelsPerformance } from '../../../components/agent/ReelsPerformance';
 
 interface DeveloperProfileLite {
   companyName: string;
@@ -393,6 +394,9 @@ export default function DashboardOverview() {
           </section>
         );
       })()}
+
+      {/* ── How their property reels are doing ── */}
+      {can('reels') && <ReelsPerformance className="mb-6 rounded-3xl border border-[#dadce0] bg-white p-6" manageHref="/dashboard/reels" />}
 
       {/* ── Working cards: pipeline, bookings, inventory, profile, billing ── */}
       <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
