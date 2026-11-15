@@ -67,6 +67,12 @@ const ORGANIZATION_JSON_LD = {
   alternateName: 'e-resi',
   url: SITE_URL,
   logo: `${SITE_URL}/icon.svg`,
+  // Official social profiles: lets search engines tie them to this organisation.
+  sameAs: [
+    'https://www.facebook.com/eresiofficial',
+    'https://www.instagram.com/eresiofficial/',
+    'https://www.tiktok.com/@eresi.com',
+  ],
   description:
     "E-resi is Kenya's immersive property platform. Buyers, investors and tenants tour "
     + 'off-plan developments, homes for sale and rentals in cinematic, 3D and VR before they '

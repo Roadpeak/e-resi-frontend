@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '../brand/Logo';
 import { FOOTER_COLUMNS } from './footer-links';
+import { SocialLinks } from './SocialLinks';
 
 const cols = FOOTER_COLUMNS;
 
@@ -18,6 +19,7 @@ export function Footer() {
               Immersive real estate experiences. Every property a world to explore.
             </p>
             <div className="w-6 h-px bg-warm-500 mt-6" />
+            <SocialLinks tone="dark" className="mt-6" />
           </div>
 
           {/* Columns */}

@@ -16,6 +16,7 @@ import { cn } from '../../lib/utils';
 import { NeedAgentHelp } from '../agents/NeedAgentHelp';
 import { ReelsStrip } from '../reels/ReelsStrip';
 import type { RentListing, RentFilters, FurnishingType } from '../../lib/types';
+import { SocialLinks } from '../layout/SocialLinks';
 
 const FURNISHINGS: { value: FurnishingType; label: string }[] = [
   { value: 'furnished', label: 'Furnished' },
@@ -477,7 +478,7 @@ function Empty({ title, body, action, icon }: { title: string; body: string; act
 function Footer() {
   return (
     <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-[#efefef] pt-6 text-[14px] text-[#52525b]">
-      <span>Homes to rent on e-resi</span>
+      <span className="flex items-center gap-4">Homes to rent on e-resi <SocialLinks tone="light" /></span>
       <span className="flex gap-4">
         <Link href="/privacy" className="hover:text-[#18181b]">Privacy Policy</Link>
         <Link href="/terms" className="hover:text-[#18181b]">Terms of Service</Link>
