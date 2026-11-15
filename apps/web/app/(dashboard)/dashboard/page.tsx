@@ -364,6 +364,38 @@ export default function DashboardOverview() {
         </Card>
         )}
 
+      </div>
+
+      {/* ── At a glance: the numbers, above the working cards ── */}
+      {(() => {
+        const views7d = daily.reduce((n, d) => n + d.views, 0);
+        const tiles = [
+          can('properties') && { label: 'Live developments', value: `${liveProps}`, sub: totalProps ? `of ${totalProps} listed` : 'none yet', Icon: Building2, href: '/dashboard/properties' },
+          can('analytics') && { label: 'Views · 7 days', value: views7d.toLocaleString(), sub: trendPct ? `${trendPct > 0 ? '+' : ''}${trendPct}% lately` : 'steady', Icon: BarChart3, href: '/dashboard/analytics' },
+          can('inquiries') && { label: 'Inquiries · 30 days', value: `${stats?.inquiries.last30Days ?? 0}`, sub: newInquiries ? `${newInquiries} new` : 'all answered', Icon: MessageSquare, href: '/dashboard/inquiries' },
+          can('bookings') && { label: 'Viewings to confirm', value: `${pendingBookings}`, sub: pendingBookings ? 'waiting on you' : 'nothing pending', Icon: CalendarDays, href: '/dashboard/bookings' },
+          can('reservations') && { label: 'Active reservations', value: `${activeReservations.length}`, sub: pipelineValue ? `${fmtUsd(pipelineValue)} in play` : completedSales ? `${completedSales} sold` : 'none yet', Icon: Landmark, href: '/dashboard/reservations' },
+          can('units') && { label: 'Units available', value: `${unitTotals.available}`, sub: unitTotals.total ? `of ${unitTotals.total} · ${unitsTaken} taken` : 'add units', Icon: DoorOpen, href: '/dashboard/units' },
+        ].filter(Boolean) as { label: string; value: string; sub: string; Icon: typeof Building2; href: string }[];
+        if (!tiles.length) return null;
+        return (
+          <section aria-label="At a glance" className="mb-6 mt-2">
+            <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.1em] text-[#5f6368]">At a glance</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+              {tiles.map(({ label, value, sub, Icon, href }) => (
+                <Link key={label} href={href} className="group rounded-2xl border border-[#dadce0] bg-white px-4 py-4 transition-colors hover:border-[#c6dafc] hover:bg-[#f8fbff]">
+                  <span className="flex items-center gap-1.5 text-[12.5px] text-[#5f6368]"><Icon size={14} /> {label}</span>
+                  <span className="mt-2 block text-[26px] font-normal leading-none tabular-nums text-[#202124]">{value}</span>
+                  <span className="mt-1.5 block truncate text-[12px] text-[#5f6368]">{sub}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* ── Working cards: pipeline, bookings, inventory, profile, billing ── */}
+      <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
         {/* Sales pipeline — reservations */}
         {can('reservations') && (
         <Card className="border-[#dadce0] bg-white" delay={0.12}>
