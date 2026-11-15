@@ -19,14 +19,26 @@ const TOTAL_SCREENS_MOBILE = 3.25;
 const HERO_BLUE_GRADIENT =
   'linear-gradient(180deg, #0149FE 0%, #205EFE 12.5%, #4B7EFE 29%, #749CFE 46%, #9FBAFF 62.5%, #B5CBFF 71%, #DAE4FE 79%, #F2F4FF 87.5%, #FFFFFF 100%)';
 
-/** The end-of-hero chooser: one yellow button per intent. */
-
-const INTERESTS = [
-  { href: '/properties', title: 'Buy properties', Icon: Building2 },
+/** The end-of-hero chooser: Buy / Rent / List share one segmented white button; the tours offer sits below it on glass. */
+const SEGMENTS = [
+  { href: '/properties', title: 'Buy', Icon: Building2 },
   { href: '/rent', title: 'Rent', Icon: KeyRound },
-  { href: '/list-development', title: 'List properties', Icon: PlusCircle },
-  { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine },
+  { href: '/list-development', title: 'List', Icon: PlusCircle },
 ] as const;
+const TOURS = { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine } as const;
+
+/** A magnifying glass with a house in its lens: "find a home". */
+function HomeSearchMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <circle cx="27" cy="27" r="19" strokeWidth="3.2" />
+      <path d="M41 41 54.5 54.5" strokeWidth="5.5" />
+      <path d="M17.5 28.5 27 20l9.5 8.5" strokeWidth="2.8" />
+      <path d="M20.5 26v10.5h13V26" strokeWidth="2.8" />
+      <path d="M25 36.5v-5h4v5" strokeWidth="2.4" />
+    </svg>
+  );
+}
 
 /** Tablet and desktop: the pinned film hero with its three scroll phases. */
 function CinematicHero() {
@@ -590,31 +602,40 @@ function CinematicHero() {
   );
 }
 
-/** "What are you interested in?" with its four buttons: the last step of the desktop hero and the whole hero on phones. */
-function InterestChooser({ headRef, gridRef, as = 'h2' }: { headRef?: Ref<HTMLDivElement>; gridRef?: Ref<HTMLDivElement>; as?: 'h1' | 'h2' }) {
-  const Heading = as;
+/** "What are you interested in?": the last step of the desktop hero and the whole hero on phones. */
+function InterestChooser({ headRef, gridRef }: { headRef?: Ref<HTMLDivElement>; gridRef?: Ref<HTMLDivElement> }) {
   return (
     <>
-    <div ref={headRef} className="mb-8 text-center sm:mb-10 [@media(max-height:700px)]:mb-4">
-      <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-white/85 [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
-      <Heading className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
-        What are you interested in?
-      </Heading>
-    </div>
-    <div ref={gridRef} className="mx-auto flex max-w-[360px] flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center [@media(max-height:700px)]:gap-2">
-      {INTERESTS.map(({ href, title, Icon }) => (
+      <div ref={headRef} className="mb-7 flex flex-col items-center text-center sm:mb-9 [@media(max-height:700px)]:mb-4">
+        <HomeSearchMark className="mb-4 h-14 w-14 text-white drop-shadow-[0_4px_14px_rgba(1,30,120,0.35)] sm:h-16 sm:w-16 [@media(max-height:700px)]:mb-2 [@media(max-height:700px)]:h-10 [@media(max-height:700px)]:w-10" />
+        <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-white/85 [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
+        <h2 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
+          What are you interested in?
+        </h2>
+      </div>
+      <div ref={gridRef} className="mx-auto flex w-full max-w-[400px] flex-col gap-3 sm:max-w-[520px]">
+        {/* One white bar, three doors. */}
+        <nav aria-label="Buy, rent or list" className="flex h-14 overflow-hidden rounded-full bg-white shadow-[0_1px_2px_rgba(16,26,58,0.14),0_8px_24px_rgba(16,26,58,0.22)] sm:h-[60px] [@media(max-height:700px)]:h-12">
+          {SEGMENTS.map(({ href, title, Icon }, i) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-1 items-center justify-center gap-2 text-[15px] font-semibold text-[#14120a] transition-colors hover:bg-[#eef3ff] focus-visible:bg-[#eef3ff] focus-visible:outline-none sm:text-base ${i > 0 ? 'border-l border-[#e3e6ee]' : ''}`}
+            >
+              <Icon size={18} strokeWidth={2.2} className="text-[#0149FE]" />
+              {title}
+            </Link>
+          ))}
+        </nav>
+        {/* Liquid glass with a yellow frame. */}
         <Link
-          key={href}
-          href={href}
-          className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-[#FFE345] py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#14120a] shadow-[0_1px_2px_rgba(16,26,58,0.16),0_6px_18px_rgba(16,26,58,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFDB1F] hover:shadow-[0_2px_4px_rgba(16,26,58,0.18),0_12px_26px_rgba(16,26,58,0.30)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
+          href={TOURS.href}
+          className="flex min-h-14 items-center justify-center gap-2.5 rounded-full border-2 border-[#FFE345] bg-white/[0.16] px-5 py-2 text-center text-[15px] font-semibold leading-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(16,26,58,0.22)] backdrop-blur-xl backdrop-saturate-150 transition-colors [text-shadow:0_1px_2px_rgba(1,20,80,0.35)] hover:bg-white/[0.24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[60px] sm:text-base [@media(max-height:700px)]:min-h-12"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14120a]/[0.08] text-[#14120a] sm:h-9 sm:w-9">
-            <Icon size={17} strokeWidth={2.2} />
-          </span>
-          {title}
+          <TOURS.Icon size={18} strokeWidth={2.2} className="shrink-0 text-[#FFE345]" />
+          {TOURS.title}
         </Link>
-      ))}
-    </div>
+      </div>
     </>
   );
 }
