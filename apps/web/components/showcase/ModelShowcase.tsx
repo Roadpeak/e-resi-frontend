@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Hand, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Home3D } from '../../lib/api/site';
+import { ShowcaseErrorBoundary } from './ShowcaseErrorBoundary';
 
 // three.js only loads in the browser, and only for pages that show a model.
 const ModelCanvas = dynamic(() => import('./ModelCanvas'), {
@@ -46,8 +47,13 @@ export function ModelShowcase({ config, className }: { config: Home3D; className
   return (
     <div className={cn('flex flex-col', className)}>
       {/* data-lenis-prevent: the wheel zooms the model instead of the page smooth-scrolling. */}
-      <div ref={box} data-lenis-prevent className="relative h-[420px] overflow-hidden rounded-[28px] bg-[#0d0f14] ring-1 ring-white/[0.06] sm:h-[520px] lg:h-full lg:min-h-[560px]">
-        {near && <ModelCanvas url={url} preload={other ? config[other] : null} interactive={interactive} />}
+      <div ref={box} data-lenis-prevent className="relative h-[420px] sm:h-[520px] lg:h-full lg:min-h-[560px]">
+        {/* Backstop: anything else the 3D view throws stays inside this box. */}
+        {near && (
+          <ShowcaseErrorBoundary key={url}>
+            <ModelCanvas url={url} preload={other ? config[other] : null} interactive={interactive} />
+          </ShowcaseErrorBoundary>
+        )}
 
         {views.length > 1 && (
           <div role="tablist" aria-label="View" className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 rounded-full bg-black/45 p-1 backdrop-blur-md">
