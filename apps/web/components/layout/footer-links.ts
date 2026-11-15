@@ -33,6 +33,7 @@ export const FOOTER_COLUMNS: { heading: string; links: { label: string; href: st
       { label: 'For investors', href: '/for-investors' },
       { label: 'List your agency', href: '/list-agency' },
       { label: 'List a development', href: '/list-development' },
+      { label: 'Production services', href: '/services' },
       { label: 'Pricing', href: '/pricing' },
     ],
   },
