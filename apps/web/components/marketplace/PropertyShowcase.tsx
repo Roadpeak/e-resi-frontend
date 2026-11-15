@@ -147,7 +147,7 @@ export function PropertyShowcase({ properties }: { properties: ShowcaseProperty[
       {/* Horizontal track */}
       <div
         ref={trackRef}
-        className="flex items-end gap-5 px-8 sm:px-14 lg:px-20 pt-44 pb-16"
+        className="flex items-end gap-5 px-8 sm:px-14 lg:px-20 pt-48 sm:pt-56 pb-16"
         style={{ width: 'max-content' }}
       >
         {properties.map((property, i) => (
