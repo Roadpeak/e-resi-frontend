@@ -630,7 +630,7 @@ function InterestChooser({ headRef, gridRef }: { headRef?: Ref<HTMLDivElement>; 
         {/* Liquid glass with a yellow frame. */}
         <Link
           href={TOURS.href}
-          className="flex min-h-14 items-center justify-center gap-2.5 rounded-full border-2 border-[#FFE345] bg-white/[0.16] px-5 py-2 text-center text-[15px] font-semibold leading-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(16,26,58,0.22)] backdrop-blur-xl backdrop-saturate-150 transition-colors [text-shadow:0_1px_2px_rgba(1,20,80,0.35)] hover:bg-white/[0.24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[60px] sm:text-base [@media(max-height:700px)]:min-h-12"
+          className="flex min-h-14 items-center justify-center gap-2.5 rounded-full border-2 border-[#FFE345] bg-[rgba(1,45,160,0.30)] px-5 py-2 text-center text-[15px] font-semibold leading-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(16,26,58,0.22)] backdrop-blur-xl backdrop-saturate-150 transition-colors [text-shadow:0_1px_2px_rgba(1,20,80,0.35)] hover:bg-[rgba(1,45,160,0.40)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[60px] sm:text-base [@media(max-height:700px)]:min-h-12"
         >
           <TOURS.Icon size={18} strokeWidth={2.2} className="shrink-0 text-[#FFE345]" />
           {TOURS.title}
