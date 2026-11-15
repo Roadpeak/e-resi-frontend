@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { announceHeroBlue } from '../../lib/hero-blue';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowDown, Headset, Box, ArrowRight, Film, Building2, KeyRound, PlusCircle, ScanLine, ChevronRight } from 'lucide-react';
+import { ArrowDown, Headset, Box, ArrowRight, Film, Building2, KeyRound, PlusCircle, ScanLine } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,11 +16,12 @@ const BASE_SCREENS_MOBILE = 2.5;
 const TOTAL_SCREENS_MOBILE = 3.25;
 
 /** The end-of-hero chooser: icons in Google's four colours, one per intent. */
+
 const INTERESTS = [
-  { href: '/properties', title: 'Buy properties', body: 'Off-plan and ready homes from verified developers', Icon: Building2, tint: '#e8f0fe', ink: '#1a73e8' },
-  { href: '/rent', title: 'Rent', body: 'Apartments, houses and offices with live availability', Icon: KeyRound, tint: '#e6f4ea', ink: '#188038' },
-  { href: '/list-development', title: 'List properties', body: 'For developers and agents — reach buyers and tenants', Icon: PlusCircle, tint: '#fef7e0', ink: '#b06000' },
-  { href: '/for-developers', title: 'Get 3D and VR tours for your property', body: 'We film, scan and publish it for buyers to walk through', Icon: ScanLine, tint: '#fce8e6', ink: '#d93025' },
+  { href: '/properties', title: 'Buy properties', Icon: Building2, tint: '#e8f0fe', ink: '#1a73e8' },
+  { href: '/rent', title: 'Rent', Icon: KeyRound, tint: '#e6f4ea', ink: '#188038' },
+  { href: '/list-development', title: 'List properties', Icon: PlusCircle, tint: '#fef7e0', ink: '#b06000' },
+  { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine, tint: '#fce8e6', ink: '#d93025' },
 ] as const;
 
 export function HeroSection() {
@@ -214,6 +216,7 @@ export function HeroSection() {
         video.removeEventListener('loadedmetadata', onMeta);
       };
 
+      let blueShown = false;
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start: 'top top',
@@ -287,7 +290,12 @@ export function HeroSection() {
           if (phase3Ref.current) gsap.set(phase3Ref.current, { autoAlpha: p3head > 0 ? 1 : 0 });
           if (phase3HeadRef.current) gsap.set(phase3HeadRef.current, { autoAlpha: p3head, y: (1 - p3head) * 30 });
           if (phase3GridRef.current) gsap.set(phase3GridRef.current, { autoAlpha: p3grid, y: (1 - p3grid) * 40 });
+
+          // Blue runs up behind the nav: let the bar go transparent while it is showing.
+          const blue = p3bg > 0.5 && p < 1;
+          if (blue !== blueShown) { blueShown = blue; announceHeroBlue(blue); }
         },
+        onLeave: () => { if (blueShown) { blueShown = false; announceHeroBlue(false); } },
       });
 
       // ── Scroll indicator float ──
@@ -317,6 +325,7 @@ export function HeroSection() {
     });
 
     return () => {
+      announceHeroBlue(false);
       removeVideoListeners?.();
       ctxRef.current?.revert();
       ctxRef.current = null;
@@ -562,22 +571,17 @@ export function HeroSection() {
               What are you interested in?
             </h2>
           </div>
-          <div ref={phase3GridRef} className="grid gap-3 sm:grid-cols-2 sm:gap-4 [@media(max-height:700px)]:gap-2">
-            {INTERESTS.map(({ href, title, body, Icon, tint, ink }) => (
+          <div ref={phase3GridRef} className="mx-auto flex max-w-[360px] flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center [@media(max-height:700px)]:gap-2">
+            {INTERESTS.map(({ href, title, Icon, tint, ink }) => (
               <Link
                 key={href}
                 href={href}
-                className="group flex items-center gap-4 rounded-2xl bg-white px-4 py-4 text-left shadow-[0_1px_2px_rgba(16,26,58,0.12),0_8px_24px_rgba(16,26,58,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(16,26,58,0.14),0_14px_32px_rgba(16,26,58,0.26)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-5 sm:py-5 [@media(max-height:700px)]:py-3 [@media(max-height:700px)]:sm:py-3"
+                className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-full bg-white pl-2 pr-6 text-[15px] font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-[52px] sm:text-base [@media(max-height:700px)]:h-11"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full [@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9" style={{ background: tint, color: ink }}>
-                  <Icon size={20} strokeWidth={2} />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9" style={{ background: tint, color: ink }}>
+                  <Icon size={17} strokeWidth={2.2} />
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[16px] font-semibold text-[#202124] sm:text-[17px]">{title}</span>
-                  {/* Short screens (small phones, short laptops) keep just the titles so all four fit. */}
-                  <span className="mt-0.5 block text-[13.5px] leading-snug text-[#5f6368] [@media(max-height:700px)]:hidden">{body}</span>
-                </span>
-                <ChevronRight size={18} className="shrink-0 text-[#9aa0a6] transition-transform group-hover:translate-x-0.5 group-hover:text-[#1a73e8]" />
+                {title}
               </Link>
             ))}
           </div>

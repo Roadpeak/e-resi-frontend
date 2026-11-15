@@ -8,6 +8,7 @@ import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { Logo } from '../brand/Logo';
 import { homePathFor } from '../../lib/auth/role-home';
+import { HERO_BLUE_EVENT } from '../../lib/hero-blue';
 
 const links = [
   { href: '/properties', label: 'Properties' },
@@ -22,6 +23,13 @@ const links = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  // True while the homepage hero's blue step fills the screen: the bar goes clear so the blue runs to the top.
+  const [overBlue, setOverBlue] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setOverBlue(Boolean((e as CustomEvent<boolean>).detail));
+    window.addEventListener(HERO_BLUE_EVENT, on);
+    return () => window.removeEventListener(HERO_BLUE_EVENT, on);
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -73,7 +81,7 @@ export function Navbar() {
         style={{ opacity: 0 }}
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
-          scrolled
+          scrolled && !overBlue
             ? 'bg-ink/90 backdrop-blur-xl border-b border-white/[0.06]'
             : 'bg-transparent',
         )}
