@@ -21,7 +21,8 @@ const links = [
  * to an opaque tinted bar once the hero has scrolled past. It never hides — only
  * the ground and the text colour change, over a 300ms transition.
  */
-export function MarketingNav() {
+/** `solid`: for pages with no dark hero underneath, so the bar never starts transparent. */
+export function MarketingNav({ solid = false }: { solid?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -45,7 +46,7 @@ export function MarketingNav() {
     router.push('/');
   }
 
-  const onDark = !scrolled && !menuOpen;
+  const onDark = !solid && !scrolled && !menuOpen;
 
   return (
     <>

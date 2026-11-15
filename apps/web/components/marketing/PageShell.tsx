@@ -19,20 +19,23 @@ export function PageShell({
   eyebrow,
   title,
   lede,
+  bare = false,
   children,
 }: {
   eyebrow?: string;
-  title: string;
+  title?: string;
   lede?: string;
+  /** No dark hero: the page opens straight on its content under a solid nav. */
+  bare?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: GROUND }}>
-      <MarketingNav />
+      <MarketingNav solid={bare} />
 
-      <Hero eyebrow={eyebrow} title={title} lede={lede} />
+      {!bare && <Hero eyebrow={eyebrow} title={title ?? ''} lede={lede} />}
 
-      <main className="px-6 py-20 sm:px-10 sm:py-24">
+      <main className={cn('px-6 sm:px-10', bare ? 'pb-20 pt-28 sm:pb-24 sm:pt-32' : 'py-20 sm:py-24')}>
         <div className="mx-auto max-w-[1080px]">{children}</div>
       </main>
 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageShell, Section, CardGrid, FeatureCard, StepCard } from '../../../components/marketing/PageShell';
+import { ServiceIcon } from '../../../components/services/ServiceIcon';
 import { AccordionItem } from '../../../components/marketing/Accordion';
 import { JsonLd, breadcrumbs } from '../../../components/seo/JsonLd';
 import { ServiceRequestForm } from '../../../components/services/ServiceRequestForm';
@@ -65,11 +66,7 @@ export default async function ServicesPage() {
   );
 
   return (
-    <PageShell
-      eyebrow="Production services"
-      title="Property media, produced on request."
-      lede="Photography, drone, cinematic video, 3D scans, VR and 360° tours for homes, rentals and developments across Kenya. Tell us what you need, where and when, and you’ll have a quote within an hour."
-    >
+    <PageShell bare>
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'Service',
@@ -93,6 +90,38 @@ export default async function ServicesPage() {
       }} />
       <JsonLd data={breadcrumbs([{ name: 'Home', path: '/' }, { name: 'Production services', path: '/services' }])} />
 
+
+      {/* Opens straight on the services. */}
+      <section className="mb-20 sm:mb-24">
+        <h1 className="text-[30px] font-semibold leading-[1.15] tracking-tight text-ink sm:text-[40px]" style={{ textWrap: 'balance' }}>
+          Property media production services
+        </h1>
+        <p className="mt-3 max-w-[60ch] text-[17px] leading-relaxed text-ink/60">
+          Photography, drone, video, 3D scans and virtual tours across Kenya. Choose what you need and get a quote within an hour.
+        </p>
+        <div className="mt-10 space-y-12">
+          {groups.map(([category, items]) => (
+            <div key={category}>
+              <h2 className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em] text-resi-600">{CATEGORY_TITLE[category] ?? category}</h2>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((s) => (
+                  <li key={s.key} className="flex gap-4 rounded-[24px] bg-white p-6">
+                    <ServiceIcon serviceKey={s.key} category={s.category} />
+                    <div>
+                      <h3 className="text-[17px] font-semibold tracking-tight text-ink">{s.label}</h3>
+                      {s.description && <p className="mt-1.5 text-[15px] leading-relaxed text-ink/60">{s.description}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <a href="#request" className="mt-10 inline-flex items-center rounded-full bg-[#1a73e8] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#1765cc]">
+          Request a quote
+        </a>
+      </section>
+
       <Section
         eyebrow="Request a quote"
         title="Tell us what you want produced."
@@ -102,18 +131,6 @@ export default async function ServicesPage() {
           <ServiceRequestForm services={services} />
         </div>
       </Section>
-
-      {groups.map(([category, items]) => (
-        <Section key={category} eyebrow="What we produce" title={CATEGORY_TITLE[category] ?? category}>
-          <div className="mt-10">
-            <CardGrid cols={3}>
-              {items.map((s) => (
-                <FeatureCard key={s.key} title={s.label}>{s.description ?? ''}</FeatureCard>
-              ))}
-            </CardGrid>
-          </div>
-        </Section>
-      ))}
 
       <Section eyebrow="Who it’s for" title="For anyone with a property to show.">
         <div className="mt-10">

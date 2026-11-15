@@ -7,7 +7,7 @@ import { gsap } from 'gsap';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../lib/stores/auth.store';
 import { Logo } from '../brand/Logo';
-import { homePathFor } from '../../lib/auth/role-home';
+import { homeLabelFor, homePathFor } from '../../lib/auth/role-home';
 import { HERO_BLUE_EVENT } from '../../lib/hero-blue';
 
 const links = [
@@ -170,8 +170,19 @@ export function Navbar() {
           </Link>
         ))}
         <div className="h-px bg-white/8 my-2" />
-        <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-chalk/80">Sign In</Link>
-        <Link href="/list-development" onClick={() => setMenuOpen(false)} className="border border-chalk/40 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
+        {/* Same sign-in awareness as the desktop bar: the phone menu used to say "Sign In" to everyone. */}
+        {isAuthenticated && user ? (
+          <>
+            <p className="text-xs tracking-[0.15em] uppercase text-chalk/50">Signed in as {user.firstName}</p>
+            <Link href={homePathFor(user.role)} onClick={() => setMenuOpen(false)} className="border border-chalk/40 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">{homeLabelFor(user.role)}</Link>
+            <button type="button" onClick={() => { setMenuOpen(false); void handleLogout(); }} className="text-left text-xs tracking-[0.15em] uppercase text-chalk/80 cursor-pointer">Sign Out</button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" onClick={() => setMenuOpen(false)} className="text-xs tracking-[0.15em] uppercase text-chalk/80">Sign In</Link>
+            <Link href="/list-development" onClick={() => setMenuOpen(false)} className="border border-chalk/40 text-chalk text-xs tracking-[0.12em] uppercase px-5 py-3 text-center">List Property</Link>
+          </>
+        )}
       </div>
     </>
   );

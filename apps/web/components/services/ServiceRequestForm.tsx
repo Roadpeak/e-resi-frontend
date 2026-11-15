@@ -10,6 +10,7 @@ import {
   REQUESTER_OPTIONS, serviceRequestsApi, type CatalogService, type RequesterType, type ServiceRequestInput,
 } from '../../lib/api/service-requests';
 import { GoogleButton } from '../auth/GoogleButton';
+import { ServiceIcon } from './ServiceIcon';
 import { cn } from '../../lib/utils';
 
 /** Survives the trip to sign-in and back (including Google's), per browser. */
@@ -196,12 +197,13 @@ export function ServiceRequestForm({ services }: { services: CatalogService[] })
                           on ? 'border-[#1a73e8] bg-[#f4f8ff]' : 'border-[#dadce0] hover:bg-[#f8f9fa]',
                         )}
                       >
-                        <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', on ? 'border-[#1a73e8] bg-[#1a73e8] text-white' : 'border-[#9aa0a6]')}>
-                          {on && <Check size={13} strokeWidth={3} />}
-                        </span>
-                        <span>
+                        <ServiceIcon serviceKey={s.key} category={s.category} size="sm" />
+                        <span className="min-w-0 flex-1">
                           <span className="block text-[15px] font-medium text-[#202124]">{s.label}</span>
                           {s.description && <span className="mt-0.5 block text-[13px] leading-snug text-[#5f6368]">{s.description}</span>}
+                        </span>
+                        <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', on ? 'border-[#1a73e8] bg-[#1a73e8] text-white' : 'border-[#9aa0a6]')}>
+                          {on && <Check size={13} strokeWidth={3} />}
                         </span>
                       </button>
                     );
