@@ -552,29 +552,30 @@ export function HeroSection() {
       </div>
       <div
         ref={phase3Ref}
-        className="absolute inset-0 z-[26] flex items-center justify-center px-5 sm:px-10"
+        className="absolute inset-0 z-[26] flex items-center justify-center px-5 pt-16 sm:px-10"
         style={{ visibility: 'hidden' }}
       >
         <div className="w-full max-w-[880px] font-sans">
-          <div ref={phase3HeadRef} className="mb-8 text-center sm:mb-10">
-            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff]">Get started</p>
-            <h2 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px]" style={{ textWrap: 'balance' }}>
+          <div ref={phase3HeadRef} className="mb-8 text-center sm:mb-10 [@media(max-height:700px)]:mb-4">
+            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#a9c1ff] [@media(max-height:700px)]:mb-1.5 [@media(max-height:700px)]:text-[11px]">Get started</p>
+            <h2 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-white sm:text-[48px] [@media(max-height:700px)]:text-[24px] [@media(max-height:700px)]:sm:text-[34px]" style={{ textWrap: 'balance' }}>
               What are you interested in?
             </h2>
           </div>
-          <div ref={phase3GridRef} className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <div ref={phase3GridRef} className="grid gap-3 sm:grid-cols-2 sm:gap-4 [@media(max-height:700px)]:gap-2">
             {INTERESTS.map(({ href, title, body, Icon, tint, ink }) => (
               <Link
                 key={href}
                 href={href}
-                className="group flex items-center gap-4 rounded-2xl bg-white px-4 py-4 text-left shadow-[0_1px_2px_rgba(16,26,58,0.12),0_8px_24px_rgba(16,26,58,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(16,26,58,0.14),0_14px_32px_rgba(16,26,58,0.26)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-5 sm:py-5"
+                className="group flex items-center gap-4 rounded-2xl bg-white px-4 py-4 text-left shadow-[0_1px_2px_rgba(16,26,58,0.12),0_8px_24px_rgba(16,26,58,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(16,26,58,0.14),0_14px_32px_rgba(16,26,58,0.26)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-5 sm:py-5 [@media(max-height:700px)]:py-3 [@media(max-height:700px)]:sm:py-3"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: tint, color: ink }}>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full [@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9" style={{ background: tint, color: ink }}>
                   <Icon size={20} strokeWidth={2} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[16px] font-semibold text-[#202124] sm:text-[17px]">{title}</span>
-                  <span className="mt-0.5 block text-[13.5px] leading-snug text-[#5f6368]">{body}</span>
+                  {/* Short screens (small phones, short laptops) keep just the titles so all four fit. */}
+                  <span className="mt-0.5 block text-[13.5px] leading-snug text-[#5f6368] [@media(max-height:700px)]:hidden">{body}</span>
                 </span>
                 <ChevronRight size={18} className="shrink-0 text-[#9aa0a6] transition-transform group-hover:translate-x-0.5 group-hover:text-[#1a73e8]" />
               </Link>
