@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Rotate3d } from 'lucide-react';
 import { PageShell, Section, CardGrid, FeatureCard, StepCard } from '../../../components/marketing/PageShell';
 import { ServiceIcon } from '../../../components/services/ServiceIcon';
 import { AccordionItem } from '../../../components/marketing/Accordion';
@@ -93,9 +95,15 @@ export default async function ServicesPage() {
 
       {/* Opens straight on the services. */}
       <section className="mb-20 sm:mb-24">
-        <h1 className="text-[30px] font-semibold leading-[1.15] tracking-tight text-ink sm:text-[40px]" style={{ textWrap: 'balance' }}>
-          Property media production services
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <h1 className="text-[30px] font-semibold leading-[1.15] tracking-tight text-ink sm:text-[40px]" style={{ textWrap: 'balance' }}>
+            Property media production services
+          </h1>
+          {/* The live demo of what a 3D tour looks like. */}
+          <Link href="/3d-demo" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e6c200] bg-[#FFE345] px-5 py-2.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#14120a] transition-colors hover:bg-[#FFDB1F]">
+            <Rotate3d size={16} /> 360-3D Demo
+          </Link>
+        </div>
         <p className="mt-3 max-w-[60ch] text-[17px] leading-relaxed text-ink/60">
           Photography, drone, video, 3D scans and virtual tours across Kenya. Choose what you need and get a quote within an hour.
         </p>
