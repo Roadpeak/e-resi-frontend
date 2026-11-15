@@ -576,7 +576,7 @@ export function HeroSection() {
               <Link
                 key={href}
                 href={href}
-                className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-full bg-white pl-2 pr-6 text-[15px] font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-[52px] sm:text-base [@media(max-height:700px)]:h-11"
+                className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-white py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9" style={{ background: tint, color: ink }}>
                   <Icon size={17} strokeWidth={2.2} />
