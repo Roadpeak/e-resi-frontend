@@ -19,13 +19,13 @@ const TOTAL_SCREENS_MOBILE = 3.25;
 const HERO_BLUE_GRADIENT =
   'linear-gradient(180deg, #0149FE 0%, #205EFE 12.5%, #4B7EFE 29%, #749CFE 46%, #9FBAFF 62.5%, #B5CBFF 71%, #DAE4FE 79%, #F2F4FF 87.5%, #FFFFFF 100%)';
 
-/** The end-of-hero chooser: icons in Google's four colours, one per intent. */
+/** The end-of-hero chooser: one yellow button per intent. */
 
 const INTERESTS = [
-  { href: '/properties', title: 'Buy properties', Icon: Building2, tint: '#e8f0fe', ink: '#1a73e8' },
-  { href: '/rent', title: 'Rent', Icon: KeyRound, tint: '#e6f4ea', ink: '#188038' },
-  { href: '/list-development', title: 'List properties', Icon: PlusCircle, tint: '#fef7e0', ink: '#b06000' },
-  { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine, tint: '#fce8e6', ink: '#d93025' },
+  { href: '/properties', title: 'Buy properties', Icon: Building2 },
+  { href: '/rent', title: 'Rent', Icon: KeyRound },
+  { href: '/list-development', title: 'List properties', Icon: PlusCircle },
+  { href: '/for-developers', title: 'Get 3D and VR tours for your property', Icon: ScanLine },
 ] as const;
 
 /** Tablet and desktop: the pinned film hero with its three scroll phases. */
@@ -602,13 +602,13 @@ function InterestChooser({ headRef, gridRef, as = 'h2' }: { headRef?: Ref<HTMLDi
       </Heading>
     </div>
     <div ref={gridRef} className="mx-auto flex max-w-[360px] flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center [@media(max-height:700px)]:gap-2">
-      {INTERESTS.map(({ href, title, Icon, tint, ink }) => (
+      {INTERESTS.map(({ href, title, Icon }) => (
         <Link
           key={href}
           href={href}
-          className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-white py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#202124] shadow-[0_1px_2px_rgba(16,26,58,0.14),0_4px_14px_rgba(16,26,58,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f8faff] hover:shadow-[0_2px_4px_rgba(16,26,58,0.16),0_10px_24px_rgba(16,26,58,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
+          className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-[#FFE345] py-1.5 pl-2 pr-6 text-[15px] leading-tight font-semibold text-[#14120a] shadow-[0_1px_2px_rgba(16,26,58,0.16),0_6px_18px_rgba(16,26,58,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFDB1F] hover:shadow-[0_2px_4px_rgba(16,26,58,0.18),0_12px_26px_rgba(16,26,58,0.30)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[52px] sm:text-base [@media(max-height:700px)]:min-h-11"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9" style={{ background: tint, color: ink }}>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14120a]/[0.08] text-[#14120a] sm:h-9 sm:w-9">
             <Icon size={17} strokeWidth={2.2} />
           </span>
           {title}
@@ -619,14 +619,36 @@ function InterestChooser({ headRef, gridRef, as = 'h2' }: { headRef?: Ref<HTMLDi
   );
 }
 
-/** Phones: no film and no scroll animation, just the blue chooser as the hero. */
+/** Phones: no film and no scroll animation, just the blue chooser over a tower photo as the hero. */
+const PHONE_PHOTO = '/images/hero-mobile-tower.jpg';
+const phoneSrc = (w: number) => `/_next/image?url=${encodeURIComponent(PHONE_PHOTO)}&w=${w}&q=75`;
+/** 1×1 transparent GIF: what wider screens pick, so the phone photo never downloads on desktop. */
+const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 function MobileHero() {
   return (
     <section
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-5 pb-12 pt-24"
+      className="relative flex min-h-[100svh] flex-col overflow-hidden px-5 pb-10 pt-24"
       style={{ backgroundImage: HERO_BLUE_GRADIENT }}
     >
-      <div className="hero-rise relative w-full max-w-[880px] font-sans">
+      {/* The photo's pale sky melts into the gradient; the towers and pool fill the bottom of the screen. */}
+      <picture>
+        <source media="(min-width: 768px)" srcSet={BLANK_GIF} />
+        <img
+          src={phoneSrc(828)}
+          srcSet={`${phoneSrc(640)} 640w, ${phoneSrc(828)} 828w, ${phoneSrc(1080)} 1080w`}
+          sizes="100vw"
+          alt="Residential towers around a landscaped pool and lawn"
+          fetchPriority="high"
+          decoding="async"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[64%] w-full object-cover object-[50%_30%]"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, #000 38%)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, #000 38%)',
+          }}
+        />
+      </picture>
+      <div className="hero-rise relative z-10 mx-auto w-full max-w-[880px] font-sans">
         <InterestChooser />
       </div>
     </section>
